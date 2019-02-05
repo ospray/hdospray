@@ -1,0 +1,11 @@
+stages: 
+ - build
+
+.job_template: &build_job_docker
+  stage: build
+  tags:
+    - docker
+  image: ospray/docker-images:arch
+  script:
+    - scripts/build_gitlab/linux.sh
+
