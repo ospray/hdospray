@@ -23,7 +23,7 @@ Currently tested with Linux - Centos 7 and Arch.
 * OpenImageIO is required in usd build
 * Optional - OpenImageDenoise
 * Optional - ptex.  This is not publicly available yet due to 
-*  required changes to core OSPRay.  Email me if you need access.
+  required changes to core OSPRay.  Email me if you need access.
 
 ## Building
 * hdOSPRayPlugin uses a cmake build system which links in USD
