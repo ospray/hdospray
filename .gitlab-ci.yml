@@ -9,3 +9,8 @@ stages:
   script:
     - scripts/build_gitlab/linux.sh
 
+
+### BUILD JOBS ###
+
+build-arch-gcc:
+  <<: *build_job_docker
