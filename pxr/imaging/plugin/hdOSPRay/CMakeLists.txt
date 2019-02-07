@@ -24,6 +24,7 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
   option(HDOSPRAY_ENABLE_DENOISER "build OSPRay plugin using OpenImageDenoise")
   if (HDOSPRAY_ENABLE_DENOISER)
     find_package(OpenImageDenoise REQUIRED)
+    add_definitions(-DHDOSPRAY_ENABLE_DENOISER)
   endif()
 
   pxr_plugin(hdOSPRay
@@ -46,7 +47,8 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
     INCLUDE_DIRS
       ${TBB_INCLUDE_DIRS}
       ${OSPRAY_INCLUDE_DIRS}
-      ${OIIO_INCLUDE_DIRS}${OPENIMAGEDENOISE_INCLUDE_DIRS}
+      ${OIIO_INCLUDE_DIRS}
+      ${OPENIMAGEDENOISE_INCLUDE_DIRS}
 
     PUBLIC_CLASSES
       config
