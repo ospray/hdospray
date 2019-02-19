@@ -1,10 +1,5 @@
 PROJECT(hdOSPRayPlugin)
 
-set(USD_SOURCE_DIR USD_SOURCE_DIR-NOTFOUND CACHE PATH "USD SOURCE DIRECTORY")
-if(NOT USD_SOURCE_DIR)
-  message(FATAL_ERROR "must specify USD_SOURCE_DIR")
-endif()
-
 if (WIN32)
     cmake_minimum_required(VERSION 3.1.1)
 else()
@@ -25,11 +20,6 @@ endif()
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/defaults
                       ${CMAKE_SOURCE_DIR}/cmake/modules
                       ${CMAKE_SOURCE_DIR}/cmake/macros)
-
-# we need to copy over the cmake folder to the external project.
-#  trying to just set the cmake module path was causing issues as they
-#  use and set their own project source dir.
-#file(COPY "${USD_SOURCE_DIR}/cmake" DESTINATION "${PROJECT_SOURCE_DIR}/" )
 
 include(Options)
 
