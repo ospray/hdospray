@@ -5,12 +5,15 @@ stages:
   stage: build
   tags:
     - docker
-  image: ospray/docker-images:arch
+  image: ospray/docker-images:centos7
   script:
     - scripts/build_gitlab/linux.sh
 
 
 ### BUILD JOBS ###
 
-build-arch-gcc:
+      #build-arch-gcc:
+      #  <<: *build_job_docker
+
+build-centos7-gcc:
   <<: *build_job_docker

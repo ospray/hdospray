@@ -19,13 +19,12 @@ mkdir build
 cd build
 
 cmake \
-  -D OSPRAY_BUILD_ISA=ALL \
-  -D OSPRAY_ENABLE_TESTING=ON \
-  -D OSPRAY_AUTO_DOWNLOAD_TEST_IMAGES=OFF \
-  -D OSPRAY_MODULE_BILINEAR_PATCH=ON \
-  -D OSPRAY_SG_CHOMBO=OFF \
-  -D OSPRAY_SG_OPENIMAGEIO=OFF \
-  -D OSPRAY_SG_VTK=OFF \
+  -D pxr_DIR=/gitlab/USD-install \
+  -D ospray_DIR=/gitlab/ospray-install \
+  -D PXR_BUILD_OPENIMAGEIO_PLUGIN=ON \
+  -D OIIO_BASE_DIR=/gitlab/USD-install \
+  -D HDOSPRAY_ENABLE_DENOISER=OFF \
+  -D CMAKE_INSTALL_PREFIX=/gitlab/USD-install \
   "$@" ..
 
-make -j`nproc` && make test
+make -j`nproc`
