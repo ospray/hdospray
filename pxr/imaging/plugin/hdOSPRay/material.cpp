@@ -262,6 +262,8 @@ void HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
 void HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName) {
   bool isPtex = node.identifier == HdOSPRayTokens->HwPtexTexture_1;
 
+  hasPtex = isPtex;
+
   HdOSPRayTexture texture;
   TF_FOR_ALL(param, node.parameters) {
     const auto &name = param->first;
