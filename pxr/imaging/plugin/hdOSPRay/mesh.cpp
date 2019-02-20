@@ -121,6 +121,36 @@ HdOSPRayMesh::_InitRepr(TfToken const &reprToken,
     }
 }
 
+
+static bool
+_IsEnabledForceQuadrangulate()
+{
+    static bool enabled = HdOSPRayConfig::GetInstance().forceQuadrangulate == 1;
+    return enabled;
+}
+
+bool
+HdOSPRayMesh::_UseQuadIndices(
+        const HdRenderIndex &renderIndex,
+        HdMeshTopology const & topology) const
+{
+    // We should never quadrangulate for subdivision schemes
+    // which refine to triangles (like Loop)
+    if (topology.GetScheme() == PxOsdOpenSubdivTokens->loop)
+        return false;
+
+    // According to HdSt mesh.cpp, always use quads on surfaces with ptex
+    // XXX: Make sure this is always true
+    const HdOSPRayMaterial *material = static_cast<const HdOSPRayMaterial *>(
+            renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
+    if (material && material->HasPtex())
+        return true;
+
+    // Fallback to the environment variable, which allows forcing of
+    // quadrangulation for debugging/testing.
+    return _IsEnabledForceQuadrangulate();
+}
+
 void
 HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate,
                    HdRenderParam     *renderParam,
@@ -345,7 +375,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 //      }
 //    }
 
-    bool useQuads = true;
+    bool useQuads = _UseQuadIndices(sceneDelegate->GetRenderIndex(), _topology);
     OSPGeometry mesh = nullptr;
     if (useQuads) {
       mesh = ospNewGeometry("quadmesh");
@@ -370,7 +400,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
       VtValue quadPrimvar;
       if (!meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(buffer.GetData(), buffer.GetNumElements(),
                                                  buffer.GetTupleType().type, &quadPrimvar)) {
-        std::cout << "ERROR: could not triangule face-varying data\n";
+        std::cout << "ERROR: could not quadrangulate face-varying data\n";
       } else {
         if (quadPrimvar.IsHolding<VtVec2fArray>())
         _texcoords = quadPrimvar.Get<VtVec2fArray>();
@@ -412,7 +442,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
       VtValue triangulatedPrimvar;
       if (!meshUtil.ComputeTriangulatedFaceVaryingPrimvar(buffer.GetData(), buffer.GetNumElements(),
                                                  buffer.GetTupleType().type, &triangulatedPrimvar)) {
-        std::cout << "ERROR: could not triangule face-varying data\n";
+        std::cout << "ERROR: could not triangulate face-varying data\n";
       } else {
         if (triangulatedPrimvar.IsHolding<VtVec2fArray>())
         _texcoords = triangulatedPrimvar.Get<VtVec2fArray>();

@@ -128,6 +128,9 @@ public:
 
 protected:
 
+    bool _UseQuadIndices(const HdRenderIndex &renderIndex,
+                         HdMeshTopology const & topology) const;
+
     // This callback from Rprim gives the prim an opportunity to set
     // additional dirty bits based on those already set.  This is done
     // before the dirty bits are passed to the scene delegate, so can be
