@@ -101,6 +101,11 @@ public:
     /// Override with *HDOSPRAY_USE_CHECKERBOARDING*.
     bool useCheckerboarding;
 
+    ///  Whether OSPRay forces quad meshes for debug
+    ///
+    /// Override with *HDOSPRAY_FORCE_QUADRANGULATE*.
+    bool forceQuadrangulate;
+
     /// Initialization arguments sent to OSPRay.
     ///  This can be used to set ospray configurations like mpi.
     ///
