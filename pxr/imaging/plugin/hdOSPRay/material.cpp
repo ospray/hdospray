@@ -72,8 +72,6 @@ TF_DEFINE_PRIVATE_TOKENS(
     (repeat)
     (mirror)
     (HwPtexTexture_1)
-    (faceOffset)
-    (ptexFaceOffset)
 );
 
 OSPTextureFormat
@@ -283,8 +281,6 @@ void HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureN
       }
     } else if (name == HdOSPRayTokens->scale) {
       texture.scale = value.Get<GfVec4f>();
-    } else if (name == HdOSPRayTokens->faceOffset || name == HdOSPRayTokens->ptexFaceOffset) {
-      texture.faceOffset = value.Get<int>();
     } else if (name == HdOSPRayTokens->wrapS) {
     } else if (name == HdOSPRayTokens->wrapT) {
     } else {
@@ -292,13 +288,8 @@ void HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureN
     }
   }
 
-  if (texture.ospTexture) {
-    //ptexFaceOffset currently requires custom OSPRay
-    if (texture.faceOffset > 0)
-      ospSet1i(texture.ospTexture, "faceOffset", texture.faceOffset);
-
+  if (texture.ospTexture)
     ospCommit(texture.ospTexture);
-  }
 
   if (textureName == HdOSPRayTokens->diffuseColor) {
     map_diffuseColor = texture;

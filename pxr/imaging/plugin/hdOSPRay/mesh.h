@@ -203,7 +203,6 @@ private:
     VtVec2fArray _texcoords;
     VtVec4fArray _colors;
     VtVec3fArray _normals;
-    int _ptexFaceOffset{0};
 
     // Derived scene data:
     // - _triangulatedIndices holds a triangulation of the source topology,

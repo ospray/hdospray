@@ -48,7 +48,6 @@ PXR_NAMESPACE_OPEN_SCOPE
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayTokens,
     (st)
-    (ptexFaceOffset)
 );
 
 std::mutex g_mutex;
@@ -220,13 +219,6 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
 
       auto value = sceneDelegate->Get(id, pv.name);
 
-      //ptexFaceOffset
-      if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, HdOSPRayTokens->ptexFaceOffset)) {
-        if (value.IsHolding<int>()) {
-          _ptexFaceOffset = value.Get<int>();
-        }
-      }
-
       //texcoords
       if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, HdOSPRayTokens->st)) {
         if (value.IsHolding<VtVec2fArray>()) {
@@ -287,8 +279,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->normals) ||
         HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->widths) ||
         HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->primvar) ||
-        HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdOSPRayTokens->st) ||
-        HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdOSPRayTokens->ptexFaceOffset)
+        HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdOSPRayTokens->st)
         ) {
         _UpdatePrimvarSources(sceneDelegate, *dirtyBits);
     }
@@ -392,12 +383,14 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
       ospSetData(mesh, "index", indices);
       ospRelease(indices);
 
-      ospSet1i(mesh, "ptexFaceOffset", _ptexFaceOffset);
-
       TfToken buffName = HdOSPRayTokens->st;
       VtValue buffValue = VtValue(_texcoords);
       HdVtBufferSource buffer(buffName, buffValue);
       VtValue quadPrimvar;
+#if 1
+      _texcoords = buffValue.Get<VtVec2fArray>();
+#else //BMCDEBUG, this has definite problems!!!  Is it necessary???
+      // Gramophone horn and some wood looks right with this.  Why?!?!?!
       if (!meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(buffer.GetData(), buffer.GetNumElements(),
                                                  buffer.GetTupleType().type, &quadPrimvar)) {
         std::cout << "ERROR: could not quadrangulate face-varying data\n";
@@ -420,6 +413,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         }
       }
       _texcoords = texcoords2;
+#endif
 
     } else {  //triangles
       mesh = ospNewGeometry("trianglemesh");
@@ -440,6 +434,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
       VtValue buffValue = VtValue(_texcoords);
       HdVtBufferSource buffer(buffName, buffValue);
       VtValue triangulatedPrimvar;
+
+#if 0 //BMCDEBUG???  Triangulate if mesh was a quad, otherwise just use texcoords
+      _texcoords = buffValue.Get<VtVec2fArray>();
+#else
       if (!meshUtil.ComputeTriangulatedFaceVaryingPrimvar(buffer.GetData(), buffer.GetNumElements(),
                                                  buffer.GetTupleType().type, &triangulatedPrimvar)) {
         std::cout << "ERROR: could not triangulate face-varying data\n";
@@ -447,6 +445,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         if (triangulatedPrimvar.IsHolding<VtVec2fArray>())
         _texcoords = triangulatedPrimvar.Get<VtVec2fArray>();
       }
+#endif
     }
 
     auto vertices = ospNewData(_points.size(),OSP_FLOAT3, _points.cdata(),
