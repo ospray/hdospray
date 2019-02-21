@@ -5,7 +5,7 @@ stages:
   stage: build
   tags:
     - docker
-  image: ospray/docker-images:centos7
+  image: ospray/hdospray-docker-images:centos7
   script:
     - scripts/build_gitlab/linux.sh
 
