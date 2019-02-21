@@ -24,10 +24,23 @@ build-arch-gcc:
 build-centos7-gcc:
   <<: *build_job_docker
 
-build-osx-clang:
-  <<: *build_job_shell
-  script:
-    - scripts/build_gitlab/osx.sh
-  tags:
-    - osx
-    - clang
+#build-osx-clang:
+#  <<: *build_job_shell
+#  script:
+#    - scripts/build_gitlab/osx.sh
+#  tags:
+#    - osx
+#    - clang
+
+#build-windows-msvc15:
+#  <<: *build_job_shell
+#  script:
+#    - scripts\build_gitlab\win.bat "Visual Studio 15 2017 Win64" "v141" "OFF"
+#  tags:
+#    - msvc15
+#    - win7
+#  artifacts:
+#    paths:
+#      - build/Release
+#      - build/regression_tests
+#    expire_in: 3 day

@@ -21,11 +21,14 @@ cd build
 
 cmake \
   -D pxr_DIR=/gitlab/USD-install \
-  -D ospray_DIR=/gitlab/ospray-install \
+  -D ospray_DIR=/gitlab/ospray-install/lib/cmake/ospray-1.8.0 \
   -D PXR_BUILD_OPENIMAGEIO_PLUGIN=ON \
   -D OIIO_BASE_DIR=/gitlab/USD-install \
   -D HDOSPRAY_ENABLE_DENOISER=OFF \
   -D CMAKE_INSTALL_PREFIX=/gitlab/USD-install \
+  -D GLEW_LIBRARY=/gitlab/USD-install/lib64/libGLEW.so \
+  -D GLEW_INCLUDE_DIR=/gitlab/USD-install/include \
+  -D PXR_ENABLE_PTEX_SUPPORT=OFF \
   "$@" ..
 
 make -j`nproc`
