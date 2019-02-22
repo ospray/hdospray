@@ -21,7 +21,7 @@ cd build
 
 cmake \
   -D pxr_DIR=/gitlab/USD-install \
-  -D ospray_DIR=/gitlab/ospray-install/lib/cmake/ospray-1.8.0 \
+  -D ospray_DIR=/gitlab/ospray-install/lib/cmake/ospray-1.8.1 \
   -D PXR_BUILD_OPENIMAGEIO_PLUGIN=ON \
   -D OIIO_BASE_DIR=/gitlab/USD-install \
   -D HDOSPRAY_ENABLE_DENOISER=OFF \
