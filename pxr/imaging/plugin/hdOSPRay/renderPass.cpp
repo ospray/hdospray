@@ -204,10 +204,15 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     origin = _inverseViewMatrix.Transform(origin);
     dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
     up = _inverseViewMatrix.TransformDir(up).GetNormalized();
+
+    double prjMatrix[4][4];
+    renderPassState->GetProjectionMatrix().Get(prjMatrix);
+    float fov = 2.0 * std::atan(1.0/prjMatrix[1][1] ) * 180.0 / M_PI;
+
     ospSet3fv(_camera,"pos", &origin[0]);
     ospSet3fv(_camera,"dir", &dir[0]);
     ospSet3fv(_camera,"up", &up[0]);
-    ospSetf(_camera,"fovy", 60.f);
+    ospSetf(_camera,"fovy", fov);
     ospCommit(_camera);
 
     //Render the frame
