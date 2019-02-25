@@ -69,8 +69,6 @@ HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id,
 void
 HdOSPRayMesh::Finalize(HdRenderParam *renderParam)
 {
-  OSPModel scene = static_cast<HdOSPRayRenderParam*>(renderParam)
-                  ->GetOSPRayModel();
   _ospInstances.clear();
 }
 
@@ -576,19 +574,9 @@ HdOSPRayMesh::_UpdateDrawItemGeometricShader(HdSceneDelegate *sceneDelegate,
 {
     HdRenderIndex &renderIndex = sceneDelegate->GetRenderIndex();
 
-    bool hasFaceVaryingPrimvars =
-        (bool)drawItem->GetFaceVaryingPrimvarRange();
-
-
-    HdSt_GeometricShader::PrimitiveType primType =
-        HdSt_GeometricShader::PrimitiveType::PRIM_MESH_COARSE_TRIANGLES;
 
     // resolve geom style, cull style
     HdCullStyle cullStyle = desc.cullStyle;
-    HdMeshGeomStyle geomStyle = desc.geomStyle;
-
-    // Resolve normals interpolation.
-    HdInterpolation normalsInterpolation = HdInterpolationVertex;
 
     // if the repr doesn't have an opinion about cullstyle, use the
     // prim's default (it could also be DontCare, then renderPass's
@@ -600,18 +588,6 @@ HdOSPRayMesh::_UpdateDrawItemGeometricShader(HdSceneDelegate *sceneDelegate,
     if (cullStyle == HdCullStyleDontCare) {
         cullStyle = _cullStyle;
     }
-
-    bool blendWireframeColor = desc.blendWireframeColor;
-
-    // Check if the shader bound to this mesh has a custom displacement
-    // terminal, or uses ptex, so that we know whether to include the geometry
-    // shader.
-    const HdOSPRayMaterial *material = static_cast<const HdOSPRayMaterial *>(
-            renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
-
-    //    bool hasCustomDisplacementTerminal =
-    //        material && material->HasDisplacement();
-    bool hasPtex = material && material->HasPtex();
 
     // The edge geomstyles below are rasterized as lines.
     // See HdSt_GeometricShader::BindResources()

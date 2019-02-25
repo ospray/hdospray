@@ -102,7 +102,7 @@ HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
         ospDeviceCommit(device);
       }
   }
-  catch (std::runtime_error e) {
+  catch (const std::runtime_error& e) {
     std::cerr << "OSPRAY Initialization error.  Likely incorrect initArgs\n";
     //todo: request addition of ospFinalize() to ospray
   }
