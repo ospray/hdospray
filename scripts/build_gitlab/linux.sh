@@ -29,6 +29,8 @@ cmake \
   -D GLEW_LIBRARY=/gitlab/USD-install/lib64/libGLEW.so \
   -D GLEW_INCLUDE_DIR=/gitlab/USD-install/include \
   -D PXR_ENABLE_PTEX_SUPPORT=OFF \
+  -D PXR_BUILD_USD_IMAGING=OFF \
+  -D PXR_BUILD_USDVIEW=OFF \
   "$@" ..
 
 make -j`nproc`
