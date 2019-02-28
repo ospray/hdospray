@@ -59,7 +59,6 @@ const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES =
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES =
 {
-//    HdPrimTypeTokens->texture,
 };
 
 std::mutex HdOSPRayRenderDelegate::_mutexResourceRegistry;
