@@ -184,7 +184,6 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
     primvars = GetPrimvarDescriptors(sceneDelegate, interp);
     for (HdPrimvarDescriptor const& pv: primvars) {
       auto value = sceneDelegate->Get(id, pv.name);
-      std::cout << "processing mesh primvar: " << pv.name <<  " " << value.GetTypeName() << std::endl;
 
       //ptexFaceOffset
       if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, HdOSPRayTokens->ptexFaceOffset)) {

@@ -174,18 +174,14 @@ void HdOSPRayMaterial::Sync(HdSceneDelegate *sceneDelegate,
 
     // get material network from network map
     TF_FOR_ALL(itr, networkMap.map) {
-      std::cout << "checking matnetworkmap with num nodes: "
-                << itr->second.nodes.size() << std::endl;
       auto &network = itr->second;
       TF_FOR_ALL(node, network.nodes) {
-        std::cout << "network map node: " << node->identifier << std::endl;
         if (node->identifier == HdOSPRayMaterialTokens->UsdPreviewSurface)
           matNetwork = network;
       }
     }
 
     TF_FOR_ALL(node, matNetwork.nodes) {
-      std::cout << "matNetwork itr: " << node->identifier.GetString() << "\n";
       if (node->identifier == HdOSPRayTokens->UsdPreviewSurface)
         _ProcessUsdPreviewSurfaceNode(*node);
       else if (node->identifier == HdOSPRayTokens->UsdUVTexture ||
@@ -199,7 +195,6 @@ void HdOSPRayMaterial::Sync(HdSceneDelegate *sceneDelegate,
                          return rel.inputId == node->path;
                        });
         if (relationship == relationships.end()) {
-          std::cout << "mat node was not in relationship\n";
           continue;  // node isn't actually used
         }
 
@@ -224,7 +219,6 @@ void HdOSPRayMaterial::_UpdateOSPRayMaterial()
     }
     if (map_metallic.ospTexture) {
       ospSetObject(_ospMaterial, "metallicMap", map_metallic.ospTexture);
-      std::cout << "setting metallic\n";
       metallic = 1.0f;
     }
     if (map_roughness.ospTexture) {
@@ -249,7 +243,6 @@ void HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
   TF_FOR_ALL(param, node.parameters) {
     const auto &name = param->first;
     const auto &value = param->second;
-    std::cout << "preview node param: " << name.GetString() << std::endl;
     if (name == HdOSPRayTokens->diffuseColor) {
       diffuseColor = value.Get<GfVec4f>();
     } else if (name == HdOSPRayTokens->metallic) {
