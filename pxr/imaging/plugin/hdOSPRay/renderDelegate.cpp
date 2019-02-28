@@ -74,8 +74,7 @@ HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
   std::stringstream ss(initArgs);
   std::string arg;
   std::vector<std::string> args;
-  while (ss >> arg)
-  {
+  while (ss >> arg) {
     args.push_back(arg);
   }
   ac = static_cast<int>(args.size()+1);
@@ -84,27 +83,21 @@ HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
   for(int i=1;i < ac; i++) {
     av[i] = args[i - 1].c_str();
   }
-  try {
-      int init_error = ospInit(&ac,av);
-      if (init_error != OSP_NO_ERROR) {
-        std::cerr << "FATAL ERROR DURING INITIALIZATION!" << std::endl;
-      } else {
-        auto device = ospGetCurrentDevice();
-        if (device == nullptr) {
-            std::cerr << "FATAL ERROR DURING GETTING CURRENT DEVICE!" << std::endl;
-        }
-
-        ospDeviceSetStatusFunc(device, [](const char *msg) { std::cout << msg; });
-        ospDeviceSetErrorFunc(device, [](OSPError e, const char *msg) {
-            std::cerr << "OSPRAY ERROR [" << e << "]: " << msg << std::endl;
-        });
-
-        ospDeviceCommit(device);
-      }
-  }
-  catch (const std::runtime_error& e) {
-    std::cerr << "OSPRAY Initialization error.  Likely incorrect initArgs\n";
-    //todo: request addition of ospFinalize() to ospray
+  int init_error = ospInit(&ac,av);
+  if (init_error != OSP_NO_ERROR) {
+    std::cerr << "FATAL ERROR DURING INITIALIZATION!" << std::endl;
+  } else {
+    auto device = ospGetCurrentDevice();
+    if (device == nullptr) {
+        std::cerr << "FATAL ERROR DURING GETTING CURRENT DEVICE!" << std::endl;
+    }
+    
+    ospDeviceSetStatusFunc(device, [](const char *msg) { std::cout << msg; });
+    ospDeviceSetErrorFunc(device, [](OSPError e, const char *msg) {
+        std::cerr << "OSPRAY ERROR [" << e << "]: " << msg << std::endl;
+    });
+    
+    ospDeviceCommit(device);
   }
   if (ospGetCurrentDevice() == nullptr)
   {
@@ -133,7 +126,6 @@ HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
     if (_counterResourceRegistry.fetch_add(1) == 0) {
         _resourceRegistry.reset( new HdResourceRegistry() );
     }
-
 }
 
 HdOSPRayRenderDelegate::~HdOSPRayRenderDelegate()
