@@ -24,8 +24,8 @@
 #ifndef HDOSPRAY_RENDERER_PLUGIN_H
 #define HDOSPRAY_RENDERER_PLUGIN_H
 
-#include "pxr/pxr.h"
 #include "pxr/imaging/hdx/rendererPlugin.h"
+#include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -42,28 +42,27 @@ PXR_NAMESPACE_OPEN_SCOPE
 ///
 class HdOSPRayRendererPlugin final : public HdxRendererPlugin {
 public:
-    HdOSPRayRendererPlugin() = default;
-    virtual ~HdOSPRayRendererPlugin() = default;
+  HdOSPRayRendererPlugin() = default;
+  virtual ~HdOSPRayRendererPlugin() = default;
 
-    /// Construct a new render delegate of type HdOSPRayRenderDelegate.
-    /// OSPRay render delegates own the embree scene object, so a new render
-    /// delegate should be created for each instance of HdRenderIndex.
-    ///   \return A new HdOSPRayRenderDelegate object.
-    virtual HdRenderDelegate *CreateRenderDelegate() override;
+  /// Construct a new render delegate of type HdOSPRayRenderDelegate.
+  /// OSPRay render delegates own the embree scene object, so a new render
+  /// delegate should be created for each instance of HdRenderIndex.
+  ///   \return A new HdOSPRayRenderDelegate object.
+  virtual HdRenderDelegate *CreateRenderDelegate() override;
 
-    /// Destroy a render delegate created by this class's CreateRenderDelegate.
-    ///   \param renderDelegate The render delegate to delete.
-    virtual void DeleteRenderDelegate(
-        HdRenderDelegate *renderDelegate) override;
+  /// Destroy a render delegate created by this class's CreateRenderDelegate.
+  ///   \param renderDelegate The render delegate to delete.
+  virtual void DeleteRenderDelegate(HdRenderDelegate *renderDelegate) override;
 
-    /// Checks to see if the embree plugin is supported on the running system
-    ///
-    virtual bool IsSupported() const override;
+  /// Checks to see if the embree plugin is supported on the running system
+  ///
+  virtual bool IsSupported() const override;
 
 private:
-    // This class does not support copying.
-    HdOSPRayRendererPlugin(const HdOSPRayRendererPlugin&)             = delete;
-    HdOSPRayRendererPlugin &operator =(const HdOSPRayRendererPlugin&) = delete;
+  // This class does not support copying.
+  HdOSPRayRendererPlugin(const HdOSPRayRendererPlugin &) = delete;
+  HdOSPRayRendererPlugin &operator=(const HdOSPRayRendererPlugin &) = delete;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

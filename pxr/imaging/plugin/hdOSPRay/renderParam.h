@@ -24,8 +24,8 @@
 #ifndef HDOSPRAY_RENDER_PARAM_H
 #define HDOSPRAY_RENDER_PARAM_H
 
-#include "pxr/pxr.h"
 #include "pxr/imaging/hd/renderDelegate.h"
+#include "pxr/pxr.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -35,27 +35,26 @@ PXR_NAMESPACE_OPEN_SCOPE
 /// The render delegate can create an object of type HdRenderParam, to pass
 /// to each prim during Sync(). HdOSPRay uses this class to pass top-level
 /// embree state around.
-/// 
+///
 class HdOSPRayRenderParam final : public HdRenderParam {
 public:
-    HdOSPRayRenderParam(OSPModel model, OSPRenderer renderer,
-                        std::atomic<int> *sceneVersion)
-      : _model(model), _renderer(renderer), _sceneVersion(sceneVersion)
-        {}
-    virtual ~HdOSPRayRenderParam() = default;
+  HdOSPRayRenderParam(OSPModel model, OSPRenderer renderer,
+                      std::atomic<int> *sceneVersion)
+      : _model(model), _renderer(renderer), _sceneVersion(sceneVersion) {}
+  virtual ~HdOSPRayRenderParam() = default;
 
-    OSPModel GetOSPRayModel() {
-      (_sceneVersion)++;
-      return _model;
-    }
+  OSPModel GetOSPRayModel() {
+    (_sceneVersion)++;
+    return _model;
+  }
 
-    OSPRenderer GetOSPRayRenderer() { return _renderer; }
+  OSPRenderer GetOSPRayRenderer() { return _renderer; }
 
 private:
-    OSPModel _model;
-    OSPRenderer _renderer;
-    /// A version counter for edits to _scene.
-    std::atomic<int> *_sceneVersion;
+  OSPModel _model;
+  OSPRenderer _renderer;
+  /// A version counter for edits to _scene.
+  std::atomic<int> *_sceneVersion;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -23,35 +23,29 @@
 //
 #include "pxr/imaging/hdOSPRay/rendererPlugin.h"
 
-#include "pxr/imaging/hdx/rendererPluginRegistry.h"
 #include "pxr/imaging/hdOSPRay/renderDelegate.h"
+#include "pxr/imaging/hdx/rendererPluginRegistry.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
 // Register the embree plugin with the renderer plugin system.
-TF_REGISTRY_FUNCTION(TfType)
-{
-    HdxRendererPluginRegistry::Define<HdOSPRayRendererPlugin>();
+TF_REGISTRY_FUNCTION(TfType) {
+  HdxRendererPluginRegistry::Define<HdOSPRayRendererPlugin>();
 }
 
-HdRenderDelegate*
-HdOSPRayRendererPlugin::CreateRenderDelegate()
-{
-    return new HdOSPRayRenderDelegate();
+HdRenderDelegate *HdOSPRayRendererPlugin::CreateRenderDelegate() {
+  return new HdOSPRayRenderDelegate();
 }
 
-void
-HdOSPRayRendererPlugin::DeleteRenderDelegate(HdRenderDelegate *renderDelegate)
-{
-    delete renderDelegate;
+void HdOSPRayRendererPlugin::DeleteRenderDelegate(
+    HdRenderDelegate *renderDelegate) {
+  delete renderDelegate;
 }
 
-bool
-HdOSPRayRendererPlugin::IsSupported() const
-{
-    // Nothing more to check for now, we assume if the plugin loads correctly
-    // it is supported.
-    return true;
+bool HdOSPRayRendererPlugin::IsSupported() const {
+  // Nothing more to check for now, we assume if the plugin loads correctly
+  // it is supported.
+  return true;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
