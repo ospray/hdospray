@@ -53,6 +53,9 @@ TF_DEFINE_PRIVATE_TOKENS(
 
 std::mutex g_mutex;
 
+//USD forces warnings when converting ospcommon::affine3f to osp::affine3f
+const osp::affine3f identity({1,0,0,0,1,0,0,0,1});
+
 HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id,
                            SdfPath const& instancerId)
         : HdMesh(id, instancerId)
@@ -504,7 +507,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     // Size up (if necessary).
     for(size_t i = oldSize; i < newSize; ++i) {
       // Create the new instance.
-      _ospInstances[i] = ospNewInstance(instanceModel, (osp::affine3f&)ospcommon::one);
+      _ospInstances[i] = ospNewInstance(instanceModel, identity);
     }
 
     // Update transforms.
@@ -527,7 +530,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     bool newInstance = false;
     if (_ospInstances.size() == 0) {
       //convert aligned matrix to unalighned 4x3 matrix
-      auto instance = ospNewInstance(instanceModel, (osp::affine3f&)ospcommon::one);
+      auto instance = ospNewInstance(instanceModel, identity);
       _ospInstances.push_back(instance);
       ospCommit(instance);
       newInstance = true;
