@@ -154,6 +154,11 @@ void HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate *sceneDelegate,
     HdInterpolation interp = static_cast<HdInterpolation>(i);
     primvars = GetPrimvarDescriptors(sceneDelegate, interp);
     for (HdPrimvarDescriptor const &pv : primvars) {
+
+      // Points are handled outside _UpdatePrimvarSources
+      if (pv.name == HdTokens->points)
+        continue;
+
       auto value = sceneDelegate->Get(id, pv.name);
 
       // ptexFaceOffset
@@ -169,13 +174,6 @@ void HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate *sceneDelegate,
         if (value.IsHolding<VtVec2fArray>()) {
           _texcoords = value.Get<VtVec2fArray>();
         }
-      }
-
-      // points
-      if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, pv.name) &&
-          pv.name != HdTokens->points) {
-        _primvarSourceMap[pv.name] = {GetPrimvar(sceneDelegate, pv.name),
-                                      interp};
       }
 
       if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, HdTokens->color)) {
