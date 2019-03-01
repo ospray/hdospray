@@ -37,12 +37,13 @@ PXR_NAMESPACE_OPEN_SCOPE
 /// A small bit of state attached to each bit of prototype geometry in embree,
 /// for the benefit of HdOSPRayRenderPass::_TraceRay.
 ///
-struct HdOSPRayPrototypeContext {
-  /// A pointer back to the owning HdOSPRay rprim.
-  HdRprim *rprim;
-  /// A name-indexed map of primvar samplers.
-  //    TfHashMap<TfToken, HdOSPRayPrimvarSampler*, TfToken::HashFunctor>
-  //        primvarMap;
+struct HdOSPRayPrototypeContext
+{
+    /// A pointer back to the owning HdOSPRay rprim.
+    HdRprim *rprim;
+    /// A name-indexed map of primvar samplers.
+//    TfHashMap<TfToken, HdOSPRayPrimvarSampler*, TfToken::HashFunctor>
+//        primvarMap;
 };
 
 ///
@@ -51,13 +52,15 @@ struct HdOSPRayPrototypeContext {
 /// A small bit of state attached to each bit of instanced geometry in embree,
 /// for the benefit of HdOSPRayRenderPass::_TraceRay.
 ///
-struct HdOSPRayInstanceContext {
-  /// The object-to-world transform, for transforming normals to worldspace.
-  GfMatrix4f objectToWorldMatrix;
-  /// The scene the prototype geometry lives in, for passing to
-  /// rtcInterpolate.
-  // RTCScene rootScene;
+struct HdOSPRayInstanceContext
+{
+    /// The object-to-world transform, for transforming normals to worldspace.
+    GfMatrix4f objectToWorldMatrix;
+    /// The scene the prototype geometry lives in, for passing to
+    /// rtcInterpolate.
+    //RTCScene rootScene;
 };
+
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

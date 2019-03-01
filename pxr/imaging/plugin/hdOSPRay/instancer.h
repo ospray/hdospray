@@ -51,45 +51,48 @@ PXR_NAMESPACE_OPEN_SCOPE
 ///
 class HdOSPRayInstancer : public HdInstancer {
 public:
-  /// Constructor.
-  ///   \param delegate The scene delegate backing this instancer's data.
-  ///   \param id The unique id of this instancer.
-  ///   \param parentInstancerId The unique id of the parent instancer,
-  ///                            or an empty id if not applicable.
-  HdOSPRayInstancer(HdSceneDelegate *delegate, SdfPath const &id,
-                    SdfPath const &parentInstancerId);
+    /// Constructor.
+    ///   \param delegate The scene delegate backing this instancer's data.
+    ///   \param id The unique id of this instancer.
+    ///   \param parentInstancerId The unique id of the parent instancer,
+    ///                            or an empty id if not applicable.
+    HdOSPRayInstancer(HdSceneDelegate* delegate, SdfPath const& id,
+                      SdfPath const &parentInstancerId);
 
-  /// Destructor.
-  ~HdOSPRayInstancer();
+    /// Destructor.
+    ~HdOSPRayInstancer();
 
-  /// Computes all instance transforms for the provided prototype id,
-  /// taking into account the scene delegate's instancerTransform and the
-  /// instance primvars "instanceTransform", "translate", "rotate", "scale".
-  /// Computes and flattens nested transforms, if necessary.
-  ///   \param prototypeId The prototype to compute transforms for.
-  ///   \return One transform per instance, to apply when drawing.
-  VtMatrix4dArray ComputeInstanceTransforms(SdfPath const &prototypeId);
+    /// Computes all instance transforms for the provided prototype id,
+    /// taking into account the scene delegate's instancerTransform and the
+    /// instance primvars "instanceTransform", "translate", "rotate", "scale".
+    /// Computes and flattens nested transforms, if necessary.
+    ///   \param prototypeId The prototype to compute transforms for.
+    ///   \return One transform per instance, to apply when drawing.
+    VtMatrix4dArray ComputeInstanceTransforms(SdfPath const &prototypeId);
 
 private:
-  // Checks the change tracker to determine whether instance primvars are
-  // dirty, and if so pulls them. Since primvars can only be pulled once,
-  // and are cached, this function is not re-entrant. However, this function
-  // is called by ComputeInstanceTransforms, which is called (potentially)
-  // by HdOSPRayMesh::Sync(), which is dispatched in parallel, so it needs
-  // to be guarded by _instanceLock.
-  //
-  // Pulled primvars are cached in _primvarMap.
-  void _SyncPrimvars();
+    // Checks the change tracker to determine whether instance primvars are
+    // dirty, and if so pulls them. Since primvars can only be pulled once,
+    // and are cached, this function is not re-entrant. However, this function
+    // is called by ComputeInstanceTransforms, which is called (potentially)
+    // by HdOSPRayMesh::Sync(), which is dispatched in parallel, so it needs
+    // to be guarded by _instanceLock.
+    //
+    // Pulled primvars are cached in _primvarMap.
+    void _SyncPrimvars();
 
-  // Mutex guard for _SyncPrimvars().
-  std::mutex _instanceLock;
+    // Mutex guard for _SyncPrimvars().
+    std::mutex _instanceLock;
 
-  // Map of the latest primvar data for this instancer, keyed by
-  // primvar name. Primvar values are VtValue, an any-type; they are
-  // interpreted at consumption time (here, in ComputeInstanceTransforms).
-  TfHashMap<TfToken, HdVtBufferSource *, TfToken::HashFunctor> _primvarMap;
+    // Map of the latest primvar data for this instancer, keyed by
+    // primvar name. Primvar values are VtValue, an any-type; they are
+    // interpreted at consumption time (here, in ComputeInstanceTransforms).
+    TfHashMap<TfToken,
+              HdVtBufferSource*,
+              TfToken::HashFunctor> _primvarMap;
 };
+
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // HDOSPRAY_INSTANCER_H
+#endif  // HDOSPRAY_INSTANCER_H
