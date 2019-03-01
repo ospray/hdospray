@@ -37,77 +37,82 @@ TF_INSTANTIATE_SINGLETON(HdOSPRayConfig);
 // The environment variable macro takes the variable name, a default value,
 // and a description...
 TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_PER_FRAME, -1,
-                      "Raytraced samples per pixel per frame (must be >= 1)");
+        "Raytraced samples per pixel per frame (must be >= 1)");
 
-TF_DEFINE_ENV_SETTING(
-    HDOSPRAY_SAMPLES_TO_CONVERGENCE, 100,
-    "Samples per pixel before we stop rendering (must be >= 1)");
+TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_TO_CONVERGENCE, 100,
+        "Samples per pixel before we stop rendering (must be >= 1)");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES, 0,
-                      "Ambient occlusion samples per camera ray (must be >= 0; "
-                      "a value of 0 disables ambient occlusion)");
+        "Ambient occlusion samples per camera ray (must be >= 0; a value of 0 disables ambient occlusion)");
 
-TF_DEFINE_ENV_SETTING(
-    HDOSPRAY_FIX_RANDOM_SEED, 0,
-    "Should HdOSPRay sampling use a fixed random seed? (values > 0 are true)");
+TF_DEFINE_ENV_SETTING(HDOSPRAY_FIX_RANDOM_SEED, 0,
+        "Should HdOSPRay sampling use a fixed random seed? (values > 0 are true)");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_FACE_COLORS, 1,
-                      "Should HdOSPRay use face colors while rendering?");
+        "Should HdOSPRay use face colors while rendering?");
 
-TF_DEFINE_ENV_SETTING(
-    HDOSPRAY_CAMERA_LIGHT_INTENSITY, 300,
-    "Intensity of the camera light, specified as a percentage of <1,1,1>.");
+TF_DEFINE_ENV_SETTING(HDOSPRAY_CAMERA_LIGHT_INTENSITY, 300,
+        "Intensity of the camera light, specified as a percentage of <1,1,1>.");
 
-TF_DEFINE_ENV_SETTING(
-    HDOSPRAY_PRINT_CONFIGURATION, 0,
-    "Should HdOSPRay print configuration on startup? (values > 0 are true)");
+TF_DEFINE_ENV_SETTING(HDOSPRAY_PRINT_CONFIGURATION, 0,
+        "Should HdOSPRay print configuration on startup? (values > 0 are true)");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_PATHTRACING, 0,
-                      "Should HdOSPRay use path tracing");
+        "Should HdOSPRay use path tracing");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_INIT_ARGS, "",
-                      "Initialization arguments sent to OSPRay");
+        "Initialization arguments sent to OSPRay");
 
-TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_DENOISER, 0, "OSPRay uses denoiser");
+TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_DENOISER, 0,
+        "OSPRay uses denoiser");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_CHECKERBOARDING, 0,
-                      "OSPRay uses checkerboarding");
+        "OSPRay uses checkerboarding");
 
-HdOSPRayConfig::HdOSPRayConfig() {
-  // Read in values from the environment, clamping them to valid ranges.
-  samplesPerFrame = std::max(-1, TfGetEnvSetting(HDOSPRAY_SAMPLES_PER_FRAME));
-  samplesToConvergence =
-      std::max(1, TfGetEnvSetting(HDOSPRAY_SAMPLES_TO_CONVERGENCE));
-  ambientOcclusionSamples =
-      std::max(0, TfGetEnvSetting(HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES));
-  fixRandomSeed = (TfGetEnvSetting(HDOSPRAY_FIX_RANDOM_SEED) > 0);
-  useFaceColors = (TfGetEnvSetting(HDOSPRAY_USE_FACE_COLORS) > 0);
-  cameraLightIntensity =
-      (std::max(100, TfGetEnvSetting(HDOSPRAY_CAMERA_LIGHT_INTENSITY)) /
-       100.0f);
-  usePathTracing = TfGetEnvSetting(HDOSPRAY_USE_PATHTRACING);
-  initArgs = TfGetEnvSetting(HDOSPRAY_INIT_ARGS);
-  useDenoiser = TfGetEnvSetting(HDOSPRAY_USE_DENOISER);
-  useCheckerboarding = TfGetEnvSetting(HDOSPRAY_USE_CHECKERBOARDING);
+HdOSPRayConfig::HdOSPRayConfig()
+{
+    // Read in values from the environment, clamping them to valid ranges.
+    samplesPerFrame = std::max(-1,
+            TfGetEnvSetting(HDOSPRAY_SAMPLES_PER_FRAME));
+    samplesToConvergence = std::max(1,
+            TfGetEnvSetting(HDOSPRAY_SAMPLES_TO_CONVERGENCE));
+    ambientOcclusionSamples = std::max(0,
+            TfGetEnvSetting(HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES));
+    fixRandomSeed = (TfGetEnvSetting(HDOSPRAY_FIX_RANDOM_SEED) > 0);
+    useFaceColors = (TfGetEnvSetting(HDOSPRAY_USE_FACE_COLORS) > 0);
+    cameraLightIntensity = (std::max(100,
+            TfGetEnvSetting(HDOSPRAY_CAMERA_LIGHT_INTENSITY)) / 100.0f);
+    usePathTracing =TfGetEnvSetting(HDOSPRAY_USE_PATHTRACING);
+    initArgs =TfGetEnvSetting(HDOSPRAY_INIT_ARGS);
+    useDenoiser = TfGetEnvSetting(HDOSPRAY_USE_DENOISER);
+    useCheckerboarding = TfGetEnvSetting(HDOSPRAY_USE_CHECKERBOARDING);
 
-  if (TfGetEnvSetting(HDOSPRAY_PRINT_CONFIGURATION) > 0) {
-    std::cout << "HdOSPRay Configuration: \n"
-              << "  samplesPerFrame            = " << samplesPerFrame << "\n"
-              << "  samplesToConvergence       = " << samplesToConvergence
-              << "\n"
-              << "  ambientOcclusionSamples    = " << ambientOcclusionSamples
-              << "\n"
-              << "  fixRandomSeed              = " << fixRandomSeed << "\n"
-              << "  useFaceColors              = " << useFaceColors << "\n"
-              << "  cameraLightIntensity      = " << cameraLightIntensity
-              << "\n"
-              << "  initArgs                  = " << initArgs << "\n";
-  }
+    if (TfGetEnvSetting(HDOSPRAY_PRINT_CONFIGURATION) > 0) {
+        std::cout
+            << "HdOSPRay Configuration: \n"
+            << "  samplesPerFrame            = "
+            <<    samplesPerFrame         << "\n"
+            << "  samplesToConvergence       = "
+            <<    samplesToConvergence    << "\n"
+            << "  ambientOcclusionSamples    = "
+            <<    ambientOcclusionSamples << "\n"
+            << "  fixRandomSeed              = "
+            <<    fixRandomSeed           << "\n"
+            << "  useFaceColors              = "
+            <<    useFaceColors           << "\n"
+            << "  cameraLightIntensity      = "
+            <<    cameraLightIntensity   << "\n"
+            << "  initArgs                  = "
+            <<    initArgs   << "\n"
+            ;
+    }
 }
 
 /*static*/
-const HdOSPRayConfig &HdOSPRayConfig::GetInstance() {
-  return TfSingleton<HdOSPRayConfig>::GetInstance();
+const HdOSPRayConfig&
+HdOSPRayConfig::GetInstance()
+{
+    return TfSingleton<HdOSPRayConfig>::GetInstance();
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

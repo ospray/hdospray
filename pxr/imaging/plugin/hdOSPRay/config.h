@@ -24,8 +24,8 @@
 #ifndef HDOSPRAY_CONFIG_H
 #define HDOSPRAY_CONFIG_H
 
-#include "pxr/base/tf/singleton.h"
 #include "pxr/pxr.h"
+#include "pxr/base/tf/singleton.h"
 
 #include <string>
 
@@ -46,78 +46,77 @@ PXR_NAMESPACE_OPEN_SCOPE
 ///
 class HdOSPRayConfig {
 public:
-  /// \brief Return the configuration singleton.
-  static const HdOSPRayConfig &GetInstance();
+    /// \brief Return the configuration singleton.
+    static const HdOSPRayConfig &GetInstance();
 
-  /// How many samples does each pixel get per frame?
-  ///
-  /// Override with *HDOSPRAY_SAMPLES_PER_FRAME*.
-  unsigned int samplesPerFrame;
+    /// How many samples does each pixel get per frame?
+    ///
+    /// Override with *HDOSPRAY_SAMPLES_PER_FRAME*.
+    unsigned int samplesPerFrame;
 
-  /// How many samples do we need before a pixel is considered
-  /// converged?
-  ///
-  /// Override with *HDOSPRAY_SAMPLES_TO_CONVERGENCE*.
-  unsigned int samplesToConvergence;
+    /// How many samples do we need before a pixel is considered
+    /// converged?
+    ///
+    /// Override with *HDOSPRAY_SAMPLES_TO_CONVERGENCE*.
+    unsigned int samplesToConvergence;
 
-  /// How many ambient occlusion rays should we generate per
-  /// camera ray?
-  ///
-  /// Override with *HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES*.
-  unsigned int ambientOcclusionSamples;
+    /// How many ambient occlusion rays should we generate per
+    /// camera ray?
+    ///
+    /// Override with *HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES*.
+    unsigned int ambientOcclusionSamples;
 
-  /// Should the renderpass's sampling functions use a fixed random seed?
-  /// (Helpful for things like unit tests, to get consistent results).
-  ///
-  /// Override with *HDOSPRAY_FIX_RANDOM_SEED*. Integer values greater than
-  /// zero are considered "true".
-  bool fixRandomSeed;
+    /// Should the renderpass's sampling functions use a fixed random seed?
+    /// (Helpful for things like unit tests, to get consistent results).
+    ///
+    /// Override with *HDOSPRAY_FIX_RANDOM_SEED*. Integer values greater than
+    /// zero are considered "true".
+    bool fixRandomSeed;
 
-  /// Should the renderpass use the color primvar, or flat white colors?
-  /// (Flat white shows off ambient occlusion better).
-  ///
-  /// Override with *HDOSPRAY_USE_FACE_COLORS*. Integer values greater than
-  /// zero are considered "true".
-  bool useFaceColors;
+    /// Should the renderpass use the color primvar, or flat white colors?
+    /// (Flat white shows off ambient occlusion better).
+    ///
+    /// Override with *HDOSPRAY_USE_FACE_COLORS*. Integer values greater than
+    /// zero are considered "true".
+    bool useFaceColors;
 
-  /// What should the intensity of the camera light be, specified as a
-  /// percent of <1, 1, 1>.  For example, 300 would be <3, 3, 3>.
-  ///
-  /// Override with *HDOSPRAY_CAMERA_LIGHT_INTENSITY*.
-  float cameraLightIntensity;
+    /// What should the intensity of the camera light be, specified as a
+    /// percent of <1, 1, 1>.  For example, 300 would be <3, 3, 3>.
+    ///
+    /// Override with *HDOSPRAY_CAMERA_LIGHT_INTENSITY*.
+    float cameraLightIntensity;
 
-  ///  Whether OSPRay uses path tracing or scivis renderer.
-  ///
-  /// Override with *HDOSPRAY_USE_PATHTRACING*.
-  bool usePathTracing;
+    ///  Whether OSPRay uses path tracing or scivis renderer.
+    ///
+    /// Override with *HDOSPRAY_USE_PATHTRACING*.
+    bool usePathTracing;
 
-  ///  Whether OSPRay uses denoiser
-  ///
-  /// Override with *HDOSPRAY_USE_DENOISER*.
-  bool useDenoiser;
+    ///  Whether OSPRay uses denoiser
+    ///
+    /// Override with *HDOSPRAY_USE_DENOISER*.
+    bool useDenoiser;
 
-  ///  Whether OSPRay uses checkerboarding
-  ///
-  /// Override with *HDOSPRAY_USE_CHECKERBOARDING*.
-  bool useCheckerboarding;
+    ///  Whether OSPRay uses checkerboarding
+    ///
+    /// Override with *HDOSPRAY_USE_CHECKERBOARDING*.
+    bool useCheckerboarding;
 
-  /// Initialization arguments sent to OSPRay.
-  ///  This can be used to set ospray configurations like mpi.
-  ///
-  /// Override with *HDOSPRAY_INIT_ARGS*.
-  std::string initArgs;
-
+    /// Initialization arguments sent to OSPRay.
+    ///  This can be used to set ospray configurations like mpi.
+    ///
+    /// Override with *HDOSPRAY_INIT_ARGS*.
+    std::string initArgs;
 private:
-  // The constructor initializes the config variables with their
-  // default or environment-provided override, and optionally prints
-  // them.
-  HdOSPRayConfig();
-  ~HdOSPRayConfig() = default;
+    // The constructor initializes the config variables with their
+    // default or environment-provided override, and optionally prints
+    // them.
+    HdOSPRayConfig();
+    ~HdOSPRayConfig() = default;
 
-  HdOSPRayConfig(const HdOSPRayConfig &) = delete;
-  HdOSPRayConfig &operator=(const HdOSPRayConfig &) = delete;
+    HdOSPRayConfig(const HdOSPRayConfig&) = delete;
+    HdOSPRayConfig& operator=(const HdOSPRayConfig&) = delete;
 
-  friend class TfSingleton<HdOSPRayConfig>;
+    friend class TfSingleton<HdOSPRayConfig>;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
