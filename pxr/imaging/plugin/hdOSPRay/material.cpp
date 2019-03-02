@@ -275,7 +275,7 @@ void HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureN
       texture.file = path.GetResolvedPath();
       if (isPtex) {
         texture.isPtex = true;
-        #ifdef PXR_HDOSPRAY_PLUGIN_PTEX
+        #ifdef HDOSPRAY_PLUGIN_PTEX
           texture.ospTexture = LoadPtexTexture(texture.file);
         #endif 
       }

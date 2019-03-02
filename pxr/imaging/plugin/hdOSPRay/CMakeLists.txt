@@ -8,9 +8,9 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
   find_package(ospray 1.8 CONFIG REQUIRED)
 
   # add ptex module to ospray libraries
-  option(PXR_HDOSPRAY_PLUGIN_PTEX "build hdOSPRay with Ptex support")
-  if (PXR_HDOSPRAY_PLUGIN_PTEX)
-    add_definitions(-DPXR_HDOSPRAY_PLUGIN_PTEX)
+  option(HDOSPRAY_PLUGIN_PTEX "build hdOSPRay with Ptex support")
+  if (HDOSPRAY_PLUGIN_PTEX)
+    add_definitions(-DHDOSPRAY_PLUGIN_PTEX)
     LINK_DIRECTORIES(${OSPRAY_ROOT}/lib64 ${OSPRAY_ROOT}/lib)
     SET(OSPRAY_MODULE_LIBRARIES ${OSPRAY_MODULE_LIBRARIES} ospray_module_ptex)
   endif()
