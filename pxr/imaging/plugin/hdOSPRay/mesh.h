@@ -24,14 +24,14 @@
 #ifndef HDOSPRAY_MESH_H
 #define HDOSPRAY_MESH_H
 
-#include "pxr/pxr.h"
-#include "pxr/imaging/hd/mesh.h"
-#include "pxr/imaging/hd/enums.h"
-#include "pxr/imaging/hd/vertexAdjacency.h"
 #include "pxr/base/gf/matrix4f.h"
 #include "pxr/base/gf/vec2f.h"
 #include "pxr/base/gf/vec3f.h"
 #include "pxr/base/gf/vec4f.h"
+#include "pxr/imaging/hd/enums.h"
+#include "pxr/imaging/hd/mesh.h"
+#include "pxr/imaging/hd/vertexAdjacency.h"
+#include "pxr/pxr.h"
 
 #include "ospray/ospray.h"
 #include <mutex>
@@ -40,8 +40,8 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 class HdStDrawItem;
 
-//class HdOSPRayPrototypeContext;
-//class HdOSPRayInstanceContext;
+// class HdOSPRayPrototypeContext;
+// class HdOSPRayInstanceContext;
 
 /// \class HdOSPRayMesh
 ///
@@ -76,8 +76,7 @@ public:
     ///   \param id The scene-graph path to this mesh.
     ///   \param instancerId If specified, the HdOSPRayInstancer at this id uses
     ///                      this mesh as a prototype.
-    HdOSPRayMesh(SdfPath const& id,
-                 SdfPath const& instancerId = SdfPath());
+    HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId = SdfPath());
 
     /// HdOSPRayMesh destructor.
     /// (Note: OSPRay resources are released in Finalize()).
@@ -93,7 +92,7 @@ public:
     /// destroy the geometry object in the ospray scene graph.
     ///   \param renderParam An HdOSPRayRenderParam object containing top-level
     ///                      ospray state.
-    virtual void Finalize(HdRenderParam *renderParam) override;
+    virtual void Finalize(HdRenderParam* renderParam) override;
 
     /// Pull invalidated scene data and prepare/update the renderable
     /// representation.
@@ -121,15 +120,13 @@ public:
     ///   \param reprName A specifier for which representation to draw with.
     ///   \param forcedRepr A specifier for how to resolve reprName opinions.
     ///
-    virtual void Sync(HdSceneDelegate   *sceneDelegate,
-                      HdRenderParam     *renderParam,
-                      HdDirtyBits       *dirtyBits,
-                      TfToken const     &reprToken) override;
+    virtual void Sync(HdSceneDelegate* sceneDelegate,
+                      HdRenderParam* renderParam, HdDirtyBits* dirtyBits,
+                      TfToken const& reprToken) override;
 
 protected:
-
-    bool _UseQuadIndices(const HdRenderIndex &renderIndex,
-                         HdMeshTopology const & topology) const;
+    bool _UseQuadIndices(const HdRenderIndex& renderIndex,
+                         HdMeshTopology const& topology) const;
 
     // This callback from Rprim gives the prim an opportunity to set
     // additional dirty bits based on those already set.  This is done
@@ -156,22 +153,19 @@ protected:
     // repr is synced.  InitRepr occurs before dirty bit propagation.
     //
     // See HdRprim::InitRepr()
-    virtual void _InitRepr(TfToken const &reprToken,
-                           HdDirtyBits *dirtyBits) override;
+    virtual void _InitRepr(TfToken const& reprToken,
+                           HdDirtyBits* dirtyBits) override;
 
-    void _UpdateDrawItemGeometricShader(HdSceneDelegate *sceneDelegate,
-                                        HdStDrawItem *drawItem,
-                                        const HdMeshReprDesc &desc,
+    void _UpdateDrawItemGeometricShader(HdSceneDelegate* sceneDelegate,
+                                        HdStDrawItem* drawItem,
+                                        const HdMeshReprDesc& desc,
                                         size_t drawItemIdForDesc);
 
 private:
-
     // Populate the ospray geometry object based on scene data.
-    void _PopulateOSPMesh(HdSceneDelegate *sceneDelegate,
-                         OSPModel model,
-                         OSPRenderer renderer,
-                         HdDirtyBits *dirtyBits,
-                         HdMeshReprDesc const &desc);
+    void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
+                          OSPRenderer renderer, HdDirtyBits* dirtyBits,
+                          HdMeshReprDesc const& desc);
 
     // Populate _primvarSourceMap (our local cache of primvar data) based on
     // scene data. Primvars will be turned into samplers in _PopulateRtMesh,
@@ -184,8 +178,7 @@ private:
     // This function's main purpose is to resolve the (interpolation, refined)
     // tuple into the concrete primvar sampler type.
     void _CreatePrimvarSampler(TfToken const& name, VtValue const& data,
-                               HdInterpolation interpolation,
-                               bool refined);
+                               HdInterpolation interpolation, bool refined);
 
     // Every HdOSPRayMesh is treated as instanced; if there's no instancer,
     // the prototype has a single identity istance.
@@ -244,8 +237,8 @@ private:
     TfHashMap<TfToken, PrimvarSource, TfToken::HashFunctor> _primvarSourceMap;
 
     // This class does not support copying.
-    HdOSPRayMesh(const HdOSPRayMesh&)             = delete;
-    HdOSPRayMesh &operator =(const HdOSPRayMesh&) = delete;
+    HdOSPRayMesh(const HdOSPRayMesh&) = delete;
+    HdOSPRayMesh& operator=(const HdOSPRayMesh&) = delete;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

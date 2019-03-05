@@ -52,7 +52,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 class HdOSPRayTypeHelper {
 public:
     /// Return the HdTupleType corresponding to the given C++ type.
-    template<typename T>
+    template <typename T>
     static HdTupleType GetTupleType();
 
     /// Define a type that can hold one sample of any primvar.
@@ -61,29 +61,32 @@ public:
 
 // Define template specializations of HdOSPRayTypeHelper methods for
 // all our supported types...
-#define TYPE_HELPER(T,type)\
-template<> inline HdTupleType \
-HdOSPRayTypeHelper::GetTupleType<T>() { return HdTupleType{type, 1}; }
+#define TYPE_HELPER(T, type)                                                   \
+    template <>                                                                \
+    inline HdTupleType HdOSPRayTypeHelper::GetTupleType<T>()                   \
+    {                                                                          \
+        return HdTupleType { type, 1 };                                        \
+    }
 
-    TYPE_HELPER(bool, HdTypeBool)
-    TYPE_HELPER(char, HdTypeInt8)
-    TYPE_HELPER(short, HdTypeInt16)
-    TYPE_HELPER(unsigned short, HdTypeUInt16)
-    TYPE_HELPER(int, HdTypeInt32)
-    TYPE_HELPER(GfVec2i, HdTypeInt32Vec2)
-    TYPE_HELPER(GfVec3i, HdTypeInt32Vec3)
-    TYPE_HELPER(GfVec4i, HdTypeInt32Vec4)
-    TYPE_HELPER(unsigned int, HdTypeUInt32)
-    TYPE_HELPER(float, HdTypeFloat)
-    TYPE_HELPER(GfVec2f, HdTypeFloatVec2)
-    TYPE_HELPER(GfVec3f, HdTypeFloatVec3)
-    TYPE_HELPER(GfVec4f, HdTypeFloatVec4)
-    TYPE_HELPER(double, HdTypeDouble)
-    TYPE_HELPER(GfVec2d, HdTypeDoubleVec2)
-    TYPE_HELPER(GfVec3d, HdTypeDoubleVec3)
-    TYPE_HELPER(GfVec4d, HdTypeDoubleVec4)
-    TYPE_HELPER(GfMatrix4f, HdTypeFloatMat4)
-    TYPE_HELPER(GfMatrix4d, HdTypeDoubleMat4)
+TYPE_HELPER(bool, HdTypeBool)
+TYPE_HELPER(char, HdTypeInt8)
+TYPE_HELPER(short, HdTypeInt16)
+TYPE_HELPER(unsigned short, HdTypeUInt16)
+TYPE_HELPER(int, HdTypeInt32)
+TYPE_HELPER(GfVec2i, HdTypeInt32Vec2)
+TYPE_HELPER(GfVec3i, HdTypeInt32Vec3)
+TYPE_HELPER(GfVec4i, HdTypeInt32Vec4)
+TYPE_HELPER(unsigned int, HdTypeUInt32)
+TYPE_HELPER(float, HdTypeFloat)
+TYPE_HELPER(GfVec2f, HdTypeFloatVec2)
+TYPE_HELPER(GfVec3f, HdTypeFloatVec3)
+TYPE_HELPER(GfVec4f, HdTypeFloatVec4)
+TYPE_HELPER(double, HdTypeDouble)
+TYPE_HELPER(GfVec2d, HdTypeDoubleVec2)
+TYPE_HELPER(GfVec3d, HdTypeDoubleVec3)
+TYPE_HELPER(GfVec4d, HdTypeDoubleVec4)
+TYPE_HELPER(GfMatrix4f, HdTypeFloatMat4)
+TYPE_HELPER(GfMatrix4d, HdTypeDoubleMat4)
 #undef TYPE_HELPER
 
 /// \class HdOSPRayBufferSampler
@@ -101,8 +104,9 @@ public:
     /// is alive while Sample() is being called.
     /// \param buffer The buffer being sampled.
     HdOSPRayBufferSampler(HdVtBufferSource const& buffer)
-        : _buffer(buffer) {}
-
+        : _buffer(buffer)
+    {
+    }
 
     /// Sample the buffer at element index \p index, and write the sample to
     /// \p value. Interpret \p value as having arity \p numComponents, each of
@@ -120,9 +124,11 @@ public:
     bool Sample(int index, void* value, HdTupleType dataType) const;
 
     // Convenient, templated frontend for Sample().
-    template<typename T> bool Sample(int index, T* value) const {
+    template <typename T>
+    bool Sample(int index, T* value) const
+    {
         return Sample(index, static_cast<void*>(value),
-            HdOSPRayTypeHelper::GetTupleType<T>());
+                      HdOSPRayTypeHelper::GetTupleType<T>());
     }
 
 private:

@@ -23,8 +23,8 @@
 //
 #include "pxr/imaging/hdOSPRay/rendererPlugin.h"
 
-#include "pxr/imaging/hdx/rendererPluginRegistry.h"
 #include "pxr/imaging/hdOSPRay/renderDelegate.h"
+#include "pxr/imaging/hdx/rendererPluginRegistry.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -41,7 +41,7 @@ HdOSPRayRendererPlugin::CreateRenderDelegate()
 }
 
 void
-HdOSPRayRendererPlugin::DeleteRenderDelegate(HdRenderDelegate *renderDelegate)
+HdOSPRayRendererPlugin::DeleteRenderDelegate(HdRenderDelegate* renderDelegate)
 {
     delete renderDelegate;
 }

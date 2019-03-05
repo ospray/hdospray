@@ -23,22 +23,22 @@
 //
 #include "pxr/pxr.h"
 
-#include "pxr/imaging/glf/glew.h"
 #include "pxr/imaging/glf/drawTarget.h"
+#include "pxr/imaging/glf/glew.h"
 #include "pxr/imaging/glf/image.h"
 
 #include "pxr/imaging/hd/engine.h"
-#include "pxr/imaging/hdSt/unitTestGLDrawing.h"
 #include "pxr/imaging/hd/unitTestDelegate.h"
 #include "pxr/imaging/hdSt/glConversions.h"
+#include "pxr/imaging/hdSt/unitTestGLDrawing.h"
 
 #include "pxr/imaging/hdx/renderTask.h"
 
 #include "pxr/imaging/hd/camera.h"
 #include "pxr/imaging/hd/renderBuffer.h"
 
-#include "pxr/imaging/hdOSPRay/rendererPlugin.h"
 #include "pxr/imaging/hdOSPRay/renderDelegate.h"
+#include "pxr/imaging/hdOSPRay/rendererPlugin.h"
 
 #include "pxr/base/tf/errorMark.h"
 
@@ -60,7 +60,7 @@ public:
         , _refined(false)
         , _outputName("color1.png")
     {
-        SetCameraRotate(0,0);
+        SetCameraRotate(0, 0);
         SetCameraTranslate(GfVec3f(0));
     }
 
@@ -75,10 +75,9 @@ public:
 
 protected:
     // Give the test class a chance to parse command line arguments.
-    virtual void ParseArgs(int argc, char *argv[]);
+    virtual void ParseArgs(int argc, char* argv[]);
 
 private:
-
     // HdEngine is the entry point for generating images with hydra. The
     // data-flow is as follows:
     //
@@ -109,10 +108,10 @@ private:
     // are a discoverable way to create render delegates.
 
     HdEngine _engine;
-    HdOSPRayRendererPlugin *_rendererPlugin;
-    HdRenderDelegate *_renderDelegate;
-    HdRenderIndex *_renderIndex;
-    HdUnitTestDelegate *_sceneDelegate;
+    HdOSPRayRendererPlugin* _rendererPlugin;
+    HdRenderDelegate* _renderDelegate;
+    HdRenderIndex* _renderIndex;
+    HdUnitTestDelegate* _sceneDelegate;
 
     // Scene options:
     // - Use smooth normals, or flat normals?
@@ -129,17 +128,18 @@ private:
 
     // For depth AOV rendering, we need to rescale the final image to
     // [0, 1] in order to write it to an image.
-    void _RescaleDepth(float *buffer, int size);
+    void _RescaleDepth(float* buffer, int size);
 
     // For primId AOV rendering, we need to colorize the ids in order to
     // write it to an image.
-    void _ColorizeId(int32_t *buffer, int size);
+    void _ColorizeId(int32_t* buffer, int size);
 
     // For offscreen tests, what file do we write to?
     std::string _outputName;
 };
 
-void HdOSPRay_TestGLDrawing::InitTest()
+void
+HdOSPRay_TestGLDrawing::InitTest()
 {
     // This test bypasses the hydra plugin system; it creates an embree
     // renderer plugin directly, and then a render delegate, and then
@@ -154,8 +154,8 @@ void HdOSPRay_TestGLDrawing::InitTest()
     TF_VERIFY(_renderIndex != nullptr);
 
     // Construct a new scene delegate to populate the render index.
-    _sceneDelegate = new HdUnitTestDelegate(
-            _renderIndex, SdfPath::AbsoluteRootPath());
+    _sceneDelegate
+           = new HdUnitTestDelegate(_renderIndex, SdfPath::AbsoluteRootPath());
     TF_VERIFY(_sceneDelegate != nullptr);
 
     // Create a camera (it's populated later).
@@ -188,8 +188,8 @@ void HdOSPRay_TestGLDrawing::InitTest()
         }
         attach.renderBufferId = renderBuffer;
         _sceneDelegate->AddRenderBuffer(renderBuffer,
-            GfVec3i(GetWidth(), GetHeight(), 1),
-            format, false);
+                                        GfVec3i(GetWidth(), GetHeight(), 1),
+                                        format, false);
     }
 
     // Params is a general argument structure to the render task.
@@ -218,20 +218,24 @@ void HdOSPRay_TestGLDrawing::InitTest()
     // - HdReprTokens->refined is the smooth-shaded, refined mesh.
 
     if (_refined) {
-        _sceneDelegate->UpdateTask(renderTask, HdTokens->collection,
-                VtValue(HdRprimCollection(HdTokens->geometry,
-                HdReprSelector(HdReprTokens->refined))));
+        _sceneDelegate->UpdateTask(
+               renderTask, HdTokens->collection,
+               VtValue(HdRprimCollection(
+                      HdTokens->geometry,
+                      HdReprSelector(HdReprTokens->refined))));
     } else {
-        _sceneDelegate->UpdateTask(renderTask, HdTokens->collection,
-                VtValue(HdRprimCollection(HdTokens->geometry,
-                HdReprSelector(_smooth ? HdReprTokens->smoothHull
-                                       : HdReprTokens->hull))));
+        _sceneDelegate->UpdateTask(
+               renderTask, HdTokens->collection,
+               VtValue(HdRprimCollection(
+                      HdTokens->geometry,
+                      HdReprSelector(_smooth ? HdReprTokens->smoothHull
+                                             : HdReprTokens->hull))));
     }
 
     // Tasks can have child tasks that get scheduled together.
     // We don't use this here.
     _sceneDelegate->UpdateTask(renderTask, HdTokens->children,
-            VtValue(SdfPathVector()));
+                               VtValue(SdfPathVector()));
 
     if (_instance) {
         // Instanced scene. Add test geometry:
@@ -240,8 +244,8 @@ void HdOSPRay_TestGLDrawing::InitTest()
         //    (-3, 0, 5),
         //    ( 3, 0, 5)
         _sceneDelegate->AddInstancer(SdfPath("/instancer"));
-        _sceneDelegate->AddCube(SdfPath("/protoCube"), GfMatrix4f(1),
-                                false, SdfPath("/instancer"));
+        _sceneDelegate->AddCube(SdfPath("/protoCube"), GfMatrix4f(1), false,
+                                SdfPath("/instancer"));
 
         VtIntArray index;
         VtVec3fArray translate, scale;
@@ -257,10 +261,9 @@ void HdOSPRay_TestGLDrawing::InitTest()
         rotate.push_back(GfVec4f(1, 0, 0, 0));
         scale.push_back(GfVec3f(1, 1, 1));
 
-        _sceneDelegate->SetInstancerProperties(SdfPath("/instancer"),
-            index, scale, rotate, translate);
-    }
-    else {
+        _sceneDelegate->SetInstancerProperties(SdfPath("/instancer"), index,
+                                               scale, rotate, translate);
+    } else {
         // Un-instanced scene. Add test geometry:
         // - A grid on the XY plane, uniformly scaled up by 10.
         // - A cube at (-3, 0, 5).
@@ -269,12 +272,12 @@ void HdOSPRay_TestGLDrawing::InitTest()
         _sceneDelegate->AddGrid(SdfPath("/grid"), 1, 1, GfMatrix4f(gridXf));
 
         GfMatrix4d cube1Xf(1);
-        cube1Xf.SetTranslateOnly(GfVec3d(-5,0,1));
+        cube1Xf.SetTranslateOnly(GfVec3d(-5, 0, 1));
         _sceneDelegate->AddCube(SdfPath("/cube1"), GfMatrix4f(cube1Xf));
 
         GfMatrix4d cube2Xf(1);
-        cube2Xf.SetRotateOnly(GfRotation(GfVec3d(0,0,1), 30));
-        cube2Xf.SetTranslateOnly(GfVec3d(5,0,1));
+        cube2Xf.SetRotateOnly(GfRotation(GfVec3d(0, 0, 1), 30));
+        cube2Xf.SetTranslateOnly(GfVec3d(5, 0, 1));
         _sceneDelegate->AddCube(SdfPath("/cube2"), GfMatrix4f(cube2Xf));
     }
 
@@ -290,15 +293,14 @@ void HdOSPRay_TestGLDrawing::InitTest()
     frustum.SetPosition(GfVec3d(0, -5, 10));
     frustum.SetRotation(GfRotation(GfVec3d(1, 0, 0), 45));
 
-    _sceneDelegate->UpdateCamera(camera,
-        HdCameraTokens->worldToViewMatrix,
-        VtValue(frustum.ComputeViewMatrix()));
-    _sceneDelegate->UpdateCamera(camera,
-        HdCameraTokens->projectionMatrix,
-        VtValue(frustum.ComputeProjectionMatrix()));
+    _sceneDelegate->UpdateCamera(camera, HdCameraTokens->worldToViewMatrix,
+                                 VtValue(frustum.ComputeViewMatrix()));
+    _sceneDelegate->UpdateCamera(camera, HdCameraTokens->projectionMatrix,
+                                 VtValue(frustum.ComputeProjectionMatrix()));
 };
 
-void HdOSPRay_TestGLDrawing::DrawTest()
+void
+HdOSPRay_TestGLDrawing::DrawTest()
 {
     // The GL viewport needs to be set before calling execute.
     glViewport(0, 0, GetWidth(), GetHeight());
@@ -311,7 +313,8 @@ void HdOSPRay_TestGLDrawing::DrawTest()
     // We don't support live-rendering of AOV output in this test...
 }
 
-void HdOSPRay_TestGLDrawing::_RescaleDepth(float *buffer, int size)
+void
+HdOSPRay_TestGLDrawing::_RescaleDepth(float* buffer, int size)
 {
     // Normalize everything in the buffer to be in the range [0,1].
     float maxDepth = 0.0f;
@@ -326,18 +329,12 @@ void HdOSPRay_TestGLDrawing::_RescaleDepth(float *buffer, int size)
     }
 }
 
-void HdOSPRay_TestGLDrawing::_ColorizeId(int32_t *buffer, int size)
+void
+HdOSPRay_TestGLDrawing::_ColorizeId(int32_t* buffer, int size)
 {
     // As we come across unique primId values, map them to a color in our list.
-    uint32_t colors[] = {
-        0xff00ff00,
-        0xffd0e040,
-        0xff3c14dc,
-        0xffff00ff,
-        0xff2a2aa5,
-        0xff83004b,
-        0xff808000
-    };
+    uint32_t colors[] = { 0xff00ff00, 0xffd0e040, 0xff3c14dc, 0xffff00ff,
+                          0xff2a2aa5, 0xff83004b, 0xff808000 };
     int nextColor = 0;
     std::map<int32_t, int32_t> primToColorMap;
 
@@ -347,24 +344,25 @@ void HdOSPRay_TestGLDrawing::_ColorizeId(int32_t *buffer, int size)
         }
         auto it = primToColorMap.find(buffer[i]);
         if (it == primToColorMap.end()) {
-            primToColorMap[buffer[i]] =
-                *reinterpret_cast<int32_t*>(&colors[nextColor]);
+            primToColorMap[buffer[i]]
+                   = *reinterpret_cast<int32_t*>(&colors[nextColor]);
             it = primToColorMap.find(buffer[i]);
-            nextColor = (nextColor+1) % (sizeof(colors)/sizeof(colors[0]));
+            nextColor = (nextColor + 1) % (sizeof(colors) / sizeof(colors[0]));
         }
         buffer[i] = it->second;
     }
 }
 
-void HdOSPRay_TestGLDrawing::OffscreenTest()
+void
+HdOSPRay_TestGLDrawing::OffscreenTest()
 {
     // Render and write out to a file.
     glViewport(0, 0, GetWidth(), GetHeight());
 
     // Ask hydra to execute our render task (producing an image).
-    boost::shared_ptr<HdxRenderTask> renderTask =
-        boost::static_pointer_cast<HdxRenderTask>(
-            _renderIndex->GetTask(SdfPath("/renderTask")));
+    boost::shared_ptr<HdxRenderTask> renderTask
+           = boost::static_pointer_cast<HdxRenderTask>(
+                  _renderIndex->GetTask(SdfPath("/renderTask")));
 
     // For offline rendering, make sure we render to convergence.
     HdTaskSharedPtrVector tasks = { renderTask };
@@ -374,9 +372,9 @@ void HdOSPRay_TestGLDrawing::OffscreenTest()
 
     if (_aov.size() > 0) {
         // For AOVs, write them out as the appropriate type of image.
-        HdRenderBuffer *rb = static_cast<HdRenderBuffer*>(
-            _renderIndex->GetBprim(HdPrimTypeTokens->renderBuffer,
-                                   SdfPath("/renderBuffer")));
+        HdRenderBuffer* rb = static_cast<HdRenderBuffer*>(
+               _renderIndex->GetBprim(HdPrimTypeTokens->renderBuffer,
+                                      SdfPath("/renderBuffer")));
 
         // We need to resolve the buffer before we read it, to process
         // multisampled color, etc.
@@ -386,8 +384,8 @@ void HdOSPRay_TestGLDrawing::OffscreenTest()
         GlfImage::StorageSpec storage;
         storage.width = rb->GetWidth();
         storage.height = rb->GetHeight();
-        HdStGLConversions::GetGlFormat(rb->GetFormat(),
-            &storage.format, &storage.type, &unused);
+        HdStGLConversions::GetGlFormat(rb->GetFormat(), &storage.format,
+                                       &storage.type, &unused);
         storage.flipped = true;
         storage.data = rb->Map();
 
@@ -397,12 +395,12 @@ void HdOSPRay_TestGLDrawing::OffscreenTest()
         // support.
         if (_aov == "linearDepth") {
             _RescaleDepth(reinterpret_cast<float*>(storage.data),
-                storage.width*storage.height);
+                          storage.width * storage.height);
         } else if (_aov == "primId") {
             storage.format = GL_RGBA;
             storage.type = GL_UNSIGNED_BYTE;
             _ColorizeId(reinterpret_cast<int32_t*>(storage.data),
-                storage.width*storage.height);
+                        storage.width * storage.height);
         }
 
         VtDictionary metadata;
@@ -421,7 +419,8 @@ void HdOSPRay_TestGLDrawing::OffscreenTest()
     }
 }
 
-void HdOSPRay_TestGLDrawing::UninitTest()
+void
+HdOSPRay_TestGLDrawing::UninitTest()
 {
     // Deconstruct hydra state.
     delete _sceneDelegate;
@@ -430,7 +429,8 @@ void HdOSPRay_TestGLDrawing::UninitTest()
     delete _rendererPlugin;
 }
 
-void HdOSPRay_TestGLDrawing::ParseArgs(int argc, char *argv[])
+void
+HdOSPRay_TestGLDrawing::ParseArgs(int argc, char* argv[])
 {
     // Parse command line for variant switches:
     // - Flat/smooth shading (default = flat)
@@ -438,7 +438,7 @@ void HdOSPRay_TestGLDrawing::ParseArgs(int argc, char *argv[])
     // - Whether to refine (default = no)
     // - whether to use AOVs for output, and if so which aov?
     // - Where to write offscreen test output.
-    for (int i=0; i<argc; ++i) {
+    for (int i = 0; i < argc; ++i) {
         if (std::string(argv[i]) == "--flat") {
             _smooth = false;
         } else if (std::string(argv[i]) == "--smooth") {
@@ -447,26 +447,25 @@ void HdOSPRay_TestGLDrawing::ParseArgs(int argc, char *argv[])
             _instance = true;
         } else if (std::string(argv[i]) == "--refined") {
             _refined = true;
-        } else if (std::string(argv[i]) == "--aov" &&
-                   (i+1) < argc) {
-            _aov = std::string(argv[i+1]);
+        } else if (std::string(argv[i]) == "--aov" && (i + 1) < argc) {
+            _aov = std::string(argv[i + 1]);
             ++i;
-        } else if (std::string(argv[i]) == "--write" &&
-                   (i+1) < argc) {
-            _outputName = std::string(argv[i+1]);
+        } else if (std::string(argv[i]) == "--write" && (i + 1) < argc) {
+            _outputName = std::string(argv[i + 1]);
             ++i;
         }
     }
 
     // AOV only supports "color", "linearDepth", and "primId" currently.
-    if (_aov.size() > 0 &&
-        _aov != "color" && _aov != "linearDepth" && _aov != "primId") {
+    if (_aov.size() > 0 && _aov != "color" && _aov != "linearDepth"
+        && _aov != "primId") {
         TF_WARN("Unrecognized AOV token '%s'", _aov.c_str());
         exit(EXIT_FAILURE);
     }
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char* argv[])
 {
     TfErrorMark mark;
 

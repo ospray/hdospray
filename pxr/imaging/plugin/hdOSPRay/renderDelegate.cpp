@@ -21,8 +21,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/imaging/glf/glew.h"
 #include "pxr/imaging/hdOSPRay/renderDelegate.h"
+#include "pxr/imaging/glf/glew.h"
 
 #include "pxr/imaging/hdOSPRay/config.h"
 #include "pxr/imaging/hdOSPRay/instancer.h"
@@ -31,13 +31,13 @@
 
 #include "pxr/imaging/hd/resourceRegistry.h"
 
-#include "pxr/imaging/hdOSPRay/mesh.h"
 #include "pxr/imaging/hdOSPRay/material.h"
-//XXX: Add other Rprim types later
+#include "pxr/imaging/hdOSPRay/mesh.h"
+// XXX: Add other Rprim types later
 #include "pxr/imaging/hd/camera.h"
-//XXX: Add other Sprim types later
+// XXX: Add other Sprim types later
 #include "pxr/imaging/hd/bprim.h"
-//XXX: Add bprim types
+// XXX: Add bprim types
 #include "pxr/imaging/hdSt/material.h"
 
 #include <iostream>
@@ -46,84 +46,79 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 TF_DEFINE_PUBLIC_TOKENS(HdOSPRayTokens, HDOSPRAY_TOKENS);
 
-const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_RPRIM_TYPES =
-{
+const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_RPRIM_TYPES = {
     HdPrimTypeTokens->mesh,
 };
 
-const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES =
-{
+const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES = {
     HdPrimTypeTokens->camera,
     HdPrimTypeTokens->material,
 };
 
-const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES =
-{
-};
+const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {};
 
 std::mutex HdOSPRayRenderDelegate::_mutexResourceRegistry;
 std::atomic_int HdOSPRayRenderDelegate::_counterResourceRegistry;
 HdResourceRegistrySharedPtr HdOSPRayRenderDelegate::_resourceRegistry;
 
-
 HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
 {
-  int ac=1;
-  std::string initArgs = HdOSPRayConfig::GetInstance().initArgs;
-  std::stringstream ss(initArgs);
-  std::string arg;
-  std::vector<std::string> args;
-  while (ss >> arg) {
-    args.push_back(arg);
-  }
-  ac = static_cast<int>(args.size()+1);
-  const char** av = new const char*[ac];
-  av[0] = "ospray";
-  for(int i=1;i < ac; i++) {
-    av[i] = args[i - 1].c_str();
-  }
-  int init_error = ospInit(&ac,av);
-  if (init_error != OSP_NO_ERROR) {
-    std::cerr << "FATAL ERROR DURING INITIALIZATION!" << std::endl;
-  } else {
-    auto device = ospGetCurrentDevice();
-    if (device == nullptr) {
-        std::cerr << "FATAL ERROR DURING GETTING CURRENT DEVICE!" << std::endl;
+    int ac = 1;
+    std::string initArgs = HdOSPRayConfig::GetInstance().initArgs;
+    std::stringstream ss(initArgs);
+    std::string arg;
+    std::vector<std::string> args;
+    while (ss >> arg) {
+        args.push_back(arg);
     }
-    
-    ospDeviceSetStatusFunc(device, [](const char *msg) { std::cout << msg; });
-    ospDeviceSetErrorFunc(device, [](OSPError e, const char *msg) {
-        std::cerr << "OSPRAY ERROR [" << e << "]: " << msg << std::endl;
-    });
-    
-    ospDeviceCommit(device);
-  }
-  if (ospGetCurrentDevice() == nullptr)
-  {
-    //user most likely specified bad arguments, retry without them
-    ac = 1;
-    ospInit(&ac, av);
-  }
-  delete [] av;
+    ac = static_cast<int>(args.size() + 1);
+    const char** av = new const char*[ac];
+    av[0] = "ospray";
+    for (int i = 1; i < ac; i++) {
+        av[i] = args[i - 1].c_str();
+    }
+    int init_error = ospInit(&ac, av);
+    if (init_error != OSP_NO_ERROR) {
+        std::cerr << "FATAL ERROR DURING INITIALIZATION!" << std::endl;
+    } else {
+        auto device = ospGetCurrentDevice();
+        if (device == nullptr) {
+            std::cerr << "FATAL ERROR DURING GETTING CURRENT DEVICE!"
+                      << std::endl;
+        }
 
-  _model = ospNewModel();
-  ospCommit(_model);
-  if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
-    _renderer = ospNewRenderer("pt");
-  else
-    _renderer = ospNewRenderer("sv");
+        ospDeviceSetStatusFunc(device,
+                               [](const char* msg) { std::cout << msg; });
+        ospDeviceSetErrorFunc(device, [](OSPError e, const char* msg) {
+            std::cerr << "OSPRAY ERROR [" << e << "]: " << msg << std::endl;
+        });
+
+        ospDeviceCommit(device);
+    }
+    if (ospGetCurrentDevice() == nullptr) {
+        // user most likely specified bad arguments, retry without them
+        ac = 1;
+        ospInit(&ac, av);
+    }
+    delete[] av;
+
+    _model = ospNewModel();
+    ospCommit(_model);
+    if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
+        _renderer = ospNewRenderer("pt");
+    else
+        _renderer = ospNewRenderer("sv");
 
     // Store top-level embree objects inside a render param that can be
     // passed to prims during Sync().
-    _renderParam =
-        std::make_shared<HdOSPRayRenderParam>(_model, _renderer, &_sceneVersion);
-
+    _renderParam = std::make_shared<HdOSPRayRenderParam>(_model, _renderer,
+                                                         &_sceneVersion);
 
     // Initialize one resource registry for all embree plugins
     std::lock_guard<std::mutex> guard(_mutexResourceRegistry);
 
     if (_counterResourceRegistry.fetch_add(1) == 0) {
-        _resourceRegistry.reset( new HdResourceRegistry() );
+        _resourceRegistry.reset(new HdResourceRegistry());
     }
 }
 
@@ -146,16 +141,19 @@ HdOSPRayRenderDelegate::GetRenderParam() const
 }
 
 void
-HdOSPRayRenderDelegate::CommitResources(HdChangeTracker *tracker)
+HdOSPRayRenderDelegate::CommitResources(HdChangeTracker* tracker)
 {
     // CommitResources() is called after prim sync has finished, but before any
     // tasks (such as draw tasks) have run.
 }
 
-TfToken HdOSPRayRenderDelegate::GetMaterialNetworkSelector() const {
-  //Carson: this should be "HdOSPRayTokens->ospray", but we return glslfx so that we work with many supplied shaders
-  // TODO: is it possible to return both?
-  return HdOSPRayTokens->glslfx;
+TfToken
+HdOSPRayRenderDelegate::GetMaterialNetworkSelector() const
+{
+    // Carson: this should be "HdOSPRayTokens->ospray", but we return glslfx so
+    // that we work with many supplied shaders
+    // TODO: is it possible to return both?
+    return HdOSPRayTokens->glslfx;
 }
 
 TfTokenVector const&
@@ -209,15 +207,15 @@ HdOSPRayRenderDelegate::GetDefaultAovDescriptor(TfToken const& name) const
 }
 
 HdRenderPassSharedPtr
-HdOSPRayRenderDelegate::CreateRenderPass(HdRenderIndex *index,
-                            HdRprimCollection const& collection)
+HdOSPRayRenderDelegate::CreateRenderPass(HdRenderIndex* index,
+                                         HdRprimCollection const& collection)
 {
-    return HdRenderPassSharedPtr(
-        new HdOSPRayRenderPass(index, collection, _model, _renderer, &_sceneVersion));
+    return HdRenderPassSharedPtr(new HdOSPRayRenderPass(
+           index, collection, _model, _renderer, &_sceneVersion));
 }
 
-HdInstancer *
-HdOSPRayRenderDelegate::CreateInstancer(HdSceneDelegate *delegate,
+HdInstancer*
+HdOSPRayRenderDelegate::CreateInstancer(HdSceneDelegate* delegate,
                                         SdfPath const& id,
                                         SdfPath const& instancerId)
 {
@@ -225,12 +223,12 @@ HdOSPRayRenderDelegate::CreateInstancer(HdSceneDelegate *delegate,
 }
 
 void
-HdOSPRayRenderDelegate::DestroyInstancer(HdInstancer *instancer)
+HdOSPRayRenderDelegate::DestroyInstancer(HdInstancer* instancer)
 {
     delete instancer;
 }
 
-HdRprim *
+HdRprim*
 HdOSPRayRenderDelegate::CreateRprim(TfToken const& typeId,
                                     SdfPath const& rprimId,
                                     SdfPath const& instancerId)
@@ -245,19 +243,19 @@ HdOSPRayRenderDelegate::CreateRprim(TfToken const& typeId,
 }
 
 void
-HdOSPRayRenderDelegate::DestroyRprim(HdRprim *rPrim)
+HdOSPRayRenderDelegate::DestroyRprim(HdRprim* rPrim)
 {
     delete rPrim;
 }
 
-HdSprim *
+HdSprim*
 HdOSPRayRenderDelegate::CreateSprim(TfToken const& typeId,
                                     SdfPath const& sprimId)
 {
     if (typeId == HdPrimTypeTokens->camera) {
-      return new HdCamera(sprimId);
+        return new HdCamera(sprimId);
     } else if (typeId == HdPrimTypeTokens->material) {
-      return new HdOSPRayMaterial(sprimId);
+        return new HdOSPRayMaterial(sprimId);
     } else {
         TF_CODING_ERROR("Unknown Sprim Type %s", typeId.GetText());
     }
@@ -265,7 +263,7 @@ HdOSPRayRenderDelegate::CreateSprim(TfToken const& typeId,
     return nullptr;
 }
 
-HdSprim *
+HdSprim*
 HdOSPRayRenderDelegate::CreateFallbackSprim(TfToken const& typeId)
 {
     // For fallback sprims, create objects with an empty scene path.
@@ -274,26 +272,26 @@ HdOSPRayRenderDelegate::CreateFallbackSprim(TfToken const& typeId)
 }
 
 void
-HdOSPRayRenderDelegate::DestroySprim(HdSprim *sPrim)
+HdOSPRayRenderDelegate::DestroySprim(HdSprim* sPrim)
 {
     delete sPrim;
 }
 
-HdBprim *
+HdBprim*
 HdOSPRayRenderDelegate::CreateBprim(TfToken const& typeId,
                                     SdfPath const& bprimId)
 {
     return nullptr;
 }
 
-HdBprim *
+HdBprim*
 HdOSPRayRenderDelegate::CreateFallbackBprim(TfToken const& typeId)
 {
     return CreateBprim(typeId, SdfPath::EmptyPath());
 }
 
 void
-HdOSPRayRenderDelegate::DestroyBprim(HdBprim *bPrim)
+HdOSPRayRenderDelegate::DestroyBprim(HdBprim* bPrim)
 {
     delete bPrim;
 }

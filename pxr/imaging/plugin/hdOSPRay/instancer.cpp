@@ -25,14 +25,14 @@
 
 #include "pxr/imaging/hdOSPRay/instancer.h"
 
-#include "pxr/imaging/hdOSPRay/sampler.h"
 #include "pxr/imaging/hd/sceneDelegate.h"
+#include "pxr/imaging/hdOSPRay/sampler.h"
 
+#include "pxr/base/gf/matrix4d.h"
+#include "pxr/base/gf/quaternion.h"
+#include "pxr/base/gf/rotation.h"
 #include "pxr/base/gf/vec3f.h"
 #include "pxr/base/gf/vec4f.h"
-#include "pxr/base/gf/matrix4d.h"
-#include "pxr/base/gf/rotation.h"
-#include "pxr/base/gf/quaternion.h"
 #include "pxr/base/tf/staticTokens.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -40,6 +40,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 // Define local tokens for the names of the primvars the instancer
 // consumes.
 // XXX: These should be hydra tokens...
+// clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
     _tokens,
     (instanceTransform)
@@ -47,17 +48,17 @@ TF_DEFINE_PRIVATE_TOKENS(
     (scale)
     (translate)
 );
+// clang-format on
 
 HdOSPRayInstancer::HdOSPRayInstancer(HdSceneDelegate* delegate,
-                                     SdfPath const& id,
-                                     SdfPath const &parentId)
+                                     SdfPath const& id, SdfPath const& parentId)
     : HdInstancer(delegate, id, parentId)
 {
 }
 
 HdOSPRayInstancer::~HdOSPRayInstancer()
 {
-    TF_FOR_ALL(it, _primvarMap) {
+    TF_FOR_ALL (it, _primvarMap) {
         delete it->second;
     }
     _primvarMap.clear();
@@ -69,8 +70,8 @@ HdOSPRayInstancer::_SyncPrimvars()
     HD_TRACE_FUNCTION();
     HF_MALLOC_TAG_FUNCTION();
 
-    HdChangeTracker &changeTracker =
-        GetDelegate()->GetRenderIndex().GetChangeTracker();
+    HdChangeTracker& changeTracker
+           = GetDelegate()->GetRenderIndex().GetChangeTracker();
     SdfPath const& id = GetId();
 
     // Use the double-checked locking pattern to check if this instancer's
@@ -86,18 +87,19 @@ HdOSPRayInstancer::_SyncPrimvars()
             // primvar names and then cache each one.
 
             TfTokenVector primvarNames;
-            HdPrimvarDescriptorVector primvars = GetDelegate()
-                ->GetPrimvarDescriptors(id, HdInterpolationInstance);
+            HdPrimvarDescriptorVector primvars
+                   = GetDelegate()->GetPrimvarDescriptors(
+                          id, HdInterpolationInstance);
 
-            for (HdPrimvarDescriptor const& pv: primvars) {
+            for (HdPrimvarDescriptor const& pv : primvars) {
                 if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, pv.name)) {
                     VtValue value = GetDelegate()->Get(id, pv.name);
                     if (!value.IsEmpty()) {
                         if (_primvarMap.count(pv.name) > 0) {
                             delete _primvarMap[pv.name];
                         }
-                        _primvarMap[pv.name] =
-                            new HdVtBufferSource(pv.name, value);
+                        _primvarMap[pv.name]
+                               = new HdVtBufferSource(pv.name, value);
                     }
                 }
             }
@@ -109,7 +111,7 @@ HdOSPRayInstancer::_SyncPrimvars()
 }
 
 VtMatrix4dArray
-HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const &prototypeId)
+HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const& prototypeId)
 {
     HD_TRACE_FUNCTION();
     HF_MALLOC_TAG_FUNCTION();
@@ -123,10 +125,10 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const &prototypeId)
     // }
     // If any transform isn't provided, it's assumed to be the identity.
 
-    GfMatrix4d instancerTransform =
-        GetDelegate()->GetInstancerTransform(GetId(), prototypeId);
-    VtIntArray instanceIndices =
-        GetDelegate()->GetInstanceIndices(GetId(), prototypeId);
+    GfMatrix4d instancerTransform
+           = GetDelegate()->GetInstancerTransform(GetId(), prototypeId);
+    VtIntArray instanceIndices
+           = GetDelegate()->GetInstanceIndices(GetId(), prototypeId);
 
     VtMatrix4dArray transforms(instanceIndices.size());
     for (size_t i = 0; i < instanceIndices.size(); ++i) {
@@ -154,7 +156,7 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const &prototypeId)
             if (sampler.Sample(instanceIndices[i], &quat)) {
                 GfMatrix4d rotateMat(1);
                 rotateMat.SetRotate(GfRotation(GfQuaternion(
-                    quat[0], GfVec3d(quat[1], quat[2], quat[3]))));
+                       quat[0], GfVec3d(quat[1], quat[2], quat[3]))));
                 transforms[i] = rotateMat * transforms[i];
             }
         }
@@ -188,8 +190,8 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const &prototypeId)
         return transforms;
     }
 
-    HdInstancer *parentInstancer =
-        GetDelegate()->GetRenderIndex().GetInstancer(GetParentId());
+    HdInstancer* parentInstancer
+           = GetDelegate()->GetRenderIndex().GetInstancer(GetParentId());
     if (!TF_VERIFY(parentInstancer)) {
         return transforms;
     }
@@ -199,19 +201,18 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const &prototypeId)
     // foreach (parentXf : parentTransforms, xf : transforms) {
     //     parentXf * xf
     // }
-    VtMatrix4dArray parentTransforms =
-        static_cast<HdOSPRayInstancer*>(parentInstancer)->
-            ComputeInstanceTransforms(GetId());
+    VtMatrix4dArray parentTransforms
+           = static_cast<HdOSPRayInstancer*>(parentInstancer)
+                    ->ComputeInstanceTransforms(GetId());
 
     VtMatrix4dArray final(parentTransforms.size() * transforms.size());
     for (size_t i = 0; i < parentTransforms.size(); ++i) {
         for (size_t j = 0; j < transforms.size(); ++j) {
-            final[i * transforms.size() + j] = transforms[j] *
-                                               parentTransforms[i];
+            final[i * transforms.size() + j]
+                   = transforms[j] * parentTransforms[i];
         }
     }
     return final;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
-
