@@ -24,8 +24,8 @@
 #ifndef HDOSPRAY_CONFIG_H
 #define HDOSPRAY_CONFIG_H
 
-#include "pxr/pxr.h"
 #include "pxr/base/tf/singleton.h"
+#include "pxr/pxr.h"
 
 #include <string>
 
@@ -47,7 +47,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 class HdOSPRayConfig {
 public:
     /// \brief Return the configuration singleton.
-    static const HdOSPRayConfig &GetInstance();
+    static const HdOSPRayConfig& GetInstance();
 
     /// How many samples does each pixel get per frame?
     ///
@@ -111,6 +111,7 @@ public:
     ///
     /// Override with *HDOSPRAY_INIT_ARGS*.
     std::string initArgs;
+
 private:
     // The constructor initializes the config variables with their
     // default or environment-provided override, and optionally prints

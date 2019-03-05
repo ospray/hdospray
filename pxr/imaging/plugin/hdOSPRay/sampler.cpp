@@ -33,8 +33,8 @@ HdOSPRayBufferSampler::Sample(int index, void* value,
     // Sanity checks: index is within the bounds of buffer,
     // and the sample type and buffer type (defined by the dataType)
     // are the same.
-    if (_buffer.GetNumElements() <= (size_t)index ||
-        _buffer.GetTupleType() != dataType) {
+    if (_buffer.GetNumElements() <= (size_t)index
+        || _buffer.GetTupleType() != dataType) {
         return false;
     }
 
@@ -45,8 +45,8 @@ HdOSPRayBufferSampler::Sample(int index, void* value,
     // Equivalent to:
     // *static_cast<ElementType*>(value) =
     //     static_cast<ElementType*>(_buffer.GetData())[index];
-    memcpy(value,
-        static_cast<const uint8_t*>(_buffer.GetData()) + offset, elemSize);
+    memcpy(value, static_cast<const uint8_t*>(_buffer.GetData()) + offset,
+           elemSize);
 
     return true;
 }

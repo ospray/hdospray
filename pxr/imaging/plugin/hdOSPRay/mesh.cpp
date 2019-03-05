@@ -21,8 +21,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/imaging/glf/glew.h"
 #include "pxr/imaging/hdOSPRay/mesh.h"
+#include "pxr/imaging/glf/glew.h"
 #include "pxr/imaging/hdOSPRay/config.h"
 #include "pxr/imaging/hdOSPRay/context.h"
 #include "pxr/imaging/hdOSPRay/instancer.h"
@@ -30,12 +30,12 @@
 #include "pxr/imaging/hdOSPRay/renderParam.h"
 #include "pxr/imaging/hdOSPRay/renderPass.h"
 
+#include "pxr/base/gf/matrix4d.h"
+#include "pxr/base/gf/matrix4f.h"
+#include "pxr/base/gf/vec3f.h"
 #include "pxr/imaging/hd/meshUtil.h"
 #include "pxr/imaging/hd/smoothNormals.h"
 #include "pxr/imaging/pxOsd/tokens.h"
-#include "pxr/base/gf/matrix4f.h"
-#include "pxr/base/gf/matrix4d.h"
-#include "pxr/base/gf/vec3f.h"
 
 #include "pxr/imaging/hdSt/drawItem.h"
 #include "pxr/imaging/hdSt/geometricShader.h"
@@ -54,26 +54,25 @@ TF_DEFINE_PRIVATE_TOKENS(
 
 std::mutex g_mutex;
 
-//USD forces warnings when converting ospcommon::affine3f to osp::affine3f
-const osp::affine3f identity({1,0,0,0,1,0,0,0,1});
+// USD forces warnings when converting ospcommon::affine3f to osp::affine3f
+const osp::affine3f identity({ 1, 0, 0, 0, 1, 0, 0, 0, 1 });
 
-HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id,
-                           SdfPath const& instancerId)
-        : HdMesh(id, instancerId)
-        , _ospMesh(nullptr)
-        , _adjacencyValid(false)
-        , _normalsValid(false)
-        , _refined(false)
-        , _smoothNormals(false)
-        , _doubleSided(false)
-        , _cullStyle(HdCullStyleDontCare)
+HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
+    : HdMesh(id, instancerId)
+    , _ospMesh(nullptr)
+    , _adjacencyValid(false)
+    , _normalsValid(false)
+    , _refined(false)
+    , _smoothNormals(false)
+    , _doubleSided(false)
+    , _cullStyle(HdCullStyleDontCare)
 {
 }
 
 void
-HdOSPRayMesh::Finalize(HdRenderParam *renderParam)
+HdOSPRayMesh::Finalize(HdRenderParam* renderParam)
 {
-  _ospInstances.clear();
+    _ospInstances.clear();
 }
 
 HdDirtyBits
@@ -82,21 +81,16 @@ HdOSPRayMesh::GetInitialDirtyBitsMask() const
     // The initial dirty bits control what data is available on the first
     // run through _PopulateMesh(), so it should list every data item
     // that _PopulateMesh requests.
-    int mask = HdChangeTracker::Clean
-        | HdChangeTracker::InitRepr
-        | HdChangeTracker::DirtyPoints
-        | HdChangeTracker::DirtyTopology
-        | HdChangeTracker::DirtyTransform
-        | HdChangeTracker::DirtyVisibility
-        | HdChangeTracker::DirtyCullStyle
-        | HdChangeTracker::DirtyDoubleSided
-        | HdChangeTracker::DirtyDisplayStyle
-        | HdChangeTracker::DirtySubdivTags
-        | HdChangeTracker::DirtyPrimvar
-        | HdChangeTracker::DirtyNormals
-        | HdChangeTracker::DirtyInstanceIndex
-        | HdChangeTracker::AllDirty  //this magic bit seems to trigger materials... bah
-        ;
+    int mask = HdChangeTracker::Clean | HdChangeTracker::InitRepr
+           | HdChangeTracker::DirtyPoints | HdChangeTracker::DirtyTopology
+           | HdChangeTracker::DirtyTransform | HdChangeTracker::DirtyVisibility
+           | HdChangeTracker::DirtyCullStyle | HdChangeTracker::DirtyDoubleSided
+           | HdChangeTracker::DirtyDisplayStyle
+           | HdChangeTracker::DirtySubdivTags | HdChangeTracker::DirtyPrimvar
+           | HdChangeTracker::DirtyNormals | HdChangeTracker::DirtyInstanceIndex
+           | HdChangeTracker::AllDirty // this magic bit seems to trigger
+                                       // materials... bah
+           ;
 
     return (HdDirtyBits)mask;
 }
@@ -104,13 +98,11 @@ HdOSPRayMesh::GetInitialDirtyBitsMask() const
 HdDirtyBits
 HdOSPRayMesh::_PropagateDirtyBits(HdDirtyBits bits) const
 {
-  return bits;
+    return bits;
 }
 
-
 void
-HdOSPRayMesh::_InitRepr(TfToken const &reprToken,
-                        HdDirtyBits *dirtyBits)
+HdOSPRayMesh::_InitRepr(TfToken const& reprToken, HdDirtyBits* dirtyBits)
 {
     TF_UNUSED(dirtyBits);
 
@@ -122,7 +114,6 @@ HdOSPRayMesh::_InitRepr(TfToken const &reprToken,
     }
 }
 
-
 static bool
 _IsEnabledForceQuadrangulate()
 {
@@ -131,9 +122,8 @@ _IsEnabledForceQuadrangulate()
 }
 
 bool
-HdOSPRayMesh::_UseQuadIndices(
-        const HdRenderIndex &renderIndex,
-        HdMeshTopology const & topology) const
+HdOSPRayMesh::_UseQuadIndices(const HdRenderIndex& renderIndex,
+                              HdMeshTopology const& topology) const
 {
     // We should never quadrangulate for subdivision schemes
     // which refine to triangles (like Loop)
@@ -141,8 +131,8 @@ HdOSPRayMesh::_UseQuadIndices(
         return false;
 
     // According to HdSt mesh.cpp, always use quads on surfaces with ptex
-    const HdOSPRayMaterial *material = static_cast<const HdOSPRayMaterial *>(
-            renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
+    const HdOSPRayMaterial* material = static_cast<const HdOSPRayMaterial*>(
+           renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
     if (material && material->HasPtex())
         return true;
 
@@ -152,97 +142,94 @@ HdOSPRayMesh::_UseQuadIndices(
 }
 
 void
-HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate,
-                   HdRenderParam     *renderParam,
-                   HdDirtyBits       *dirtyBits,
-                   TfToken const &reprToken)
+HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
+                   HdDirtyBits* dirtyBits, TfToken const& reprToken)
 {
-  HD_TRACE_FUNCTION();
-  HF_MALLOC_TAG_FUNCTION();
+    HD_TRACE_FUNCTION();
+    HF_MALLOC_TAG_FUNCTION();
 
-  // XXX: Meshes can have multiple reprs; this is done, for example, when
-  // the drawstyle specifies different rasterizing modes between front faces
-  // and back faces. With raytracing, this concept makes less sense, but
-  // combining semantics of two HdMeshReprDesc is tricky in the general case.
-  // For now, HdOSPRayMesh only respects the first desc; this should be fixed.
-  _MeshReprConfig::DescArray descs = _GetReprDesc(reprToken);
-  const HdMeshReprDesc &desc = descs[0];
+    // XXX: Meshes can have multiple reprs; this is done, for example, when
+    // the drawstyle specifies different rasterizing modes between front faces
+    // and back faces. With raytracing, this concept makes less sense, but
+    // combining semantics of two HdMeshReprDesc is tricky in the general case.
+    // For now, HdOSPRayMesh only respects the first desc; this should be fixed.
+    _MeshReprConfig::DescArray descs = _GetReprDesc(reprToken);
+    const HdMeshReprDesc& desc = descs[0];
 
-  // Pull top-level OSPRay state out of the render param.
-  HdOSPRayRenderParam *ospRenderParam =
-    static_cast<HdOSPRayRenderParam*>(renderParam);
-  OSPModel model = ospRenderParam->GetOSPRayModel();
-  OSPRenderer renderer = ospRenderParam->GetOSPRayRenderer();
+    // Pull top-level OSPRay state out of the render param.
+    HdOSPRayRenderParam* ospRenderParam
+           = static_cast<HdOSPRayRenderParam*>(renderParam);
+    OSPModel model = ospRenderParam->GetOSPRayModel();
+    OSPRenderer renderer = ospRenderParam->GetOSPRayRenderer();
 
-  if (*dirtyBits & HdChangeTracker::DirtyMaterialId) {
-    _SetMaterialId(sceneDelegate->GetRenderIndex().GetChangeTracker(),
-                   sceneDelegate->GetMaterialId(GetId()));
-  }
+    if (*dirtyBits & HdChangeTracker::DirtyMaterialId) {
+        _SetMaterialId(sceneDelegate->GetRenderIndex().GetChangeTracker(),
+                       sceneDelegate->GetMaterialId(GetId()));
+    }
 
-  // Create ospray geometry objects.
-  _PopulateOSPMesh(sceneDelegate, model, renderer, dirtyBits, desc);
+    // Create ospray geometry objects.
+    _PopulateOSPMesh(sceneDelegate, model, renderer, dirtyBits, desc);
 
-  if (*dirtyBits & HdChangeTracker::DirtyTopology)
-  {
-    //TODO: update material here?
-  }
+    if (*dirtyBits & HdChangeTracker::DirtyTopology) {
+        // TODO: update material here?
+    }
 }
 
 void
 HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                                     HdDirtyBits dirtyBits)
 {
-  HD_TRACE_FUNCTION();
-  SdfPath const& id = GetId();
+    HD_TRACE_FUNCTION();
+    SdfPath const& id = GetId();
 
-  // Update _primvarSourceMap, our local cache of raw primvar data.
-  // This function pulls data from the scene delegate, but defers processing.
-  //
-  // While iterating primvars, we skip "points" (vertex positions) because
-  // the points primvar is processed by _PopulateMesh. We only call
-  // GetPrimvar on primvars that have been marked dirty.
-  //
-  // Currently, hydra doesn't have a good way of communicating changes in
-  // the set of primvars, so we only ever add and update to the primvar set.
+    // Update _primvarSourceMap, our local cache of raw primvar data.
+    // This function pulls data from the scene delegate, but defers processing.
+    //
+    // While iterating primvars, we skip "points" (vertex positions) because
+    // the points primvar is processed by _PopulateMesh. We only call
+    // GetPrimvar on primvars that have been marked dirty.
+    //
+    // Currently, hydra doesn't have a good way of communicating changes in
+    // the set of primvars, so we only ever add and update to the primvar set.
 
-  HdPrimvarDescriptorVector primvars;
-  for (size_t i=0; i < HdInterpolationCount; ++i) {
-    HdInterpolation interp = static_cast<HdInterpolation>(i);
-    primvars = GetPrimvarDescriptors(sceneDelegate, interp);
-    for (HdPrimvarDescriptor const &pv : primvars) {
+    HdPrimvarDescriptorVector primvars;
+    for (size_t i = 0; i < HdInterpolationCount; ++i) {
+        HdInterpolation interp = static_cast<HdInterpolation>(i);
+        primvars = GetPrimvarDescriptors(sceneDelegate, interp);
+        for (HdPrimvarDescriptor const& pv : primvars) {
 
-      // Points are handled outside _UpdatePrimvarSources
-      if (pv.name == HdTokens->points)
-        continue;
+            // Points are handled outside _UpdatePrimvarSources
+            if (pv.name == HdTokens->points)
+                continue;
 
-      auto value = sceneDelegate->Get(id, pv.name);
+            auto value = sceneDelegate->Get(id, pv.name);
 
-      //texcoords
-      if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, HdOSPRayTokens->st)) {
-        if (value.IsHolding<VtVec2fArray>()) {
-          _texcoords = value.Get<VtVec2fArray>();
+            // texcoords
+            if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                HdOSPRayTokens->st)) {
+                if (value.IsHolding<VtVec2fArray>()) {
+                    _texcoords = value.Get<VtVec2fArray>();
+                }
+            }
+
+            if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                HdTokens->color)) {
+                if (value.IsHolding<VtVec4fArray>())
+                    _colors = value.Get<VtVec4fArray>();
+            }
         }
-      }
-
-      if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, HdTokens->color)) {
-        if (value.IsHolding<VtVec4fArray>())
-          _colors = value.Get<VtVec4fArray>();
-      }
     }
-  }
 }
 
 void
-HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
-                              OSPModel model,
-                              OSPRenderer renderer,
-                              HdDirtyBits*     dirtyBits,
-                              HdMeshReprDesc const &desc)
+HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
+                               OSPRenderer renderer, HdDirtyBits* dirtyBits,
+                               HdMeshReprDesc const& desc)
 {
-  HD_TRACE_FUNCTION();
-  HF_MALLOC_TAG_FUNCTION();
+    HD_TRACE_FUNCTION();
+    HF_MALLOC_TAG_FUNCTION();
 
-  SdfPath const& id = GetId();
+    SdfPath const& id = GetId();
 
     ////////////////////////////////////////////////////////////////////////
     // 1. Pull scene data.
@@ -250,14 +237,13 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)) {
         VtValue value = sceneDelegate->Get(id, HdTokens->points);
         if (value.IsHolding<VtVec3fArray>())
-          _points = value.Get<VtVec3fArray>();
+            _points = value.Get<VtVec3fArray>();
         _normalsValid = false;
     }
 
     if (HdChangeTracker::IsDisplayStyleDirty(*dirtyBits, id)) {
         HdDisplayStyle const displayStyle = sceneDelegate->GetDisplayStyle(id);
-        _topology = HdMeshTopology(_topology,
-            displayStyle.refineLevel);
+        _topology = HdMeshTopology(_topology, displayStyle.refineLevel);
     }
 
     if (HdChangeTracker::IsTransformDirty(*dirtyBits, id)) {
@@ -274,11 +260,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     if (HdChangeTracker::IsDoubleSidedDirty(*dirtyBits, id)) {
         _doubleSided = IsDoubleSided(sceneDelegate);
     }
-    if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->normals) ||
-        HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->widths) ||
-        HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->primvar) ||
-        HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdOSPRayTokens->st)
-        ) {
+    if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->normals)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->widths)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->primvar)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
+                                           HdOSPRayTokens->st)) {
         _UpdatePrimvarSources(sceneDelegate, *dirtyBits);
     }
 
@@ -296,344 +282,354 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     // interpolated smoothly across faces.
     _smoothNormals = !desc.flatShadingEnabled;
 
+    ////////////////////////////////////////////////////////////////////////
+    // 3. Populate ospray prototype object.
 
-  ////////////////////////////////////////////////////////////////////////
-  // 3. Populate ospray prototype object.
+    // If the topology has changed, or the value of doRefine has changed, we
+    // need to create or recreate the OSPRay mesh object.
+    // _GetInitialDirtyBits() ensures that the topology is dirty the first time
+    // this function is called, so that the OSPRay mesh is always created.
+    bool newMesh = false;
+    if (HdChangeTracker::IsTopologyDirty(*dirtyBits, id)
+        || doRefine != _refined) {
 
-  // If the topology has changed, or the value of doRefine has changed, we
-  // need to create or recreate the OSPRay mesh object.
-  // _GetInitialDirtyBits() ensures that the topology is dirty the first time
-  // this function is called, so that the OSPRay mesh is always created.
-  bool newMesh = false;
-  if (HdChangeTracker::IsTopologyDirty(*dirtyBits, id) ||
-                  doRefine != _refined) {
+        newMesh = true;
 
-    newMesh = true;
+        // Force the smooth normals code to rebuild the "normals" primvar the
+        // next time smooth normals is enabled.
+        _normalsValid = false;
+    }
 
-    // Force the smooth normals code to rebuild the "normals" primvar the
-    // next time smooth normals is enabled.
+    if (HdChangeTracker::IsTopologyDirty(*dirtyBits, id)) {
+        // When pulling a new topology, we don't want to overwrite the
+        // refine level or subdiv tags, which are provided separately by the
+        // scene delegate, so we save and restore them.
+        PxOsdSubdivTags subdivTags = _topology.GetSubdivTags();
+        int refineLevel = _topology.GetRefineLevel();
+        _topology = HdMeshTopology(GetMeshTopology(sceneDelegate), refineLevel);
+        _topology.SetSubdivTags(subdivTags);
+        _adjacencyValid = false;
+    }
+
+    if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)
+        && _topology.GetRefineLevel() > 0) {
+        _topology.SetSubdivTags(sceneDelegate->GetSubdivTags(id));
+    }
+
+    // Update the smooth normals in steps:
+    // 1. If the topology is dirty, update the adjacency table, a processed
+    //    form of the topology that helps calculate smooth normals quickly.
+    // 2. If the points are dirty, update the smooth normal buffer itself.
     _normalsValid = false;
-  }
-
-  if (HdChangeTracker::IsTopologyDirty(*dirtyBits, id)) {
-    // When pulling a new topology, we don't want to overwrite the
-    // refine level or subdiv tags, which are provided separately by the
-    // scene delegate, so we save and restore them.
-    PxOsdSubdivTags subdivTags = _topology.GetSubdivTags();
-    int refineLevel = _topology.GetRefineLevel();
-    _topology = HdMeshTopology(GetMeshTopology(sceneDelegate), refineLevel);
-    _topology.SetSubdivTags(subdivTags);
-    _adjacencyValid = false;
-  }
-
-  if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id) &&
-                  _topology.GetRefineLevel() > 0) {
-    _topology.SetSubdivTags(sceneDelegate->GetSubdivTags(id));
-  }
-
-  // Update the smooth normals in steps:
-  // 1. If the topology is dirty, update the adjacency table, a processed
-  //    form of the topology that helps calculate smooth normals quickly.
-  // 2. If the points are dirty, update the smooth normal buffer itself.
-  _normalsValid = false;
-  if (_smoothNormals && !_adjacencyValid) {
-    _adjacency.BuildAdjacencyTable(&_topology);
-    _adjacencyValid = true;
-    // If we rebuilt the adjacency table, force a rebuild of normals.
-    _normalsValid = false;
-  }
-  if (_smoothNormals && !_normalsValid) {
+    if (_smoothNormals && !_adjacencyValid) {
+        _adjacency.BuildAdjacencyTable(&_topology);
+        _adjacencyValid = true;
+        // If we rebuilt the adjacency table, force a rebuild of normals.
+        _normalsValid = false;
+    }
+    if (_smoothNormals && !_normalsValid) {
         _computedNormals = Hd_SmoothNormals::ComputeSmoothNormals(
-            &_adjacency, _points.size(), _points.cdata());
-    _normalsValid = true;
-  }
+               &_adjacency, _points.size(), _points.cdata());
+        _normalsValid = true;
+    }
 
-  std::lock_guard<std::mutex> lock(g_mutex);
-  // Create new OSP Mesh
-  auto instanceModel = ospNewModel();
-  if (newMesh ||
-                  HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points) ||
-                  HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdOSPRayTokens->st) )
-  {
+    std::lock_guard<std::mutex> lock(g_mutex);
+    // Create new OSP Mesh
+    auto instanceModel = ospNewModel();
+    if (newMesh
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
+                                           HdOSPRayTokens->st)) {
 
-//    if (_primvarSourceMap.count(HdTokens->color) > 0) {
-//      auto& colorBuffer = _primvarSourceMap[HdTokens->color].data;
-//      if (colorBuffer.GetArraySize() && colorBuffer.IsHolding<VtVec4fArray>()) {
-//        _colors = colorBuffer.Get<VtVec4fArray>();
-//        std::cout << "populated primvar colors for mesh " << _colors.size() << "\n";
-//      }
-//    }
+        //    if (_primvarSourceMap.count(HdTokens->color) > 0) {
+        //      auto& colorBuffer = _primvarSourceMap[HdTokens->color].data;
+        //      if (colorBuffer.GetArraySize() &&
+        //      colorBuffer.IsHolding<VtVec4fArray>()) {
+        //        _colors = colorBuffer.Get<VtVec4fArray>();
+        //        std::cout << "populated primvar colors for mesh " <<
+        //        _colors.size() << "\n";
+        //      }
+        //    }
 
-    OSPGeometry mesh = nullptr;
+        OSPGeometry mesh = nullptr;
 
-    const HdRenderIndex &renderIndex = sceneDelegate->GetRenderIndex();
-    const HdOSPRayMaterial *material = static_cast<const HdOSPRayMaterial *>(
-        renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
+        const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
+        const HdOSPRayMaterial* material
+               = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
+                      HdPrimTypeTokens->material, GetMaterialId()));
 
-    bool useQuads = _UseQuadIndices(renderIndex, _topology);
+        bool useQuads = _UseQuadIndices(renderIndex, _topology);
 
-    if (useQuads) {
-      mesh = ospNewGeometry("quadmesh");
+        if (useQuads) {
+            mesh = ospNewGeometry("quadmesh");
 
-      HdMeshUtil meshUtil(&_topology, GetId());
-      meshUtil.ComputeQuadIndices(&_quadIndices,
-                                  &_quadPrimitiveParams);
+            HdMeshUtil meshUtil(&_topology, GetId());
+            meshUtil.ComputeQuadIndices(&_quadIndices, &_quadPrimitiveParams);
 
-
-      auto indices = ospNewData(_quadIndices.size(), OSP_INT4,
+            auto indices
+                   = ospNewData(_quadIndices.size(), OSP_INT4,
                                 _quadIndices.cdata(), OSP_DATA_SHARED_BUFFER);
 
-      ospCommit(indices);
-      ospSetData(mesh, "index", indices);
-      ospRelease(indices);
+            ospCommit(indices);
+            ospSetData(mesh, "index", indices);
+            ospRelease(indices);
 
-      // Check if texcoords are provides as face varying.
-      // XXX: (This code currently only cares about _texcoords, but should be
-      // generalized to all primvars)
-      bool faceVaryingTexcoord = false;
-      HdPrimvarDescriptorVector faceVaryingPrimvars =
-        GetPrimvarDescriptors(sceneDelegate, HdInterpolationFaceVarying);
-      for (HdPrimvarDescriptor const& pv: faceVaryingPrimvars) {
-        if (pv.name == "Texture_uv")
-          faceVaryingTexcoord = true;
-      }
+            // Check if texcoords are provides as face varying.
+            // XXX: (This code currently only cares about _texcoords, but should
+            // be generalized to all primvars)
+            bool faceVaryingTexcoord = false;
+            HdPrimvarDescriptorVector faceVaryingPrimvars
+                   = GetPrimvarDescriptors(sceneDelegate,
+                                           HdInterpolationFaceVarying);
+            for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
+                if (pv.name == "Texture_uv")
+                    faceVaryingTexcoord = true;
+            }
 
-      if (faceVaryingTexcoord) {
-        TfToken buffName = HdOSPRayTokens->st;
-        VtValue buffValue = VtValue(_texcoords);
-        HdVtBufferSource buffer(buffName, buffValue);
-        VtValue quadPrimvar;
+            if (faceVaryingTexcoord) {
+                TfToken buffName = HdOSPRayTokens->st;
+                VtValue buffValue = VtValue(_texcoords);
+                HdVtBufferSource buffer(buffName, buffValue);
+                VtValue quadPrimvar;
 
-        auto success = meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(
-                           buffer.GetData(), buffer.GetNumElements(),
-                           buffer.GetTupleType().type, &quadPrimvar);
-        if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
-            _texcoords = quadPrimvar.Get<VtVec2fArray>();
+                auto success = meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(
+                       buffer.GetData(), buffer.GetNumElements(),
+                       buffer.GetTupleType().type, &quadPrimvar);
+                if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
+                    _texcoords = quadPrimvar.Get<VtVec2fArray>();
+                } else {
+                    std::cout << "ERROR: could not quadrangulate face-varying "
+                                 "data\n";
+                }
+
+                // usd stores texcoords in face indexed -> each quad has 4
+                // unique texcoords.
+                // let's try converting it to match our vertex indices
+                VtVec2fArray texcoords2;
+                texcoords2.resize(_points.size());
+                for (size_t q = 0; q < _quadIndices.size(); q++) {
+                    for (int i = 0; i < 4; i++) {
+                        // value at quadindex[q][i] maps to q*4+i texcoord;
+                        const size_t tc1index = q * 4 + i;
+                        const size_t tc2index = _quadIndices[q][i];
+                        texcoords2[tc2index] = _texcoords[tc1index];
+                    }
+                }
+                _texcoords = texcoords2;
+            }
+
+        } else { // triangles
+            mesh = ospNewGeometry("trianglemesh");
+
+            HdMeshUtil meshUtil(&_topology, GetId());
+            meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
+                                            &_trianglePrimitiveParams);
+
+            auto indices = ospNewData(_triangulatedIndices.size(), OSP_INT3,
+                                      _triangulatedIndices.cdata(),
+                                      OSP_DATA_SHARED_BUFFER);
+
+            ospCommit(indices);
+            ospSetData(mesh, "index", indices);
+            ospRelease(indices);
+
+            // Check if texcoords are provides as face varying.
+            // XXX: (This code currently only cares about _texcoords, but should
+            // be generalized to all primvars)
+            bool faceVaryingTexcoord = false;
+            HdPrimvarDescriptorVector faceVaryingPrimvars
+                   = GetPrimvarDescriptors(sceneDelegate,
+                                           HdInterpolationFaceVarying);
+            for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
+                if (pv.name == "Texture_uv")
+                    faceVaryingTexcoord = true;
+            }
+
+            if (faceVaryingTexcoord) {
+                TfToken buffName = HdOSPRayTokens->st;
+                VtValue buffValue = VtValue(_texcoords);
+                HdVtBufferSource buffer(buffName, buffValue);
+                VtValue triangulatedPrimvar;
+
+                auto success = meshUtil.ComputeTriangulatedFaceVaryingPrimvar(
+                       buffer.GetData(), buffer.GetNumElements(),
+                       buffer.GetTupleType().type, &triangulatedPrimvar);
+                if (success && triangulatedPrimvar.IsHolding<VtVec2fArray>()) {
+                    _texcoords = triangulatedPrimvar.Get<VtVec2fArray>();
+                } else {
+                    std::cout << "ERROR: could not triangulate face-varying "
+                                 "data\n";
+                }
+
+                // usd stores texcoords in face indexed -> each triangle has 3
+                // unique texcoords.
+                // let's try converting it to match our vertex indices
+                VtVec2fArray texcoords2;
+                texcoords2.resize(_points.size());
+                for (size_t t = 0; t < _triangulatedIndices.size(); t++) {
+                    for (int i = 0; i < 3; i++) {
+                        // value at triangleIndex[t][i] maps to t*3+i texcoord;
+                        const size_t tc1index = t * 3 + i;
+                        const size_t tc2index = _triangulatedIndices[t][i];
+                        texcoords2[tc2index] = _texcoords[tc1index];
+                    }
+                }
+                _texcoords = texcoords2;
+            }
+        }
+
+        auto vertices = ospNewData(_points.size(), OSP_FLOAT3, _points.cdata(),
+                                   OSP_DATA_SHARED_BUFFER);
+        ospCommit(vertices);
+        ospSetData(mesh, "vertex", vertices);
+        ospRelease(vertices);
+
+        if (_computedNormals.size()) {
+            auto normals = ospNewData(_computedNormals.size(), OSP_FLOAT3,
+                                      _computedNormals.cdata(),
+                                      OSP_DATA_SHARED_BUFFER);
+            ospSetData(mesh, "vertex.normal", normals);
+            ospRelease(normals);
+        }
+
+        if (_colors.size() > 1) {
+            // Carson: apparently colors are actually stored as a single color
+            // value for entire object
+            auto colors = ospNewData(_colors.size(), OSP_FLOAT4,
+                                     _colors.cdata(), OSP_DATA_SHARED_BUFFER);
+            ospSetData(mesh, "vertex.color", colors);
+            ospRelease(colors);
+        }
+
+        if (_texcoords.size() > 1) {
+            auto texcoords
+                   = ospNewData(_texcoords.size(), OSP_FLOAT2,
+                                _texcoords.cdata(), OSP_DATA_SHARED_BUFFER);
+            ospCommit(texcoords);
+            ospSetData(mesh, "vertex.texcoord", texcoords);
+            ospRelease(texcoords);
+        }
+
+        OSPMaterial ospMaterial = nullptr;
+
+        if (material && material->GetOSPRayMaterial()) {
+            ospMaterial = material->GetOSPRayMaterial();
         } else {
-          std::cout << "ERROR: could not quadrangulate face-varying data\n";
+            // Create new ospMaterial
+            GfVec4f color(1.f);
+            if (!_colors.empty())
+                color = _colors[0];
+            ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(color);
         }
 
-        //usd stores texcoords in face indexed -> each quad has 4 unique texcoords.
-        // let's try converting it to match our vertex indices
-        VtVec2fArray texcoords2;
-        texcoords2.resize(_points.size());
-        for (size_t q = 0; q < _quadIndices.size(); q++) {
-          for (int i = 0; i < 4; i++) {
-            // value at quadindex[q][i] maps to q*4+i texcoord;
-            const size_t tc1index = q*4+i;
-            const size_t tc2index = _quadIndices[q][i];
-            texcoords2[tc2index] = _texcoords[tc1index];
-          }
+        ospCommit(ospMaterial);
+        ospSetMaterial(mesh, ospMaterial);
+        ospRelease(ospMaterial);
+        ospCommit(mesh);
+
+        ospAddGeometry(instanceModel,
+                       mesh); // crashing when added to the scene. I suspect
+                              // indices/vertex spec.
+        ospCommit(instanceModel);
+    }
+
+    ////////////////////////////////////////////////////////////////////////
+    // 4. Populate ospray instance objects.
+
+    // If the mesh is instanced, create one new instance per transform.
+    // XXX: The current instancer invalidation tracking makes it hard for
+    // HdOSPRay to tell whether transforms will be dirty, so this code
+    // pulls them every frame.
+    if (!GetInstancerId().IsEmpty()) {
+        // Retrieve instance transforms from the instancer.
+        HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
+        HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
+        VtMatrix4dArray transforms
+               = static_cast<HdOSPRayInstancer*>(instancer)
+                        ->ComputeInstanceTransforms(GetId());
+
+        size_t oldSize = _ospInstances.size();
+        size_t newSize = transforms.size();
+
+        // Size down (if necessary).
+        for (size_t i = newSize; i < oldSize; ++i) {
+            for (auto instance : _ospInstances) {
+                ospRemoveGeometry(model, instance);
+            }
         }
-        _texcoords = texcoords2;
-      }
+        _ospInstances.resize(newSize);
 
-    } else {  //triangles
-      mesh = ospNewGeometry("trianglemesh");
-
-      HdMeshUtil meshUtil(&_topology, GetId());
-      meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
-                                      &_trianglePrimitiveParams);
-
-      auto indices = ospNewData(_triangulatedIndices.size(), OSP_INT3,
-                                _triangulatedIndices.cdata(), OSP_DATA_SHARED_BUFFER);
-
-      ospCommit(indices);
-      ospSetData(mesh, "index", indices);
-      ospRelease(indices);
-
-      // Check if texcoords are provides as face varying.
-      // XXX: (This code currently only cares about _texcoords, but should be
-      // generalized to all primvars)
-      bool faceVaryingTexcoord = false;
-      HdPrimvarDescriptorVector faceVaryingPrimvars =
-        GetPrimvarDescriptors(sceneDelegate, HdInterpolationFaceVarying);
-      for (HdPrimvarDescriptor const& pv: faceVaryingPrimvars) {
-        if (pv.name == "Texture_uv")
-          faceVaryingTexcoord = true;
-      }
-
-      if (faceVaryingTexcoord) {
-        TfToken buffName = HdOSPRayTokens->st;
-        VtValue buffValue = VtValue(_texcoords);
-        HdVtBufferSource buffer(buffName, buffValue);
-        VtValue triangulatedPrimvar;
-
-        auto success = meshUtil.ComputeTriangulatedFaceVaryingPrimvar(
-                           buffer.GetData(), buffer.GetNumElements(),
-                           buffer.GetTupleType().type, &triangulatedPrimvar);
-        if (success && triangulatedPrimvar.IsHolding<VtVec2fArray>()) {
-            _texcoords = triangulatedPrimvar.Get<VtVec2fArray>();
-        } else {
-          std::cout << "ERROR: could not triangulate face-varying data\n";
+        // Size up (if necessary).
+        for (size_t i = oldSize; i < newSize; ++i) {
+            // Create the new instance.
+            _ospInstances[i] = ospNewInstance(instanceModel, identity);
         }
 
-        //usd stores texcoords in face indexed -> each triangle has 3 unique texcoords.
-        // let's try converting it to match our vertex indices
-        VtVec2fArray texcoords2;
-        texcoords2.resize(_points.size());
-        for (size_t t = 0; t < _triangulatedIndices.size(); t++) {
-          for (int i = 0; i < 3; i++) {
-            // value at triangleIndex[t][i] maps to t*3+i texcoord;
-            const size_t tc1index = t*3+i;
-            const size_t tc2index = _triangulatedIndices[t][i];
-            texcoords2[tc2index] = _texcoords[tc1index];
-          }
+        // Update transforms.
+        for (size_t i = 0; i < _ospInstances.size(); ++i) {
+            auto instance = _ospInstances[i];
+            // Combine the local transform and the instance transform.
+            GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
+            float* xfm = matf.GetArray();
+            // convert aligned matrix to unalighned 4x3 matrix
+            ospSet3f(instance, "xfm.l.vx", xfm[0], xfm[1], xfm[2]);
+            ospSet3f(instance, "xfm.l.vy", xfm[4], xfm[5], xfm[6]);
+            ospSet3f(instance, "xfm.l.vz", xfm[8], xfm[9], xfm[10]);
+            ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
+            ospCommit(instance);
         }
-        _texcoords = texcoords2;
-      }
+    }
+    // Otherwise, create our single instance (if necessary) and update
+    // the transform (if necessary).
+    else {
+        bool newInstance = false;
+        if (_ospInstances.size() == 0) {
+            // convert aligned matrix to unalighned 4x3 matrix
+            auto instance = ospNewInstance(instanceModel, identity);
+            _ospInstances.push_back(instance);
+            ospCommit(instance);
+            newInstance = true;
+        }
+        if (newInstance || HdChangeTracker::IsTransformDirty(*dirtyBits, id)) {
+            // TODO: update transform
+            auto instance = _ospInstances[0];
+            float* xfm = _transform.GetArray();
+            // convert aligned matrix to unalighned 4x3 matrix
+            ospSet3f(instance, "xfm.l.vx", xfm[0], xfm[1], xfm[2]);
+            ospSet3f(instance, "xfm.l.vy", xfm[4], xfm[5], xfm[6]);
+            ospSet3f(instance, "xfm.l.vz", xfm[8], xfm[9], xfm[10]);
+            ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
+        }
+        if (newInstance || newMesh
+            || HdChangeTracker::IsTransformDirty(*dirtyBits, id)
+            || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
+                                               HdTokens->points)) {
+            ospCommit(_ospInstances[0]);
+            // Mark the instance as updated in the top-level BVH.
+        }
     }
 
-    auto vertices = ospNewData(_points.size(),OSP_FLOAT3, _points.cdata(),
-                               OSP_DATA_SHARED_BUFFER);
-    ospCommit(vertices);
-    ospSetData(mesh, "vertex", vertices);
-    ospRelease(vertices);
-
-    if (_computedNormals.size()) {
-      auto normals = ospNewData(_computedNormals.size(),OSP_FLOAT3,
-                                _computedNormals.cdata(), OSP_DATA_SHARED_BUFFER);
-      ospSetData(mesh, "vertex.normal", normals);
-      ospRelease(normals);
-    }
-
-    if (_colors.size() > 1) {
-      //Carson: apparently colors are actually stored as a single color value for entire object
-      auto colors = ospNewData(_colors.size(),OSP_FLOAT4, _colors.cdata(),
-                               OSP_DATA_SHARED_BUFFER);
-      ospSetData(mesh, "vertex.color", colors);
-      ospRelease(colors);
-    }
-
-    if (_texcoords.size() > 1) {
-      auto texcoords = ospNewData(_texcoords.size(),OSP_FLOAT2, _texcoords.cdata(),
-               OSP_DATA_SHARED_BUFFER);
-      ospCommit(texcoords);
-      ospSetData(mesh, "vertex.texcoord", texcoords);
-      ospRelease(texcoords);
-    }
-
-    OSPMaterial ospMaterial = nullptr;
-
-    if (material && material->GetOSPRayMaterial()) {
-      ospMaterial = material->GetOSPRayMaterial();
+    // Update visibility by pulling the object into/out of the model.
+    if (_sharedData.visible) {
+        for (auto instance : _ospInstances) {
+            // std::lock_guard<std::mutex> lock(g_mutex);
+            ospAddGeometry(model, instance);
+        }
     } else {
-      // Create new ospMaterial
-      GfVec4f color(1.f);
-      if (!_colors.empty())
-        color = _colors[0];
-      ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(color);
+        // TODO: ospRemove geometry?
     }
 
-    ospCommit(ospMaterial);
-    ospSetMaterial(mesh, ospMaterial);
-    ospRelease(ospMaterial);
-    ospCommit(mesh);
-
-    ospAddGeometry(instanceModel, mesh); // crashing when added to the scene. I suspect indices/vertex spec.
-    ospCommit(instanceModel);
-  }
-
-  ////////////////////////////////////////////////////////////////////////
-  // 4. Populate ospray instance objects.
-
-  // If the mesh is instanced, create one new instance per transform.
-  // XXX: The current instancer invalidation tracking makes it hard for
-  // HdOSPRay to tell whether transforms will be dirty, so this code
-  // pulls them every frame.
-  if (!GetInstancerId().IsEmpty()) {
-    // Retrieve instance transforms from the instancer.
-    HdRenderIndex &renderIndex = sceneDelegate->GetRenderIndex();
-    HdInstancer *instancer =
-                    renderIndex.GetInstancer(GetInstancerId());
-    VtMatrix4dArray transforms =
-                    static_cast<HdOSPRayInstancer*>(instancer)->
-                    ComputeInstanceTransforms(GetId());
-
-    size_t oldSize = _ospInstances.size();
-    size_t newSize = transforms.size();
-
-    // Size down (if necessary).
-    for(size_t i = newSize; i < oldSize; ++i) {
-      for (auto instance : _ospInstances) {
-        ospRemoveGeometry(model, instance);
-      }
-    }
-    _ospInstances.resize(newSize);
-
-    // Size up (if necessary).
-    for(size_t i = oldSize; i < newSize; ++i) {
-      // Create the new instance.
-      _ospInstances[i] = ospNewInstance(instanceModel, identity);
-    }
-
-    // Update transforms.
-    for (size_t i = 0; i < _ospInstances.size(); ++i) {
-      auto instance = _ospInstances[i];
-      // Combine the local transform and the instance transform.
-      GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
-      float* xfm = matf.GetArray();
-      //convert aligned matrix to unalighned 4x3 matrix
-      ospSet3f(instance,"xfm.l.vx",xfm[0],xfm[1],xfm[2]);
-      ospSet3f(instance,"xfm.l.vy",xfm[4],xfm[5],xfm[6]);
-      ospSet3f(instance,"xfm.l.vz",xfm[8],xfm[9],xfm[10]);
-      ospSet3f(instance,"xfm.p",xfm[12],xfm[13],xfm[14]);
-      ospCommit(instance);
-    }
-  }
-  // Otherwise, create our single instance (if necessary) and update
-  // the transform (if necessary).
-  else {
-    bool newInstance = false;
-    if (_ospInstances.size() == 0) {
-      //convert aligned matrix to unalighned 4x3 matrix
-      auto instance = ospNewInstance(instanceModel, identity);
-      _ospInstances.push_back(instance);
-      ospCommit(instance);
-      newInstance = true;
-    }
-    if (newInstance || HdChangeTracker::IsTransformDirty(*dirtyBits, id)) {
-      //TODO: update transform
-      auto instance = _ospInstances[0];
-      float* xfm = _transform.GetArray();
-      //convert aligned matrix to unalighned 4x3 matrix
-      ospSet3f(instance,"xfm.l.vx",xfm[0],xfm[1],xfm[2]);
-      ospSet3f(instance,"xfm.l.vy",xfm[4],xfm[5],xfm[6]);
-      ospSet3f(instance,"xfm.l.vz",xfm[8],xfm[9],xfm[10]);
-      ospSet3f(instance,"xfm.p",xfm[12],xfm[13],xfm[14]);
-    }
-    if (newInstance || newMesh ||
-                    HdChangeTracker::IsTransformDirty(*dirtyBits, id) ||
-                    HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
-                                                    HdTokens->points)) {
-      ospCommit(_ospInstances[0]);
-      // Mark the instance as updated in the top-level BVH.
-    }
-  }
-
-  // Update visibility by pulling the object into/out of the model.
-  if (_sharedData.visible) {
-    for (auto instance : _ospInstances) {
-      //std::lock_guard<std::mutex> lock(g_mutex);
-      ospAddGeometry(model, instance);
-    }
-  } else {
-    //TODO: ospRemove geometry?
-  }
-
-  // Clean all dirty bits.
-  *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
+    // Clean all dirty bits.
+    *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
 }
 
-
 void
-HdOSPRayMesh::_UpdateDrawItemGeometricShader(HdSceneDelegate *sceneDelegate,
-                                         HdStDrawItem *drawItem,
-                                         const HdMeshReprDesc &desc,
-                                         size_t drawItemIdForDesc)
+HdOSPRayMesh::_UpdateDrawItemGeometricShader(HdSceneDelegate* sceneDelegate,
+                                             HdStDrawItem* drawItem,
+                                             const HdMeshReprDesc& desc,
+                                             size_t drawItemIdForDesc)
 {
-    HdRenderIndex &renderIndex = sceneDelegate->GetRenderIndex();
-
+    HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
 
     // resolve geom style, cull style
     HdCullStyle cullStyle = desc.cullStyle;

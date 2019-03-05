@@ -24,14 +24,14 @@
 #ifndef HDOSPRAY_RENDER_PASS_H
 #define HDOSPRAY_RENDER_PASS_H
 
-#include "pxr/pxr.h"
-#include "pxr/imaging/hd/renderPass.h"
 #include "pxr/base/gf/matrix4d.h"
+#include "pxr/imaging/hd/renderPass.h"
+#include "pxr/pxr.h"
 
 #include "ospray/ospray.h"
 
 #if HDOSPRAY_ENABLE_DENOISER
-#include <OpenImageDenoise/oidn.hpp>
+#    include <OpenImageDenoise/oidn.hpp>
 #endif
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -50,10 +50,9 @@ public:
     ///   \param index The render index containing scene data to render.
     ///   \param collection The initial rprim collection for this renderpass.
     ///   \param scene The embree scene to raycast into.
-    HdOSPRayRenderPass(HdRenderIndex *index,
-                       HdRprimCollection const &collection,
-                       OSPModel model, OSPRenderer renderer,
-                       std::atomic<int> *sceneVersion);
+    HdOSPRayRenderPass(HdRenderIndex* index,
+                       HdRprimCollection const& collection, OSPModel model,
+                       OSPRenderer renderer, std::atomic<int>* sceneVersion);
 
     /// Renderpass destructor.
     virtual ~HdOSPRayRenderPass();
@@ -69,7 +68,6 @@ public:
     virtual bool IsConverged() const override;
 
 protected:
-
     // -----------------------------------------------------------------------
     // HdRenderPass API
 
@@ -78,13 +76,12 @@ protected:
     ///                          for this renderpass.
     ///   \param renderTags Which rendertags should be drawn this pass.
     virtual void _Execute(HdRenderPassStateSharedPtr const& renderPassState,
-                          TfTokenVector const &renderTags) override;
+                          TfTokenVector const& renderTags) override;
 
     /// Update internal tracking to reflect a dirty collection.
     virtual void _MarkCollectionDirty() override;
 
 private:
-
     // -----------------------------------------------------------------------
     // Internal API
 
@@ -102,7 +99,7 @@ private:
     OSPRenderer _renderer;
 
     // A reference to the global scene version.
-    std::atomic<int> *_sceneVersion;
+    std::atomic<int>* _sceneVersion;
     // The last scene version we rendered with.
     int _lastRenderedVersion;
 
@@ -133,15 +130,15 @@ private:
     oidn::FilterRef _denoiserFilter;
 #endif
 
-    bool _denoiserDirty{true};
+    bool _denoiserDirty { true };
     std::vector<osp::vec3f> _normalBuffer;
     std::vector<osp::vec3f> _albedoBuffer;
     std::vector<osp::vec4f> _denoisedBuffer;
 
-    int _numSamplesAccumulated{0}; //number of rendered frames not cleared
-    int _spp{1};
-    bool _useDenoiser{false};
-    int _denoiserSPPThreshold{3};
+    int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
+    int _spp { 1 };
+    bool _useDenoiser { false };
+    int _denoiserSPPThreshold { 3 };
 
     void Denoise();
 };

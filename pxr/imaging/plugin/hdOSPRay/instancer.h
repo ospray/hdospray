@@ -57,7 +57,7 @@ public:
     ///   \param parentInstancerId The unique id of the parent instancer,
     ///                            or an empty id if not applicable.
     HdOSPRayInstancer(HdSceneDelegate* delegate, SdfPath const& id,
-                      SdfPath const &parentInstancerId);
+                      SdfPath const& parentInstancerId);
 
     /// Destructor.
     ~HdOSPRayInstancer();
@@ -68,7 +68,7 @@ public:
     /// Computes and flattens nested transforms, if necessary.
     ///   \param prototypeId The prototype to compute transforms for.
     ///   \return One transform per instance, to apply when drawing.
-    VtMatrix4dArray ComputeInstanceTransforms(SdfPath const &prototypeId);
+    VtMatrix4dArray ComputeInstanceTransforms(SdfPath const& prototypeId);
 
 private:
     // Checks the change tracker to determine whether instance primvars are
@@ -87,12 +87,9 @@ private:
     // Map of the latest primvar data for this instancer, keyed by
     // primvar name. Primvar values are VtValue, an any-type; they are
     // interpreted at consumption time (here, in ComputeInstanceTransforms).
-    TfHashMap<TfToken,
-              HdVtBufferSource*,
-              TfToken::HashFunctor> _primvarMap;
+    TfHashMap<TfToken, HdVtBufferSource*, TfToken::HashFunctor> _primvarMap;
 };
-
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif  // HDOSPRAY_INSTANCER_H
+#endif // HDOSPRAY_INSTANCER_H

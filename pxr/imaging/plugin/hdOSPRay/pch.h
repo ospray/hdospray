@@ -27,60 +27,25 @@
 #define TF_MAX_ARITY 7
 #include "pxr/base/arch/defines.h"
 #if defined(ARCH_OS_DARWIN)
-#include <mach/mach_time.h>
+#    include <mach/mach_time.h>
 #endif
 #if defined(ARCH_OS_LINUX)
-#include <x86intrin.h>
+#    include <x86intrin.h>
 #endif
 #if defined(ARCH_OS_WINDOWS)
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
+#    ifndef WIN32_LEAN_AND_MEAN
+#        define WIN32_LEAN_AND_MEAN
+#    endif
 
-#include <Windows.h>
-#include <intrin.h>
-#include <boost/preprocessor/variadic/size.hpp>
-#include <boost/vmd/is_empty.hpp>
-#include <boost/vmd/is_tuple.hpp>
+#    include <Windows.h>
+#    include <boost/preprocessor/variadic/size.hpp>
+#    include <boost/vmd/is_empty.hpp>
+#    include <boost/vmd/is_tuple.hpp>
+#    include <intrin.h>
 #endif
 #include <algorithm>
 #include <atomic>
 #include <bitset>
-#include <cfloat>
-#include <cmath>
-#include <condition_variable>
-#include <cstdarg>
-#include <cstddef>
-#include <cstdint>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <functional>
-#include <initializer_list>
-#include <inttypes.h>
-#include <iosfwd>
-#include <iostream>
-#include <iterator>
-#include <list>
-#include <map>
-#include <math.h>
-#include <memory>
-#include <mutex>
-#include <random>
-#include <set>
-#include <sstream>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string>
-#include <sys/types.h>
-#include <type_traits>
-#include <typeindex>
-#include <typeinfo>
-#include <unordered_map>
-#include <unordered_set>
-#include <utility>
-#include <vector>
 #include <boost/aligned_storage.hpp>
 #include <boost/any.hpp>
 #include <boost/bind.hpp>
@@ -131,13 +96,48 @@
 #include <boost/preprocessor/tuple/elem.hpp>
 #include <boost/preprocessor/tuple/to_list.hpp>
 #include <boost/preprocessor/tuple/to_seq.hpp>
+#include <cfloat>
+#include <cmath>
+#include <condition_variable>
+#include <cstdarg>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <functional>
+#include <initializer_list>
+#include <inttypes.h>
+#include <iosfwd>
+#include <iostream>
+#include <iterator>
+#include <list>
+#include <map>
+#include <math.h>
+#include <memory>
+#include <mutex>
+#include <random>
+#include <set>
+#include <sstream>
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string>
+#include <sys/types.h>
+#include <type_traits>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 #ifdef PXR_PYTHON_SUPPORT_ENABLED
-#include <boost/python/object_fwd.hpp>
-#include <boost/python/object_operators.hpp>
-#if defined(__APPLE__) // Fix breakage caused by Python's pyport.h.
-#undef tolower
-#undef toupper
-#endif
+#    include <boost/python/object_fwd.hpp>
+#    include <boost/python/object_operators.hpp>
+#    if defined(__APPLE__) // Fix breakage caused by Python's pyport.h.
+#        undef tolower
+#        undef toupper
+#    endif
 #endif // PXR_PYTHON_SUPPORT_ENABLED
 #include <boost/range/iterator.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -169,5 +169,5 @@
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/tbb.h>
 #ifdef PXR_PYTHON_SUPPORT_ENABLED
-#include <Python.h>
+#    include <Python.h>
 #endif // PXR_PYTHON_SUPPORT_ENABLED

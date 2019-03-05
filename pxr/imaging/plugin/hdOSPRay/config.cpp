@@ -77,40 +77,35 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_FORCE_QUADRANGULATE, 0,
 HdOSPRayConfig::HdOSPRayConfig()
 {
     // Read in values from the environment, clamping them to valid ranges.
-    samplesPerFrame = std::max(-1,
-            TfGetEnvSetting(HDOSPRAY_SAMPLES_PER_FRAME));
-    samplesToConvergence = std::max(1,
-            TfGetEnvSetting(HDOSPRAY_SAMPLES_TO_CONVERGENCE));
-    ambientOcclusionSamples = std::max(0,
-            TfGetEnvSetting(HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES));
+    samplesPerFrame = std::max(-1, TfGetEnvSetting(HDOSPRAY_SAMPLES_PER_FRAME));
+    samplesToConvergence
+           = std::max(1, TfGetEnvSetting(HDOSPRAY_SAMPLES_TO_CONVERGENCE));
+    ambientOcclusionSamples
+           = std::max(0, TfGetEnvSetting(HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES));
     fixRandomSeed = (TfGetEnvSetting(HDOSPRAY_FIX_RANDOM_SEED) > 0);
     useFaceColors = (TfGetEnvSetting(HDOSPRAY_USE_FACE_COLORS) > 0);
-    cameraLightIntensity = (std::max(100,
-            TfGetEnvSetting(HDOSPRAY_CAMERA_LIGHT_INTENSITY)) / 100.0f);
-    usePathTracing =TfGetEnvSetting(HDOSPRAY_USE_PATHTRACING);
-    initArgs =TfGetEnvSetting(HDOSPRAY_INIT_ARGS);
+    cameraLightIntensity
+           = (std::max(100, TfGetEnvSetting(HDOSPRAY_CAMERA_LIGHT_INTENSITY))
+              / 100.0f);
+    usePathTracing = TfGetEnvSetting(HDOSPRAY_USE_PATHTRACING);
+    initArgs = TfGetEnvSetting(HDOSPRAY_INIT_ARGS);
     useDenoiser = TfGetEnvSetting(HDOSPRAY_USE_DENOISER);
     useCheckerboarding = TfGetEnvSetting(HDOSPRAY_USE_CHECKERBOARDING);
     forceQuadrangulate = TfGetEnvSetting(HDOSPRAY_FORCE_QUADRANGULATE);
 
     if (TfGetEnvSetting(HDOSPRAY_PRINT_CONFIGURATION) > 0) {
-        std::cout
-            << "HdOSPRay Configuration: \n"
-            << "  samplesPerFrame            = "
-            <<    samplesPerFrame         << "\n"
-            << "  samplesToConvergence       = "
-            <<    samplesToConvergence    << "\n"
-            << "  ambientOcclusionSamples    = "
-            <<    ambientOcclusionSamples << "\n"
-            << "  fixRandomSeed              = "
-            <<    fixRandomSeed           << "\n"
-            << "  useFaceColors              = "
-            <<    useFaceColors           << "\n"
-            << "  cameraLightIntensity      = "
-            <<    cameraLightIntensity   << "\n"
-            << "  initArgs                  = "
-            <<    initArgs   << "\n"
-            ;
+        std::cout << "HdOSPRay Configuration: \n"
+                  << "  samplesPerFrame            = " << samplesPerFrame
+                  << "\n"
+                  << "  samplesToConvergence       = " << samplesToConvergence
+                  << "\n"
+                  << "  ambientOcclusionSamples    = "
+                  << ambientOcclusionSamples << "\n"
+                  << "  fixRandomSeed              = " << fixRandomSeed << "\n"
+                  << "  useFaceColors              = " << useFaceColors << "\n"
+                  << "  cameraLightIntensity      = " << cameraLightIntensity
+                  << "\n"
+                  << "  initArgs                  = " << initArgs << "\n";
     }
 }
 
