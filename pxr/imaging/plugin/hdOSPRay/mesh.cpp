@@ -385,10 +385,18 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
       ospSetData(mesh, "index", indices);
       ospRelease(indices);
 
+      // Check if texcoords are provides as face varying.
+      // XXX: (This code currently only cares about _texcoords, but should be
+      // generalized to all primvars)
+      bool faceVaryingTexcoord = false;
       HdPrimvarDescriptorVector faceVaryingPrimvars =
         GetPrimvarDescriptors(sceneDelegate, HdInterpolationFaceVarying);
+      for (HdPrimvarDescriptor const& pv: faceVaryingPrimvars) {
+        if (pv.name == "Texture_uv")
+          faceVaryingTexcoord = true;
+      }
 
-      if (!faceVaryingPrimvars.empty()) {
+      if (faceVaryingTexcoord) {
         TfToken buffName = HdOSPRayTokens->st;
         VtValue buffValue = VtValue(_texcoords);
         HdVtBufferSource buffer(buffName, buffValue);
@@ -432,10 +440,18 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
       ospSetData(mesh, "index", indices);
       ospRelease(indices);
 
+      // Check if texcoords are provides as face varying.
+      // XXX: (This code currently only cares about _texcoords, but should be
+      // generalized to all primvars)
+      bool faceVaryingTexcoord = false;
       HdPrimvarDescriptorVector faceVaryingPrimvars =
         GetPrimvarDescriptors(sceneDelegate, HdInterpolationFaceVarying);
+      for (HdPrimvarDescriptor const& pv: faceVaryingPrimvars) {
+        if (pv.name == "Texture_uv")
+          faceVaryingTexcoord = true;
+      }
 
-      if (!faceVaryingPrimvars.empty()) {
+      if (faceVaryingTexcoord) {
         TfToken buffName = HdOSPRayTokens->st;
         VtValue buffValue = VtValue(_texcoords);
         HdVtBufferSource buffer(buffName, buffValue);
