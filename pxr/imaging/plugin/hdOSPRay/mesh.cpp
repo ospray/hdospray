@@ -48,7 +48,6 @@ PXR_NAMESPACE_OPEN_SCOPE
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayTokens,
     (st)
-    (ptexFaceOffset)
 );
 
 std::mutex g_mutex;
@@ -121,6 +120,35 @@ HdOSPRayMesh::_InitRepr(TfToken const &reprToken,
     }
 }
 
+
+static bool
+_IsEnabledForceQuadrangulate()
+{
+    static bool enabled = HdOSPRayConfig::GetInstance().forceQuadrangulate == 1;
+    return enabled;
+}
+
+bool
+HdOSPRayMesh::_UseQuadIndices(
+        const HdRenderIndex &renderIndex,
+        HdMeshTopology const & topology) const
+{
+    // We should never quadrangulate for subdivision schemes
+    // which refine to triangles (like Loop)
+    if (topology.GetScheme() == PxOsdOpenSubdivTokens->loop)
+        return false;
+
+    // According to HdSt mesh.cpp, always use quads on surfaces with ptex
+    const HdOSPRayMaterial *material = static_cast<const HdOSPRayMaterial *>(
+            renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
+    if (material && material->HasPtex())
+        return true;
+
+    // Fallback to the environment variable, which allows forcing of
+    // quadrangulation for debugging/testing.
+    return _IsEnabledForceQuadrangulate();
+}
+
 void
 HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate,
                    HdRenderParam     *renderParam,
@@ -130,12 +158,6 @@ HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate,
   HD_TRACE_FUNCTION();
   HF_MALLOC_TAG_FUNCTION();
 
-    // The repr token is used to look up an HdMeshReprDesc struct, which
-    // has drawing settings for this prim to use. Repr opinions can come
-    // from the render pass's rprim collection or the scene delegate;
-    // _GetReprName resolves these multiple opinions.
-    // HdReprSelector calculatedReprToken = _GetReprSelector(reprToken, forcedRepr);
-
   // XXX: Meshes can have multiple reprs; this is done, for example, when
   // the drawstyle specifies different rasterizing modes between front faces
   // and back faces. With raytracing, this concept makes less sense, but
@@ -144,8 +166,11 @@ HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate,
   _MeshReprConfig::DescArray descs = _GetReprDesc(reprToken);
   const HdMeshReprDesc &desc = descs[0];
 
-  OSPModel model = static_cast<HdOSPRayRenderParam*>(renderParam)->GetOSPRayModel();
-  OSPRenderer renderer = static_cast<HdOSPRayRenderParam*>(renderParam)->GetOSPRayRenderer();
+  // Pull top-level OSPRay state out of the render param.
+  HdOSPRayRenderParam *ospRenderParam =
+    static_cast<HdOSPRayRenderParam*>(renderParam);
+  OSPModel model = ospRenderParam->GetOSPRayModel();
+  OSPRenderer renderer = ospRenderParam->GetOSPRayRenderer();
 
   if (*dirtyBits & HdChangeTracker::DirtyMaterialId) {
     _SetMaterialId(sceneDelegate->GetRenderIndex().GetChangeTracker(),
@@ -189,13 +214,6 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
         continue;
 
       auto value = sceneDelegate->Get(id, pv.name);
-
-      //ptexFaceOffset
-      if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, HdOSPRayTokens->ptexFaceOffset)) {
-        if (value.IsHolding<int>()) {
-          _ptexFaceOffset = value.Get<int>();
-        }
-      }
 
       //texcoords
       if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, HdOSPRayTokens->st)) {
@@ -257,8 +275,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->normals) ||
         HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->widths) ||
         HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->primvar) ||
-        HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdOSPRayTokens->st) ||
-        HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdOSPRayTokens->ptexFaceOffset)
+        HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdOSPRayTokens->st)
         ) {
         _UpdatePrimvarSources(sceneDelegate, *dirtyBits);
     }
@@ -345,14 +362,20 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 //      }
 //    }
 
-    bool useQuads = true;
     OSPGeometry mesh = nullptr;
+
+    const HdRenderIndex &renderIndex = sceneDelegate->GetRenderIndex();
+    const HdOSPRayMaterial *material = static_cast<const HdOSPRayMaterial *>(
+        renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
+
+    bool useQuads = _UseQuadIndices(renderIndex, _topology);
+
     if (useQuads) {
       mesh = ospNewGeometry("quadmesh");
 
       HdMeshUtil meshUtil(&_topology, GetId());
       meshUtil.ComputeQuadIndices(&_quadIndices,
-                                      &_quadPrimitiveParams);
+                                  &_quadPrimitiveParams);
 
 
       auto indices = ospNewData(_quadIndices.size(), OSP_INT4,
@@ -362,34 +385,46 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
       ospSetData(mesh, "index", indices);
       ospRelease(indices);
 
-      ospSet1i(mesh, "ptexFaceOffset", _ptexFaceOffset);
-
-      TfToken buffName = HdOSPRayTokens->st;
-      VtValue buffValue = VtValue(_texcoords);
-      HdVtBufferSource buffer(buffName, buffValue);
-      VtValue quadPrimvar;
-      if (!meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(buffer.GetData(), buffer.GetNumElements(),
-                                                 buffer.GetTupleType().type, &quadPrimvar)) {
-        std::cout << "ERROR: could not triangule face-varying data\n";
-      } else {
-        if (quadPrimvar.IsHolding<VtVec2fArray>())
-        _texcoords = quadPrimvar.Get<VtVec2fArray>();
+      // Check if texcoords are provides as face varying.
+      // XXX: (This code currently only cares about _texcoords, but should be
+      // generalized to all primvars)
+      bool faceVaryingTexcoord = false;
+      HdPrimvarDescriptorVector faceVaryingPrimvars =
+        GetPrimvarDescriptors(sceneDelegate, HdInterpolationFaceVarying);
+      for (HdPrimvarDescriptor const& pv: faceVaryingPrimvars) {
+        if (pv.name == "Texture_uv")
+          faceVaryingTexcoord = true;
       }
 
-      //usd stores texcoords in face indexed -> each quad has 4 unique texcoords.
-      // let's try converting it to match our vertex indices
-      VtVec2fArray texcoords2;
-      texcoords2.resize(_points.size());
-      for (size_t q = 0; q < _quadIndices.size(); q++) {
-        for (int i = 0; i < 4; i++) {
-          // value at quadindex[i][q] maps to i*4+q texcoord;
-          const size_t tc1index = q*4+i;
-          const size_t tc2index = _quadIndices[q][i];
-          if (tc1index < _texcoords.size() && tc2index < texcoords2.size())
-            texcoords2[tc2index] = _texcoords[tc1index];
+      if (faceVaryingTexcoord) {
+        TfToken buffName = HdOSPRayTokens->st;
+        VtValue buffValue = VtValue(_texcoords);
+        HdVtBufferSource buffer(buffName, buffValue);
+        VtValue quadPrimvar;
+
+        auto success = meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(
+                           buffer.GetData(), buffer.GetNumElements(),
+                           buffer.GetTupleType().type, &quadPrimvar);
+        if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
+            _texcoords = quadPrimvar.Get<VtVec2fArray>();
+        } else {
+          std::cout << "ERROR: could not quadrangulate face-varying data\n";
         }
+
+        //usd stores texcoords in face indexed -> each quad has 4 unique texcoords.
+        // let's try converting it to match our vertex indices
+        VtVec2fArray texcoords2;
+        texcoords2.resize(_points.size());
+        for (size_t q = 0; q < _quadIndices.size(); q++) {
+          for (int i = 0; i < 4; i++) {
+            // value at quadindex[q][i] maps to q*4+i texcoord;
+            const size_t tc1index = q*4+i;
+            const size_t tc2index = _quadIndices[q][i];
+            texcoords2[tc2index] = _texcoords[tc1index];
+          }
+        }
+        _texcoords = texcoords2;
       }
-      _texcoords = texcoords2;
 
     } else {  //triangles
       mesh = ospNewGeometry("trianglemesh");
@@ -398,7 +433,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
       meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
                                       &_trianglePrimitiveParams);
 
-
       auto indices = ospNewData(_triangulatedIndices.size(), OSP_INT3,
                                 _triangulatedIndices.cdata(), OSP_DATA_SHARED_BUFFER);
 
@@ -406,16 +440,45 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
       ospSetData(mesh, "index", indices);
       ospRelease(indices);
 
-      TfToken buffName = HdOSPRayTokens->st;
-      VtValue buffValue = VtValue(_texcoords);
-      HdVtBufferSource buffer(buffName, buffValue);
-      VtValue triangulatedPrimvar;
-      if (!meshUtil.ComputeTriangulatedFaceVaryingPrimvar(buffer.GetData(), buffer.GetNumElements(),
-                                                 buffer.GetTupleType().type, &triangulatedPrimvar)) {
-        std::cout << "ERROR: could not triangule face-varying data\n";
-      } else {
-        if (triangulatedPrimvar.IsHolding<VtVec2fArray>())
-        _texcoords = triangulatedPrimvar.Get<VtVec2fArray>();
+      // Check if texcoords are provides as face varying.
+      // XXX: (This code currently only cares about _texcoords, but should be
+      // generalized to all primvars)
+      bool faceVaryingTexcoord = false;
+      HdPrimvarDescriptorVector faceVaryingPrimvars =
+        GetPrimvarDescriptors(sceneDelegate, HdInterpolationFaceVarying);
+      for (HdPrimvarDescriptor const& pv: faceVaryingPrimvars) {
+        if (pv.name == "Texture_uv")
+          faceVaryingTexcoord = true;
+      }
+
+      if (faceVaryingTexcoord) {
+        TfToken buffName = HdOSPRayTokens->st;
+        VtValue buffValue = VtValue(_texcoords);
+        HdVtBufferSource buffer(buffName, buffValue);
+        VtValue triangulatedPrimvar;
+
+        auto success = meshUtil.ComputeTriangulatedFaceVaryingPrimvar(
+                           buffer.GetData(), buffer.GetNumElements(),
+                           buffer.GetTupleType().type, &triangulatedPrimvar);
+        if (success && triangulatedPrimvar.IsHolding<VtVec2fArray>()) {
+            _texcoords = triangulatedPrimvar.Get<VtVec2fArray>();
+        } else {
+          std::cout << "ERROR: could not triangulate face-varying data\n";
+        }
+
+        //usd stores texcoords in face indexed -> each triangle has 3 unique texcoords.
+        // let's try converting it to match our vertex indices
+        VtVec2fArray texcoords2;
+        texcoords2.resize(_points.size());
+        for (size_t t = 0; t < _triangulatedIndices.size(); t++) {
+          for (int i = 0; i < 3; i++) {
+            // value at triangleIndex[t][i] maps to t*3+i texcoord;
+            const size_t tc1index = t*3+i;
+            const size_t tc2index = _triangulatedIndices[t][i];
+            texcoords2[tc2index] = _texcoords[tc1index];
+          }
+        }
+        _texcoords = texcoords2;
       }
     }
 
@@ -449,9 +512,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     }
 
     OSPMaterial ospMaterial = nullptr;
-    HdRenderIndex &renderIndex = sceneDelegate->GetRenderIndex();
-    const HdOSPRayMaterial *material = static_cast<const HdOSPRayMaterial *>(
-            renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
 
     if (material && material->GetOSPRayMaterial()) {
       ospMaterial = material->GetOSPRayMaterial();

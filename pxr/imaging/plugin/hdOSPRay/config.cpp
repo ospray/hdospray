@@ -69,6 +69,9 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_DENOISER, 0,
 TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_CHECKERBOARDING, 0,
         "OSPRay uses checkerboarding");
 
+TF_DEFINE_ENV_SETTING(HDOSPRAY_FORCE_QUADRANGULATE, 0,
+        "OSPRay force Quadrangulate meshes for debug");
+
 HdOSPRayConfig::HdOSPRayConfig()
 {
     // Read in values from the environment, clamping them to valid ranges.
@@ -86,6 +89,7 @@ HdOSPRayConfig::HdOSPRayConfig()
     initArgs =TfGetEnvSetting(HDOSPRAY_INIT_ARGS);
     useDenoiser = TfGetEnvSetting(HDOSPRAY_USE_DENOISER);
     useCheckerboarding = TfGetEnvSetting(HDOSPRAY_USE_CHECKERBOARDING);
+    forceQuadrangulate = TfGetEnvSetting(HDOSPRAY_FORCE_QUADRANGULATE);
 
     if (TfGetEnvSetting(HDOSPRAY_PRINT_CONFIGURATION) > 0) {
         std::cout

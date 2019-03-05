@@ -128,6 +128,9 @@ public:
 
 protected:
 
+    bool _UseQuadIndices(const HdRenderIndex &renderIndex,
+                         HdMeshTopology const & topology) const;
+
     // This callback from Rprim gives the prim an opportunity to set
     // additional dirty bits based on those already set.  This is done
     // before the dirty bits are passed to the scene delegate, so can be
@@ -200,7 +203,6 @@ private:
     VtVec2fArray _texcoords;
     VtVec4fArray _colors;
     VtVec3fArray _normals;
-    int _ptexFaceOffset{0};
 
     // Derived scene data:
     // - _triangulatedIndices holds a triangulation of the source topology,
