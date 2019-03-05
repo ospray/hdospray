@@ -42,6 +42,7 @@ OIIO_NAMESPACE_USING
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+// clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayMaterialTokens,
     (UsdPreviewSurface)
@@ -73,6 +74,7 @@ TF_DEFINE_PRIVATE_TOKENS(
     (mirror)
     (HwPtexTexture_1)
 );
+// clang-format on
 
 OSPTextureFormat
 osprayTextureFormat(int depth, int channels, bool preferLinear = false)

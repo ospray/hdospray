@@ -40,6 +40,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 // Define local tokens for the names of the primvars the instancer
 // consumes.
 // XXX: These should be hydra tokens...
+// clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
     _tokens,
     (instanceTransform)
@@ -47,6 +48,7 @@ TF_DEFINE_PRIVATE_TOKENS(
     (scale)
     (translate)
 );
+// clang-format on
 
 HdOSPRayInstancer::HdOSPRayInstancer(HdSceneDelegate* delegate,
                                      SdfPath const& id,

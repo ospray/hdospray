@@ -36,6 +36,7 @@ TF_INSTANTIATE_SINGLETON(HdOSPRayConfig);
 // Each configuration variable has an associated environment variable.
 // The environment variable macro takes the variable name, a default value,
 // and a description...
+// clang-format off
 TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_PER_FRAME, -1,
         "Raytraced samples per pixel per frame (must be >= 1)");
 
@@ -71,6 +72,7 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_CHECKERBOARDING, 0,
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_FORCE_QUADRANGULATE, 0,
         "OSPRay force Quadrangulate meshes for debug");
+// clang-format on
 
 HdOSPRayConfig::HdOSPRayConfig()
 {

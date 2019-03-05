@@ -45,10 +45,12 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+// clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayTokens,
     (st)
 );
+// clang-format on
 
 std::mutex g_mutex;
 
