@@ -63,6 +63,11 @@ HdResourceRegistrySharedPtr HdOSPRayRenderDelegate::_resourceRegistry;
 
 HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
 {
+    //Check plugin against pxr version
+#if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 19
+        #error This version of HdOSPRay is configured to built against USD v0.19.x
+#endif
+
     int ac = 1;
     std::string initArgs = HdOSPRayConfig::GetInstance().initArgs;
     std::stringstream ss(initArgs);
