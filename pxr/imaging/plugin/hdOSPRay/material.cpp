@@ -278,8 +278,6 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
 {
     bool isPtex = node.identifier == HdOSPRayTokens->HwPtexTexture_1;
 
-    hasPtex = isPtex;
-
     HdOSPRayTexture texture;
     TF_FOR_ALL (param, node.parameters) {
         const auto& name = param->first;
@@ -292,6 +290,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
             texture.file = path.GetResolvedPath();
             if (isPtex) {
+                hasPtex = true;
                 texture.isPtex = true;
 #ifdef HDOSPRAY_PLUGIN_PTEX
                 texture.ospTexture = LoadPtexTexture(texture.file);
