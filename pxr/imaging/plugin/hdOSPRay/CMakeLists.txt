@@ -47,7 +47,7 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
   target_include_directories(hdOSPRay PUBLIC ${OIIO_INCLUDE_DIRS})
 
   # add ptex module to ospray libraries
-  option(HDOSPRAY_PLUGIN_PTEX "build hdOSPRay with Ptex support" ON)
+  option(HDOSPRAY_PLUGIN_PTEX "build hdOSPRay with Ptex support" OFF)
   if (HDOSPRAY_PLUGIN_PTEX)
     if (NOT TARGET ospray::ospray_module_ptex)
       message(FATAL_ERROR "hdOSPRayPlugin requires building OSPRay with ptex module")
