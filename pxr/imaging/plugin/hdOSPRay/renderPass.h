@@ -42,14 +42,14 @@ PXR_NAMESPACE_OPEN_SCOPE
 /// scene (the HdRprimCollection) for a specific viewer (the camera/viewport
 /// parameters in HdRenderPassState) to the current draw target.
 ///
-/// This class does so by raycasting into the embree scene.
+/// This class does so by raycasting into the OSPRay scene.
 ///
 class HdOSPRayRenderPass final : public HdRenderPass {
 public:
     /// Renderpass constructor.
     ///   \param index The render index containing scene data to render.
     ///   \param collection The initial rprim collection for this renderpass.
-    ///   \param scene The embree scene to raycast into.
+    ///   \param scene The OSPRay scene to raycast into.
     HdOSPRayRenderPass(HdRenderIndex* index,
                        HdRprimCollection const& collection, OSPModel model,
                        OSPRenderer renderer, std::atomic<int>* sceneVersion);
@@ -112,7 +112,7 @@ private:
     // The height of the viewport we're rendering into.
     unsigned int _height;
 
-    // Our handle to the embree scene.
+    // OSPRay model that will hold OSPRay specific geometry
     OSPModel _model;
 
     OSPCamera _camera;

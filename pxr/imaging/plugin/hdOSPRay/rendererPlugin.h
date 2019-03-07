@@ -46,7 +46,7 @@ public:
     virtual ~HdOSPRayRendererPlugin() = default;
 
     /// Construct a new render delegate of type HdOSPRayRenderDelegate.
-    /// OSPRay render delegates own the embree scene object, so a new render
+    /// OSPRay render delegates own the OSPRay scene object, so a new render
     /// delegate should be created for each instance of HdRenderIndex.
     ///   \return A new HdOSPRayRenderDelegate object.
     virtual HdRenderDelegate* CreateRenderDelegate() override;
@@ -56,7 +56,7 @@ public:
     virtual void
     DeleteRenderDelegate(HdRenderDelegate* renderDelegate) override;
 
-    /// Checks to see if the embree plugin is supported on the running system
+    /// Checks to see if the OSPRay plugin is supported on the running system
     ///
     virtual bool IsSupported() const override;
 
@@ -68,4 +68,4 @@ private:
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // HDEMBREE_RENDERER_PLUGIN_H
+#endif // HDOSPRAY_RENDERER_PLUGIN_H

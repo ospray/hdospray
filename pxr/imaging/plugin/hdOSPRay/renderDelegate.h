@@ -44,12 +44,8 @@ class HdOSPRayRenderParam;
 ///
 /// \class HdOSPRayRenderDelegate
 ///
-/// Render delegates provide renderer-specific functionality to the render
-/// index, the main hydra state management structure. The render index uses
-/// the render delegate to create and delete scene primitives, which include
-/// geometry and also non-drawable objects. The render delegate is also
-/// responsible for creating renderpasses, which know how to draw this
-/// renderer's scene primitives.
+/// Manages OSPRay specific objects mapped from Hydra Rprims, Sprims,
+/// and Bprims.
 ///
 /// Primitives in Hydra are split into Rprims (drawables), Sprims (state
 /// objects like cameras and materials), and Bprims (buffer objects like
@@ -57,28 +53,11 @@ class HdOSPRayRenderParam;
 /// one Rprim (so the scene's not empty) and the "camera" Sprim, which is
 /// required by HdxRenderTask, the task implementing basic hydra drawing.
 ///
-/// A render delegate can report which prim types it supports via
-/// GetSupportedRprimTypes() (and Sprim, Bprim), and well-behaved applications
-/// won't call CreateRprim() (Sprim, Bprim) for prim types that aren't
-/// supported. The core hydra prim types are "mesh", "basisCurves", and
-/// "points", but a custom render delegate and a custom scene delegate could
-/// add support for other prims such as implicit surfaces or volumes.
-///
-/// HdEmbree Rprims create embree geometry objects in the render delegate's
-/// top-level embree scene; and HdEmbree's render pass draws by casting rays
-/// into the top-level scene. The renderpass writes to the currently bound GL
-/// framebuffer.
-///
-/// The render delegate also has a hook for the main hydra execution algorithm
-/// (HdEngine::Execute()): between HdRenderIndex::SyncAll(), which pulls new
-/// scene data, and execution of tasks, the engine calls back to
-/// CommitResources(). This can be used to commit GPU buffers or, in HdEmbree's
-/// case, to do a final build of the BVH.
 ///
 class HdOSPRayRenderDelegate final : public HdRenderDelegate {
 public:
     /// Render delegate constructor. This method creates the RTC device and
-    /// scene, and links embree error handling to hydra error handling.
+    /// scene, and links OSPRay error handling to hydra error handling.
     HdOSPRayRenderDelegate();
     /// Render delegate destructor. This method destroys the RTC device and
     /// scene.
@@ -104,11 +83,11 @@ public:
     /// Create a renderpass. Hydra renderpasses are responsible for drawing
     /// a subset of the scene (specified by the "collection" parameter) to the
     /// current framebuffer. This class creates objects of type
-    /// HdOSPRayRenderPass, which draw using embree's raycasting API.
+    /// HdOSPRayRenderPass, which draw using OSPRay's raycasting API.
     ///   \param index The render index this renderpass will be bound to.
     ///   \param collection A specifier for which parts of the scene should
     ///                     be drawn.
-    ///   \return An embree renderpass object.
+    ///   \return An OSPRay renderpass object.
     virtual HdRenderPassSharedPtr
     CreateRenderPass(HdRenderIndex* index,
                      HdRprimCollection const& collection) override;
@@ -121,7 +100,7 @@ public:
     ///             data from a scene delegate.
     ///   \param instancerId If specified, the instancer at this id uses
     ///                      this instancer as a prototype.
-    ///   \return An embree instancer object.
+    ///   \return An OSPRay instancer object.
     virtual HdInstancer* CreateInstancer(HdSceneDelegate* delegate,
                                          SdfPath const& id,
                                          SdfPath const& instancerId);
@@ -130,16 +109,14 @@ public:
     ///   \param instancer The instancer to be destroyed.
     virtual void DestroyInstancer(HdInstancer* instancer);
 
-    /// Create a hydra Rprim, representing scene geometry. This class creates
-    /// embree-specialized geometry containers like HdEmbreeMesh which map
-    /// scene data to embree scene graph objects.
+    /// Create an OSPRay specific hydra Rprim, representing scene geometry. 
     ///   \param typeId The rprim type to create. This must be one of the types
     ///                 from GetSupportedRprimTypes().
     ///   \param rprimId The scene graph ID of this rprim, used when pulling
     ///                  data from a scene delegate.
     ///   \param instancerId If specified, the instancer at this id uses the
     ///                      new rprim as a prototype.
-    ///   \return An embree rprim object.
+    ///   \return An OSPRay rprim object.
     virtual HdRprim* CreateRprim(TfToken const& typeId, SdfPath const& rprimId,
                                  SdfPath const& instancerId) override;
 
@@ -153,7 +130,7 @@ public:
     ///                 from GetSupportedSprimTypes().
     ///   \param sprimId The scene graph ID of this sprim, used when pulling
     ///                  data from a scene delegate.
-    ///   \return An embree sprim object.
+    ///   \return An OSPRay sprim object.
     virtual HdSprim* CreateSprim(TfToken const& typeId,
                                  SdfPath const& sprimId) override;
 
@@ -161,7 +138,7 @@ public:
     /// binding.
     ///   \param typeId The sprim type to create. This must be one of the types
     ///                 from GetSupportedSprimTypes().
-    ///   \return An embree fallback sprim object.
+    ///   \return An OSPRay fallback sprim object.
     virtual HdSprim* CreateFallbackSprim(TfToken const& typeId) override;
 
     /// Destroy an Sprim created with CreateSprim or CreateFallbackSprim.
@@ -173,7 +150,7 @@ public:
     ///                 from GetSupportedBprimTypes().
     ///   \param bprimId The scene graph ID of this bprim, used when pulling
     ///                  data from a scene delegate.
-    ///   \return An embree bprim object.
+    ///   \return An OSPRay bprim object.
     virtual HdBprim* CreateBprim(TfToken const& typeId,
                                  SdfPath const& bprimId) override;
 
@@ -181,7 +158,7 @@ public:
     /// binding.
     ///   \param typeId The bprim type to create. This must be one of the types
     ///                 from GetSupportedBprimTypes().
-    ///   \return An embree fallback bprim object.
+    ///   \return An OSPRay fallback bprim object.
     virtual HdBprim* CreateFallbackBprim(TfToken const& typeId) override;
 
     /// Destroy a Bprim created with CreateBprim or CreateFallbackBprim.
@@ -199,8 +176,6 @@ public:
     virtual TfToken GetMaterialNetworkSelector() const;
 
     /// This function tells the scene which material variant to reference.
-    /// Embree doesn't currently use materials but raytraced backends generally
-    /// specify "full".
     ///   \return A token specifying which material variant this renderer
     ///           prefers.
     virtual TfToken GetMaterialBindingPurpose() const override
@@ -231,9 +206,7 @@ private:
     HdOSPRayRenderDelegate(const HdOSPRayRenderDelegate&) = delete;
     HdOSPRayRenderDelegate& operator=(const HdOSPRayRenderDelegate&) = delete;
 
-    // Handle for an embree "device", or library state.
-
-    // Handle for the top-level embree scene, mirroring the Hydra scene.
+    // Handle for the top-level OSPRay model
     OSPModel _model;
     OSPRenderer
            _renderer; // moved from Pass to Delegate due to Material dependancy
@@ -241,7 +214,7 @@ private:
     // A version counter for edits to _scene.
     std::atomic<int> _sceneVersion;
 
-    // A shared HdOSPRayRenderParam object that stores top-level embree state;
+    // A shared HdOSPRayRenderParam object that stores top-level OSPRay state;
     // passed to prims during Sync().
     std::shared_ptr<HdOSPRayRenderParam> _renderParam;
 };

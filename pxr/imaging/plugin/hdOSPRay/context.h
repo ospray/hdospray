@@ -21,8 +21,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef HDEMBREE_CONTEXT_H
-#define HDEMBREE_CONTEXT_H
+#ifndef HDOSPRAY_CONTEXT_H
+#define HDOSPRAY_CONTEXT_H
 
 #include "pxr/pxr.h"
 
@@ -34,31 +34,25 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 /// \class HdOSPRayPrototypeContext
 ///
-/// A small bit of state attached to each bit of prototype geometry in embree,
+/// A small bit of state attached to each bit of prototype geometry in OSPRay,
 /// for the benefit of HdOSPRayRenderPass::_TraceRay.
 ///
 struct HdOSPRayPrototypeContext {
     /// A pointer back to the owning HdOSPRay rprim.
     HdRprim* rprim;
-    /// A name-indexed map of primvar samplers.
-    //    TfHashMap<TfToken, HdOSPRayPrimvarSampler*, TfToken::HashFunctor>
-    //        primvarMap;
 };
 
 ///
 /// \class HdOSPRayInstanceContext
 ///
-/// A small bit of state attached to each bit of instanced geometry in embree,
-/// for the benefit of HdOSPRayRenderPass::_TraceRay.
+/// A small bit of state attached to each bit of instanced geometry in OSPRay
 ///
 struct HdOSPRayInstanceContext {
     /// The object-to-world transform, for transforming normals to worldspace.
     GfMatrix4f objectToWorldMatrix;
     /// The scene the prototype geometry lives in, for passing to
-    /// rtcInterpolate.
-    // RTCScene rootScene;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
-#endif // HDEMBREE_CONTEXT_H
+#endif // HDOSPRAY_CONTEXT_H

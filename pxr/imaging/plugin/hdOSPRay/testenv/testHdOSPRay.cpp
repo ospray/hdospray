@@ -42,7 +42,6 @@
 
 #include "pxr/base/tf/errorMark.h"
 
-#include <embree2/rtcore.h>
 #include <iostream>
 
 PXR_NAMESPACE_USING_DIRECTIVE
@@ -50,7 +49,7 @@ PXR_NAMESPACE_USING_DIRECTIVE
 // ------------------------------------------------------
 // HdSt_UnitTestGLDrawing is test scaffolding; it can create a window
 // and render into it, or do a headless render into a PNG file.
-// Extend it to draw a simple embree scene.
+// Extend it to draw a simple OSPRay scene.
 
 class HdOSPRay_TestGLDrawing : public HdSt_UnitTestGLDrawing {
 public:
@@ -141,7 +140,7 @@ private:
 void
 HdOSPRay_TestGLDrawing::InitTest()
 {
-    // This test bypasses the hydra plugin system; it creates an embree
+    // This test bypasses the hydra plugin system; it creates an HdOSPRAY
     // renderer plugin directly, and then a render delegate, and then
     // a render index.
     _rendererPlugin = new HdOSPRayRendererPlugin;
@@ -162,7 +161,7 @@ HdOSPRay_TestGLDrawing::InitTest()
     SdfPath camera("/camera");
     _sceneDelegate->AddCamera(camera);
 
-    // Prepare an embree render task.  The render task is responsible for
+    // Prepare an OSPRay render task.  The render task is responsible for
     // rendering the scene.
     SdfPath renderTask("/renderTask");
     _sceneDelegate->AddTask<HdxRenderTask>(renderTask);

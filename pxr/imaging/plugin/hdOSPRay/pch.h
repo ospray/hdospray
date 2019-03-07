@@ -160,9 +160,6 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/utility/value_init.hpp>
 #include <boost/weak_ptr.hpp>
-#include <embree2/rtcore.h>
-#include <embree2/rtcore_geometry.h>
-#include <embree2/rtcore_ray.h>
 #include <tbb/atomic.h>
 #include <tbb/concurrent_unordered_map.h>
 #include <tbb/concurrent_vector.h>
