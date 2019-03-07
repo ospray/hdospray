@@ -66,20 +66,6 @@ public:
     /// Override with *HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES*.
     unsigned int ambientOcclusionSamples;
 
-    /// Should the renderpass's sampling functions use a fixed random seed?
-    /// (Helpful for things like unit tests, to get consistent results).
-    ///
-    /// Override with *HDOSPRAY_FIX_RANDOM_SEED*. Integer values greater than
-    /// zero are considered "true".
-    bool fixRandomSeed;
-
-    /// Should the renderpass use the color primvar, or flat white colors?
-    /// (Flat white shows off ambient occlusion better).
-    ///
-    /// Override with *HDOSPRAY_USE_FACE_COLORS*. Integer values greater than
-    /// zero are considered "true".
-    bool useFaceColors;
-
     /// What should the intensity of the camera light be, specified as a
     /// percent of <1, 1, 1>.  For example, 300 would be <3, 3, 3>.
     ///
@@ -96,21 +82,16 @@ public:
     /// Override with *HDOSPRAY_USE_DENOISER*.
     bool useDenoiser;
 
-    ///  Whether OSPRay uses checkerboarding
-    ///
-    /// Override with *HDOSPRAY_USE_CHECKERBOARDING*.
-    bool useCheckerboarding;
-
-    ///  Whether OSPRay forces quad meshes for debug
-    ///
-    /// Override with *HDOSPRAY_FORCE_QUADRANGULATE*.
-    bool forceQuadrangulate;
-
     /// Initialization arguments sent to OSPRay.
     ///  This can be used to set ospray configurations like mpi.
     ///
     /// Override with *HDOSPRAY_INIT_ARGS*.
     std::string initArgs;
+
+    ///  Whether OSPRay forces quad meshes for debug
+    ///
+    /// Override with *HDOSPRAY_FORCE_QUADRANGULATE*.
+    bool forceQuadrangulate;
 
 private:
     // The constructor initializes the config variables with their

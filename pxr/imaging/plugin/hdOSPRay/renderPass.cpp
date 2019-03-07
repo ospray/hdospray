@@ -81,22 +81,18 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(HdRenderIndex* index,
 
     ospSetObject(_renderer, "model", _model);
     ospSetObject(_renderer, "camera", _camera);
-    // ospSet1i(_renderer, "checkerboard", 1);
 
     _spp = HdOSPRayConfig::GetInstance().samplesPerFrame;
     _useDenoiser = HdOSPRayConfig::GetInstance().useDenoiser;
-    ospSet1i(_renderer, "spp", _spp);
-    ospSet1i(_renderer, "aoSamples",
-             HdOSPRayConfig::GetInstance().ambientOcclusionSamples);
-    ospSet1i(_renderer, "maxDepth", 8);
-    ospSet1f(_renderer, "aoDistance", 15.0f);
-    ospSet1i(_renderer, "shadowsEnabled", true);
-    ospSet1f(_renderer, "maxContribution", 2.f);
-    ospSet1f(_renderer, "minContribution", 0.05f);
-    ospSet1f(_renderer, "epsilon", 0.001f);
-    ospSet1i(_renderer, "useGeometryLights", 0);
-    ospSet1i(_renderer, "checkerboard",
-             HdOSPRayConfig::GetInstance().useCheckerboarding);
+    ospSet1i(_renderer,"spp",_spp);
+    ospSet1i(_renderer,"aoSamples",HdOSPRayConfig::GetInstance().ambientOcclusionSamples);
+    ospSet1i(_renderer,"maxDepth",8);
+    ospSet1f(_renderer,"aoDistance",15.0f);
+    ospSet1i(_renderer,"shadowsEnabled",true);
+    ospSet1f(_renderer,"maxContribution",2.f);
+    ospSet1f(_renderer,"minContribution",0.05f);
+    ospSet1f(_renderer,"epsilon",0.001f);
+    ospSet1i(_renderer,"useGeometryLights",0);
 
     ospCommit(_renderer);
 
