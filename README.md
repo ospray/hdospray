@@ -11,8 +11,7 @@ OSPRay interactive rendering plugin for USD Hydra
 </p>
 </center>
 This is release v0.2.0 of HdOSPRay.
-Visit [HdOSPRay in github](https://github.com/ospray/hdospray)
-for more information.
+Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more information.
 
 HdOSPRay Overview
 =================
