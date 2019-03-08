@@ -7,6 +7,6 @@ HdOSPRay
 <p><em>Pixar's Kitchen asset rendered with OSPRay's path tracer at interactive rates.</em></p></center>
 
 This is release v0.2.0 of HdOSPRay. 
-Visit [www.github.com/ospray/hdospray](http://www.github.com/ospray/hdospray)  
+Visit [HdOSPRay in github](https://github.com/ospray/hdospray)  
 for more information.
 
