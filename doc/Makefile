@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
-webpages := $(addprefix www/, $(addsuffix .html, index news demos documentation gallery downloads legal))
-process_version := $(addprefix tmp/, $(addsuffix .md, demos readme_head))
+webpages := $(addprefix www/, $(addsuffix .html, index news documentation gallery downloads legal))
+process_version := $(addprefix tmp/, $(addsuffix .md, readme_head))
 
 PANDOC := pandoc
 PDMINVERSION := 2000000
@@ -25,11 +25,6 @@ HDOSPRAY_VERSION := "0.1.0"
 HDOSPRAY_VERSION_MAJOR := "0"
 HDOSPRAY_VERSION_MINOR := "1"
 HDOSPRAY_VERSION_PATCH := "0"
-
-
-changelog.md:
-	ln -s ../CHANGELOG.md $@
-
 
 ### directories
 ########################################################################
@@ -55,9 +50,8 @@ www/%.html:
 www/stylesheet.css: stylesheet.css
 	cp $< $@
 
-www/index.html: teaser.html overview.md changelog.md
+www/index.html: teaser.html overview.md
 www/news.html: news.md
-#www/demos.html: tmp/demos.md
 www/gallery.html: gallery.md
 www/downloads.html: compilation.md
 www/legal.html: legal.md
@@ -70,17 +64,16 @@ www/documentation.html: compilation.md documentation.md
 # also works around pandoc #5121, should be fixed in v2.5.1
 convert_nbsp_width = sed -e 's@\\ @ @g' -e 's/" style="width:/" width="/g' -e "s@^</figure>@\0\n\n@"
 
-#../README.md: readme_head.md overview.md gallery.md compilation.md documentation.md examples.md 
-#	$(PANDOC) $+ -t markdown-smart+pipe_tables-simple_tables-multiline_tables-grid_tables-link_attributes | $(convert_nbsp_width) > $@
-
 ../README.md: readme_head.md overview.md gallery.md compilation.md documentation.md 
-	$(PANDOC) --wrap=preserve -f markdown+hard_line_breaks-auto_identifiers -t markdown+hard_line_breaks-auto_identifiers $+ > $@
+	$(PANDOC) --from=markdown --to=markdown --verbose --output $@ $+
+
+#html $+ | $(PANDOC) --from=html --to=markdown-raw_html-native_divs --output $@
 
 ### clean
 ########################################################################
 
 clean:
-	rm -rf www tmp changelog.md __pycache__
+	rm -rf www tmp __pycache__
 
 realclean: clean
 	rm -irf images

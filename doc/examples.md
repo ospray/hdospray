@@ -8,7 +8,7 @@ Kitchen
 <p align="center">
 Pixar kitchen set rendered with HdOSPRay in usdview.  
 
-- Download Kitchen set asset from [pixar](http://graphics.pixar.com/usd/downloads.html)
+- Download Kitchen set asset from [Pixar](http://graphics.pixar.com/usd/downloads.html)
 - Run usdview using HdOSPRay using
 ```
 HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Kitchen_set.usd
@@ -23,7 +23,7 @@ HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Kitchen_set.usd
 <p align="center">
 Apple teapot rendered with HdOSPRay in usdview.  
 
-- Download the Apple ARKit teapot from [apple](https://developer.apple.com/arkit/gallery/models/teapot/teapot.usdz).  
+- Download the Apple ARKit teapot from [Apple](https://developer.apple.com/arkit/gallery/models/teapot/teapot.usdz).  
 - USDZ files are zip files, unzip using platform specific program of your choice.
 ```
 unzip teapot.usdz
@@ -43,7 +43,7 @@ HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Teapot.usdc
 <p align="center">
 Apple Gramaphone rendered with HdOSPRay in usdview
 
-- Download the Apple ARKit gramaphone from [apple](https://developer.apple.com/arkit/gallery/models/gramaphone/gramaphone.usdz).
+- Download the Apple ARKit gramaphone from [Apple](https://developer.apple.com/arkit/gallery/models/gramaphone/gramaphone.usdz).
 - USDZ files are zip files, unzip using platform specific program of your choice. 
 ```
 unzip teapot.usdz
