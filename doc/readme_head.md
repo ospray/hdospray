@@ -1,6 +1,5 @@
-HdOSPRay
-=========================
-## OSPRay interactive rendering plugin for USD Hydra 
+# HdOSPRay
+OSPRay interactive rendering plugin for USD Hydra
 
 <center>
 <img src="images/hdospray_kitchen_pt.jpg" style="padding: 0px 0px 0px 0px; box-shadow: 0px 0px 24px rgba(0,0,0,0.4);">
