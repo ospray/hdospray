@@ -3,15 +3,13 @@ HdOSPRay
 
 OSPRay interactive rendering plugin for USD Hydra
 
-<center>
 <img src="images/hdospray_kitchen_pt.jpg" style="padding: 0px 0px 0px 0px; box-shadow: 0px 0px 24px rgba(0,0,0,0.4);">
-<p>
-<em>Pixar's Kitchen asset rendered with OSPRay's path tracer at
-interactive rates.</em>
-</p>
-</center>
-This is release v0.2.0 of HdOSPRay.
-Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more information.
+
+Pixar's Kitchen asset rendered with OSPRay's path tracer at interactive
+rates.
+
+This is release v0.2.0 of HdOSPRay. Visit [HdOSPRay on
+github](https://github.com/ospray/hdospray) for more information.
 
 HdOSPRay
 --------
@@ -64,7 +62,6 @@ Instructions are provided for loading the scenes below.
 
 -   Download Kitchen Set asset from
     [Pixar](http://graphics.pixar.com/usd/downloads.html)
-
 -   Run usdview using HdOSPRay using
 
         HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Kitchen_set.usd
@@ -113,7 +110,6 @@ usdview <br/>
 
 -   Download the Apple ARKit teapot from
     [Apple](https://developer.apple.com/arkit/gallery/models/teapot/teapot.usdz)
-
 -   USDZ files are zip files, unzip using platform specific program of
     your choice
 
@@ -136,7 +132,6 @@ usdview <br/>
 
 -   Download the Apple ARKit gramophone from
     [Apple](https://developer.apple.com/arkit/gallery/models/gramophone/gramophone.usdz)
-
 -   USDZ files are zip files, unzip using platform specific program of
     your choice
 
@@ -215,20 +210,15 @@ following the build scripts provided.
 
 -   Set `pxr_DIR` to the install directory of USD which contains
     `pxrConfig.cmake`
-
 -   Set required USD options: `usd-imaging` and `openimageio` are
     required for both the USD and HdOSPRay builds
-
 -   Set `ospray_DIR` to the directory containing your
     `osprayConfig.cmake`
-
     -   This can be found in the root directory of the distributed
         binaries or if you are building and installing from source it
         can be found in `<install>/lib/cmake/ospray-\*/`
-
 -   Set `embree_DIR` to install directory of Embree. These will be the
     same as `ospray_DIR` if you downloaded the OSPRay binaries
-
 -   Compile and install HdOSPRay
 
         $ make -j install
