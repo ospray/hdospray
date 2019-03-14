@@ -81,7 +81,9 @@ osprayTextureFormat(int depth, int channels, bool preferLinear = false)
 {
     if (depth == 1) {
         if (channels == 1)
-            return OSP_TEXTURE_R8;
+            return preferLinear ? OSP_TEXTURE_R8 : OSP_TEXTURE_L8;
+        if (channels == 2)
+            return preferLinear ? OSP_TEXTURE_RA8 : OSP_TEXTURE_LA8;
         if (channels == 3)
             return preferLinear ? OSP_TEXTURE_RGB8 : OSP_TEXTURE_SRGB;
         if (channels == 4)
