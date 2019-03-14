@@ -1,0 +1,5 @@
+# ignore vim files
+.*.swp
+
+# ignore built documentation
+doc/www

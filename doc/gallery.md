@@ -1,14 +1,15 @@
-HdOSPRay Gallery
-==========================
+## HdOSPRay Gallery
 
 Our gallery currently contains a limited set of renderings done with HdOSPRay
 inside of usdview using publicly available USD datasets. We hope to grow this
 gallery as more assets become available. Please let us know of any great scenes
-we may be missing, or you would like to send us for testing and display here!
+we may be missing, or if you would like to send us a scene for testing and
+displaying here!
 
 Instructions are provided for loading the scenes below.
 
-## Kitchen_Set
+### Kitchen Set
+
 <center>
 <img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced with HdOSPRay in usdview" width=70%>
 <br/>
@@ -17,11 +18,12 @@ Pixar Kitchen Set path traced with HdOSPRay in usdview
 </center>
 <br/>
 
-- Download Kitchen set asset from [pixar](http://graphics.pixar.com/usd/downloads.html)
+- Download Kitchen Set asset from [Pixar](http://graphics.pixar.com/usd/downloads.html)
 - Run usdview using HdOSPRay using
-```
-HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Kitchen_set.usd
-```
+
+    ```
+    HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Kitchen_set.usd
+    ```
 <br/>
 
 <center>
@@ -58,9 +60,7 @@ Pixar Kitchen Set rendered with HdOSPRay and path tracing in usdview
 </center>
 <br/>
 
-
-## Teapot
-
+### Teapot
 
 <center>
 <img src="images/hdospray_teapot2_thumbnail.jpg" alt="Teapot" width=70%>
@@ -70,20 +70,21 @@ Apple teapot rendered with HdOSPRay in usdview
 </center>
 <br/>
 
+- Download the Apple ARKit teapot from [Apple](https://developer.apple.com/arkit/gallery/models/teapot/teapot.usdz)
+- USDZ files are zip files, unzip using platform specific program of your choice
 
-- Download the Apple ARKit teapot from [apple](https://developer.apple.com/arkit/gallery/models/teapot/teapot.usdz).  
-- USDZ files are zip files, unzip using platform specific program of your choice.
-```
-unzip teapot.usdz
-``` 
+    ```
+    unzip teapot.usdz
+    ```
+
 - Run usdview using HdOSPRay using
-```
-HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Teapot.usdc
-```
+
+    ```
+    HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Teapot.usdc
+    ```
 <br/>
 
-
-## Gramophone
+### Gramophone
 
 <center>
 <img src="images/hdospray_gramophone_thumbnail.jpg" alt="Gramophone" width=70%>
@@ -93,14 +94,16 @@ Apple Gramophone rendered with HdOSPRay in usdview
 </center>
 <br/>
 
-- Download the Apple ARKit gramophone from [apple](https://developer.apple.com/arkit/gallery/models/gramophone/gramophone.usdz)
-- USDZ files are zip files, unzip using platform specific program of your choice. 
-```
-unzip teapot.usdz
-``` 
-- Run usdview using HdOSPRay using
-```
-HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Gramophone.usdc
-```
-<br/>
+- Download the Apple ARKit gramophone from [Apple](https://developer.apple.com/arkit/gallery/models/gramophone/gramophone.usdz)
+- USDZ files are zip files, unzip using platform specific program of your choice
 
+    ```
+    unzip teapot.usdz
+    ```
+
+- Run usdview using HdOSPRay using
+
+    ```
+    HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Gramophone.usdc
+    ```
+<br/>
