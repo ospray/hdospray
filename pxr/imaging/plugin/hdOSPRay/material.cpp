@@ -232,7 +232,10 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
     }
     if (map_metallic.ospTexture) {
         ospSetObject(_ospMaterial, "metallicMap", map_metallic.ospTexture);
-        metallic = 1.0f;
+        // XXX: OSPRay Principled material bug workaround.
+        // Set metallic factor to less than 1.0 to prevent crash in Principled
+        // material when metallic = 1.0 and ior > 1.0.
+        metallic = .75f;
     }
     if (map_roughness.ospTexture) {
         ospSetObject(_ospMaterial, "roughnessMap", map_roughness.ospTexture);
