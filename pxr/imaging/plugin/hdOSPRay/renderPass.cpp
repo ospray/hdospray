@@ -35,6 +35,8 @@
 #include "pxr/base/gf/vec2f.h"
 #include "pxr/base/work/loops.h"
 
+#include <iostream>
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 HdOSPRayRenderPass::HdOSPRayRenderPass(HdRenderIndex* index,
@@ -54,6 +56,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(HdRenderIndex* index,
     , _inverseProjMatrix(1.0f) // == identity
     , _clearColor(0.0707f, 0.0707f, 0.0707f)
 {
+  std::cout << "renderPass\n";
     _camera = ospNewCamera("perspective");
     std::vector<OSPLight> lights;
     auto ambient = ospNewLight(_renderer, "ambient");
@@ -184,7 +187,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _inverseViewMatrix = inverseViewMatrix;
         _inverseProjMatrix = inverseProjMatrix;
     }
-
+    
     // Reset the sample buffer if it's been requested.
     if (_pendingResetImage) {
         ospFrameBufferClear(_frameBuffer, OSP_FB_ACCUM);

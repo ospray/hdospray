@@ -58,11 +58,23 @@ public:
         return _renderer;
     }
 
+    void SetModelDirty(bool st)
+    {
+      _modelDirty = st;
+    }
+
+    bool GetModelDirty()
+    {
+      return _modelDirty;
+    }
+
 private:
     OSPModel _model;
     OSPRenderer _renderer;
     /// A version counter for edits to _scene.
     std::atomic<int>* _sceneVersion;
+    bool _modelDirty{true};
+    bool _imageDirty{true};
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

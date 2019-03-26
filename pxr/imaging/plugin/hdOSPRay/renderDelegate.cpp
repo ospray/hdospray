@@ -150,6 +150,11 @@ HdOSPRayRenderDelegate::CommitResources(HdChangeTracker* tracker)
 {
     // CommitResources() is called after prim sync has finished, but before any
     // tasks (such as draw tasks) have run.
+    auto& rp = _renderParam;
+    if (rp->GetModelDirty()) {
+        ospCommit(rp->GetOSPRayModel());
+        rp->SetModelDirty(false);
+    }
 }
 
 TfToken
