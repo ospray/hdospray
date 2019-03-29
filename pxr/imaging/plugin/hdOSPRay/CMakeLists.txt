@@ -5,7 +5,7 @@ add_custom_target(shared_libs)
 option(PXR_BUILD_OSPRAY_PLUGIN "build Intel hdOSPRay rendering backend" ON)
 
 if (PXR_BUILD_OSPRAY_PLUGIN)
-  find_package(ospray 1.8 CONFIG REQUIRED)
+  find_package(ospray 1.8.3 CONFIG REQUIRED)
 
   # add ptex module to ospray libraries
   option(HDOSPRAY_PLUGIN_PTEX "build hdOSPRay with Ptex support")
