@@ -41,7 +41,7 @@
 #include "pxr/imaging/hdSt/geometricShader.h"
 #include "pxr/imaging/hdSt/material.h"
 
-#include "AffineSpace.h"
+#include "ospcommon/AffineSpace.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
