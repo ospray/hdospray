@@ -221,7 +221,7 @@ HdOSPRayRenderDelegate::CreateRenderPass(HdRenderIndex* index,
                                          HdRprimCollection const& collection)
 {
     return HdRenderPassSharedPtr(new HdOSPRayRenderPass(
-           index, collection, _model, _renderer, &_sceneVersion));
+           index, collection, _model, _renderer, &_sceneVersion, _renderParam));
 }
 
 HdInstancer*

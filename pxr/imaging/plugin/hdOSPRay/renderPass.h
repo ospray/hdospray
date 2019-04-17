@@ -36,6 +36,8 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+class HdOSPRayRenderParam;
+
 /// \class HdOSPRayRenderPass
 ///
 /// HdRenderPass represents a single render iteration, rendering a view of the
@@ -52,7 +54,9 @@ public:
     ///   \param scene The OSPRay scene to raycast into.
     HdOSPRayRenderPass(HdRenderIndex* index,
                        HdRprimCollection const& collection, OSPModel model,
-                       OSPRenderer renderer, std::atomic<int>* sceneVersion);
+                       OSPRenderer renderer, std::atomic<int>* sceneVersion,
+                       std::shared_ptr<HdOSPRayRenderParam> renderParam
+                       );
 
     /// Renderpass destructor.
     virtual ~HdOSPRayRenderPass();
@@ -102,6 +106,7 @@ private:
     std::atomic<int>* _sceneVersion;
     // The last scene version we rendered with.
     int _lastRenderedVersion;
+    int _lastRenderedModelVersion;
 
     // The resolved output buffer, in GL_RGBA. This is an intermediate between
     // _sampleBuffer and the GL framebuffer.
@@ -124,6 +129,8 @@ private:
 
     // The color of a ray miss.
     GfVec3f _clearColor;
+
+    std::shared_ptr<HdOSPRayRenderParam> _renderParam;
 
 #if HDOSPRAY_ENABLE_DENOISER
     oidn::DeviceRef _denoiserDevice;

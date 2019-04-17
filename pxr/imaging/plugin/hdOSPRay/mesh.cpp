@@ -231,20 +231,16 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     HF_MALLOC_TAG_FUNCTION();
 
     SdfPath const& id = GetId();
-    std::cout << __PRETTY_FUNCTION__ << " 1 " << std::endl;
 
     ////////////////////////////////////////////////////////////////////////
     // 1. Pull scene data.
 
     if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)) {
-        std::cout << __PRETTY_FUNCTION__ << " 2 " << std::endl;
         VtValue value = sceneDelegate->Get(id, HdTokens->points);
         // if (value.IsHolding<VtVec3fArray>()) {
-          std::cout << "computing new points\n";
             _points = value.Get<VtVec3fArray>();
         // }
         if (_points.size() > 0)
-           std::cout << _points[0] << std::endl;
         _normalsValid = false;
     }
 
@@ -272,7 +268,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->primvar)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
-        std::cout << __PRETTY_FUNCTION__ << " 3 " << std::endl;
         _UpdatePrimvarSources(sceneDelegate, *dirtyBits);
     }
 
@@ -300,9 +295,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     bool newMesh = false;
     if (HdChangeTracker::IsTopologyDirty(*dirtyBits, id)
         || doRefine != _refined) {
-
-        std::cout << __PRETTY_FUNCTION__ << " 4 " << std::endl;
-
         newMesh = true;
 
         // Force the smooth normals code to rebuild the "normals" primvar the
@@ -319,7 +311,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         _topology = HdMeshTopology(GetMeshTopology(sceneDelegate), refineLevel);
         _topology.SetSubdivTags(subdivTags);
         _adjacencyValid = false;
-    std::cout << __PRETTY_FUNCTION__ << " 5 " << std::endl;
     }
 
     if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)
@@ -351,14 +342,13 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
-    std::cout << __PRETTY_FUNCTION__ << " 6 " << std::endl;
+
 
         //    if (_primvarSourceMap.count(HdTokens->color) > 0) {
         //      auto& colorBuffer = _primvarSourceMap[HdTokens->color].data;
         //      if (colorBuffer.GetArraySize() &&
         //      colorBuffer.IsHolding<VtVec4fArray>()) {
         //        _colors = colorBuffer.Get<VtVec4fArray>();
-        //        std::cout << "populated primvar colors for mesh " <<
         //        _colors.size() << "\n";
         //      }
         //    }
@@ -490,7 +480,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             }
         }
 
-std::cout << "setting mesh vertices\n";
         auto vertices = ospNewData(_points.size(), OSP_FLOAT3, _points.cdata(),
                                    OSP_DATA_SHARED_BUFFER);
         ospCommit(vertices);
@@ -544,11 +533,12 @@ std::cout << "setting mesh vertices\n";
                        mesh); // crashing when added to the scene. I suspect
                               // indices/vertex spec.
         ospCommit(instanceModel);
+        renderParam->UpdateModelVersion();
+        renderParam->SetModelDirty(true);
     }
 
     ////////////////////////////////////////////////////////////////////////
     // 4. Populate ospray instance objects.
-    std::cout << "ospInstances: " << _ospInstances.size() << std::endl;
 
     // If the mesh is instanced, create one new instance per transform.
     // XXX: The current instancer invalidation tracking makes it hard for
@@ -556,7 +546,6 @@ std::cout << "setting mesh vertices\n";
     // pulls them every frame.
     bool newInstance = false;
     if (!GetInstancerId().IsEmpty()) {
-        std::cout << "instancer !empty\n";
         // Retrieve instance transforms from the instancer.
         HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
         HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
@@ -598,13 +587,11 @@ std::cout << "setting mesh vertices\n";
     // Otherwise, create our single instance (if necessary) and update
     // the transform (if necessary).
     else {
-        std::cout << "instancer empty\n";
         for (auto instance : _ospInstances) {
             ospRemoveGeometry(model, instance);
         }
         _ospInstances.resize(0);
         if (_ospInstances.size() == 0) {
-        std::cout << "new instance\n";
             // convert aligned matrix to unalighned 4x3 matrix
             auto instance = ospNewInstance(instanceModel, identity);
             _ospInstances.push_back(instance);
@@ -633,14 +620,12 @@ std::cout << "setting mesh vertices\n";
     // Update visibility by pulling the object into/out of the model.
     if (_sharedData.visible && newInstance) {
         for (auto instance : _ospInstances) {
-          std::cout << "adding instance\n";
             ospAddGeometry(model, instance);
         }
     } else {
         // TODO: ospRemove geometry?
     }
     // ospCommit(model);
-    renderParam->SetModelDirty(true);
 
     // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;

@@ -24,6 +24,7 @@
 #include "pxr/imaging/glf/glew.h"
 
 #include "pxr/imaging/hdOSPRay/renderPass.h"
+#include "pxr/imaging/hdOSPRay/renderParam.h"
 
 #include "pxr/imaging/hdOSPRay/config.h"
 #include "pxr/imaging/hdOSPRay/context.h"
@@ -42,21 +43,23 @@ PXR_NAMESPACE_OPEN_SCOPE
 HdOSPRayRenderPass::HdOSPRayRenderPass(HdRenderIndex* index,
                                        HdRprimCollection const& collection,
                                        OSPModel model, OSPRenderer renderer,
-                                       std::atomic<int>* sceneVersion)
+                                       std::atomic<int>* sceneVersion,
+                                       std::shared_ptr<HdOSPRayRenderParam> renderParam)
     : HdRenderPass(index, collection)
     , _pendingResetImage(false)
     , _pendingModelUpdate(true)
     , _renderer(renderer)
     , _sceneVersion(sceneVersion)
     , _lastRenderedVersion(0)
+    , _lastRenderedModelVersion(0)
     , _width(0)
     , _height(0)
     , _model(model)
     , _inverseViewMatrix(1.0f) // == identity
     , _inverseProjMatrix(1.0f) // == identity
     , _clearColor(0.0707f, 0.0707f, 0.0707f)
+    , _renderParam(renderParam)
 {
-  std::cout << "renderPass\n";
     _camera = ospNewCamera("perspective");
     std::vector<OSPLight> lights;
     auto ambient = ospNewLight(_renderer, "ambient");
@@ -173,6 +176,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (_pendingModelUpdate) {
         ospCommit(_model);
         _pendingModelUpdate = false;
+    }
+
+    int currentModelVersion = _renderParam->GetModelVersion();
+    if (_lastRenderedModelVersion != currentModelVersion) {
+        ResetImage();
+        _lastRenderedModelVersion = currentModelVersion;
     }
 
     // Update camera

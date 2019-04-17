@@ -27,6 +27,8 @@
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/pxr.h"
 
+#include <iostream>
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 ///
@@ -60,12 +62,22 @@ public:
 
     void SetModelDirty(bool st)
     {
-      _modelDirty = st;
+        _modelDirty = st;
     }
 
     bool GetModelDirty()
     {
-      return _modelDirty;
+        return _modelDirty;
+    }
+
+    void UpdateModelVersion()
+    {
+        _modelVersion++;
+    }
+
+    int GetModelVersion()
+    {
+        return _modelVersion.load();
     }
 
 private:
@@ -73,8 +85,9 @@ private:
     OSPRenderer _renderer;
     /// A version counter for edits to _scene.
     std::atomic<int>* _sceneVersion;
+    // version of osp model.  Used for tracking image changes
+    std::atomic<int> _modelVersion{1};  
     bool _modelDirty{true};
-    bool _imageDirty{true};
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
