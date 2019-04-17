@@ -36,8 +36,6 @@
 #include "pxr/base/gf/vec2f.h"
 #include "pxr/base/work/loops.h"
 
-#include <iostream>
-
 PXR_NAMESPACE_OPEN_SCOPE
 
 HdOSPRayRenderPass::HdOSPRayRenderPass(HdRenderIndex* index,

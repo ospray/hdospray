@@ -27,8 +27,6 @@
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/pxr.h"
 
-#include <iostream>
-
 PXR_NAMESPACE_OPEN_SCOPE
 
 ///

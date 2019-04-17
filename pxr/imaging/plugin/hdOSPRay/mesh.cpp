@@ -237,9 +237,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
 
     if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)) {
         VtValue value = sceneDelegate->Get(id, HdTokens->points);
-        // if (value.IsHolding<VtVec3fArray>()) {
             _points = value.Get<VtVec3fArray>();
-        // }
         if (_points.size() > 0)
         _normalsValid = false;
     }
