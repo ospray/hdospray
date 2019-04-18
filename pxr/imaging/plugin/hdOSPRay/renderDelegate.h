@@ -109,7 +109,7 @@ public:
     ///   \param instancer The instancer to be destroyed.
     virtual void DestroyInstancer(HdInstancer* instancer);
 
-    /// Create an OSPRay specific hydra Rprim, representing scene geometry. 
+    /// Create an OSPRay specific hydra Rprim, representing scene geometry.
     ///   \param typeId The rprim type to create. This must be one of the types
     ///                 from GetSupportedRprimTypes().
     ///   \param rprimId The scene graph ID of this rprim, used when pulling

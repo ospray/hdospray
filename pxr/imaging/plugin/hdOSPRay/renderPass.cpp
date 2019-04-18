@@ -23,8 +23,8 @@
 //
 #include "pxr/imaging/glf/glew.h"
 
-#include "pxr/imaging/hdOSPRay/renderPass.h"
 #include "pxr/imaging/hdOSPRay/renderParam.h"
+#include "pxr/imaging/hdOSPRay/renderPass.h"
 
 #include "pxr/imaging/hdOSPRay/config.h"
 #include "pxr/imaging/hdOSPRay/context.h"
@@ -38,11 +38,10 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-HdOSPRayRenderPass::HdOSPRayRenderPass(HdRenderIndex* index,
-                                       HdRprimCollection const& collection,
-                                       OSPModel model, OSPRenderer renderer,
-                                       std::atomic<int>* sceneVersion,
-                                       std::shared_ptr<HdOSPRayRenderParam> renderParam)
+HdOSPRayRenderPass::HdOSPRayRenderPass(
+       HdRenderIndex* index, HdRprimCollection const& collection,
+       OSPModel model, OSPRenderer renderer, std::atomic<int>* sceneVersion,
+       std::shared_ptr<HdOSPRayRenderParam> renderParam)
     : HdRenderPass(index, collection)
     , _pendingResetImage(false)
     , _pendingModelUpdate(true)
@@ -88,15 +87,16 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(HdRenderIndex* index,
 
     _spp = HdOSPRayConfig::GetInstance().samplesPerFrame;
     _useDenoiser = HdOSPRayConfig::GetInstance().useDenoiser;
-    ospSet1i(_renderer,"spp",_spp);
-    ospSet1i(_renderer,"aoSamples",HdOSPRayConfig::GetInstance().ambientOcclusionSamples);
-    ospSet1i(_renderer,"maxDepth",8);
-    ospSet1f(_renderer,"aoDistance",15.0f);
-    ospSet1i(_renderer,"shadowsEnabled",true);
-    ospSet1f(_renderer,"maxContribution",2.f);
-    ospSet1f(_renderer,"minContribution",0.05f);
-    ospSet1f(_renderer,"epsilon",0.001f);
-    ospSet1i(_renderer,"useGeometryLights",0);
+    ospSet1i(_renderer, "spp", _spp);
+    ospSet1i(_renderer, "aoSamples",
+             HdOSPRayConfig::GetInstance().ambientOcclusionSamples);
+    ospSet1i(_renderer, "maxDepth", 8);
+    ospSet1f(_renderer, "aoDistance", 15.0f);
+    ospSet1i(_renderer, "shadowsEnabled", true);
+    ospSet1f(_renderer, "maxContribution", 2.f);
+    ospSet1f(_renderer, "minContribution", 0.05f);
+    ospSet1f(_renderer, "epsilon", 0.001f);
+    ospSet1i(_renderer, "useGeometryLights", 0);
 
     ospCommit(_renderer);
 
@@ -194,7 +194,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _inverseViewMatrix = inverseViewMatrix;
         _inverseProjMatrix = inverseProjMatrix;
     }
-    
+
     // Reset the sample buffer if it's been requested.
     if (_pendingResetImage) {
         ospFrameBufferClear(_frameBuffer, OSP_FB_ACCUM);

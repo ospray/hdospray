@@ -168,7 +168,8 @@ HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
     }
 
     // Create ospray geometry objects.
-    _PopulateOSPMesh(sceneDelegate, model, renderer, dirtyBits, desc, ospRenderParam);
+    _PopulateOSPMesh(sceneDelegate, model, renderer, dirtyBits, desc,
+                     ospRenderParam);
 
     if (*dirtyBits & HdChangeTracker::DirtyTopology) {
         // TODO: update material here?
@@ -237,9 +238,9 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
 
     if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)) {
         VtValue value = sceneDelegate->Get(id, HdTokens->points);
-            _points = value.Get<VtVec3fArray>();
+        _points = value.Get<VtVec3fArray>();
         if (_points.size() > 0)
-        _normalsValid = false;
+            _normalsValid = false;
     }
 
     if (HdChangeTracker::IsDisplayStyleDirty(*dirtyBits, id)) {
@@ -340,7 +341,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
-
 
         //    if (_primvarSourceMap.count(HdTokens->color) > 0) {
         //      auto& colorBuffer = _primvarSourceMap[HdTokens->color].data;

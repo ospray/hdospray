@@ -55,8 +55,7 @@ public:
     HdOSPRayRenderPass(HdRenderIndex* index,
                        HdRprimCollection const& collection, OSPModel model,
                        OSPRenderer renderer, std::atomic<int>* sceneVersion,
-                       std::shared_ptr<HdOSPRayRenderParam> renderParam
-                       );
+                       std::shared_ptr<HdOSPRayRenderParam> renderParam);
 
     /// Renderpass destructor.
     virtual ~HdOSPRayRenderPass();
