@@ -60,16 +60,6 @@ public:
         return _renderer;
     }
 
-    void SetModelDirty(bool st)
-    {
-        _modelDirty = st;
-    }
-
-    bool GetModelDirty()
-    {
-        return _modelDirty;
-    }
-
     void UpdateModelVersion()
     {
         _modelVersion++;
@@ -87,7 +77,6 @@ private:
     std::atomic<int>* _sceneVersion;
     // version of osp model.  Used for tracking image changes
     std::atomic<int> _modelVersion { 1 };
-    bool _modelDirty { true };
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

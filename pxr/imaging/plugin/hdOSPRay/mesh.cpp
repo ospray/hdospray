@@ -532,7 +532,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                               // indices/vertex spec.
         ospCommit(instanceModel);
         renderParam->UpdateModelVersion();
-        renderParam->SetModelDirty(true);
     }
 
     ////////////////////////////////////////////////////////////////////////

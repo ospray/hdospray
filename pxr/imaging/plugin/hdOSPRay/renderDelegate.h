@@ -214,6 +214,8 @@ private:
     // A version counter for edits to _scene.
     std::atomic<int> _sceneVersion;
 
+    int _lastCommittedModelVersion;
+
     // A shared HdOSPRayRenderParam object that stores top-level OSPRay state;
     // passed to prims during Sync().
     std::shared_ptr<HdOSPRayRenderParam> _renderParam;
