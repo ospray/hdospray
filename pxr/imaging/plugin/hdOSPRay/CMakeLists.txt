@@ -29,7 +29,7 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
       plugInfo.json
     )
 
-  find_package(ospray 1.8.3 CONFIG REQUIRED)
+  find_package(ospray 1.8.5 CONFIG REQUIRED)
 
   target_link_libraries(hdOSPRay PUBLIC
     plug
