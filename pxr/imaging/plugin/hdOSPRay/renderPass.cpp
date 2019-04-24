@@ -23,6 +23,7 @@
 //
 #include "pxr/imaging/glf/glew.h"
 
+#include "pxr/imaging/hdOSPRay/renderParam.h"
 #include "pxr/imaging/hdOSPRay/renderPass.h"
 
 #include "pxr/imaging/hdOSPRay/config.h"
@@ -37,22 +38,24 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-HdOSPRayRenderPass::HdOSPRayRenderPass(HdRenderIndex* index,
-                                       HdRprimCollection const& collection,
-                                       OSPModel model, OSPRenderer renderer,
-                                       std::atomic<int>* sceneVersion)
+HdOSPRayRenderPass::HdOSPRayRenderPass(
+       HdRenderIndex* index, HdRprimCollection const& collection,
+       OSPModel model, OSPRenderer renderer, std::atomic<int>* sceneVersion,
+       std::shared_ptr<HdOSPRayRenderParam> renderParam)
     : HdRenderPass(index, collection)
     , _pendingResetImage(false)
     , _pendingModelUpdate(true)
     , _renderer(renderer)
     , _sceneVersion(sceneVersion)
     , _lastRenderedVersion(0)
+    , _lastRenderedModelVersion(0)
     , _width(0)
     , _height(0)
     , _model(model)
     , _inverseViewMatrix(1.0f) // == identity
     , _inverseProjMatrix(1.0f) // == identity
     , _clearColor(0.0707f, 0.0707f, 0.0707f)
+    , _renderParam(renderParam)
 {
     _camera = ospNewCamera("perspective");
     std::vector<OSPLight> lights;
@@ -84,15 +87,16 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(HdRenderIndex* index,
 
     _spp = HdOSPRayConfig::GetInstance().samplesPerFrame;
     _useDenoiser = HdOSPRayConfig::GetInstance().useDenoiser;
-    ospSet1i(_renderer,"spp",_spp);
-    ospSet1i(_renderer,"aoSamples",HdOSPRayConfig::GetInstance().ambientOcclusionSamples);
-    ospSet1i(_renderer,"maxDepth",8);
-    ospSet1f(_renderer,"aoDistance",15.0f);
-    ospSet1i(_renderer,"shadowsEnabled",true);
-    ospSet1f(_renderer,"maxContribution",2.f);
-    ospSet1f(_renderer,"minContribution",0.05f);
-    ospSet1f(_renderer,"epsilon",0.001f);
-    ospSet1i(_renderer,"useGeometryLights",0);
+    ospSet1i(_renderer, "spp", _spp);
+    ospSet1i(_renderer, "aoSamples",
+             HdOSPRayConfig::GetInstance().ambientOcclusionSamples);
+    ospSet1i(_renderer, "maxDepth", 8);
+    ospSet1f(_renderer, "aoDistance", 15.0f);
+    ospSet1i(_renderer, "shadowsEnabled", true);
+    ospSet1f(_renderer, "maxContribution", 2.f);
+    ospSet1f(_renderer, "minContribution", 0.05f);
+    ospSet1f(_renderer, "epsilon", 0.001f);
+    ospSet1i(_renderer, "useGeometryLights", 0);
 
     ospCommit(_renderer);
 
@@ -170,6 +174,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (_pendingModelUpdate) {
         ospCommit(_model);
         _pendingModelUpdate = false;
+    }
+
+    int currentModelVersion = _renderParam->GetModelVersion();
+    if (_lastRenderedModelVersion != currentModelVersion) {
+        ResetImage();
+        _lastRenderedModelVersion = currentModelVersion;
     }
 
     // Update camera

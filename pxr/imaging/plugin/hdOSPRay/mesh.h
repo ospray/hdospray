@@ -39,6 +39,7 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 class HdStDrawItem;
+class HdOSPRayRenderParam;
 
 // class HdOSPRayPrototypeContext;
 // class HdOSPRayInstanceContext;
@@ -165,7 +166,8 @@ private:
     // Populate the ospray geometry object based on scene data.
     void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                           OSPRenderer renderer, HdDirtyBits* dirtyBits,
-                          HdMeshReprDesc const& desc);
+                          HdMeshReprDesc const& desc,
+                          HdOSPRayRenderParam* renderParam);
 
     // Populate _primvarSourceMap (our local cache of primvar data) based on
     // scene data. Primvars will be turned into samplers in _PopulateRtMesh,

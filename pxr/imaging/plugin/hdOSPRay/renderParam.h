@@ -27,13 +27,15 @@
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/pxr.h"
 
+#include "ospray/ospray.h"
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 ///
 /// \class HdOSPRayRenderParam
 ///
 /// The render delegate can create an object of type HdRenderParam, to pass
-/// to each prim during Sync(). HdOSPRay uses this class to pass 
+/// to each prim during Sync(). HdOSPRay uses this class to pass
 /// OSPRay state around.
 ///
 class HdOSPRayRenderParam final : public HdRenderParam {
@@ -58,11 +60,23 @@ public:
         return _renderer;
     }
 
+    void UpdateModelVersion()
+    {
+        _modelVersion++;
+    }
+
+    int GetModelVersion()
+    {
+        return _modelVersion.load();
+    }
+
 private:
     OSPModel _model;
     OSPRenderer _renderer;
     /// A version counter for edits to _scene.
     std::atomic<int>* _sceneVersion;
+    // version of osp model.  Used for tracking image changes
+    std::atomic<int> _modelVersion { 1 };
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
