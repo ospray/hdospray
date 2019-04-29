@@ -541,7 +541,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     // XXX: The current instancer invalidation tracking makes it hard for
     // HdOSPRay to tell whether transforms will be dirty, so this code
     // pulls them every frame.
-    bool newInstance = false;
     if (!GetInstancerId().IsEmpty()) {
         // Retrieve instance transforms from the instancer.
         HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
@@ -588,14 +587,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             ospRemoveGeometry(model, instance);
         }
         _ospInstances.resize(0);
-        if (_ospInstances.size() == 0) {
-            // convert aligned matrix to unalighned 4x3 matrix
-            auto instance = ospNewInstance(instanceModel, identity);
-            _ospInstances.push_back(instance);
-            ospCommit(instance);
-            newInstance = true;
-        }
-        if (newInstance || HdChangeTracker::IsTransformDirty(*dirtyBits, id)) {
+        auto instance = ospNewInstance(instanceModel, identity);
+        _ospInstances.push_back(instance);
+        ospCommit(instance);
+        // convert aligned matrix to unalighned 4x3 matrix
+        if (HdChangeTracker::IsTransformDirty(*dirtyBits, id)) {
             // TODO: update transform
             auto instance = _ospInstances[0];
             float* xfm = _transform.GetArray();
@@ -605,7 +601,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             ospSet3f(instance, "xfm.l.vz", xfm[8], xfm[9], xfm[10]);
             ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
         }
-        if (newInstance || newMesh
+        if (newMesh
             || HdChangeTracker::IsTransformDirty(*dirtyBits, id)
             || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                                HdTokens->points)) {
@@ -615,7 +611,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     }
 
     // Update visibility by pulling the object into/out of the model.
-    if (_sharedData.visible && newInstance) {
+    if (_sharedData.visible) {
         for (auto instance : _ospInstances) {
             ospAddGeometry(model, instance);
         }
