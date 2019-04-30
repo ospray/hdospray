@@ -64,7 +64,7 @@ www/documentation.html: compilation.md documentation.md
 # also works around pandoc #5121, should be fixed in v2.5.1
 convert_nbsp_width = sed -e 's@\\ @ @g' -e 's/" style="width:/" width="/g' -e "s@^</figure>@\0\n\n@"
 
-../README.md: readme_head.md overview.md gallery.md compilation.md documentation.md 
+../README.md: readme_head.md overview.md gallery.md compilation.md documentation.md news.md
 	$(PANDOC) --from=markdown --to=markdown --verbose --output $@ $+
 
 #html $+ | $(PANDOC) --from=html --to=markdown-raw_html-native_divs --output $@

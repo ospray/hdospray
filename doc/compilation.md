@@ -21,7 +21,7 @@ at your own risk.
     For a full list of USD dependencies, see the USD page.
   - The plugin requires a minimum of `PXR_BUILD_IMAGING` and
     `PXR_BUILD_OPENIMAGEIO_PLUGIN` to be set to `ON` for USD.
-- [OSPRay 1.8.x](http://www.ospray.org/)
+- [OSPRay 1.8.5](http://www.ospray.org/)
 - [Embree 3.2.x](https://embree.github.io/)
 - CMake 3.1.1+
 
