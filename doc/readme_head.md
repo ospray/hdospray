@@ -5,6 +5,5 @@ OSPRay interactive rendering plugin for USD Hydra
 
 Pixar's Kitchen asset rendered with OSPRay's path tracer at interactive rates.
 
-This is release v0.2.0 of HdOSPRay. 
 Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more information.
 

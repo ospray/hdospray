@@ -5,51 +5,12 @@ add_custom_target(shared_libs)
 option(PXR_BUILD_OSPRAY_PLUGIN "build Intel hdOSPRay rendering backend" ON)
 
 if (PXR_BUILD_OSPRAY_PLUGIN)
-  find_package(ospray 1.8 CONFIG REQUIRED)
-
-  # add ptex module to ospray libraries
-  option(HDOSPRAY_PLUGIN_PTEX "build hdOSPRay with Ptex support")
-  if (HDOSPRAY_PLUGIN_PTEX)
-    add_definitions(-DHDOSPRAY_PLUGIN_PTEX)
-    LINK_DIRECTORIES(${OSPRAY_ROOT}/lib64 ${OSPRAY_ROOT}/lib)
-    SET(OSPRAY_MODULE_LIBRARIES ${OSPRAY_MODULE_LIBRARIES} ospray_module_ptex)
-  endif()
 
   if(NOT PXR_BUILD_OPENIMAGEIO_PLUGIN)
     message(FATAL_ERROR "hdOSPRayPlugin requires PXR_BUILD_OPENIMAGEIO_PLUGIN")
   endif()
 
-  set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/pxr/imaging/plugin/hdOSPRay/cmake)
-
-  option(HDOSPRAY_ENABLE_DENOISER "build OSPRay plugin using OpenImageDenoise")
-  if (HDOSPRAY_ENABLE_DENOISER)
-    find_package(OpenImageDenoise REQUIRED)
-    add_definitions(-DHDOSPRAY_ENABLE_DENOISER)
-  endif()
-
   pxr_plugin(hdOSPRay
-    LIBRARIES
-      plug
-      tf
-      vt
-      gf
-      work
-      hf
-      hd
-      hdx
-      ${TBB_LIBRARIES}
-      ${OSPRAY_LIBRARIES}
-      ${OSPRAY_MODULE_LIBRARIES}
-      ${EMBREE_LIBRARIES}
-      ${OPENIMAGEDENOISE_LIBRARIES}
-      ${OIIO_LIBRARIES}
-
-    INCLUDE_DIRS
-      ${TBB_INCLUDE_DIRS}
-      ${OSPRAY_INCLUDE_DIRS}
-      ${OIIO_INCLUDE_DIRS}
-      ${OPENIMAGEDENOISE_INCLUDE_DIRS}
-
     PUBLIC_CLASSES
       config
       instancer
@@ -67,5 +28,47 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
     RESOURCE_FILES
       plugInfo.json
     )
+
+  find_package(ospray 1.8.5 CONFIG REQUIRED)
+
+  target_link_libraries(hdOSPRay PUBLIC
+    plug
+    tf
+    vt
+    gf
+    work
+    hf
+    hd
+    hdx
+    ospray::ospray
+    ${OIIO_LIBRARIES}
+    )
+
+  target_include_directories(hdOSPRay PUBLIC ${OIIO_INCLUDE_DIRS})
+
+  # add ptex module to ospray libraries
+  option(HDOSPRAY_PLUGIN_PTEX "build hdOSPRay with Ptex support" OFF)
+  if (HDOSPRAY_PLUGIN_PTEX)
+    if (NOT TARGET ospray::ospray_module_ptex)
+      message(FATAL_ERROR "hdOSPRayPlugin requires building OSPRay with ptex module")
+    endif()
+
+    find_package(ptex CONFIG REQUIRED) # requires version 2.3.1 (ptex doesn't package version config)
+
+    target_link_libraries(hdOSPRay PUBLIC ospray::ospray_module_ptex)
+    target_compile_definitions(hdOSPRay PUBLIC -DHDOSPRAY_PLUGIN_PTEX)
+  endif()
+
+  # add OpenImageDenoise
+  option(HDOSPRAY_ENABLE_DENOISER "build OSPRay plugin using OpenImageDenoise" OFF)
+  if (HDOSPRAY_ENABLE_DENOISER)
+    find_package(OpenImageDenoise 0.8.1 CONFIG REQUIRED)
+    if (NOT TARGET OpenImageDenoise)
+      message(FATAL_ERROR "hdOSPRayPlugin requires OpenImageDenoise be installed")
+    endif()
+
+    target_link_libraries(hdOSPRay PUBLIC OpenImageDenoise)
+    target_compile_definitions(hdOSPRay PUBLIC -DHDOSPRAY_ENABLE_DENOISER)
+  endif()
 
 endif()

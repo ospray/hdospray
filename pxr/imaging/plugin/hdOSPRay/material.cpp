@@ -81,7 +81,9 @@ osprayTextureFormat(int depth, int channels, bool preferLinear = false)
 {
     if (depth == 1) {
         if (channels == 1)
-            return OSP_TEXTURE_R8;
+            return preferLinear ? OSP_TEXTURE_R8 : OSP_TEXTURE_L8;
+        if (channels == 2)
+            return preferLinear ? OSP_TEXTURE_RA8 : OSP_TEXTURE_LA8;
         if (channels == 3)
             return preferLinear ? OSP_TEXTURE_RGB8 : OSP_TEXTURE_SRGB;
         if (channels == 4)
@@ -232,10 +234,7 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
     }
     if (map_metallic.ospTexture) {
         ospSetObject(_ospMaterial, "metallicMap", map_metallic.ospTexture);
-        // XXX: OSPRay Principled material bug workaround.
-        // Set metallic factor to less than 1.0 to prevent crash in Principled
-        // material when metallic = 1.0 and ior > 1.0.
-        metallic = .75f;
+        metallic = 1.0f;
     }
     if (map_roughness.ospTexture) {
         ospSetObject(_ospMaterial, "roughnessMap", map_roughness.ospTexture);

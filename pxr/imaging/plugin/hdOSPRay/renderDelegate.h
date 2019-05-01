@@ -109,7 +109,7 @@ public:
     ///   \param instancer The instancer to be destroyed.
     virtual void DestroyInstancer(HdInstancer* instancer);
 
-    /// Create an OSPRay specific hydra Rprim, representing scene geometry. 
+    /// Create an OSPRay specific hydra Rprim, representing scene geometry.
     ///   \param typeId The rprim type to create. This must be one of the types
     ///                 from GetSupportedRprimTypes().
     ///   \param rprimId The scene graph ID of this rprim, used when pulling
@@ -213,6 +213,8 @@ private:
 
     // A version counter for edits to _scene.
     std::atomic<int> _sceneVersion;
+
+    int _lastCommittedModelVersion {-1};
 
     // A shared HdOSPRayRenderParam object that stores top-level OSPRay state;
     // passed to prims during Sync().

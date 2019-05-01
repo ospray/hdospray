@@ -63,9 +63,9 @@ HdResourceRegistrySharedPtr HdOSPRayRenderDelegate::_resourceRegistry;
 
 HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
 {
-    //Check plugin against pxr version
+    // Check plugin against pxr version
 #if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 19
-        #error This version of HdOSPRay is configured to built against USD v0.19.x
+#    error This version of HdOSPRay is configured to built against USD v0.19.x
 #endif
 
     int ac = 1;
@@ -150,6 +150,12 @@ HdOSPRayRenderDelegate::CommitResources(HdChangeTracker* tracker)
 {
     // CommitResources() is called after prim sync has finished, but before any
     // tasks (such as draw tasks) have run.
+    auto& rp = _renderParam;
+    const auto modelVersion = rp->GetModelVersion();
+    if (modelVersion > _lastCommittedModelVersion) {
+        ospCommit(rp->GetOSPRayModel());
+        _lastCommittedModelVersion = modelVersion;
+    }
 }
 
 TfToken
@@ -216,7 +222,7 @@ HdOSPRayRenderDelegate::CreateRenderPass(HdRenderIndex* index,
                                          HdRprimCollection const& collection)
 {
     return HdRenderPassSharedPtr(new HdOSPRayRenderPass(
-           index, collection, _model, _renderer, &_sceneVersion));
+           index, collection, _model, _renderer, &_sceneVersion, _renderParam));
 }
 
 HdInstancer*
