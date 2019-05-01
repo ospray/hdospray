@@ -151,8 +151,10 @@ HdOSPRayRenderDelegate::CommitResources(HdChangeTracker* tracker)
     // CommitResources() is called after prim sync has finished, but before any
     // tasks (such as draw tasks) have run.
     auto& rp = _renderParam;
-    if (rp->GetModelVersion() > _lastCommittedModelVersion) {
+    const auto modelVersion = rp->GetModelVersion();
+    if (modelVersion > _lastCommittedModelVersion) {
         ospCommit(rp->GetOSPRayModel());
+        _lastCommittedModelVersion = modelVersion;
     }
 }
 

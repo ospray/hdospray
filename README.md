@@ -8,8 +8,30 @@ OSPRay interactive rendering plugin for USD Hydra
 Pixar's Kitchen asset rendered with OSPRay's path tracer at interactive
 rates.
 
-This is release v0.2.0 of HdOSPRay. Visit [HdOSPRay on
-github](https://github.com/ospray/hdospray) for more information.
+Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more
+information.
+
+News, Updates, and Announcements
+================================
+
+April 30, 2019: Version v0.2.2 now released on GitHub
+-----------------------------------------------------
+
+Various bug fixes. OSPRay version updated to 1.8.5. CMake targets.
+Animation.
+
+Mar 7, 2019: Version v0.2.1 now released on GitHub
+--------------------------------------------------
+
+Bug fixes, ptex updates, documentation.
+
+Feb 28, 2019: Version v0.2.0 now released on GitHub
+---------------------------------------------------
+
+Initial Beta release version 0.2.0 is now available on the [HdOSPRay
+GitHub page](https://github.com/ospray/hdospray/releases/v0.2.0). This
+replaces the previous repository and versioning which was on my personal
+github account.
 
 HdOSPRay
 --------
@@ -57,7 +79,6 @@ Instructions are provided for loading the scenes below.
 <img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced with HdOSPRay in usdview" width=70%>
 <br/> Pixar Kitchen Set path traced with HdOSPRay in usdview <br/>
 </center>
-
 <br/>
 
 -   Download Kitchen Set asset from
@@ -72,7 +93,6 @@ Instructions are provided for loading the scenes below.
 <img src="images/usd_gl_thumbnail.jpg" alt="Pixar Kitchen Set GL" width=30%>
 <br/> Pixar Kitchen Set rendered with default GL in usdview <br/>
 </center>
-
 <br/>
 
 <center>
@@ -80,7 +100,6 @@ Instructions are provided for loading the scenes below.
 <br/> Pixar Kitchen Set rendered with HdOSPRay and basic shadows in
 usdview <br/>
 </center>
-
 <br/>
 
 <center>
@@ -88,7 +107,6 @@ usdview <br/>
 <br/> Pixar Kitchen Set rendered with HdOSPRay and basic ambient
 occlusion in usdview <br/>
 </center>
-
 <br/>
 
 <center>
@@ -96,7 +114,6 @@ occlusion in usdview <br/>
 <br/> Pixar Kitchen Set rendered with HdOSPRay and path tracing in
 usdview <br/>
 </center>
-
 <br/>
 
 ### Teapot
@@ -105,7 +122,6 @@ usdview <br/>
 <img src="images/hdospray_teapot2_thumbnail.jpg" alt="Teapot" width=70%>
 <br/> Apple teapot rendered with HdOSPRay in usdview <br/>
 </center>
-
 <br/>
 
 -   Download the Apple ARKit teapot from
@@ -127,7 +143,6 @@ usdview <br/>
 <img src="images/hdospray_gramophone_thumbnail.jpg" alt="Gramophone" width=70%>
 <br/> Apple Gramophone rendered with HdOSPRay in usdview <br/>
 </center>
-
 <br/>
 
 -   Download the Apple ARKit gramophone from
@@ -170,7 +185,7 @@ Prerequisites
         the USD page.
     -   The plugin requires a minimum of `PXR_BUILD_IMAGING` and
         `PXR_BUILD_OPENIMAGEIO_PLUGIN` to be set to `ON` for USD.
--   [OSPRay 1.8.x](http://www.ospray.org/)
+-   [OSPRay 1.8.5](http://www.ospray.org/)
 -   [Embree 3.2.x](https://embree.github.io/)
 -   CMake 3.1.1+
 
