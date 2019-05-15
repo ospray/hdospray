@@ -227,7 +227,9 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                         _colors[i] = { colors[i].data()[0], colors[i].data()[1],
                                        colors[i].data()[2], 1.f };
                     }
-                }
+                } else 
+                if (value.IsHolding<VtVec4fArray>())
+                    _colors = value.Get<VtVec4fArray>();
             }
 
             if (pv.name == "displayOpacity"
@@ -255,6 +257,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     HF_MALLOC_TAG_FUNCTION();
 
     SdfPath const& id = GetId();
+    OSPGeometry mesh = nullptr;
 
     ////////////////////////////////////////////////////////////////////////
     // 1. Pull scene data.
@@ -413,17 +416,22 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                                  "data\n";
                 }
 
-                // usd stores texcoords in face indexed -> each quad has 4
-                // unique texcoords.
-                // let's try converting it to match our vertex indices
-                VtVec2fArray texcoords2;
-                texcoords2.resize(_points.size());
-                for (size_t q = 0; q < _quadIndices.size(); q++) {
-                    for (int i = 0; i < 4; i++) {
-                        // value at quadindex[q][i] maps to q*4+i texcoord;
-                        const size_t tc1index = q * 4 + i;
-                        const size_t tc2index = _quadIndices[q][i];
-                        texcoords2[tc2index] = _texcoords[tc1index];
+                if (faceVaryingTexcoord) {
+                    TfToken buffName = HdOSPRayTokens->st;
+                    VtValue buffValue = VtValue(_texcoords);
+                    HdVtBufferSource buffer(buffName, buffValue);
+                    VtValue quadPrimvar;
+
+                    auto success
+                           = meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(
+                                  buffer.GetData(), buffer.GetNumElements(),
+                                  buffer.GetTupleType().type, &quadPrimvar);
+                    if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
+                        _texcoords = quadPrimvar.Get<VtVec2fArray>();
+                    } else {
+                        std::cout
+                               << "ERROR: could not quadrangulate face-varying "
+                                  "data\n";
                     }
                 }
                 _texcoords = texcoords2;
@@ -594,6 +602,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             }
         }
 
+        std::cout << "setting verices" << std::endl;
         auto vertices = ospNewData(_points.size(), OSP_FLOAT3, _points.cdata(),
                                    OSP_DATA_SHARED_BUFFER);
         ospCommit(vertices);
@@ -703,6 +712,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
     // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
+    std::cout << "finished mesh update" << std::endl;
 }
 
 void
