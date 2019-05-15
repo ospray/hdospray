@@ -232,6 +232,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     HF_MALLOC_TAG_FUNCTION();
 
     SdfPath const& id = GetId();
+    OSPGeometry mesh = nullptr;
 
     ////////////////////////////////////////////////////////////////////////
     // 1. Pull scene data.
@@ -279,13 +280,57 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     // HdMeshGeomStyleHull (coarse triangulated mesh).
     bool doRefine = (desc.geomStyle == HdMeshGeomStyleSurf);
 
+    // If the subdivision scheme is "none", force us to not refine.
+    doRefine
+           = doRefine && (_topology.GetScheme() != PxOsdOpenSubdivTokens->none);
+    std::cout << "opensdiv tokens != none: "
+              << (_topology.GetScheme() != PxOsdOpenSubdivTokens->none)
+              << std::endl;
+
+    // If the refine level is 0, triangulate instead of subdividing.
+    doRefine = doRefine && (_topology.GetRefineLevel() > 0);
+    std::cout << "refine level: " << _topology.GetRefineLevel() << std::endl;
+
     // The repr defines whether we should compute smooth normals for this mesh:
     // per-vertex normals taken as an average of adjacent faces, and
     // interpolated smoothly across faces.
     _smoothNormals = !desc.flatShadingEnabled;
 
+    // If the subdivision scheme is "none" or "bilinear", force us not to use
+    // smooth normals.
+    _smoothNormals = _smoothNormals
+           && (_topology.GetScheme() != PxOsdOpenSubdivTokens->none)
+           && (_topology.GetScheme() != PxOsdOpenSubdivTokens->bilinear);
+
+    if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)
+        && _topology.GetRefineLevel() > 0) {
+        _topology.SetSubdivTags(sceneDelegate->GetSubdivTags(id));
+    }
+
     ////////////////////////////////////////////////////////////////////////
     // 3. Populate ospray prototype object.
+
+    // If the refine level changed or the mesh was recreated, we need to pass
+    // the refine level into the ospray subdiv object.
+    if (HdChangeTracker::IsDisplayStyleDirty(*dirtyBits, id)) {
+        if (doRefine) {
+            // Pass the target number of uniform refinements to Embree.
+            // Embree refinement is specified as the number of quads to generate
+            // per edge, whereas hydra refinement is the number of recursive
+            // splits, so we need to pass embree (2^refineLevel).
+
+            _tessellationRate = (1 << _topology.GetRefineLevel());
+            // XXX: As of Embree 2.9.0, rendering with tessellation level 1
+            // (i.e. coarse mesh) results in weird normals, so force at least
+            // one level of subdivision.
+            if (_tessellationRate == 1) {
+                _tessellationRate++;
+            }
+            std::cout << "refine level: " << _topology.GetRefineLevel() << " "
+                      << (1 << _topology.GetRefineLevel()) << std::endl;
+            std::cout << "tessellationRate:" << _tessellationRate << std::endl;
+        }
+    }
 
     // If the topology has changed, or the value of doRefine has changed, we
     // need to create or recreate the OSPRay mesh object.
@@ -299,9 +344,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         // Force the smooth normals code to rebuild the "normals" primvar the
         // next time smooth normals is enabled.
         _normalsValid = false;
-    }
 
-    if (HdChangeTracker::IsTopologyDirty(*dirtyBits, id)) {
         // When pulling a new topology, we don't want to overwrite the
         // refine level or subdiv tags, which are provided separately by the
         // scene delegate, so we save and restore them.
@@ -310,11 +353,43 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         _topology = HdMeshTopology(GetMeshTopology(sceneDelegate), refineLevel);
         _topology.SetSubdivTags(subdivTags);
         _adjacencyValid = false;
+
+        if (doRefine) {
+            std::cout << "use subd\n";
+            mesh = _CreateOSPRaySubdivMesh();
+            std::cout << "subd created" << std::endl;
+            ospCommit(mesh);
+            std::cout << "subd committed" << std::endl;
+        } else {
+            std::cout << "use polymesh\n";
+        }
+        _refined = doRefine;
     }
 
-    if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)
-        && _topology.GetRefineLevel() > 0) {
-        _topology.SetSubdivTags(sceneDelegate->GetSubdivTags(id));
+    // If the subdiv tags changed or the mesh was recreated, we need to update
+    // the subdivision boundary mode.
+    if (newMesh || HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)) {
+        if (doRefine) {
+            TfToken const vertexRule
+                   = _topology.GetSubdivTags().GetVertexInterpolationRule();
+
+            // TODO: handle subdiv tags
+            if (vertexRule == PxOsdOpenSubdivTokens->none) {
+                // rtcSetBoundaryMode(_rtcMeshScene, _rtcMeshId,
+                //     RTC_BOUNDARY_NONE);
+            } else if (vertexRule == PxOsdOpenSubdivTokens->edgeOnly) {
+                // rtcSetBoundaryMode(_rtcMeshScene, _rtcMeshId,
+                //     RTC_BOUNDARY_EDGE_ONLY);
+            } else if (vertexRule == PxOsdOpenSubdivTokens->edgeAndCorner) {
+                // rtcSetBoundaryMode(_rtcMeshScene, _rtcMeshId,
+                //     RTC_BOUNDARY_EDGE_AND_CORNER);
+            } else {
+                if (!vertexRule.IsEmpty()) {
+                    TF_WARN("Unknown vertex interpolation rule: %s",
+                            vertexRule.GetText());
+                }
+            }
+        }
     }
 
     // Update the smooth normals in steps:
@@ -351,133 +426,142 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         //      }
         //    }
 
-        OSPGeometry mesh = nullptr;
-
         const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
         const HdOSPRayMaterial* material
                = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
                       HdPrimTypeTokens->material, GetMaterialId()));
 
-        bool useQuads = _UseQuadIndices(renderIndex, _topology);
+        if (!_refined) {
+            bool useQuads = _UseQuadIndices(renderIndex, _topology);
 
-        if (useQuads) {
-            mesh = ospNewGeometry("quadmesh");
+            if (useQuads) {
+                mesh = ospNewGeometry("quadmesh");
 
-            HdMeshUtil meshUtil(&_topology, GetId());
-            meshUtil.ComputeQuadIndices(&_quadIndices, &_quadPrimitiveParams);
+                HdMeshUtil meshUtil(&_topology, GetId());
+                meshUtil.ComputeQuadIndices(&_quadIndices,
+                                            &_quadPrimitiveParams);
 
-            auto indices
-                   = ospNewData(_quadIndices.size(), OSP_INT4,
-                                _quadIndices.cdata(), OSP_DATA_SHARED_BUFFER);
+                auto indices = ospNewData(_quadIndices.size(), OSP_INT4,
+                                          _quadIndices.cdata(),
+                                          OSP_DATA_SHARED_BUFFER);
 
-            ospCommit(indices);
-            ospSetData(mesh, "index", indices);
-            ospRelease(indices);
+                ospCommit(indices);
+                ospSetData(mesh, "index", indices);
+                ospRelease(indices);
 
-            // Check if texcoords are provides as face varying.
-            // XXX: (This code currently only cares about _texcoords, but should
-            // be generalized to all primvars)
-            bool faceVaryingTexcoord = false;
-            HdPrimvarDescriptorVector faceVaryingPrimvars
-                   = GetPrimvarDescriptors(sceneDelegate,
-                                           HdInterpolationFaceVarying);
-            for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
-                if (pv.name == "Texture_uv")
-                    faceVaryingTexcoord = true;
-            }
-
-            if (faceVaryingTexcoord) {
-                TfToken buffName = HdOSPRayTokens->st;
-                VtValue buffValue = VtValue(_texcoords);
-                HdVtBufferSource buffer(buffName, buffValue);
-                VtValue quadPrimvar;
-
-                auto success = meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(
-                       buffer.GetData(), buffer.GetNumElements(),
-                       buffer.GetTupleType().type, &quadPrimvar);
-                if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
-                    _texcoords = quadPrimvar.Get<VtVec2fArray>();
-                } else {
-                    std::cout << "ERROR: could not quadrangulate face-varying "
-                                 "data\n";
+                // Check if texcoords are provides as face varying.
+                // XXX: (This code currently only cares about _texcoords, but
+                // should be generalized to all primvars)
+                bool faceVaryingTexcoord = false;
+                HdPrimvarDescriptorVector faceVaryingPrimvars
+                       = GetPrimvarDescriptors(sceneDelegate,
+                                               HdInterpolationFaceVarying);
+                for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
+                    if (pv.name == "Texture_uv")
+                        faceVaryingTexcoord = true;
                 }
 
-                // usd stores texcoords in face indexed -> each quad has 4
-                // unique texcoords.
-                // let's try converting it to match our vertex indices
-                VtVec2fArray texcoords2;
-                texcoords2.resize(_points.size());
-                for (size_t q = 0; q < _quadIndices.size(); q++) {
-                    for (int i = 0; i < 4; i++) {
-                        // value at quadindex[q][i] maps to q*4+i texcoord;
-                        const size_t tc1index = q * 4 + i;
-                        const size_t tc2index = _quadIndices[q][i];
-                        texcoords2[tc2index] = _texcoords[tc1index];
+                if (faceVaryingTexcoord) {
+                    TfToken buffName = HdOSPRayTokens->st;
+                    VtValue buffValue = VtValue(_texcoords);
+                    HdVtBufferSource buffer(buffName, buffValue);
+                    VtValue quadPrimvar;
+
+                    auto success
+                           = meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(
+                                  buffer.GetData(), buffer.GetNumElements(),
+                                  buffer.GetTupleType().type, &quadPrimvar);
+                    if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
+                        _texcoords = quadPrimvar.Get<VtVec2fArray>();
+                    } else {
+                        std::cout
+                               << "ERROR: could not quadrangulate face-varying "
+                                  "data\n";
                     }
-                }
-                _texcoords = texcoords2;
-            }
 
-        } else { // triangles
-            mesh = ospNewGeometry("trianglemesh");
-
-            HdMeshUtil meshUtil(&_topology, GetId());
-            meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
-                                            &_trianglePrimitiveParams);
-
-            auto indices = ospNewData(_triangulatedIndices.size(), OSP_INT3,
-                                      _triangulatedIndices.cdata(),
-                                      OSP_DATA_SHARED_BUFFER);
-
-            ospCommit(indices);
-            ospSetData(mesh, "index", indices);
-            ospRelease(indices);
-
-            // Check if texcoords are provides as face varying.
-            // XXX: (This code currently only cares about _texcoords, but should
-            // be generalized to all primvars)
-            bool faceVaryingTexcoord = false;
-            HdPrimvarDescriptorVector faceVaryingPrimvars
-                   = GetPrimvarDescriptors(sceneDelegate,
-                                           HdInterpolationFaceVarying);
-            for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
-                if (pv.name == "Texture_uv")
-                    faceVaryingTexcoord = true;
-            }
-
-            if (faceVaryingTexcoord) {
-                TfToken buffName = HdOSPRayTokens->st;
-                VtValue buffValue = VtValue(_texcoords);
-                HdVtBufferSource buffer(buffName, buffValue);
-                VtValue triangulatedPrimvar;
-
-                auto success = meshUtil.ComputeTriangulatedFaceVaryingPrimvar(
-                       buffer.GetData(), buffer.GetNumElements(),
-                       buffer.GetTupleType().type, &triangulatedPrimvar);
-                if (success && triangulatedPrimvar.IsHolding<VtVec2fArray>()) {
-                    _texcoords = triangulatedPrimvar.Get<VtVec2fArray>();
-                } else {
-                    std::cout << "ERROR: could not triangulate face-varying "
-                                 "data\n";
-                }
-
-                // usd stores texcoords in face indexed -> each triangle has 3
-                // unique texcoords.
-                // let's try converting it to match our vertex indices
-                VtVec2fArray texcoords2;
-                texcoords2.resize(_points.size());
-                for (size_t t = 0; t < _triangulatedIndices.size(); t++) {
-                    for (int i = 0; i < 3; i++) {
-                        // value at triangleIndex[t][i] maps to t*3+i texcoord;
-                        const size_t tc1index = t * 3 + i;
-                        const size_t tc2index = _triangulatedIndices[t][i];
-                        texcoords2[tc2index] = _texcoords[tc1index];
+                    // usd stores texcoords in face indexed -> each quad has 4
+                    // unique texcoords.
+                    // let's try converting it to match our vertex indices
+                    VtVec2fArray texcoords2;
+                    texcoords2.resize(_points.size());
+                    for (size_t q = 0; q < _quadIndices.size(); q++) {
+                        for (int i = 0; i < 4; i++) {
+                            // value at quadindex[q][i] maps to q*4+i texcoord;
+                            const size_t tc1index = q * 4 + i;
+                            const size_t tc2index = _quadIndices[q][i];
+                            texcoords2[tc2index] = _texcoords[tc1index];
+                        }
                     }
+                    _texcoords = texcoords2;
                 }
-                _texcoords = texcoords2;
+
+            } else { // triangles
+                mesh = ospNewGeometry("trianglemesh");
+
+                HdMeshUtil meshUtil(&_topology, GetId());
+                meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
+                                                &_trianglePrimitiveParams);
+
+                auto indices = ospNewData(_triangulatedIndices.size(), OSP_INT3,
+                                          _triangulatedIndices.cdata(),
+                                          OSP_DATA_SHARED_BUFFER);
+
+                ospCommit(indices);
+                ospSetData(mesh, "index", indices);
+                ospRelease(indices);
+
+                // Check if texcoords are provides as face varying.
+                // XXX: (This code currently only cares about _texcoords, but
+                // should be generalized to all primvars)
+                bool faceVaryingTexcoord = false;
+                HdPrimvarDescriptorVector faceVaryingPrimvars
+                       = GetPrimvarDescriptors(sceneDelegate,
+                                               HdInterpolationFaceVarying);
+                for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
+                    if (pv.name == "Texture_uv")
+                        faceVaryingTexcoord = true;
+                }
+
+                if (faceVaryingTexcoord) {
+                    TfToken buffName = HdOSPRayTokens->st;
+                    VtValue buffValue = VtValue(_texcoords);
+                    HdVtBufferSource buffer(buffName, buffValue);
+                    VtValue triangulatedPrimvar;
+
+                    auto success
+                           = meshUtil.ComputeTriangulatedFaceVaryingPrimvar(
+                                  buffer.GetData(), buffer.GetNumElements(),
+                                  buffer.GetTupleType().type,
+                                  &triangulatedPrimvar);
+                    if (success
+                        && triangulatedPrimvar.IsHolding<VtVec2fArray>()) {
+                        _texcoords = triangulatedPrimvar.Get<VtVec2fArray>();
+                    } else {
+                        std::cout
+                               << "ERROR: could not triangulate face-varying "
+                                  "data\n";
+                    }
+
+                    // usd stores texcoords in face indexed -> each triangle has
+                    // 3 unique texcoords. let's try converting it to match our
+                    // vertex indices
+                    VtVec2fArray texcoords2;
+                    texcoords2.resize(_points.size());
+                    for (size_t t = 0; t < _triangulatedIndices.size(); t++) {
+                        for (int i = 0; i < 3; i++) {
+                            // value at triangleIndex[t][i] maps to t*3+i
+                            // texcoord;
+                            const size_t tc1index = t * 3 + i;
+                            const size_t tc2index = _triangulatedIndices[t][i];
+                            texcoords2[tc2index] = _texcoords[tc1index];
+                        }
+                    }
+                    _texcoords = texcoords2;
+                }
             }
         }
 
+        std::cout << "setting verices" << std::endl;
         auto vertices = ospNewData(_points.size(), OSP_FLOAT3, _points.cdata(),
                                    OSP_DATA_SHARED_BUFFER);
         ospCommit(vertices);
@@ -493,6 +577,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         }
 
         if (_colors.size() > 1) {
+            std::cout << "setting color data" << std::endl;
             // Carson: apparently colors are actually stored as a single color
             // value for entire object
             auto colors = ospNewData(_colors.size(), OSP_FLOAT4,
@@ -620,6 +705,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
 
     // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
+    std::cout << "finished mesh update" << std::endl;
 }
 
 void
@@ -648,6 +734,147 @@ HdOSPRayMesh::_UpdateDrawItemGeometricShader(HdSceneDelegate* sceneDelegate,
     // See HdSt_GeometricShader::BindResources()
     // The batches need to be validated and rebuilt if necessary.
     renderIndex.GetChangeTracker().MarkBatchesDirty();
+}
+
+OSPGeometry
+HdOSPRayMesh::_CreateOSPRaySubdivMesh()
+{
+    const PxOsdSubdivTags& subdivTags = _topology.GetSubdivTags();
+
+    // The embree edge crease buffer expects ungrouped edges: a pair
+    // of indices marking an edge and one weight per crease.
+    // HdMeshTopology stores edge creases compactly. A crease length
+    // buffer stores the number of indices per crease and groups the
+    // crease index buffer, much like the face buffer groups the vertex index
+    // buffer except that creases don't automatically close. Crease weights
+    // can be specified per crease or per individual edge.
+    //
+    // For example, to add the edges [v0->v1@2.0f] and [v1->v2@2.0f],
+    // HdMeshTopology might store length = [3], indices = [v0, v1, v2],
+    // and weight = [2.0f], or it might store weight = [2.0f, 2.0f].
+    //
+    // This loop calculates the number of edge creases, in preparation for
+    // unrolling the edge crease buffer below.
+    VtIntArray const creaseLengths = subdivTags.GetCreaseLengths();
+    int numEdgeCreases = 0;
+    for (size_t i = 0; i < creaseLengths.size(); ++i) {
+        numEdgeCreases += creaseLengths[i] - 1;
+    }
+
+    // For vertex creases, sanity check that the weights and indices
+    // arrays are the same length.
+    int numVertexCreases
+           = static_cast<int>(subdivTags.GetCornerIndices().size());
+    if (numVertexCreases
+        != static_cast<int>(subdivTags.GetCornerWeights().size())) {
+        TF_WARN("Mismatch between vertex crease indices and weights");
+        numVertexCreases = 0;
+    }
+
+    // Populate an embree subdiv object.
+    // _rtcMeshId = rtcNewSubdivisionMesh(scene, RTC_GEOMETRY_DEFORMABLE,
+    //     // numFaces is the size of RTC_FACE_BUFFER, which contains
+    //     // the number of indices for each face. This is equivalent to
+    //     // HdMeshTopology's GetFaceVertexCounts().
+    //     _topology.GetFaceVertexCounts().size(),
+    //     // numEdges is the size of RTC_INDEX_BUFFER, which contains
+    //     // the vertex indices for each face (grouped into faces by the
+    //     // face buffer). This is equivalent to HdMeshTopology's
+    //     // GetFaceVertexIndices(). Note this is more properly a count
+    //     // of half-edges.
+    //     _topology.GetFaceVertexIndices().size(),
+    //     // numVertices is the size of RTC_VERTEX_BUFFER, or vertex
+    //     // positions.
+    //     _points.size(),
+    //     // numEdgeCreases is the size of RTC_EDGE_CREASE_WEIGHT_BUFFER,
+    //     // and half the size of RTC_EDGE_CREASE_INDEX_BUFFER. See
+    //     // the calculation of numEdgeCreases above.
+    //     numEdgeCreases,
+    //     // numVertexCreases is the size of
+    //     // RTC_VERTEX_CREASE_WEIGHT_BUFFER and _INDEX_BUFFER.
+    //     numVertexCreases,
+    //     // numHoles is the size of RTC_HOLE_BUFFER.
+    //     _topology.GetHoleIndices().size());
+
+    auto mesh = ospNewGeometry("subdivision");
+    int numFaceVertices = _topology.GetFaceVertexCounts().size();
+    int numIndices = _topology.GetFaceVertexIndices().size();
+    int numVertices = _points.size();
+    int numHoles = _topology.GetHoleIndices().size();
+
+    // Fill the topology buffers.
+    // rtcSetBuffer(scene, _rtcMeshId, RTC_FACE_BUFFER,
+    //     _topology.GetFaceVertexCounts().cdata(), 0, sizeof(int));
+    // rtcSetBuffer(scene, _rtcMeshId, RTC_INDEX_BUFFER,
+    //     _topology.GetFaceVertexIndices().cdata(), 0, sizeof(int));
+    // rtcSetBuffer(scene, _rtcMeshId, RTC_HOLE_BUFFER,
+    //     _topology.GetHoleIndices().cdata(), 0, sizeof(int));
+
+    auto vertices = ospNewData(numVertices, OSP_FLOAT3, _points.cdata());
+    ospSetData(mesh, "vertex", vertices);
+    auto faces = ospNewData(numFaceVertices, OSP_UINT,
+                            _topology.GetFaceVertexCounts().cdata());
+    ospSetData(mesh, "face", faces);
+    auto indices = ospNewData(numIndices, OSP_UINT,
+                              _topology.GetFaceVertexIndices().cdata());
+    ospSetData(mesh, "index", indices);
+    // TODO: set hole buffer
+    std::vector<float> colorDummy(_points.size(), 1.0f);
+    auto colors = ospNewData(colorDummy.size(), OSP_FLOAT4, colorDummy.data());
+    ospSetData(mesh, "color", colors);
+    // TODO: ospray subd appears to require color data... this should be fixed
+
+    ospSet1f(mesh, "level", _tessellationRate:);
+    std::cout << "using subd level:" << _tessellationRate << std::endl;
+
+    // If this topology has edge creases, unroll the edge crease buffer.
+    // if (numEdgeCreases > 0) {
+    //     int *embreeCreaseIndices = static_cast<int*>(rtcMapBuffer(
+    //         scene, _rtcMeshId, RTC_EDGE_CREASE_INDEX_BUFFER));
+    //     float *embreeCreaseWeights = static_cast<float*>(rtcMapBuffer(
+    //         scene, _rtcMeshId, RTC_EDGE_CREASE_WEIGHT_BUFFER));
+    //     int embreeEdgeIndex = 0;
+
+    //     VtIntArray const creaseIndices = subdivTags.GetCreaseIndices();
+    //     VtFloatArray const creaseWeights =
+    //         subdivTags.GetCreaseWeights();
+
+    //     bool weightPerCrease =
+    //         (creaseWeights.size() == creaseLengths.size());
+
+    //     // Loop through the creases; for each crease, loop through
+    //     // the edges.
+    //     int creaseIndexStart = 0;
+    //     for (size_t i = 0; i < creaseLengths.size(); ++i) {
+    //         int numEdges = creaseLengths[i] - 1;
+    //         for(int j = 0; j < numEdges; ++j) {
+    //             // Store the crease indices.
+    //             embreeCreaseIndices[2*embreeEdgeIndex+0] =
+    //                 creaseIndices[creaseIndexStart+j];
+    //             embreeCreaseIndices[2*embreeEdgeIndex+1] =
+    //                 creaseIndices[creaseIndexStart+j+1];
+
+    //             // Store the crease weight.
+    //             embreeCreaseWeights[embreeEdgeIndex] = weightPerCrease ?
+    //                 creaseWeights[i] : creaseWeights[embreeEdgeIndex];
+
+    //             embreeEdgeIndex++;
+    //         }
+    //         creaseIndexStart += creaseLengths[i];
+    //     }
+
+    //     rtcUnmapBuffer(scene, _rtcMeshId, RTC_EDGE_CREASE_INDEX_BUFFER);
+    //     rtcUnmapBuffer(scene, _rtcMeshId, RTC_EDGE_CREASE_WEIGHT_BUFFER);
+    // }
+
+    // if (numVertexCreases > 0) {
+    //     rtcSetBuffer(scene, _rtcMeshId, RTC_VERTEX_CREASE_INDEX_BUFFER,
+    //         subdivTags.GetCornerIndices().cdata(), 0, sizeof(int));
+    //     rtcSetBuffer(scene, _rtcMeshId, RTC_VERTEX_CREASE_WEIGHT_BUFFER,
+    //         subdivTags.GetCornerWeights().cdata(), 0, sizeof(float));
+    // }
+
+    return mesh;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

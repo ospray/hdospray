@@ -182,6 +182,8 @@ private:
     void _CreatePrimvarSampler(TfToken const& name, VtValue const& data,
                                HdInterpolation interpolation, bool refined);
 
+    OSPGeometry _CreateOSPRaySubdivMesh();
+
     // Every HdOSPRayMesh is treated as instanced; if there's no instancer,
     // the prototype has a single identity istance.
     OSPGeometry _ospMesh;
@@ -227,6 +229,7 @@ private:
     bool _smoothNormals;
     bool _doubleSided;
     HdCullStyle _cullStyle;
+    int _tessellationRate { 32 };
 
     // A local cache of primvar scene data. "data" is a copy-on-write handle to
     // the actual primvar buffer, and "interpolation" is the interpolation mode

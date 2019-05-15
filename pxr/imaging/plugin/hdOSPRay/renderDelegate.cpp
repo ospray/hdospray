@@ -124,6 +124,8 @@ HdOSPRayRenderDelegate::_Initialize()
     }
     delete[] av;
 
+    ospLoadModule("ptex");
+
     _model = ospNewModel();
     ospCommit(_model);
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
