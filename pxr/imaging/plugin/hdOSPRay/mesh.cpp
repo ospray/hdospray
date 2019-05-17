@@ -882,50 +882,51 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
 
     // If this topology has edge creases, unroll the edge crease buffer.
     if (numEdgeCreases > 0) {
-        // unsigned int* creaseIndices = 
+        std::vector<unsigned int> ospCreaseIndices(numEdgeCreases*2);
+        std::vector<float> ospCreaseWeights(numEdgeCreases);
     //     int *embreeCreaseIndices = static_cast<int*>(rtcMapBuffer(
     //         scene, _rtcMeshId, RTC_EDGE_CREASE_INDEX_BUFFER));
     //     float *embreeCreaseWeights = static_cast<float*>(rtcMapBuffer(
     //         scene, _rtcMeshId, RTC_EDGE_CREASE_WEIGHT_BUFFER));
-    //     int embreeEdgeIndex = 0;
+        int ospEdgeIndex = 0;
 
-    //     VtIntArray const creaseIndices = subdivTags.GetCreaseIndices();
-    //     VtFloatArray const creaseWeights =
-    //         subdivTags.GetCreaseWeights();
+        VtIntArray const creaseIndices = subdivTags.GetCreaseIndices();
+        VtFloatArray const creaseWeights =
+            subdivTags.GetCreaseWeights();
 
-    //     bool weightPerCrease =
-    //         (creaseWeights.size() == creaseLengths.size());
+        bool weightPerCrease =
+            (creaseWeights.size() == creaseLengths.size());
 
-    //     // Loop through the creases; for each crease, loop through
-    //     // the edges.
-    //     int creaseIndexStart = 0;
-    //     for (size_t i = 0; i < creaseLengths.size(); ++i) {
-    //         int numEdges = creaseLengths[i] - 1;
-    //         for(int j = 0; j < numEdges; ++j) {
-    //             // Store the crease indices.
-    //             embreeCreaseIndices[2*embreeEdgeIndex+0] =
-    //                 creaseIndices[creaseIndexStart+j];
-    //             embreeCreaseIndices[2*embreeEdgeIndex+1] =
-    //                 creaseIndices[creaseIndexStart+j+1];
+        // Loop through the creases; for each crease, loop through
+        // the edges.
+        int creaseIndexStart = 0;
+        for (size_t i = 0; i < creaseLengths.size(); ++i) {
+            int numEdges = creaseLengths[i] - 1;
+            for(int j = 0; j < numEdges; ++j) {
+                // Store the crease indices.
+                ospCreaseIndices[2*ospEdgeIndex+0] =
+                    creaseIndices[creaseIndexStart+j];
+                ospCreaseIndices[2*ospEdgeIndex+1] =
+                    creaseIndices[creaseIndexStart+j+1];
 
-    //             // Store the crease weight.
-    //             embreeCreaseWeights[embreeEdgeIndex] = weightPerCrease ?
-    //                 creaseWeights[i] : creaseWeights[embreeEdgeIndex];
+                // Store the crease weight.
+                ospCreaseWeights[ospEdgeIndex] = weightPerCrease ?
+                    creaseWeights[i] : creaseWeights[ospEdgeIndex];
 
-    //             embreeEdgeIndex++;
-    //         }
-    //         creaseIndexStart += creaseLengths[i];
-    //     }
+                ospEdgeIndex++;
+            }
+            creaseIndexStart += creaseLengths[i];
+        }
 
     //     rtcUnmapBuffer(scene, _rtcMeshId, RTC_EDGE_CREASE_INDEX_BUFFER);
     //     rtcUnmapBuffer(scene, _rtcMeshId, RTC_EDGE_CREASE_WEIGHT_BUFFER);
 
-//   auto edge_crease_indices = ospNewData(12, OSP_UINT2, subdivTags.GetCreaseIndices().cdata());
-//   ospSetData(subd, "edgeCrease.index", edge_crease_indices);
-//   ospRelease(edge_crease_indices);
-//   auto edge_crease_weights = ospNewData(12, OSP_FLOAT, subdivTags.GetCreaseWeights().cdata());
-//   ospSetData(subd, "edgeCrease.weight", edge_crease_weights);
-//   ospRelease(edge_crease_weights);
+  auto edge_crease_indices = ospNewData(numEdgeCreases, OSP_UINT2, ospCreaseIndices.data());
+  ospSetData(mesh, "edgeCrease.index", edge_crease_indices);
+  ospRelease(edge_crease_indices);
+  auto edge_crease_weights = ospNewData(numEdgeCreases, OSP_FLOAT, ospCreaseWeights.data());
+  ospSetData(mesh, "edgeCrease.weight", edge_crease_weights);
+  ospRelease(edge_crease_weights);
     }
 
     if (numVertexCreases > 0) {
