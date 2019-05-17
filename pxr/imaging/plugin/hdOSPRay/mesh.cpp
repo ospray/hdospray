@@ -360,6 +360,55 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             std::cout << "subd created" << std::endl;
             ospCommit(mesh);
             std::cout << "subd committed" << std::endl;
+
+                HdMeshUtil meshUtil(&_topology, GetId());
+                meshUtil.ComputeQuadIndices(&_quadIndices,
+                                            &_quadPrimitiveParams);
+                // Check if texcoords are provides as face varying.
+                // XXX: (This code currently only cares about _texcoords, but
+                // should be generalized to all primvars)
+                bool faceVaryingTexcoord = false;
+                HdPrimvarDescriptorVector faceVaryingPrimvars
+                       = GetPrimvarDescriptors(sceneDelegate,
+                                               HdInterpolationFaceVarying);
+                for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
+                    if (pv.name == "Texture_uv")
+                        faceVaryingTexcoord = true;
+                }
+
+                if (faceVaryingTexcoord) {
+                    TfToken buffName = HdOSPRayTokens->st;
+                    VtValue buffValue = VtValue(_texcoords);
+                    HdVtBufferSource buffer(buffName, buffValue);
+                    VtValue quadPrimvar;
+
+                    auto success
+                           = meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(
+                                  buffer.GetData(), buffer.GetNumElements(),
+                                  buffer.GetTupleType().type, &quadPrimvar);
+                    if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
+                        _texcoords = quadPrimvar.Get<VtVec2fArray>();
+                    } else {
+                        std::cout
+                               << "ERROR: could not quadrangulate face-varying "
+                                  "data\n";
+                    }
+
+                    // usd stores texcoords in face indexed -> each quad has 4
+                    // unique texcoords.
+                    // let's try converting it to match our vertex indices
+                    VtVec2fArray texcoords2;
+                    texcoords2.resize(_points.size());
+                    for (size_t q = 0; q < _quadIndices.size(); q++) {
+                        for (int i = 0; i < 4; i++) {
+                            // value at quadindex[q][i] maps to q*4+i texcoord;
+                            const size_t tc1index = q * 4 + i;
+                            const size_t tc2index = _quadIndices[q][i];
+                            texcoords2[tc2index] = _texcoords[tc1index];
+                        }
+                    }
+                    _texcoords = texcoords2;
+                }
         } else {
             std::cout << "use polymesh\n";
         }
@@ -801,6 +850,7 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     int numIndices = _topology.GetFaceVertexIndices().size();
     int numVertices = _points.size();
     int numHoles = _topology.GetHoleIndices().size();
+    std::cout << "num holes: " << numHoles << std::endl;
 
     // Fill the topology buffers.
     // rtcSetBuffer(scene, _rtcMeshId, RTC_FACE_BUFFER,
@@ -819,16 +869,20 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
                               _topology.GetFaceVertexIndices().cdata());
     ospSetData(mesh, "index", indices);
     // TODO: set hole buffer
-    std::vector<float> colorDummy(_points.size(), 1.0f);
+    GfVec4f color(1.f);
+    if (!_colors.empty())
+      color = _colors[0];
+    std::vector<GfVec4f> colorDummy(_points.size(), color);
     auto colors = ospNewData(colorDummy.size(), OSP_FLOAT4, colorDummy.data());
     ospSetData(mesh, "color", colors);
     // TODO: ospray subd appears to require color data... this should be fixed
 
-    ospSet1f(mesh, "level", _tessellationRate:);
+    ospSet1f(mesh, "level", _tessellationRate);
     std::cout << "using subd level:" << _tessellationRate << std::endl;
 
     // If this topology has edge creases, unroll the edge crease buffer.
-    // if (numEdgeCreases > 0) {
+    if (numEdgeCreases > 0) {
+        // unsigned int* creaseIndices = 
     //     int *embreeCreaseIndices = static_cast<int*>(rtcMapBuffer(
     //         scene, _rtcMeshId, RTC_EDGE_CREASE_INDEX_BUFFER));
     //     float *embreeCreaseWeights = static_cast<float*>(rtcMapBuffer(
@@ -865,14 +919,27 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
 
     //     rtcUnmapBuffer(scene, _rtcMeshId, RTC_EDGE_CREASE_INDEX_BUFFER);
     //     rtcUnmapBuffer(scene, _rtcMeshId, RTC_EDGE_CREASE_WEIGHT_BUFFER);
-    // }
 
-    // if (numVertexCreases > 0) {
+//   auto edge_crease_indices = ospNewData(12, OSP_UINT2, subdivTags.GetCreaseIndices().cdata());
+//   ospSetData(subd, "edgeCrease.index", edge_crease_indices);
+//   ospRelease(edge_crease_indices);
+//   auto edge_crease_weights = ospNewData(12, OSP_FLOAT, subdivTags.GetCreaseWeights().cdata());
+//   ospSetData(subd, "edgeCrease.weight", edge_crease_weights);
+//   ospRelease(edge_crease_weights);
+    }
+
+    if (numVertexCreases > 0) {
+  auto vertex_crease_indices = ospNewData(numVertexCreases, OSP_UINT, subdivTags.GetCornerIndices().cdata());
+  ospSetData(mesh, "vertexCrease.index", vertex_crease_indices);
+  ospRelease(vertex_crease_indices);
+  auto vertex_crease_weights = ospNewData(numVertexCreases, OSP_FLOAT, subdivTags.GetCornerWeights().cdata());
+  ospSetData(mesh, "vertexCrease.weight", vertex_crease_weights);
+  ospRelease(vertex_crease_weights);
     //     rtcSetBuffer(scene, _rtcMeshId, RTC_VERTEX_CREASE_INDEX_BUFFER,
     //         subdivTags.GetCornerIndices().cdata(), 0, sizeof(int));
     //     rtcSetBuffer(scene, _rtcMeshId, RTC_VERTEX_CREASE_WEIGHT_BUFFER,
     //         subdivTags.GetCornerWeights().cdata(), 0, sizeof(float));
-    // }
+    }
 
     return mesh;
 }
