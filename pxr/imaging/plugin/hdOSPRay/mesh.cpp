@@ -44,6 +44,8 @@
 #include "ospcommon/AffineSpace.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
+//#define PINGY(x) { std::cout << __LINE__ << std::string(x) << std::endl; } 
+#define PINGY(x) { }
 
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
@@ -130,7 +132,7 @@ HdOSPRayMesh::_UseQuadIndices(const HdRenderIndex& renderIndex,
     if (topology.GetScheme() == PxOsdOpenSubdivTokens->loop)
         return false;
 
-    // According to HdSt mesh.cpp, always use quads on surfaces with ptex
+    // According to HdSt _ospMesh.cpp, always use quads on surfaces with ptex
     const HdOSPRayMaterial* material = static_cast<const HdOSPRayMaterial*>(
            renderIndex.GetSprim(HdPrimTypeTokens->material, GetMaterialId()));
     if (material && material->HasPtex())
@@ -232,7 +234,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     HF_MALLOC_TAG_FUNCTION();
 
     SdfPath const& id = GetId();
-    OSPGeometry mesh = nullptr;
 
     ////////////////////////////////////////////////////////////////////////
     // 1. Pull scene data.
@@ -283,13 +284,9 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     // If the subdivision scheme is "none", force us to not refine.
     doRefine
            = doRefine && (_topology.GetScheme() != PxOsdOpenSubdivTokens->none);
-    std::cout << "opensdiv tokens != none: "
-              << (_topology.GetScheme() != PxOsdOpenSubdivTokens->none)
-              << std::endl;
 
     // If the refine level is 0, triangulate instead of subdividing.
     doRefine = doRefine && (_topology.GetRefineLevel() > 0);
-    std::cout << "refine level: " << _topology.GetRefineLevel() << std::endl;
 
     // The repr defines whether we should compute smooth normals for this mesh:
     // per-vertex normals taken as an average of adjacent faces, and
@@ -298,9 +295,9 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
 
     // If the subdivision scheme is "none" or "bilinear", force us not to use
     // smooth normals.
-    _smoothNormals = _smoothNormals
-           && (_topology.GetScheme() != PxOsdOpenSubdivTokens->none)
-           && (_topology.GetScheme() != PxOsdOpenSubdivTokens->bilinear);
+    // _smoothNormals = _smoothNormals
+    //        && (_topology.GetScheme() != PxOsdOpenSubdivTokens->none)
+    //        && (_topology.GetScheme() != PxOsdOpenSubdivTokens->bilinear);
 
     if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)
         && _topology.GetRefineLevel() > 0) {
@@ -326,11 +323,13 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             if (_tessellationRate == 1) {
                 _tessellationRate++;
             }
-            std::cout << "refine level: " << _topology.GetRefineLevel() << " "
-                      << (1 << _topology.GetRefineLevel()) << std::endl;
-            std::cout << "tessellationRate:" << _tessellationRate << std::endl;
         }
     }
+
+    //OSPRay calls are not thread safe.  All osp calls should be mutex guarded.
+    std::lock_guard<std::mutex> lock(g_mutex);
+
+    PINGY();
 
     // If the topology has changed, or the value of doRefine has changed, we
     // need to create or recreate the OSPRay mesh object.
@@ -355,11 +354,9 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         _adjacencyValid = false;
 
         if (doRefine) {
-            std::cout << "use subd\n";
-            mesh = _CreateOSPRaySubdivMesh();
-            std::cout << "subd created" << std::endl;
-            ospCommit(mesh);
-            std::cout << "subd committed" << std::endl;
+            ospRelease(_ospMesh);
+            _ospMesh = _CreateOSPRaySubdivMesh();
+            ospCommit(_ospMesh);
 
                 HdMeshUtil meshUtil(&_topology, GetId());
                 meshUtil.ComputeQuadIndices(&_quadIndices,
@@ -410,12 +407,12 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                     _texcoords = texcoords2;
                 }
         } else {
-            std::cout << "use polymesh\n";
         }
         _refined = doRefine;
     }
+    PINGY();
 
-    // If the subdiv tags changed or the mesh was recreated, we need to update
+    // If the subdiv tags changed or the _ospMesh was recreated, we need to update
     // the subdivision boundary mode.
     if (newMesh || HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)) {
         if (doRefine) {
@@ -457,8 +454,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                &_adjacency, _points.size(), _points.cdata());
         _normalsValid = true;
     }
+    PINGY();
 
-    std::lock_guard<std::mutex> lock(g_mutex);
     // Create new OSP Mesh
     auto instanceModel = ospNewModel();
     if (newMesh
@@ -481,10 +478,12 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                       HdPrimTypeTokens->material, GetMaterialId()));
 
         if (!_refined) {
+            ospRelease(_ospMesh);
+    PINGY();
             bool useQuads = _UseQuadIndices(renderIndex, _topology);
 
             if (useQuads) {
-                mesh = ospNewGeometry("quadmesh");
+                _ospMesh = ospNewGeometry("quadmesh");
 
                 HdMeshUtil meshUtil(&_topology, GetId());
                 meshUtil.ComputeQuadIndices(&_quadIndices,
@@ -495,7 +494,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                                           OSP_DATA_SHARED_BUFFER);
 
                 ospCommit(indices);
-                ospSetData(mesh, "index", indices);
+                ospSetData(_ospMesh, "index", indices);
                 ospRelease(indices);
 
                 // Check if texcoords are provides as face varying.
@@ -545,7 +544,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                 }
 
             } else { // triangles
-                mesh = ospNewGeometry("trianglemesh");
+                _ospMesh = ospNewGeometry("trianglemesh");
 
                 HdMeshUtil meshUtil(&_topology, GetId());
                 meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
@@ -556,7 +555,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                                           OSP_DATA_SHARED_BUFFER);
 
                 ospCommit(indices);
-                ospSetData(mesh, "index", indices);
+                ospSetData(_ospMesh, "index", indices);
                 ospRelease(indices);
 
                 // Check if texcoords are provides as face varying.
@@ -610,39 +609,41 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             }
         }
 
-        std::cout << "setting verices" << std::endl;
         auto vertices = ospNewData(_points.size(), OSP_FLOAT3, _points.cdata(),
                                    OSP_DATA_SHARED_BUFFER);
         ospCommit(vertices);
-        ospSetData(mesh, "vertex", vertices);
+        ospSetData(_ospMesh, "vertex", vertices);
         ospRelease(vertices);
+    PINGY();
 
         if (_computedNormals.size()) {
             auto normals = ospNewData(_computedNormals.size(), OSP_FLOAT3,
                                       _computedNormals.cdata(),
                                       OSP_DATA_SHARED_BUFFER);
-            ospSetData(mesh, "vertex.normal", normals);
+            ospSetData(_ospMesh, "vertex.normal", normals);
             ospRelease(normals);
         }
+    PINGY();
 
         if (_colors.size() > 1) {
-            std::cout << "setting color data" << std::endl;
             // Carson: apparently colors are actually stored as a single color
             // value for entire object
             auto colors = ospNewData(_colors.size(), OSP_FLOAT4,
                                      _colors.cdata(), OSP_DATA_SHARED_BUFFER);
-            ospSetData(mesh, "vertex.color", colors);
+            ospSetData(_ospMesh, "vertex.color", colors);
             ospRelease(colors);
         }
+    PINGY();
 
         if (_texcoords.size() > 1) {
             auto texcoords
                    = ospNewData(_texcoords.size(), OSP_FLOAT2,
                                 _texcoords.cdata(), OSP_DATA_SHARED_BUFFER);
             ospCommit(texcoords);
-            ospSetData(mesh, "vertex.texcoord", texcoords);
+            ospSetData(_ospMesh, "vertex.texcoord", texcoords);
             ospRelease(texcoords);
         }
+    PINGY();
 
         OSPMaterial ospMaterial = nullptr;
 
@@ -657,21 +658,26 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         }
 
         ospCommit(ospMaterial);
-        ospSetMaterial(mesh, ospMaterial);
+        ospSetMaterial(_ospMesh, ospMaterial);
         ospRelease(ospMaterial);
-        ospCommit(mesh);
+    PINGY();
+        ospCommit(_ospMesh);
+    PINGY();
 
         ospAddGeometry(instanceModel,
-                       mesh); // crashing when added to the scene. I suspect
+                       _ospMesh); // crashing when added to the scene. I suspect
                               // indices/vertex spec.
+    PINGY();
         ospCommit(instanceModel);
+    PINGY();
         renderParam->UpdateModelVersion();
     }
+    PINGY();
 
     ////////////////////////////////////////////////////////////////////////
     // 4. Populate ospray instance objects.
 
-    // If the mesh is instanced, create one new instance per transform.
+    // If the _ospMesh is instanced, create one new instance per transform.
     // XXX: The current instancer invalidation tracking makes it hard for
     // HdOSPRay to tell whether transforms will be dirty, so this code
     // pulls them every frame.
@@ -687,16 +693,12 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         size_t newSize = transforms.size();
 
         // Size down (if necessary).
-        for (size_t i = newSize; i < oldSize; ++i) {
-            for (auto instance : _ospInstances) {
-                ospRemoveGeometry(model, instance);
-            }
+        for (auto instance : _ospInstances) {
+            ospRemoveGeometry(model, instance);
         }
         _ospInstances.resize(newSize);
-
-        // Size up (if necessary).
-        for (size_t i = oldSize; i < newSize; ++i) {
-            // Create the new instance.
+        for (size_t i = 0; i < newSize; i++) {
+        // Create the new instance.
             _ospInstances[i] = ospNewInstance(instanceModel, identity);
         }
 
@@ -717,6 +719,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     // Otherwise, create our single instance (if necessary) and update
     // the transform (if necessary).
     else {
+
         for (auto instance : _ospInstances) {
             ospRemoveGeometry(model, instance);
         }
@@ -725,22 +728,13 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         _ospInstances.push_back(instance);
         ospCommit(instance);
         // convert aligned matrix to unalighned 4x3 matrix
-        if (HdChangeTracker::IsTransformDirty(*dirtyBits, id)) {
-            // TODO: update transform
-            auto instance = _ospInstances[0];
-            float* xfm = _transform.GetArray();
-            // convert aligned matrix to unalighned 4x3 matrix
-            ospSet3f(instance, "xfm.l.vx", xfm[0], xfm[1], xfm[2]);
-            ospSet3f(instance, "xfm.l.vy", xfm[4], xfm[5], xfm[6]);
-            ospSet3f(instance, "xfm.l.vz", xfm[8], xfm[9], xfm[10]);
-            ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
-        }
-        if (newMesh || HdChangeTracker::IsTransformDirty(*dirtyBits, id)
-            || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
-                                               HdTokens->points)) {
-            ospCommit(_ospInstances[0]);
-            // Mark the instance as updated in the top-level BVH.
-        }
+        float* xfm = _transform.GetArray();
+        // convert aligned matrix to unalighned 4x3 matrix
+        ospSet3f(instance, "xfm.l.vx", xfm[0], xfm[1], xfm[2]);
+        ospSet3f(instance, "xfm.l.vy", xfm[4], xfm[5], xfm[6]);
+        ospSet3f(instance, "xfm.l.vz", xfm[8], xfm[9], xfm[10]);
+        ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
+        ospCommit(instance);
     }
 
     // Update visibility by pulling the object into/out of the model.
@@ -754,7 +748,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
 
     // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
-    std::cout << "finished mesh update" << std::endl;
+    PINGY();
 }
 
 void
@@ -850,7 +844,6 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     int numIndices = _topology.GetFaceVertexIndices().size();
     int numVertices = _points.size();
     int numHoles = _topology.GetHoleIndices().size();
-    std::cout << "num holes: " << numHoles << std::endl;
 
     // Fill the topology buffers.
     // rtcSetBuffer(scene, _rtcMeshId, RTC_FACE_BUFFER,
@@ -878,7 +871,6 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     // TODO: ospray subd appears to require color data... this should be fixed
 
     ospSet1f(mesh, "level", _tessellationRate);
-    std::cout << "using subd level:" << _tessellationRate << std::endl;
 
     // If this topology has edge creases, unroll the edge crease buffer.
     if (numEdgeCreases > 0) {
