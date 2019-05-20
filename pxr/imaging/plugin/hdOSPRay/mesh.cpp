@@ -44,6 +44,8 @@
 #include "ospcommon/AffineSpace.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
+//#define PINGY(x) { std::cout << __LINE__ << std::string(x) << std::endl; } 
+#define PINGY(x) { }
 
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
@@ -257,7 +259,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     HF_MALLOC_TAG_FUNCTION();
 
     SdfPath const& id = GetId();
-    OSPGeometry mesh = nullptr;
 
     ////////////////////////////////////////////////////////////////////////
     // 1. Pull scene data.
@@ -360,6 +361,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         }
     }
 
+    //OSPRay calls are not thread safe.  All osp calls should be mutex guarded.
+    std::lock_guard<std::mutex> lock(g_mutex);
+
+    PINGY();
+
     // If the topology has changed, or the value of doRefine has changed, we
     // need to create or recreate the OSPRay mesh object.
     // _GetInitialDirtyBits() ensures that the topology is dirty the first time
@@ -456,6 +462,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                &_adjacency, _points.size(), _points.cdata());
         _normalsValid = true;
     }
+    PINGY();
 
     // Create new OSP Mesh
     if (_instanceModel)
@@ -473,6 +480,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                       HdPrimTypeTokens->material, GetMaterialId()));
 
         if (!_refined) {
+            ospRelease(_ospMesh);
+    PINGY();
             bool useQuads = _UseQuadIndices(renderIndex, _topology);
 
             if (useQuads) {
@@ -602,12 +611,12 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             }
         }
 
-        std::cout << "setting verices" << std::endl;
         auto vertices = ospNewData(_points.size(), OSP_FLOAT3, _points.cdata(),
                                    OSP_DATA_SHARED_BUFFER);
         ospCommit(vertices);
         ospSetData(_ospMesh, "vertex", vertices);
         ospRelease(vertices);
+    PINGY();
 
         if (_computedNormals.size()) {
             auto normals = ospNewData(_computedNormals.size(), OSP_FLOAT3,
@@ -616,6 +625,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospSetData(_ospMesh, "vertex.normal", normals);
             ospRelease(normals);
         }
+    PINGY();
 
         if (_colors.size() > 1) {
             auto colors = ospNewData(_colors.size(), OSP_FLOAT4,
@@ -623,6 +633,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospSetData(_ospMesh, "vertex.color", colors);
             ospRelease(colors);
         }
+    PINGY();
 
         if (_texcoords.size() > 1) {
             auto texcoords
@@ -632,6 +643,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospSetData(_ospMesh, "vertex.texcoord", texcoords);
             ospRelease(texcoords);
         }
+    PINGY();
 
         OSPMaterial ospMaterial = nullptr;
 
@@ -653,6 +665,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         ospCommit(_instanceModel);
         renderParam->UpdateModelVersion();
     }
+    PINGY();
 
     ////////////////////////////////////////////////////////////////////////
     // 4. Populate ospray instance objects.
@@ -712,7 +725,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
     // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
-    std::cout << "finished mesh update" << std::endl;
+    PINGY();
 }
 
 void
