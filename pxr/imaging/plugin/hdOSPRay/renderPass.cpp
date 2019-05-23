@@ -29,6 +29,7 @@
 #include "pxr/imaging/hdOSPRay/config.h"
 #include "pxr/imaging/hdOSPRay/context.h"
 #include "pxr/imaging/hdOSPRay/mesh.h"
+#include "pxr/imaging/hdOSPRay/renderDelegate.h"
 
 #include "pxr/imaging/hd/perfLog.h"
 #include "pxr/imaging/hd/renderPassState.h"
@@ -85,11 +86,6 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     ospSetObject(_renderer, "model", _model);
     ospSetObject(_renderer, "camera", _camera);
 
-    _spp = HdOSPRayConfig::GetInstance().samplesPerFrame;
-    _useDenoiser = HdOSPRayConfig::GetInstance().useDenoiser;
-    ospSet1i(_renderer, "spp", _spp);
-    ospSet1i(_renderer, "aoSamples",
-             HdOSPRayConfig::GetInstance().ambientOcclusionSamples);
     ospSet1i(_renderer, "maxDepth", 8);
     ospSet1f(_renderer, "aoDistance", 15.0f);
     ospSet1i(_renderer, "shadowsEnabled", true);
@@ -141,7 +137,30 @@ void
 HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                              TfTokenVector const& renderTags)
 {
+    HdRenderDelegate *renderDelegate = GetRenderIndex()->GetRenderDelegate();
     // XXX: Add collection and renderTags support.
+    //update conig options
+    int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
+    if (_lastSettingsVersion != currentSettingsVersion) {
+        _useDenoiser = HdOSPRayConfig::GetInstance().useDenoiser;
+                    renderDelegate->GetRenderSetting<bool>(
+                        HdOSPRayRenderSettingsTokens->useDenoiser, false);
+        int spp = 
+                    renderDelegate->GetRenderSetting<int>(
+                        HdOSPRayRenderSettingsTokens->samplesPerFrame, 0);
+        int aoSamples = 
+                    renderDelegate->GetRenderSetting<int>(
+                        HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
+        if (spp != _spp || aoSamples != _aoSamples) {
+            _spp = spp;
+            _aoSamples = aoSamples;
+            ospSet1i(_renderer, "spp", _spp);
+            ospSet1i(_renderer, "aoSamples", _aoSamples);
+            ospCommit(_renderer);
+        }
+        _lastSettingsVersion = currentSettingsVersion;
+        ResetImage();
+    }
     // XXX: Add clip planes support.
 
     // If the viewport has changed, resize the sample buffer.

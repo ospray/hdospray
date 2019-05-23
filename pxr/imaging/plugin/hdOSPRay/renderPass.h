@@ -104,8 +104,9 @@ private:
     // A reference to the global scene version.
     std::atomic<int>* _sceneVersion;
     // The last scene version we rendered with.
-    int _lastRenderedVersion;
-    int _lastRenderedModelVersion;
+    int _lastRenderedVersion{-1};
+    int _lastRenderedModelVersion{-1};
+    int _lastSettingsVersion{-1};
 
     // The resolved output buffer, in GL_RGBA. This is an intermediate between
     // _sampleBuffer and the GL framebuffer.
@@ -145,6 +146,7 @@ private:
     int _spp { 1 };
     bool _useDenoiser { false };
     int _denoiserSPPThreshold { 3 };
+    int _aoSamples {0};
 
     void Denoise();
 };

@@ -44,6 +44,8 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+TF_DEFINE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens, HDOSPRAY_RENDER_SETTINGS_TOKENS);
+
 TF_DEFINE_PUBLIC_TOKENS(HdOSPRayTokens, HDOSPRAY_TOKENS);
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_RPRIM_TYPES = {
@@ -62,6 +64,18 @@ std::atomic_int HdOSPRayRenderDelegate::_counterResourceRegistry;
 HdResourceRegistrySharedPtr HdOSPRayRenderDelegate::_resourceRegistry;
 
 HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
+    : HdRenderDelegate()
+{
+    _Initialize();
+}
+
+HdOSPRayRenderDelegate::HdOSPRayRenderDelegate(HdRenderSettingsMap const& settingsMap)
+    : HdRenderDelegate(settingsMap)
+{
+    _Initialize();
+}
+
+void HdOSPRayRenderDelegate::_Initialize()
 {
     // Check plugin against pxr version
 #if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 19
@@ -125,6 +139,19 @@ HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
     if (_counterResourceRegistry.fetch_add(1) == 0) {
         _resourceRegistry.reset(new HdResourceRegistry());
     }
+
+    // Initialize the settings and settings descriptors.
+    _settingDescriptors.resize(3);
+    _settingDescriptors[0] = { "Ambient occlusion samples",
+        HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
+        VtValue(int(HdOSPRayConfig::GetInstance().ambientOcclusionSamples)) };
+    _settingDescriptors[1] = { "Samples per frame",
+        HdOSPRayRenderSettingsTokens->samplesPerFrame,
+        VtValue(int(HdOSPRayConfig::GetInstance().samplesPerFrame)) };
+    _settingDescriptors[2] = { "Toggle denoiser",
+        HdOSPRayRenderSettingsTokens->useDenoiser,
+        VtValue(bool(HdOSPRayConfig::GetInstance().useDenoiser)) };
+    _PopulateDefaultSettings(_settingDescriptors);
 }
 
 HdOSPRayRenderDelegate::~HdOSPRayRenderDelegate()
@@ -305,6 +332,12 @@ void
 HdOSPRayRenderDelegate::DestroyBprim(HdBprim* bPrim)
 {
     delete bPrim;
+}
+
+HdRenderSettingDescriptorList
+HdOSPRayRenderDelegate::GetRenderSettingDescriptors() const
+{
+    return _settingDescriptors;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
