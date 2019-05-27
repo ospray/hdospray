@@ -104,4 +104,11 @@ HdOSPRayConfig::GetInstance()
     return TfSingleton<HdOSPRayConfig>::GetInstance();
 }
 
+/*static*/
+HdOSPRayConfig&
+HdOSPRayConfig::GetMutableInstance()
+{
+    return TfSingleton<HdOSPRayConfig>::GetInstance();
+}
+
 PXR_NAMESPACE_CLOSE_SCOPE

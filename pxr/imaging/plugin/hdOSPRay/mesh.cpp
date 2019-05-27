@@ -44,8 +44,8 @@
 #include "ospcommon/AffineSpace.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
-//#define PINGY(x) { std::cout << __LINE__ << std::string(x) << std::endl; } 
-#define PINGY(x) { }
+#define PINGY(x) { std::cout << __LINE__ << std::string(x) << std::endl; } 
+//#define PINGY(x) { }
 
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
@@ -54,7 +54,7 @@ TF_DEFINE_PRIVATE_TOKENS(
 );
 // clang-format on
 
-std::mutex g_mutex;
+static std::mutex g_mutex;
 
 // USD forces warnings when converting ospcommon::affine3f to osp::affine3f
 const osp::affine3f identity({ 1, 0, 0, 0, 1, 0, 0, 0, 1 });
@@ -149,6 +149,11 @@ HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
 {
     HD_TRACE_FUNCTION();
     HF_MALLOC_TAG_FUNCTION();
+
+    //OSPRay calls are not thread safe.  All osp calls should be mutex guarded.
+    // std::lock_guard<std::mutex> lock(g_mutex);
+    // g_mutex.lock();
+    // std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
 
     // XXX: Meshes can have multiple reprs; this is done, for example, when
     // the drawstyle specifies different rasterizing modes between front faces
@@ -292,12 +297,26 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     // per-vertex normals taken as an average of adjacent faces, and
     // interpolated smoothly across faces.
     _smoothNormals = !desc.flatShadingEnabled;
+std::cout << " smooth normals1: " << _smoothNormals << std::endl;
 
     // If the subdivision scheme is "none" or "bilinear", force us not to use
     // smooth normals.
-    // _smoothNormals = _smoothNormals
-    //        && (_topology.GetScheme() != PxOsdOpenSubdivTokens->none)
-    //        && (_topology.GetScheme() != PxOsdOpenSubdivTokens->bilinear);
+    _smoothNormals = _smoothNormals
+           && ((_topology.GetScheme() != PxOsdOpenSubdivTokens->none));
+        //    && (_topology.GetScheme() != PxOsdOpenSubdivTokens->bilinear));
+std::cout << " smooth normals2: " << _smoothNormals << std::endl;
+std::cout << " !subdiv->none: " <<(_topology.GetScheme() != PxOsdOpenSubdivTokens->none) << std::endl;
+std::cout << " !subdiv->bilinear: " <<(_topology.GetScheme() != PxOsdOpenSubdivTokens->bilinear) << std::endl;
+
+    // If the scene delegate has provided authored normals, force us to not use
+    // smooth normals.
+    bool authoredNormals = false;
+    if (_primvarSourceMap.count(HdTokens->normals) > 0) {
+        authoredNormals = true;
+    }
+std::cout << " smooth normals: " << _smoothNormals << std::endl;
+std::cout << " doRefine: " << doRefine << std::endl;
+std::cout << "authoredNormals: " << authoredNormals << std::endl;
 
     if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)
         && _topology.GetRefineLevel() > 0) {
@@ -326,8 +345,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         }
     }
 
-    //OSPRay calls are not thread safe.  All osp calls should be mutex guarded.
-    std::lock_guard<std::mutex> lock(g_mutex);
 
     PINGY();
 
@@ -354,6 +371,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         _adjacencyValid = false;
 
         if (doRefine) {
+            g_mutex.lock();
             ospRelease(_ospMesh);
             _ospMesh = _CreateOSPRaySubdivMesh();
             ospCommit(_ospMesh);
@@ -406,6 +424,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                     }
                     _texcoords = texcoords2;
                 }
+            g_mutex.unlock();
         } else {
         }
         _refined = doRefine;
@@ -437,6 +456,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             }
         }
     }
+    PINGY();
 
     // Update the smooth normals in steps:
     // 1. If the topology is dirty, update the adjacency table, a processed
@@ -444,12 +464,14 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     // 2. If the points are dirty, update the smooth normal buffer itself.
     _normalsValid = false;
     if (_smoothNormals && !_adjacencyValid) {
+    PINGY();
         _adjacency.BuildAdjacencyTable(&_topology);
         _adjacencyValid = true;
         // If we rebuilt the adjacency table, force a rebuild of normals.
         _normalsValid = false;
     }
-    if (_smoothNormals && !_normalsValid) {
+    if (_smoothNormals && !_normalsValid && !doRefine) {
+    PINGY();
         _computedNormals = Hd_SmoothNormals::ComputeSmoothNormals(
                &_adjacency, _points.size(), _points.cdata());
         _normalsValid = true;
@@ -462,6 +484,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
+        g_mutex.lock();
 
         //    if (_primvarSourceMap.count(HdTokens->color) > 0) {
         //      auto& colorBuffer = _primvarSourceMap[HdTokens->color].data;
@@ -671,12 +694,14 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         ospCommit(instanceModel);
     PINGY();
         renderParam->UpdateModelVersion();
+        g_mutex.unlock();
     }
     PINGY();
 
     ////////////////////////////////////////////////////////////////////////
     // 4. Populate ospray instance objects.
 
+g_mutex.lock();
     // If the _ospMesh is instanced, create one new instance per transform.
     // XXX: The current instancer invalidation tracking makes it hard for
     // HdOSPRay to tell whether transforms will be dirty, so this code
@@ -748,6 +773,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
 
     // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
+    g_mutex.unlock();
     PINGY();
 }
 

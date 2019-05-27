@@ -174,6 +174,8 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
 
     TF_UNUSED(renderParam);
 
+    // std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
+
     if (*dirtyBits & HdMaterial::DirtyResource) {
         // update material
         VtValue networkMapResource
