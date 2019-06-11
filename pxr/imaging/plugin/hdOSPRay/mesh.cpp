@@ -214,7 +214,7 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
             }
 
             if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
-                                                HdTokens->color)) {
+                                                HdTokens->displayColor)) {
                 if (value.IsHolding<VtVec4fArray>())
                     _colors = value.Get<VtVec4fArray>();
             }
