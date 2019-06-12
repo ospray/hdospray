@@ -142,7 +142,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     //update conig options
     int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
     if (_lastSettingsVersion != currentSettingsVersion) {
-        _useDenoiser = HdOSPRayConfig::GetInstance().useDenoiser;
+        _useDenoiser =
                     renderDelegate->GetRenderSetting<bool>(
                         HdOSPRayRenderSettingsTokens->useDenoiser, false);
         int spp = 

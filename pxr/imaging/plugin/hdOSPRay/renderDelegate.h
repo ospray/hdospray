@@ -37,8 +37,8 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 #define HDOSPRAY_RENDER_SETTINGS_TOKENS \
     (ambientOcclusionSamples)           \
-    (useDenoiser)                       \
     (samplesPerFrame)                   \
+    (useDenoiser)                       \
 
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens, HDOSPRAY_RENDER_SETTINGS_TOKENS);
