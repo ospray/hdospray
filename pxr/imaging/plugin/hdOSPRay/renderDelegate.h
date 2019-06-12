@@ -42,10 +42,12 @@ PXR_NAMESPACE_OPEN_SCOPE
     (maxDepth)                          \
     (aoDistance)                        \
     (samplesToConvergence)              \
+    (ambientLight)                          \
     (eyeLight)                          \
     (keyLight)                          \
     (fillLight)                         \
     (backLight)                         \
+    (pathTracer)                         \
 
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens, HDOSPRAY_RENDER_SETTINGS_TOKENS);

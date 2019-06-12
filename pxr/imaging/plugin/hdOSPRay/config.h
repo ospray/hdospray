@@ -103,6 +103,11 @@ public:
     /// Override with *HDOSPRAY_AO_DISTANCE*.
     float aoDistance {15.0f};
 
+    ///  Use an ambient light
+    ///
+    /// Override with *HDOSPRAY_AMBIENT_LIGHT*.
+    bool ambientLight {true};
+
     ///  Use an eye light
     ///
     /// Override with *HDOSPRAY_EYE_LIGHT*.

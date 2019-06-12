@@ -141,7 +141,7 @@ void HdOSPRayRenderDelegate::_Initialize()
     }
 
     // Initialize the settings and settings descriptors.
-    _settingDescriptors.resize(10);
+    _settingDescriptors.resize(12);
     _settingDescriptors[0] = { "Ambient occlusion samples",
         HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
         VtValue(int(HdOSPRayConfig::GetInstance().ambientOcclusionSamples)) };
@@ -160,18 +160,24 @@ void HdOSPRayRenderDelegate::_Initialize()
     _settingDescriptors[5] = { "samplesToConvergence",
         HdOSPRayRenderSettingsTokens->samplesToConvergence,
         VtValue(int(HdOSPRayConfig::GetInstance().samplesToConvergence)) };
-    _settingDescriptors[6] = { "eyeLight",
+    _settingDescriptors[6] = { "ambientLight",
+        HdOSPRayRenderSettingsTokens->ambientLight,
+        VtValue(bool(HdOSPRayConfig::GetInstance().ambientLight)) };
+    _settingDescriptors[7] = { "eyeLight",
         HdOSPRayRenderSettingsTokens->eyeLight,
         VtValue(bool(HdOSPRayConfig::GetInstance().eyeLight)) };
-    _settingDescriptors[7] = { "keyLight",
+    _settingDescriptors[8] = { "keyLight",
         HdOSPRayRenderSettingsTokens->keyLight,
         VtValue(bool(HdOSPRayConfig::GetInstance().keyLight)) };
-    _settingDescriptors[8] = { "fillLight",
-        HdOSPRayRenderSettingsTokens->keyLight,
-        VtValue(bool(HdOSPRayConfig::GetInstance().keyLight)) };
-    _settingDescriptors[9] = { "backLight",
-        HdOSPRayRenderSettingsTokens->keyLight,
-        VtValue(bool(HdOSPRayConfig::GetInstance().keyLight)) };
+    _settingDescriptors[9] = { "fillLight",
+        HdOSPRayRenderSettingsTokens->fillLight,
+        VtValue(bool(HdOSPRayConfig::GetInstance().fillLight)) };
+    _settingDescriptors[10] = { "backLight",
+        HdOSPRayRenderSettingsTokens->backLight,
+        VtValue(bool(HdOSPRayConfig::GetInstance().backLight)) };
+    _settingDescriptors[11] = { "pathTracer",
+        HdOSPRayRenderSettingsTokens->pathTracer,
+        VtValue(bool(HdOSPRayConfig::GetInstance().usePathTracing)) };
     _PopulateDefaultSettings(_settingDescriptors);
 }
 

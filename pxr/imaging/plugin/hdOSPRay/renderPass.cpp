@@ -39,6 +39,11 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+inline float rad(float deg)
+{
+    return deg*M_PI/180.0f;
+}
+
 HdOSPRayRenderPass::HdOSPRayRenderPass(
        HdRenderIndex* index, HdRprimCollection const& collection,
        OSPModel model, OSPRenderer renderer, std::atomic<int>* sceneVersion,
@@ -80,6 +85,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
 
     OSPData lightArray = ospNewData(lights.size(), OSP_OBJECT, &(lights[0]));
     ospSetData(_renderer, "lights", lightArray);
+    ospRelease(lightArray);
     ospSet4f(_renderer, "bgColor", _clearColor[0], _clearColor[1],
              _clearColor[2], 1.f);
 
@@ -138,10 +144,37 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                              TfTokenVector const& renderTags)
 {
     HdRenderDelegate *renderDelegate = GetRenderIndex()->GetRenderDelegate();
+
+    float aspect = _width / float(_height);
+    ospSetf(_camera, "aspect", aspect);
+    GfVec3f origin = GfVec3f(0, 0, 0);
+    GfVec3f dir = GfVec3f(0, 0, -1);
+    GfVec3f up = GfVec3f(0, 1, 0);
+    dir = _inverseProjMatrix.Transform(dir);
+    origin = _inverseViewMatrix.Transform(origin);
+    dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
+    up = _inverseViewMatrix.TransformDir(up).GetNormalized();
+
+    double prjMatrix[4][4];
+    renderPassState->GetProjectionMatrix().Get(prjMatrix);
+    float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
+
+    ospSet3fv(_camera, "pos", &origin[0]);
+    ospSet3fv(_camera, "dir", &dir[0]);
+    ospSet3fv(_camera, "up", &up[0]);
+    ospSetf(_camera, "fovy", fov);
+    ospCommit(_camera);
+
     // XXX: Add collection and renderTags support.
     //update conig options
     int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
     if (_lastSettingsVersion != currentSettingsVersion) {
+        _samplesToConvergence = 
+                    renderDelegate->GetRenderSetting<int>(
+                        HdOSPRayRenderSettingsTokens->samplesToConvergence, 0);
+        float aoDistance = 
+                    renderDelegate->GetRenderSetting<float>(
+                        HdOSPRayRenderSettingsTokens->aoDistance, 0);
         _useDenoiser =
                     renderDelegate->GetRenderSetting<bool>(
                         HdOSPRayRenderSettingsTokens->useDenoiser, false);
@@ -151,17 +184,103 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         int aoSamples = 
                     renderDelegate->GetRenderSetting<int>(
                         HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
-        if (spp != _spp || aoSamples != _aoSamples) {
+        bool ambientLight =
+                    renderDelegate->GetRenderSetting<bool>(
+                        HdOSPRayRenderSettingsTokens->ambientLight, false);
+        bool eyeLight =
+                    renderDelegate->GetRenderSetting<bool>(
+                        HdOSPRayRenderSettingsTokens->eyeLight, false);
+        bool keyLight =
+                    renderDelegate->GetRenderSetting<bool>(
+                        HdOSPRayRenderSettingsTokens->keyLight, false);
+        bool fillLight =
+                    renderDelegate->GetRenderSetting<bool>(
+                        HdOSPRayRenderSettingsTokens->fillLight, false);
+        bool backLight =
+                    renderDelegate->GetRenderSetting<bool>(
+                        HdOSPRayRenderSettingsTokens->backLight, false);
+        if (spp != _spp || aoSamples != _aoSamples ||
+              aoDistance != aoDistance) {
             _spp = spp;
             _aoSamples = aoSamples;
             ospSet1i(_renderer, "spp", _spp);
             ospSet1i(_renderer, "aoSamples", _aoSamples);
+            ospSet1f(_renderer, "aoDistance", _aoSamples);
             ospCommit(_renderer);
         }
+        if (eyeLight != _eyeLight || keyLight != _keyLight 
+          || fillLight != _fillLight || backLight != backLight
+          || ambientLight != _ambientLight) {
+            _eyeLight = eyeLight;
+            _keyLight = keyLight;
+            _fillLight = fillLight;
+            _backLight = backLight;
+            _ambientLight = ambientLight;
+            GfVec3f right = GfCross(dir, up);
+            float camDistance = 10.0f;
+            std::vector<OSPLight> lights;
+            auto ambient = ospNewLight(_renderer, "ambient");
+            ospSet3f(ambient, "color", 1.f, 1.f, 1.f);
+            ospSet1f(ambient, "intensity", 0.35f);
+            ospCommit(ambient);
+            lights.push_back(ambient);
+            // auto fillLight = ospNewLight(_renderer, "DirectionalLight");
+            // ospSet3f(fillLight, "color", 127.f / 255.f, 178.f / 255.f, 255.f / 255.f);
+            // ospSet3f(fillLight, "direction", -0.13f, -.94f, -.105f);
+            // ospSet1f(fillLight, "intensity", 0.95f);
+            // ospCommit(fillLight);
+            // lights.push_back(fillLight);
+            // auto backLight = ospNewLight(_renderer, "DirectionalLight");
+            // ospSet3f(backLight, "color", 127.f / 255.f, 178.f / 255.f, 255.f / 255.f);
+            // ospSet3f(backLight, "direction", -0.13f, -.94f, -.105f);
+            // ospSet1f(backLight, "intensity", 0.95f);
+            // ospCommit(backLight);
+            // lights.push_back(backLight);
+
+            OSPData lightArray = ospNewData(lights.size(), OSP_OBJECT, &(lights[0]));
+            ospSetData(_renderer, "lights", lightArray);
+            ospRelease(lightArray);
+            ospCommit(_renderer);
+          }
         _lastSettingsVersion = currentSettingsVersion;
         ResetImage();
     }
     // XXX: Add clip planes support.
+
+    // add lights
+            GfVec3f right = GfCross(dir, up);
+            float camDistance = 10.0f;
+            std::vector<OSPLight> lights;
+            if (_ambientLight) {
+            auto ambient = ospNewLight(_renderer, "ambient");
+            ospSet3f(ambient, "color", 1.f, 1.f, 1.f);
+            ospSet1f(ambient, "intensity", 0.35f);
+            ospCommit(ambient);
+            lights.push_back(ambient);
+            }
+            if (_eyeLight) {
+            auto eyeLight = ospNewLight(_renderer, "DirectionalLight");
+            ospSet3f(eyeLight, "color", 1.f, 232.f / 255.f, 166.f / 255.f);
+            ospSet3fv(eyeLight, "direction", &dir[0]);
+            ospSet1f(eyeLight, "intensity", 3.3f);
+            ospCommit(eyeLight);
+            lights.push_back(eyeLight);
+            }
+            if (_keyLight) {
+            auto keyLight = ospNewLight(_renderer, "DirectionalLight");
+            auto keyHorz = -1.0f/tan(rad(45.0f)) * right;
+            auto keyVert = 1.0f/tan(rad(70.0f)) * up;
+            auto keyPos = origin + (keyVert + keyHorz) * camDistance;
+            ospSet3f(keyLight, "color", 1.f, 232.f / 255.f, 166.f / 255.f);
+            ospSet3fv(keyLight, "position", &keyPos[0]);
+            ospSet1f(keyLight, "intensity", 3.3f);
+            ospCommit(keyLight);
+            lights.push_back(keyLight);
+            }
+            OSPData lightArray = ospNewData(lights.size(), OSP_OBJECT, &(lights[0]));
+            ospSetData(_renderer, "lights", lightArray);
+            ospRelease(lightArray);
+            ospCommit(_renderer);
 
     // If the viewport has changed, resize the sample buffer.
     GfVec4f vp = renderPassState->GetViewport();
@@ -226,25 +345,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         }
     }
 
-    float aspect = _width / float(_height);
-    ospSetf(_camera, "aspect", aspect);
-    GfVec3f origin = GfVec3f(0, 0, 0);
-    GfVec3f dir = GfVec3f(0, 0, -1);
-    GfVec3f up = GfVec3f(0, 1, 0);
-    dir = _inverseProjMatrix.Transform(dir);
-    origin = _inverseViewMatrix.Transform(origin);
-    dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
-    up = _inverseViewMatrix.TransformDir(up).GetNormalized();
-
-    double prjMatrix[4][4];
-    renderPassState->GetProjectionMatrix().Get(prjMatrix);
-    float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
-
-    ospSet3fv(_camera, "pos", &origin[0]);
-    ospSet3fv(_camera, "dir", &dir[0]);
-    ospSet3fv(_camera, "up", &up[0]);
-    ospSetf(_camera, "fovy", fov);
-    ospCommit(_camera);
 
     // Render the frame
     ospRenderFrame(_frameBuffer, _renderer,
