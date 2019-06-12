@@ -248,39 +248,61 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     // XXX: Add clip planes support.
 
     // add lights
-            GfVec3f right = GfCross(dir, up);
-            float camDistance = 10.0f;
-            std::vector<OSPLight> lights;
-            if (_ambientLight) {
-            auto ambient = ospNewLight(_renderer, "ambient");
-            ospSet3f(ambient, "color", 1.f, 1.f, 1.f);
-            ospSet1f(ambient, "intensity", 0.35f);
-            ospCommit(ambient);
-            lights.push_back(ambient);
-            }
-            if (_eyeLight) {
-            auto eyeLight = ospNewLight(_renderer, "DirectionalLight");
-            ospSet3f(eyeLight, "color", 1.f, 232.f / 255.f, 166.f / 255.f);
-            ospSet3fv(eyeLight, "direction", &dir[0]);
-            ospSet1f(eyeLight, "intensity", 3.3f);
-            ospCommit(eyeLight);
-            lights.push_back(eyeLight);
-            }
-            if (_keyLight) {
-            auto keyLight = ospNewLight(_renderer, "DirectionalLight");
-            auto keyHorz = -1.0f/tan(rad(45.0f)) * right;
-            auto keyVert = 1.0f/tan(rad(70.0f)) * up;
-            auto keyPos = origin + (keyVert + keyHorz) * camDistance;
-            ospSet3f(keyLight, "color", 1.f, 232.f / 255.f, 166.f / 255.f);
-            ospSet3fv(keyLight, "position", &keyPos[0]);
-            ospSet1f(keyLight, "intensity", 3.3f);
-            ospCommit(keyLight);
-            lights.push_back(keyLight);
-            }
-            OSPData lightArray = ospNewData(lights.size(), OSP_OBJECT, &(lights[0]));
-            ospSetData(_renderer, "lights", lightArray);
-            ospRelease(lightArray);
-            ospCommit(_renderer);
+    GfVec3f right = GfCross(dir, up);
+    float camDistance = 10.0f;
+    std::vector<OSPLight> lights;
+    if (_ambientLight) {
+        auto ambient = ospNewLight(_renderer, "ambient");
+        ospSet3f(ambient, "color", 1.f, 1.f, 1.f);
+        ospSet1f(ambient, "intensity", 0.35f);
+        ospCommit(ambient);
+        lights.push_back(ambient);
+    }
+    if (_eyeLight) {
+        auto eyeLight = ospNewLight(_renderer, "DirectionalLight");
+        ospSet3f(eyeLight, "color", 1.f, 232.f / 255.f, 166.f / 255.f);
+        ospSet3fv(eyeLight, "direction", &dir[0]);
+        ospSet1f(eyeLight, "intensity", 3.3f);
+        ospCommit(eyeLight);
+        lights.push_back(eyeLight);
+    }
+    if (_keyLight) {
+        auto keyLight = ospNewLight(_renderer, "PointLight");
+        auto keyHorz = -1.0f/tan(rad(45.0f)) * right;
+        auto keyVert = 1.0f/tan(rad(70.0f)) * up;
+        auto keyPos = origin + (keyVert + keyHorz) * camDistance;
+        ospSet3f(keyLight, "color", .8f, .8f / .8f, 1.f);
+        ospSet3fv(keyLight, "position", &keyPos[0]);
+        ospSet1f(keyLight, "intensity", 3.3f);
+        ospCommit(keyLight);
+        lights.push_back(keyLight);
+    }
+    if (_fillLight) {
+        auto fillLight = ospNewLight(_renderer, "PointLight");
+        auto fillHorz = 1.0f/tan(rad(30.0f)) * right;
+        auto fillVert = 1.0f/tan(rad(45.0f)) * up;
+        auto fillPos = origin + (fillVert + fillHorz) * camDistance;
+        ospSet3f(fillLight, "color", .6f, .6f, .6f, 1.f);
+        ospSet3fv(fillLight, "position", &fillPos[0]);
+        ospSet1f(fillLight, "intensity", 0.95f);
+        ospCommit(fillLight);
+        lights.push_back(fillLight);
+    }
+    if (_backLight) {
+        auto backLight = ospNewLight(_renderer, "PointLight");
+        auto backHorz = 1.0f/tan(rad(60.0f)) * right;
+        auto backVert = -1.0f/tan(rad(60.0f)) * up;
+        auto backPos = -1.f*origin + (backHorz+backVert)*camDistance;
+        ospSet3f(backLight, "color", .6f, .6f, .6f, 1.f);
+        ospSet3fv(backLight, "position", &backPos[0]);
+        ospSet1f(backLight, "intensity", 0.95f);
+        ospCommit(backLight);
+        lights.push_back(backLight);
+    }
+    OSPData lightArray = ospNewData(lights.size(), OSP_OBJECT, &(lights[0]));
+    ospSetData(_renderer, "lights", lightArray);
+    ospRelease(lightArray);
+    ospCommit(_renderer);
 
     // If the viewport has changed, resize the sample buffer.
     GfVec4f vp = renderPassState->GetViewport();
