@@ -141,7 +141,7 @@ void HdOSPRayRenderDelegate::_Initialize()
     }
 
     // Initialize the settings and settings descriptors.
-    _settingDescriptors.resize(3);
+    _settingDescriptors.resize(10);
     _settingDescriptors[0] = { "Ambient occlusion samples",
         HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
         VtValue(int(HdOSPRayConfig::GetInstance().ambientOcclusionSamples)) };
@@ -151,6 +151,27 @@ void HdOSPRayRenderDelegate::_Initialize()
     _settingDescriptors[2] = { "Toggle denoiser",
         HdOSPRayRenderSettingsTokens->useDenoiser,
         VtValue(bool(HdOSPRayConfig::GetInstance().useDenoiser)) };
+    _settingDescriptors[3] = { "maxDepth",
+        HdOSPRayRenderSettingsTokens->maxDepth,
+        VtValue(int(HdOSPRayConfig::GetInstance().maxDepth)) };
+    _settingDescriptors[4] = { "aoDistance",
+        HdOSPRayRenderSettingsTokens->aoDistance,
+        VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) };
+    _settingDescriptors[5] = { "samplesToConvergence",
+        HdOSPRayRenderSettingsTokens->samplesToConvergence,
+        VtValue(int(HdOSPRayConfig::GetInstance().samplesToConvergence)) };
+    _settingDescriptors[6] = { "eyeLight",
+        HdOSPRayRenderSettingsTokens->eyeLight,
+        VtValue(bool(HdOSPRayConfig::GetInstance().eyeLight)) };
+    _settingDescriptors[7] = { "keyLight",
+        HdOSPRayRenderSettingsTokens->keyLight,
+        VtValue(bool(HdOSPRayConfig::GetInstance().keyLight)) };
+    _settingDescriptors[8] = { "fillLight",
+        HdOSPRayRenderSettingsTokens->keyLight,
+        VtValue(bool(HdOSPRayConfig::GetInstance().keyLight)) };
+    _settingDescriptors[9] = { "backLight",
+        HdOSPRayRenderSettingsTokens->keyLight,
+        VtValue(bool(HdOSPRayConfig::GetInstance().keyLight)) };
     _PopulateDefaultSettings(_settingDescriptors);
 }
 

@@ -93,6 +93,36 @@ public:
     /// Override with *HDOSPRAY_FORCE_QUADRANGULATE*.
     bool forceQuadrangulate;
 
+    ///  Maximum ray depth
+    ///
+    /// Override with *HDOSPRAY_MAX_DEPTH*.
+    int maxDepth {8};
+
+    ///  Ao rays maximum distance
+    ///
+    /// Override with *HDOSPRAY_AO_DISTANCE*.
+    float aoDistance {15.0f};
+
+    ///  Use an eye light
+    ///
+    /// Override with *HDOSPRAY_EYE_LIGHT*.
+    bool eyeLight {true};
+
+    ///  Use a key light
+    ///
+    /// Override with *HDOSPRAY_KEY_LIGHT*.
+    bool keyLight {true};
+
+    ///  Use a fill light
+    ///
+    /// Override with *HDOSPRAY_FILL_LIGHT*.
+    bool fillLight {true};
+
+    ///  Use a back light
+    ///
+    /// Override with *HDOSPRAY_BACK_LIGHT*.
+    bool backLight {true};
+
 private:
     // The constructor initializes the config variables with their
     // default or environment-provided override, and optionally prints
