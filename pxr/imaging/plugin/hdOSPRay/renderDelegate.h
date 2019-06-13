@@ -35,22 +35,13 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-#define HDOSPRAY_RENDER_SETTINGS_TOKENS \
-    (ambientOcclusionSamples)           \
-    (samplesPerFrame)                   \
-    (useDenoiser)                       \
-    (maxDepth)                          \
-    (aoDistance)                        \
-    (samplesToConvergence)              \
-    (ambientLight)                          \
-    (eyeLight)                          \
-    (keyLight)                          \
-    (fillLight)                         \
-    (backLight)                         \
-    (pathTracer)                         \
+#define HDOSPRAY_RENDER_SETTINGS_TOKENS                                        \
+    (ambientOcclusionSamples)(samplesPerFrame)(useDenoiser)(maxDepth)(         \
+           aoDistance)(samplesToConvergence)(ambientLight)(eyeLight)(          \
+           keyLight)(fillLight)(backLight)(pathTracer)
 
-
-TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens, HDOSPRAY_RENDER_SETTINGS_TOKENS);
+TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
+                         HDOSPRAY_RENDER_SETTINGS_TOKENS);
 
 #define HDOSPRAY_TOKENS (ospray)(glslfx)
 
@@ -220,7 +211,7 @@ public:
     /// not be exhaustive, but can be used for populating application settings
     /// UI.
     virtual HdRenderSettingDescriptorList
-        GetRenderSettingDescriptors() const override;
+    GetRenderSettingDescriptors() const override;
 
 private:
     static const TfTokenVector SUPPORTED_RPRIM_TYPES;
@@ -250,7 +241,7 @@ private:
     // A version counter for edits to _scene.
     std::atomic<int> _sceneVersion;
 
-    int _lastCommittedModelVersion {-1};
+    int _lastCommittedModelVersion { -1 };
 
     // A shared HdOSPRayRenderParam object that stores top-level OSPRay state;
     // passed to prims during Sync().

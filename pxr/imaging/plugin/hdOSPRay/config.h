@@ -96,37 +96,37 @@ public:
     ///  Maximum ray depth
     ///
     /// Override with *HDOSPRAY_MAX_DEPTH*.
-    int maxDepth {8};
+    int maxDepth { 8 };
 
     ///  Ao rays maximum distance
     ///
     /// Override with *HDOSPRAY_AO_DISTANCE*.
-    float aoDistance {15.0f};
+    float aoDistance { 15.0f };
 
     ///  Use an ambient light
     ///
     /// Override with *HDOSPRAY_AMBIENT_LIGHT*.
-    bool ambientLight {true};
+    bool ambientLight { false };
 
     ///  Use an eye light
     ///
     /// Override with *HDOSPRAY_EYE_LIGHT*.
-    bool eyeLight {true};
+    bool eyeLight { false };
 
     ///  Use a key light
     ///
     /// Override with *HDOSPRAY_KEY_LIGHT*.
-    bool keyLight {true};
+    bool keyLight { true };
 
     ///  Use a fill light
     ///
     /// Override with *HDOSPRAY_FILL_LIGHT*.
-    bool fillLight {true};
+    bool fillLight { true };
 
     ///  Use a back light
     ///
     /// Override with *HDOSPRAY_BACK_LIGHT*.
-    bool backLight {true};
+    bool backLight { true };
 
 private:
     // The constructor initializes the config variables with their

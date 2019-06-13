@@ -39,9 +39,10 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-inline float rad(float deg)
+inline float
+rad(float deg)
 {
-    return deg*M_PI/180.0f;
+    return deg * M_PI / 180.0f;
 }
 
 HdOSPRayRenderPass::HdOSPRayRenderPass(
@@ -143,7 +144,7 @@ void
 HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                              TfTokenVector const& renderTags)
 {
-    HdRenderDelegate *renderDelegate = GetRenderIndex()->GetRenderDelegate();
+    HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
 
     float aspect = _width / float(_height);
     ospSetf(_camera, "aspect", aspect);
@@ -166,41 +167,31 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     ospCommit(_camera);
 
     // XXX: Add collection and renderTags support.
-    //update conig options
+    // update conig options
     int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
     if (_lastSettingsVersion != currentSettingsVersion) {
-        _samplesToConvergence = 
-                    renderDelegate->GetRenderSetting<int>(
-                        HdOSPRayRenderSettingsTokens->samplesToConvergence, 0);
-        float aoDistance = 
-                    renderDelegate->GetRenderSetting<float>(
-                        HdOSPRayRenderSettingsTokens->aoDistance, 0);
-        _useDenoiser =
-                    renderDelegate->GetRenderSetting<bool>(
-                        HdOSPRayRenderSettingsTokens->useDenoiser, false);
-        int spp = 
-                    renderDelegate->GetRenderSetting<int>(
-                        HdOSPRayRenderSettingsTokens->samplesPerFrame, 0);
-        int aoSamples = 
-                    renderDelegate->GetRenderSetting<int>(
-                        HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
-        bool ambientLight =
-                    renderDelegate->GetRenderSetting<bool>(
-                        HdOSPRayRenderSettingsTokens->ambientLight, false);
-        bool eyeLight =
-                    renderDelegate->GetRenderSetting<bool>(
-                        HdOSPRayRenderSettingsTokens->eyeLight, false);
-        bool keyLight =
-                    renderDelegate->GetRenderSetting<bool>(
-                        HdOSPRayRenderSettingsTokens->keyLight, false);
-        bool fillLight =
-                    renderDelegate->GetRenderSetting<bool>(
-                        HdOSPRayRenderSettingsTokens->fillLight, false);
-        bool backLight =
-                    renderDelegate->GetRenderSetting<bool>(
-                        HdOSPRayRenderSettingsTokens->backLight, false);
-        if (spp != _spp || aoSamples != _aoSamples ||
-              aoDistance != aoDistance) {
+        _samplesToConvergence = renderDelegate->GetRenderSetting<int>(
+               HdOSPRayRenderSettingsTokens->samplesToConvergence, 0);
+        float aoDistance = renderDelegate->GetRenderSetting<float>(
+               HdOSPRayRenderSettingsTokens->aoDistance, 0);
+        _useDenoiser = renderDelegate->GetRenderSetting<bool>(
+               HdOSPRayRenderSettingsTokens->useDenoiser, false);
+        int spp = renderDelegate->GetRenderSetting<int>(
+               HdOSPRayRenderSettingsTokens->samplesPerFrame, 0);
+        int aoSamples = renderDelegate->GetRenderSetting<int>(
+               HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
+        _ambientLight = renderDelegate->GetRenderSetting<bool>(
+               HdOSPRayRenderSettingsTokens->ambientLight, false);
+        _eyeLight = renderDelegate->GetRenderSetting<bool>(
+               HdOSPRayRenderSettingsTokens->eyeLight, false);
+        _keyLight = renderDelegate->GetRenderSetting<bool>(
+               HdOSPRayRenderSettingsTokens->keyLight, false);
+        _fillLight = renderDelegate->GetRenderSetting<bool>(
+               HdOSPRayRenderSettingsTokens->fillLight, false);
+        _backLight = renderDelegate->GetRenderSetting<bool>(
+               HdOSPRayRenderSettingsTokens->backLight, false);
+        if (spp != _spp || aoSamples != _aoSamples
+            || aoDistance != aoDistance) {
             _spp = spp;
             _aoSamples = aoSamples;
             ospSet1i(_renderer, "spp", _spp);
@@ -208,40 +199,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             ospSet1f(_renderer, "aoDistance", _aoSamples);
             ospCommit(_renderer);
         }
-        if (eyeLight != _eyeLight || keyLight != _keyLight 
-          || fillLight != _fillLight || backLight != backLight
-          || ambientLight != _ambientLight) {
-            _eyeLight = eyeLight;
-            _keyLight = keyLight;
-            _fillLight = fillLight;
-            _backLight = backLight;
-            _ambientLight = ambientLight;
-            GfVec3f right = GfCross(dir, up);
-            float camDistance = 10.0f;
-            std::vector<OSPLight> lights;
-            auto ambient = ospNewLight(_renderer, "ambient");
-            ospSet3f(ambient, "color", 1.f, 1.f, 1.f);
-            ospSet1f(ambient, "intensity", 0.35f);
-            ospCommit(ambient);
-            lights.push_back(ambient);
-            // auto fillLight = ospNewLight(_renderer, "DirectionalLight");
-            // ospSet3f(fillLight, "color", 127.f / 255.f, 178.f / 255.f, 255.f / 255.f);
-            // ospSet3f(fillLight, "direction", -0.13f, -.94f, -.105f);
-            // ospSet1f(fillLight, "intensity", 0.95f);
-            // ospCommit(fillLight);
-            // lights.push_back(fillLight);
-            // auto backLight = ospNewLight(_renderer, "DirectionalLight");
-            // ospSet3f(backLight, "color", 127.f / 255.f, 178.f / 255.f, 255.f / 255.f);
-            // ospSet3f(backLight, "direction", -0.13f, -.94f, -.105f);
-            // ospSet1f(backLight, "intensity", 0.95f);
-            // ospCommit(backLight);
-            // lights.push_back(backLight);
-
-            OSPData lightArray = ospNewData(lights.size(), OSP_OBJECT, &(lights[0]));
-            ospSetData(_renderer, "lights", lightArray);
-            ospRelease(lightArray);
-            ospCommit(_renderer);
-          }
         _lastSettingsVersion = currentSettingsVersion;
         ResetImage();
     }
@@ -268,21 +225,23 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
     if (_keyLight) {
         auto keyLight = ospNewLight(_renderer, "PointLight");
-        auto keyHorz = -1.0f/tan(rad(45.0f)) * right;
-        auto keyVert = 1.0f/tan(rad(70.0f)) * up;
-        auto keyPos = origin + (keyVert + keyHorz) * camDistance;
-        ospSet3f(keyLight, "color", .8f, .8f / .8f, 1.f);
+        auto keyHorz = -1.0f / tan(rad(45.0f)) * right;
+        auto keyVert = 1.0f / tan(rad(70.0f)) * up;
+        auto keyPos
+               = origin + (dir + keyVert / 3.f + keyHorz / 3.f) * camDistance;
+        ospSet3f(keyLight, "color", .8f, .8f, .8f);
         ospSet3fv(keyLight, "position", &keyPos[0]);
-        ospSet1f(keyLight, "intensity", 3.3f);
+        ospSet1f(keyLight, "intensity", 1.0f);
+        ospSet1f(keyLight, "radius", 1.5f);
         ospCommit(keyLight);
         lights.push_back(keyLight);
     }
     if (_fillLight) {
         auto fillLight = ospNewLight(_renderer, "PointLight");
-        auto fillHorz = 1.0f/tan(rad(30.0f)) * right;
-        auto fillVert = 1.0f/tan(rad(45.0f)) * up;
+        auto fillHorz = 1.0f / tan(rad(30.0f)) * right;
+        auto fillVert = 1.0f / tan(rad(45.0f)) * up;
         auto fillPos = origin + (fillVert + fillHorz) * camDistance;
-        ospSet3f(fillLight, "color", .6f, .6f, .6f, 1.f);
+        ospSet3f(fillLight, "color", .6f, .6f, .6f);
         ospSet3fv(fillLight, "position", &fillPos[0]);
         ospSet1f(fillLight, "intensity", 0.95f);
         ospCommit(fillLight);
@@ -290,10 +249,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
     if (_backLight) {
         auto backLight = ospNewLight(_renderer, "PointLight");
-        auto backHorz = 1.0f/tan(rad(60.0f)) * right;
-        auto backVert = -1.0f/tan(rad(60.0f)) * up;
-        auto backPos = -1.f*origin + (backHorz+backVert)*camDistance;
-        ospSet3f(backLight, "color", .6f, .6f, .6f, 1.f);
+        auto backHorz = 1.0f / tan(rad(60.0f)) * right;
+        auto backVert = -1.0f / tan(rad(60.0f)) * up;
+        auto backPos = -1.f * origin + (backHorz + backVert) * camDistance;
+        ospSet3f(backLight, "color", .6f, .6f, .6f);
         ospSet3fv(backLight, "position", &backPos[0]);
         ospSet1f(backLight, "intensity", 0.95f);
         ospCommit(backLight);
@@ -366,7 +325,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             ospCommit(_renderer);
         }
     }
-
 
     // Render the frame
     ospRenderFrame(_frameBuffer, _renderer,

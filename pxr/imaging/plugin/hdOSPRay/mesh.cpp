@@ -601,8 +601,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             ospSet3f(instance, "xfm.l.vz", xfm[8], xfm[9], xfm[10]);
             ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
         }
-        if (newMesh
-            || HdChangeTracker::IsTransformDirty(*dirtyBits, id)
+        if (newMesh || HdChangeTracker::IsTransformDirty(*dirtyBits, id)
             || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                                HdTokens->points)) {
             ospCommit(_ospInstances[0]);

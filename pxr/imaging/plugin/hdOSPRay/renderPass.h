@@ -104,9 +104,9 @@ private:
     // A reference to the global scene version.
     std::atomic<int>* _sceneVersion;
     // The last scene version we rendered with.
-    int _lastRenderedVersion{-1};
-    int _lastRenderedModelVersion{-1};
-    int _lastSettingsVersion{-1};
+    int _lastRenderedVersion { -1 };
+    int _lastRenderedModelVersion { -1 };
+    int _lastSettingsVersion { -1 };
 
     // The resolved output buffer, in GL_RGBA. This is an intermediate between
     // _sampleBuffer and the GL framebuffer.
@@ -145,16 +145,16 @@ private:
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
     int _spp { 1 };
     bool _useDenoiser { false };
-    int _samplesToConvergence {100};
+    int _samplesToConvergence { 100 };
     int _denoiserSPPThreshold { 3 };
-    int _aoSamples {0};
-    bool _ambientLight {true};
-    bool _eyeLight {true};
-    bool _keyLight {true};
-    bool _fillLight {true};
-    bool _backLight {true};
-    int _maxDepth {8};
-    float _aoDistance {0.f};
+    int _aoSamples { 0 };
+    bool _ambientLight { true };
+    bool _eyeLight { true };
+    bool _keyLight { true };
+    bool _fillLight { true };
+    bool _backLight { true };
+    int _maxDepth { 8 };
+    float _aoDistance { 0.f };
 
     void Denoise();
 };
