@@ -206,17 +206,40 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
             auto value = sceneDelegate->Get(id, pv.name);
 
             // texcoords
-            if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
-                                                HdOSPRayTokens->st)) {
+            if (pv.name == "Texture_uv"
+                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                   HdOSPRayTokens->st)) {
                 if (value.IsHolding<VtVec2fArray>()) {
                     _texcoords = value.Get<VtVec2fArray>();
                 }
             }
 
-            if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
-                                                HdTokens->displayColor)) {
-                if (value.IsHolding<VtVec4fArray>())
-                    _colors = value.Get<VtVec4fArray>();
+            // Create 4 component displayColor/opacity array for OSPRay
+            // XXX OSPRay currently expects 4 component color array.
+            // XXX Extend OSPRay to support separate RGB/Opacity arrays
+            if (pv.name == "displayColor"
+                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                   HdTokens->displayColor)) {
+                if (value.IsHolding<VtVec3fArray>()) {
+                    const VtVec3fArray& colors = value.Get<VtVec3fArray>();
+                    _colors.resize(colors.size());
+                    for (size_t i = 0; i < colors.size(); i++) {
+                        _colors[i] = { colors[i].data()[0], colors[i].data()[1],
+                                       colors[i].data()[2], 1.f };
+                    }
+                }
+            }
+
+            if (pv.name == "displayOpacity"
+                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                   HdTokens->displayOpacity)) {
+                // XXX assuming displayOpacity can't exist without displayColor
+                // and/or can a different size
+                if (value.IsHolding<VtFloatArray>()) {
+                    const VtFloatArray& opacities = value.Get<VtFloatArray>();
+                    for (size_t i = 0; i < opacities.size(); i++)
+                        _colors[i].data()[3] = opacities[i];
+                }
             }
         }
     }
@@ -265,6 +288,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->normals)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->widths)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->primvar)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
+                                           HdTokens->displayColor)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
+                                           HdTokens->displayOpacity)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
         _UpdatePrimvarSources(sceneDelegate, *dirtyBits);
@@ -582,8 +609,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         }
 
         if (_colors.size() > 1) {
-            // Carson: apparently colors are actually stored as a single color
-            // value for entire object
             auto colors = ospNewData(_colors.size(), OSP_FLOAT4,
                                      _colors.cdata(), OSP_DATA_SHARED_BUFFER);
             ospSetData(_ospMesh, "vertex.color", colors);
