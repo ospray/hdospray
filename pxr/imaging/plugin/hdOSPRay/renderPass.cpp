@@ -207,7 +207,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     // add lights
     GfVec3f right = GfCross(dir, up);
     float camDistance = 50.0f;
-    float lightMultiplier = 100000.0f;
+    float lightMultiplier = 3.14f;
     std::vector<OSPLight> lights;
     if (_ambientLight) {
         auto ambient = ospNewLight(_renderer, "ambient");
@@ -225,39 +225,42 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         lights.push_back(eyeLight);
     }
     if (_keyLight) {
-        auto keyLight = ospNewLight3("sphere");
+        auto keyLight = ospNewLight3("directional");
         auto keyHorz = -1.0f / tan(rad(45.0f)) * right;
         auto keyVert = 1.0f / tan(rad(70.0f)) * up;
         auto keyPos
                = origin + (dir + keyVert / 3.f + keyHorz / 3.f) * camDistance;
+        auto lightDir = keyPos - origin;
         ospSet3f(keyLight, "color", .8f, .8f, .8f);
-        ospSet3fv(keyLight, "position", &keyPos[0]);
+        ospSet3fv(keyLight, "direction", &lightDir[0]);
         ospSet1f(keyLight, "intensity", 0.95f*lightMultiplier);
-        ospSet1f(keyLight, "radius", 2.5f);
+        ospSet1f(keyLight, "angularDiameter", 2.5f);
         ospCommit(keyLight);
         lights.push_back(keyLight);
     }
     if (_fillLight) {
-        auto fillLight = ospNewLight(_renderer, "sphere");
+        auto fillLight = ospNewLight(_renderer, "directional");
         auto fillHorz = 1.0f / tan(rad(30.0f)) * right;
         auto fillVert = 1.0f / tan(rad(45.0f)) * up;
         auto fillPos = origin + (fillVert + fillHorz) * camDistance;
+        auto lightDir = fillPos - origin;
         ospSet3f(fillLight, "color", .6f, .6f, .6f);
-        ospSet3fv(fillLight, "position", &fillPos[0]);
+        ospSet3fv(fillLight, "direction", &lightDir[0]);
         ospSet1f(fillLight, "intensity", 0.95f*lightMultiplier);
-        ospSet1f(fillLight, "radius", 2.5f);
+        ospSet1f(fillLight, "angularDiameter", 2.5f);
         ospCommit(fillLight);
         lights.push_back(fillLight);
     }
     if (_backLight) {
-        auto backLight = ospNewLight(_renderer, "sphere");
+        auto backLight = ospNewLight(_renderer, "directional");
         auto backHorz = 1.0f / tan(rad(60.0f)) * right;
         auto backVert = -1.0f / tan(rad(60.0f)) * up;
         auto backPos = -1.f * origin + (backHorz + backVert) * camDistance;
+        auto lightDir = backPos - origin;
         ospSet3f(backLight, "color", .6f, .6f, .6f);
-        ospSet3fv(backLight, "position", &backPos[0]);
+        ospSet3fv(backLight, "direction", &lightDir[0]);
         ospSet1f(backLight, "intensity", 0.95f*lightMultiplier);
-        ospSet1f(backLight, "radius", 2.5f);
+        ospSet1f(backLight, "angularDiameter", 2.5f);
         ospCommit(backLight);
         lights.push_back(backLight);
     }
