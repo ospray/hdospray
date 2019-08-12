@@ -106,7 +106,7 @@ public:
     ///  Use an ambient light
     ///
     /// Override with *HDOSPRAY_AMBIENT_LIGHT*.
-    bool ambientLight { false };
+    bool ambientLight { true };
 
     ///  Use an eye light
     ///

@@ -144,7 +144,7 @@ HdOSPRayRenderDelegate::_Initialize()
     }
 
     // Initialize the settings and settings descriptors.
-    _settingDescriptors.resize(12);
+    _settingDescriptors.resize(11);
     _settingDescriptors[0] = {
         "Ambient occlusion samples",
         HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
@@ -183,9 +183,6 @@ HdOSPRayRenderDelegate::_Initialize()
     _settingDescriptors[10]
            = { "backLight", HdOSPRayRenderSettingsTokens->backLight,
                VtValue(bool(HdOSPRayConfig::GetInstance().backLight)) };
-    _settingDescriptors[11]
-           = { "pathTracer", HdOSPRayRenderSettingsTokens->pathTracer,
-               VtValue(bool(HdOSPRayConfig::GetInstance().usePathTracing)) };
     _PopulateDefaultSettings(_settingDescriptors);
 }
 
