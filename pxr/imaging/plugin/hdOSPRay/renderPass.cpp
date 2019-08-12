@@ -210,7 +210,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     // add lights
     const GfVec3f right = GfCross(dir, up);
-    const float lightMultiplier = 6.f;
     std::vector<OSPLight> lights;
     if (_ambientLight) {
         auto ambient = ospNewLight(_renderer, "ambient");
@@ -227,6 +226,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         ospCommit(eyeLight);
         lights.push_back(eyeLight);
     }
+    const float angularDiameter = 4.5f;
+    const float glToPTLightIntensityMultiplier = 6.f;
     if (_keyLight) {
         auto keyLight = ospNewLight3("directional");
         auto keyHorz = -1.0f / tan(rad(45.0f)) * right;
@@ -234,8 +235,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto lightDir = -(keyVert + keyHorz);
         ospSet3f(keyLight, "color", .8f, .8f, .8f);
         ospSet3fv(keyLight, "direction", &lightDir[0]);
-        ospSet1f(keyLight, "intensity", 0.95f * lightMultiplier);
-        ospSet1f(keyLight, "angularDiameter", 4.5f);
+        ospSet1f(keyLight, "intensity", glToPTLightIntensityMultiplier);
+        ospSet1f(keyLight, "angularDiameter", angularDiameter);
         ospCommit(keyLight);
         lights.push_back(keyLight);
     }
@@ -246,8 +247,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto lightDir = (fillVert + fillHorz);
         ospSet3f(fillLight, "color", .6f, .6f, .6f);
         ospSet3fv(fillLight, "direction", &lightDir[0]);
-        ospSet1f(fillLight, "intensity", 0.95f * lightMultiplier);
-        ospSet1f(fillLight, "angularDiameter", 4.5f);
+        ospSet1f(fillLight, "intensity", glToPTLightIntensityMultiplier);
+        ospSet1f(fillLight, "angularDiameter", angularDiameter);
         ospCommit(fillLight);
         lights.push_back(fillLight);
     }
@@ -258,8 +259,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto lightDir = (backHorz + backVert);
         ospSet3f(backLight, "color", .6f, .6f, .6f);
         ospSet3fv(backLight, "direction", &lightDir[0]);
-        ospSet1f(backLight, "intensity", 0.95f * lightMultiplier);
-        ospSet1f(backLight, "angularDiameter", 4.5f);
+        ospSet1f(backLight, "intensity", glToPTLightIntensityMultiplier);
+        ospSet1f(backLight, "angularDiameter", angularDiameter);
         ospCommit(backLight);
         lights.push_back(backLight);
     }
