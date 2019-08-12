@@ -171,15 +171,17 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
     if (_lastSettingsVersion != currentSettingsVersion) {
         _samplesToConvergence = renderDelegate->GetRenderSetting<int>(
-               HdOSPRayRenderSettingsTokens->samplesToConvergence, 0);
+               HdOSPRayRenderSettingsTokens->samplesToConvergence, 100);
         float aoDistance = renderDelegate->GetRenderSetting<float>(
-               HdOSPRayRenderSettingsTokens->aoDistance, 0);
+               HdOSPRayRenderSettingsTokens->aoDistance, 10.f);
         _useDenoiser = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->useDenoiser, false);
         int spp = renderDelegate->GetRenderSetting<int>(
-               HdOSPRayRenderSettingsTokens->samplesPerFrame, 0);
+               HdOSPRayRenderSettingsTokens->samplesPerFrame, 1);
         int aoSamples = renderDelegate->GetRenderSetting<int>(
                HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
+        int maxDepth = renderDelegate->GetRenderSetting<int>(
+               HdOSPRayRenderSettingsTokens->maxDepth, 5);
         _ambientLight = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->ambientLight, false);
         _eyeLight = renderDelegate->GetRenderSetting<bool>(
@@ -191,12 +193,14 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _backLight = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->backLight, false);
         if (spp != _spp || aoSamples != _aoSamples
-            || aoDistance != aoDistance) {
+            || aoDistance != aoDistance || maxDepth != _maxDepth) {
             _spp = spp;
             _aoSamples = aoSamples;
+            _maxDepth = maxDepth;
             ospSet1i(_renderer, "spp", _spp);
             ospSet1i(_renderer, "aoSamples", _aoSamples);
             ospSet1f(_renderer, "aoDistance", _aoSamples);
+            ospSet1i(_renderer, "maxDepth", _maxDepth);
             ospCommit(_renderer);
         }
         _lastSettingsVersion = currentSettingsVersion;
@@ -205,14 +209,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     // XXX: Add clip planes support.
 
     // add lights
-    GfVec3f right = GfCross(dir, up);
-    float camDistance = 50.0f;
-    float lightMultiplier = 3.14f;
+    const GfVec3f right = GfCross(dir, up);
+    const float lightMultiplier = 6.f;
     std::vector<OSPLight> lights;
     if (_ambientLight) {
         auto ambient = ospNewLight(_renderer, "ambient");
         ospSet3f(ambient, "color", 1.f, 1.f, 1.f);
-        ospSet1f(ambient, "intensity", 0.35f);
+        ospSet1f(ambient, "intensity", 0.25f);
         ospCommit(ambient);
         lights.push_back(ambient);
     }
@@ -228,13 +231,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto keyLight = ospNewLight3("directional");
         auto keyHorz = -1.0f / tan(rad(45.0f)) * right;
         auto keyVert = 1.0f / tan(rad(70.0f)) * up;
-        auto keyPos
-               = origin + (dir + keyVert / 3.f + keyHorz / 3.f) * camDistance;
-        auto lightDir = keyPos - origin;
+        auto lightDir
+               = -(keyVert + keyHorz);
         ospSet3f(keyLight, "color", .8f, .8f, .8f);
         ospSet3fv(keyLight, "direction", &lightDir[0]);
         ospSet1f(keyLight, "intensity", 0.95f*lightMultiplier);
-        ospSet1f(keyLight, "angularDiameter", 2.5f);
+        ospSet1f(keyLight, "angularDiameter", 4.5f);
         ospCommit(keyLight);
         lights.push_back(keyLight);
     }
@@ -242,12 +244,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto fillLight = ospNewLight(_renderer, "directional");
         auto fillHorz = 1.0f / tan(rad(30.0f)) * right;
         auto fillVert = 1.0f / tan(rad(45.0f)) * up;
-        auto fillPos = origin + (fillVert + fillHorz) * camDistance;
-        auto lightDir = fillPos - origin;
+        auto lightDir = (fillVert + fillHorz);
         ospSet3f(fillLight, "color", .6f, .6f, .6f);
         ospSet3fv(fillLight, "direction", &lightDir[0]);
         ospSet1f(fillLight, "intensity", 0.95f*lightMultiplier);
-        ospSet1f(fillLight, "angularDiameter", 2.5f);
+        ospSet1f(fillLight, "angularDiameter", 4.5f);
         ospCommit(fillLight);
         lights.push_back(fillLight);
     }
@@ -255,12 +256,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto backLight = ospNewLight(_renderer, "directional");
         auto backHorz = 1.0f / tan(rad(60.0f)) * right;
         auto backVert = -1.0f / tan(rad(60.0f)) * up;
-        auto backPos = -1.f * origin + (backHorz + backVert) * camDistance;
-        auto lightDir = backPos - origin;
+        auto lightDir = (backHorz + backVert);
         ospSet3f(backLight, "color", .6f, .6f, .6f);
         ospSet3fv(backLight, "direction", &lightDir[0]);
         ospSet1f(backLight, "intensity", 0.95f*lightMultiplier);
-        ospSet1f(backLight, "angularDiameter", 2.5f);
+        ospSet1f(backLight, "angularDiameter", 4.5f);
         ospCommit(backLight);
         lights.push_back(backLight);
     }

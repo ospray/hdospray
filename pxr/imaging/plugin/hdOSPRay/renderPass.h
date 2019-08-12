@@ -147,14 +147,14 @@ private:
     bool _useDenoiser { false };
     int _samplesToConvergence { 100 };
     int _denoiserSPPThreshold { 3 };
-    int _aoSamples { 0 };
+    int _aoSamples { 1 };
     bool _ambientLight { true };
     bool _eyeLight { true };
     bool _keyLight { true };
     bool _fillLight { true };
     bool _backLight { true };
-    int _maxDepth { 8 };
-    float _aoDistance { 0.f };
+    int _maxDepth { 5 };
+    float _aoDistance { 10.f };
 
     void Denoise();
 };
