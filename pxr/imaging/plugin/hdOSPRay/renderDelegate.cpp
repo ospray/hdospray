@@ -145,43 +145,43 @@ HdOSPRayRenderDelegate::_Initialize()
 
     // Initialize the settings and settings descriptors.
     // _settingDescriptors.resize(11);
-    _settingDescriptors.push_back({
-        "Ambient occlusion samples",
-        HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
-        VtValue(int(HdOSPRayConfig::GetInstance().ambientOcclusionSamples))
-    });
-    _settingDescriptors.push_back({
-           "Samples per frame",
-               HdOSPRayRenderSettingsTokens->samplesPerFrame,
-               VtValue(int(HdOSPRayConfig::GetInstance().samplesPerFrame)) });
-    _settingDescriptors.push_back({
-           "Toggle denoiser", HdOSPRayRenderSettingsTokens->useDenoiser,
-               VtValue(bool(HdOSPRayConfig::GetInstance().useDenoiser)) });
-    _settingDescriptors.push_back({
-           "maxDepth", HdOSPRayRenderSettingsTokens->maxDepth,
-               VtValue(int(HdOSPRayConfig::GetInstance().maxDepth)) });
-    _settingDescriptors.push_back({
-           "aoDistance", HdOSPRayRenderSettingsTokens->aoDistance,
-               VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) });
-    _settingDescriptors.push_back({
-            "samplesToConvergence",
-               HdOSPRayRenderSettingsTokens->samplesToConvergence,
-               VtValue(int(HdOSPRayConfig::GetInstance().samplesToConvergence)) });
-    _settingDescriptors.push_back({
-           "ambientLight", HdOSPRayRenderSettingsTokens->ambientLight,
-               VtValue(bool(HdOSPRayConfig::GetInstance().ambientLight)) });
-    _settingDescriptors.push_back({
-           "eyeLight", HdOSPRayRenderSettingsTokens->eyeLight,
-               VtValue(bool(HdOSPRayConfig::GetInstance().eyeLight)) });
-    _settingDescriptors.push_back({
-           "keyLight", HdOSPRayRenderSettingsTokens->keyLight,
-               VtValue(bool(HdOSPRayConfig::GetInstance().keyLight)) });
-    _settingDescriptors.push_back({
-           "fillLight", HdOSPRayRenderSettingsTokens->fillLight,
-               VtValue(bool(HdOSPRayConfig::GetInstance().fillLight)) });
-    _settingDescriptors.push_back({
-           "backLight", HdOSPRayRenderSettingsTokens->backLight,
-               VtValue(bool(HdOSPRayConfig::GetInstance().backLight)) });
+    _settingDescriptors.push_back(
+           { "Ambient occlusion samples",
+             HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
+             VtValue(int(
+                    HdOSPRayConfig::GetInstance().ambientOcclusionSamples)) });
+    _settingDescriptors.push_back(
+           { "Samples per frame", HdOSPRayRenderSettingsTokens->samplesPerFrame,
+             VtValue(int(HdOSPRayConfig::GetInstance().samplesPerFrame)) });
+    _settingDescriptors.push_back(
+           { "Toggle denoiser", HdOSPRayRenderSettingsTokens->useDenoiser,
+             VtValue(bool(HdOSPRayConfig::GetInstance().useDenoiser)) });
+    _settingDescriptors.push_back(
+           { "maxDepth", HdOSPRayRenderSettingsTokens->maxDepth,
+             VtValue(int(HdOSPRayConfig::GetInstance().maxDepth)) });
+    _settingDescriptors.push_back(
+           { "aoDistance", HdOSPRayRenderSettingsTokens->aoDistance,
+             VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) });
+    _settingDescriptors.push_back(
+           { "samplesToConvergence",
+             HdOSPRayRenderSettingsTokens->samplesToConvergence,
+             VtValue(
+                    int(HdOSPRayConfig::GetInstance().samplesToConvergence)) });
+    _settingDescriptors.push_back(
+           { "ambientLight", HdOSPRayRenderSettingsTokens->ambientLight,
+             VtValue(bool(HdOSPRayConfig::GetInstance().ambientLight)) });
+    _settingDescriptors.push_back(
+           { "eyeLight", HdOSPRayRenderSettingsTokens->eyeLight,
+             VtValue(bool(HdOSPRayConfig::GetInstance().eyeLight)) });
+    _settingDescriptors.push_back(
+           { "keyLight", HdOSPRayRenderSettingsTokens->keyLight,
+             VtValue(bool(HdOSPRayConfig::GetInstance().keyLight)) });
+    _settingDescriptors.push_back(
+           { "fillLight", HdOSPRayRenderSettingsTokens->fillLight,
+             VtValue(bool(HdOSPRayConfig::GetInstance().fillLight)) });
+    _settingDescriptors.push_back(
+           { "backLight", HdOSPRayRenderSettingsTokens->backLight,
+             VtValue(bool(HdOSPRayConfig::GetInstance().backLight)) });
     _PopulateDefaultSettings(_settingDescriptors);
 }
 
