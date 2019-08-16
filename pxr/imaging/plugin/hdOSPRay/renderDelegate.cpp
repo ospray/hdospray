@@ -80,6 +80,8 @@ HdOSPRayRenderDelegate::HdOSPRayRenderDelegate(
 void
 HdOSPRayRenderDelegate::_Initialize()
 {
+    std::cout << "RenderDelegate\n";
+    std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
     // Check plugin against pxr version
 #if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 19
 #    error This version of HdOSPRay is configured to built against USD v0.19.x
@@ -128,6 +130,7 @@ HdOSPRayRenderDelegate::_Initialize()
 
     _model = ospNewModel();
     ospCommit(_model);
+    HdOSPRayConfig::GetMutableInstance().ospModel = _model;
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
         _renderer = ospNewRenderer("pt");
     else
@@ -213,6 +216,7 @@ HdOSPRayRenderDelegate::CommitResources(HdChangeTracker* tracker)
     auto& rp = _renderParam;
     const auto modelVersion = rp->GetModelVersion();
     if (modelVersion > _lastCommittedModelVersion) {
+        std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
         ospCommit(rp->GetOSPRayModel());
         _lastCommittedModelVersion = modelVersion;
     }

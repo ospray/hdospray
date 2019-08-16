@@ -49,7 +49,7 @@ public:
     }
     virtual ~HdOSPRayRenderParam() = default;
 
-    OSPModel GetOSPRayModel()
+    OSPModel& GetOSPRayModel()
     {
         (_sceneVersion)++;
         return _model;

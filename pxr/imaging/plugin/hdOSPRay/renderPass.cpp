@@ -297,8 +297,20 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (_pendingModelUpdate) {
+        std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
+        ospRelease(_model);
+        _model = ospNewModel();
+        _renderParam->GetOSPRayModel() = _model;
+        // HDOSPRayConfig::GetMutableInstance().ospModel = _model;
+        for (auto instance : HdOSPRayConfig::GetMutableInstance().ospInstances) {
+            ospAddGeometry(_model, instance);
+            ospRelease(instance);
+        }
         ospCommit(_model);
+        ospSetObject(_renderer, "model", _model);
+        ospCommit(_renderer);
         _pendingModelUpdate = false;
+        HdOSPRayConfig::GetMutableInstance().ospInstances.resize(0);
     }
 
     int currentModelVersion = _renderParam->GetModelVersion();

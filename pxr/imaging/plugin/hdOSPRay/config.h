@@ -27,7 +27,10 @@
 #include "pxr/base/tf/singleton.h"
 #include "pxr/pxr.h"
 
+#include "ospray/ospray.h"
+
 #include <string>
+#include <vector>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -128,6 +131,10 @@ public:
     ///
     /// Override with *HDOSPRAY_BACK_LIGHT*.
     bool backLight { true };
+
+    OSPModel ospModel;
+
+    std::vector<OSPGeometry> ospInstances;
 
 private:
     // The constructor initializes the config variables with their

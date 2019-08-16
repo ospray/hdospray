@@ -54,7 +54,7 @@ TF_DEFINE_PRIVATE_TOKENS(
 );
 // clang-format on
 
-static std::mutex g_mutex;
+// static std::mutex g_mutex;
 
 // USD forces warnings when converting ospcommon::affine3f to osp::affine3f
 const osp::affine3f identity({ 1, 0, 0, 0, 1, 0, 0, 0, 1 });
@@ -62,6 +62,7 @@ const osp::affine3f identity({ 1, 0, 0, 0, 1, 0, 0, 0, 1 });
 HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
     : HdMesh(id, instancerId)
     , _ospMesh(nullptr)
+    , _instanceModel(nullptr)
     , _adjacencyValid(false)
     , _normalsValid(false)
     , _refined(false)
@@ -297,16 +298,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     // per-vertex normals taken as an average of adjacent faces, and
     // interpolated smoothly across faces.
     _smoothNormals = !desc.flatShadingEnabled;
-std::cout << " smooth normals1: " << _smoothNormals << std::endl;
 
     // If the subdivision scheme is "none" or "bilinear", force us not to use
     // smooth normals.
     _smoothNormals = _smoothNormals
            && ((_topology.GetScheme() != PxOsdOpenSubdivTokens->none));
-        //    && (_topology.GetScheme() != PxOsdOpenSubdivTokens->bilinear));
-std::cout << " smooth normals2: " << _smoothNormals << std::endl;
-std::cout << " !subdiv->none: " <<(_topology.GetScheme() != PxOsdOpenSubdivTokens->none) << std::endl;
-std::cout << " !subdiv->bilinear: " <<(_topology.GetScheme() != PxOsdOpenSubdivTokens->bilinear) << std::endl;
 
     // If the scene delegate has provided authored normals, force us to not use
     // smooth normals.
@@ -314,9 +310,6 @@ std::cout << " !subdiv->bilinear: " <<(_topology.GetScheme() != PxOsdOpenSubdivT
     if (_primvarSourceMap.count(HdTokens->normals) > 0) {
         authoredNormals = true;
     }
-std::cout << " smooth normals: " << _smoothNormals << std::endl;
-std::cout << " doRefine: " << doRefine << std::endl;
-std::cout << "authoredNormals: " << authoredNormals << std::endl;
 
     if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)
         && _topology.GetRefineLevel() > 0) {
@@ -371,8 +364,7 @@ std::cout << "authoredNormals: " << authoredNormals << std::endl;
         _adjacencyValid = false;
 
         if (doRefine) {
-            g_mutex.lock();
-            ospRelease(_ospMesh);
+            // g_mutex.lock();
             _ospMesh = _CreateOSPRaySubdivMesh();
             ospCommit(_ospMesh);
 
@@ -424,7 +416,7 @@ std::cout << "authoredNormals: " << authoredNormals << std::endl;
                     }
                     _texcoords = texcoords2;
                 }
-            g_mutex.unlock();
+            // g_mutex.unlock();
         } else {
         }
         _refined = doRefine;
@@ -479,12 +471,14 @@ std::cout << "authoredNormals: " << authoredNormals << std::endl;
     PINGY();
 
     // Create new OSP Mesh
-    auto instanceModel = ospNewModel();
+    if (_instanceModel)
+      ospRelease(_instanceModel);
+    _instanceModel = ospNewModel();
     if (newMesh
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
-        g_mutex.lock();
+        // g_mutex.lock();
 
         //    if (_primvarSourceMap.count(HdTokens->color) > 0) {
         //      auto& colorBuffer = _primvarSourceMap[HdTokens->color].data;
@@ -687,44 +681,51 @@ std::cout << "authoredNormals: " << authoredNormals << std::endl;
         ospCommit(_ospMesh);
     PINGY();
 
-        ospAddGeometry(instanceModel,
+        ospAddGeometry(_instanceModel,
                        _ospMesh); // crashing when added to the scene. I suspect
-                              // indices/vertex spec.
+                              // indices/vertex spec
+        ospRelease(_ospMesh);
     PINGY();
-        ospCommit(instanceModel);
+        ospCommit(_instanceModel);
     PINGY();
         renderParam->UpdateModelVersion();
-        g_mutex.unlock();
+        // g_mutex.unlock();
     }
     PINGY();
 
     ////////////////////////////////////////////////////////////////////////
     // 4. Populate ospray instance objects.
 
-g_mutex.lock();
+// g_mutex.lock();
     // If the _ospMesh is instanced, create one new instance per transform.
     // XXX: The current instancer invalidation tracking makes it hard for
     // HdOSPRay to tell whether transforms will be dirty, so this code
     // pulls them every frame.
     if (!GetInstancerId().IsEmpty()) {
+    PINGY();
         // Retrieve instance transforms from the instancer.
         HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
         HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
+    PINGY();
         VtMatrix4dArray transforms
                = static_cast<HdOSPRayInstancer*>(instancer)
                         ->ComputeInstanceTransforms(GetId());
+    PINGY();
 
         size_t oldSize = _ospInstances.size();
         size_t newSize = transforms.size();
+    PINGY();
 
         // Size down (if necessary).
         for (auto instance : _ospInstances) {
-            ospRemoveGeometry(model, instance);
+            // std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
+            // ospRemoveGeometry(model, instance);
         }
+    PINGY();
         _ospInstances.resize(newSize);
         for (size_t i = 0; i < newSize; i++) {
         // Create the new instance.
-            _ospInstances[i] = ospNewInstance(instanceModel, identity);
+            _ospInstances[i] = ospNewInstance(_instanceModel, identity);
         }
 
         // Update transforms.
@@ -744,12 +745,13 @@ g_mutex.lock();
     // Otherwise, create our single instance (if necessary) and update
     // the transform (if necessary).
     else {
-
+    PINGY();
+        std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
         for (auto instance : _ospInstances) {
             ospRemoveGeometry(model, instance);
         }
         _ospInstances.resize(0);
-        auto instance = ospNewInstance(instanceModel, identity);
+        auto instance = ospNewInstance(_instanceModel, identity);
         _ospInstances.push_back(instance);
         ospCommit(instance);
         // convert aligned matrix to unalighned 4x3 matrix
@@ -761,11 +763,14 @@ g_mutex.lock();
         ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
         ospCommit(instance);
     }
+    PINGY();
 
     // Update visibility by pulling the object into/out of the model.
     if (_sharedData.visible) {
+        std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
         for (auto instance : _ospInstances) {
-            ospAddGeometry(model, instance);
+            // ospAddGeometry(model, instance);
+            HdOSPRayConfig::GetMutableInstance().ospInstances.push_back(instance);
         }
     } else {
         // TODO: ospRemove geometry?
@@ -773,7 +778,7 @@ g_mutex.lock();
 
     // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
-    g_mutex.unlock();
+    // g_mutex.unlock();
     PINGY();
 }
 
