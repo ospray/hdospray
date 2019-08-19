@@ -75,7 +75,7 @@ HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
 void
 HdOSPRayMesh::Finalize(HdRenderParam* renderParam)
 {
-    _ospInstances.clear();
+    // _ospInstances.clear();
 }
 
 HdDirtyBits
@@ -176,8 +176,8 @@ HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
     }
 
     // Create ospray geometry objects.
-    _PopulateOSPMesh(sceneDelegate, model, renderer, dirtyBits, desc,
-                     ospRenderParam);
+     _PopulateOSPMesh(sceneDelegate, model, renderer, dirtyBits, desc,
+                      ospRenderParam);
 
     if (*dirtyBits & HdChangeTracker::DirtyTopology) {
         // TODO: update material here?
@@ -364,7 +364,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         _adjacencyValid = false;
 
         if (doRefine) {
-            // g_mutex.lock();
             _ospMesh = _CreateOSPRaySubdivMesh();
             ospCommit(_ospMesh);
 
@@ -416,9 +415,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                     }
                     _texcoords = texcoords2;
                 }
-            // g_mutex.unlock();
-        } else {
-        }
+        } 
         _refined = doRefine;
     }
     PINGY();
@@ -472,13 +469,14 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
 
     // Create new OSP Mesh
     if (_instanceModel)
-      ospRelease(_instanceModel);
+    {
+        ospRelease(_instanceModel);
+    }
     _instanceModel = ospNewModel();
     if (newMesh
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
-        // g_mutex.lock();
 
         //    if (_primvarSourceMap.count(HdTokens->color) > 0) {
         //      auto& colorBuffer = _primvarSourceMap[HdTokens->color].data;
@@ -679,21 +677,18 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     PINGY();
 
         ospAddGeometry(_instanceModel,
-                       _ospMesh); // crashing when added to the scene. I suspect
-                              // indices/vertex spec
+                       _ospMesh); 
         ospRelease(_ospMesh);
     PINGY();
         ospCommit(_instanceModel);
     PINGY();
         renderParam->UpdateModelVersion();
-        // g_mutex.unlock();
     }
     PINGY();
 
     ////////////////////////////////////////////////////////////////////////
     // 4. Populate ospray instance objects.
 
-// g_mutex.lock();
     // If the _ospMesh is instanced, create one new instance per transform.
     // XXX: The current instancer invalidation tracking makes it hard for
     // HdOSPRay to tell whether transforms will be dirty, so this code
@@ -709,25 +704,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                         ->ComputeInstanceTransforms(GetId());
     PINGY();
 
-        size_t oldSize = _ospInstances.size();
         size_t newSize = transforms.size();
-    PINGY();
-
-        // Size down (if necessary).
-        for (auto instance : _ospInstances) {
-            // std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
-            // ospRemoveGeometry(model, instance);
-        }
-    PINGY();
         _ospInstances.resize(newSize);
         for (size_t i = 0; i < newSize; i++) {
         // Create the new instance.
-            _ospInstances[i] = ospNewInstance(_instanceModel, identity);
-        }
-
-        // Update transforms.
-        for (size_t i = 0; i < _ospInstances.size(); ++i) {
-            auto instance = _ospInstances[i];
+            auto instance = ospNewInstance(_instanceModel, identity);
             // Combine the local transform and the instance transform.
             GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
             float* xfm = matf.GetArray();
@@ -737,6 +718,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             ospSet3f(instance, "xfm.l.vz", xfm[8], xfm[9], xfm[10]);
             ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
             ospCommit(instance);
+            _ospInstances[i] = instance;
         }
     }
     // Otherwise, create our single instance (if necessary) and update
@@ -763,7 +745,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     if (_sharedData.visible) {
         std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
         for (auto instance : _ospInstances) {
-            // ospAddGeometry(model, instance);
             HdOSPRayConfig::GetMutableInstance().ospInstances.push_back(instance);
         }
     } else {
@@ -772,7 +753,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
 
     // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
-    // g_mutex.unlock();
     PINGY();
 }
 

@@ -41,6 +41,7 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
     hd
     hdx
     ospray::ospray
+    ospray::ospray_module_ispc
     ${OIIO_LIBRARIES}
     )
 

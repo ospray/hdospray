@@ -304,7 +304,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
           ospRelease(_model);
         _model = ospNewModel();
         _renderParam->GetOSPRayModel() = _model;
-        // HDOSPRayConfig::GetMutableInstance().ospModel = _model;
         for (auto instance : HdOSPRayConfig::GetMutableInstance().ospInstances) {
             ospAddGeometry(_model, instance);
             ospRelease(instance);
