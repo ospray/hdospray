@@ -274,6 +274,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (_width != vp[2] || _height != vp[3]) {
         _width = vp[2];
         _height = vp[3];
+        if (_frameBuffer)
+          ospRelease(_frameBuffer);
         _frameBuffer = ospNewFrameBuffer(
                osp::vec2i({ (int)_width, (int)_height }), OSP_FB_RGBA32F,
                OSP_FB_COLOR | OSP_FB_ACCUM |
@@ -298,7 +300,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     if (_pendingModelUpdate) {
         std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
-        ospRelease(_model);
+        if (_model)
+          ospRelease(_model);
         _model = ospNewModel();
         _renderParam->GetOSPRayModel() = _model;
         // HDOSPRayConfig::GetMutableInstance().ospModel = _model;

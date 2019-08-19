@@ -44,8 +44,8 @@
 #include "ospcommon/AffineSpace.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
-#define PINGY(x) { std::cout << __LINE__ << std::string(x) << std::endl; } 
-//#define PINGY(x) { }
+// #define PINGY(x) { std::cout << __LINE__ << std::string(x) << std::endl; } 
+#define PINGY(x) { }
 
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
@@ -495,7 +495,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                       HdPrimTypeTokens->material, GetMaterialId()));
 
         if (!_refined) {
-            ospRelease(_ospMesh);
     PINGY();
             bool useQuads = _UseQuadIndices(renderIndex, _topology);
 
@@ -674,9 +673,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(color);
         }
 
-        ospCommit(ospMaterial);
         ospSetMaterial(_ospMesh, ospMaterial);
-        ospRelease(ospMaterial);
     PINGY();
         ospCommit(_ospMesh);
     PINGY();
@@ -747,9 +744,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     else {
     PINGY();
         std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
-        for (auto instance : _ospInstances) {
-            ospRemoveGeometry(model, instance);
-        }
         _ospInstances.resize(0);
         auto instance = ospNewInstance(_instanceModel, identity);
         _ospInstances.push_back(instance);
@@ -886,12 +880,15 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
 
     auto vertices = ospNewData(numVertices, OSP_FLOAT3, _points.cdata());
     ospSetData(mesh, "vertex", vertices);
+    ospRelease(vertices);
     auto faces = ospNewData(numFaceVertices, OSP_UINT,
                             _topology.GetFaceVertexCounts().cdata());
     ospSetData(mesh, "face", faces);
+    ospRelease(faces);
     auto indices = ospNewData(numIndices, OSP_UINT,
                               _topology.GetFaceVertexIndices().cdata());
     ospSetData(mesh, "index", indices);
+    ospRelease(indices);
     // TODO: set hole buffer
     GfVec4f color(1.f);
     if (!_colors.empty())
@@ -899,6 +896,7 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     std::vector<GfVec4f> colorDummy(_points.size(), color);
     auto colors = ospNewData(colorDummy.size(), OSP_FLOAT4, colorDummy.data());
     ospSetData(mesh, "color", colors);
+    ospRelease(colors);
     // TODO: ospray subd appears to require color data... this should be fixed
 
     ospSet1f(mesh, "level", _tessellationRate);

@@ -46,7 +46,7 @@ class HdOSPRayMaterial final : public HdMaterial {
 public:
     HdOSPRayMaterial(SdfPath const& id);
 
-    virtual ~HdOSPRayMaterial() = default;
+    virtual ~HdOSPRayMaterial();
 
     /// Synchronizes state from the delegate to this object.
     virtual void Sync(HdSceneDelegate* sceneDelegate,

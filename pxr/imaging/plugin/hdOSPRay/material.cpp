@@ -164,6 +164,11 @@ HdOSPRayMaterial::HdOSPRayMaterial(SdfPath const& id)
     diffuseColor = GfVec4f(1, 1, 1, 1);
 }
 
+HdOSPRayMaterial::~HdOSPRayMaterial()
+{
+  ospRelease(_ospMaterial);
+}
+
 /// Synchronizes state from the delegate to this object.
 void
 HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
@@ -228,6 +233,8 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
 void
 HdOSPRayMaterial::_UpdateOSPRayMaterial()
 {
+    if (_ospMaterial)
+      ospRelease(_ospMaterial);
     _ospMaterial = CreateDefaultMaterial(diffuseColor);
 
     if (map_diffuseColor.ospTexture) {

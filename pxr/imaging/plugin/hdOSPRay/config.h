@@ -132,8 +132,6 @@ public:
     /// Override with *HDOSPRAY_BACK_LIGHT*.
     bool backLight { true };
 
-    OSPModel ospModel;
-
     std::vector<OSPGeometry> ospInstances;
 
 private:

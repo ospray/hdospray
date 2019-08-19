@@ -97,7 +97,7 @@ private:
     bool _pendingResetImage;
     bool _pendingModelUpdate;
 
-    OSPFrameBuffer _frameBuffer;
+    OSPFrameBuffer _frameBuffer {nullptr};
 
     OSPRenderer _renderer;
 

@@ -130,7 +130,6 @@ HdOSPRayRenderDelegate::_Initialize()
 
     _model = ospNewModel();
     ospCommit(_model);
-    HdOSPRayConfig::GetMutableInstance().ospModel = _model;
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
         _renderer = ospNewRenderer("pt");
     else
