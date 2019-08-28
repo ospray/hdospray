@@ -132,13 +132,8 @@ public:
     /// Override with *HDOSPRAY_BACK_LIGHT*.
     bool backLight { true };
 
+    // meshes populate global instances.  These are then committed by the renderPass into a scene.
     std::vector<OSPGeometry> ospInstances;
-
-    OSPModel ospModel {nullptr};
-
-    bool modelDirty {true};
-
-    bool ModelDirty() const { return modelDirty; }
 
 private:
     // The constructor initializes the config variables with their

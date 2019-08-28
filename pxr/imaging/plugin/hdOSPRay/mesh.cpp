@@ -73,10 +73,10 @@ HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
 void
 HdOSPRayMesh::Finalize(HdRenderParam* renderParam)
 {
-    if (_ospMesh)
-      ospRelease(_ospMesh);
-    if (_instanceModel)
-      ospRelease(_instanceModel);
+    if (_instanceModel && _ospMesh) {
+        ospRemoveGeometry(_instanceModel, _ospMesh);
+        ospRelease(_instanceModel);
+    }
 }
 
 HdDirtyBits
@@ -434,7 +434,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     }
 
     // Create new OSP Mesh
-    if (_instanceModel) {
+    if (_instanceModel && _ospMesh) {
         ospRemoveGeometry(_instanceModel, _ospMesh);
         ospRelease(_instanceModel);
     }
@@ -630,7 +630,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         ospAddGeometry(_instanceModel,
                        _ospMesh); 
         ospRelease(_ospMesh);
-        _ospMesh = nullptr;
         ospCommit(_instanceModel);
         renderParam->UpdateModelVersion();
     }

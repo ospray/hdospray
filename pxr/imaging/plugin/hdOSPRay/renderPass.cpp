@@ -299,12 +299,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (_pendingModelUpdate) {
-        std::cout << "model update" << std::endl;
         std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
+        //release resources from last committed scene
         if (oldModel) {
-            //OSPRay has a memory leak if the geometry is not explicitly removed from the old model
-            for (auto instance : oldInstances)
-            {
+            for (auto instance : oldInstances) {
               ospRemoveGeometry(oldModel, instance);
               ospRelease(instance);
             }
@@ -312,6 +310,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             oldModel = nullptr;
             oldInstances.resize(0);
         }
+        //create new model and populate with mesh instances
         OSPModel model = ospNewModel();
         for (auto instance : HdOSPRayConfig::GetMutableInstance().ospInstances) {
             ospAddGeometry(model, instance);
@@ -320,11 +319,9 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         ospCommit(model);
         ospSetObject(_renderer, "model", model);
         oldModel = model;
-        HdOSPRayConfig::GetMutableInstance().modelDirty = false;
         ospCommit(_renderer);
         _pendingModelUpdate = false;
         HdOSPRayConfig::GetMutableInstance().ospInstances.resize(0);
-        std::cout << "model update done" << std::endl;
     }
 
     int currentModelVersion = _renderParam->GetModelVersion();
