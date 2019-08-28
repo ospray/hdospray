@@ -128,8 +128,6 @@ HdOSPRayRenderDelegate::_Initialize()
 
     ospLoadModule("ptex");
 
-    _model = ospNewModel();
-    ospCommit(_model);
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
         _renderer = ospNewRenderer("pt");
     else
@@ -137,7 +135,7 @@ HdOSPRayRenderDelegate::_Initialize()
 
     // Store top-level OSPRay objects inside a render param that can be
     // passed to prims during Sync().
-    _renderParam = std::make_shared<HdOSPRayRenderParam>(_model, _renderer,
+    _renderParam = std::make_shared<HdOSPRayRenderParam>(_renderer,
                                                          &_sceneVersion);
 
     // Initialize one resource registry for all OSPRay plugins
@@ -216,7 +214,6 @@ HdOSPRayRenderDelegate::CommitResources(HdChangeTracker* tracker)
     const auto modelVersion = rp->GetModelVersion();
     if (modelVersion > _lastCommittedModelVersion) {
         std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
-        ospCommit(rp->GetOSPRayModel());
         _lastCommittedModelVersion = modelVersion;
     }
 }
@@ -285,7 +282,7 @@ HdOSPRayRenderDelegate::CreateRenderPass(HdRenderIndex* index,
                                          HdRprimCollection const& collection)
 {
     return HdRenderPassSharedPtr(new HdOSPRayRenderPass(
-           index, collection, _model, _renderer, &_sceneVersion, _renderParam));
+           index, collection, _renderer, &_sceneVersion, _renderParam));
 }
 
 HdInstancer*

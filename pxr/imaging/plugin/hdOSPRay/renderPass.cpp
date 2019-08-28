@@ -37,6 +37,8 @@
 #include "pxr/base/gf/vec2f.h"
 #include "pxr/base/work/loops.h"
 
+#include <iostream>
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 inline float
@@ -47,7 +49,7 @@ rad(float deg)
 
 HdOSPRayRenderPass::HdOSPRayRenderPass(
        HdRenderIndex* index, HdRprimCollection const& collection,
-       OSPModel model, OSPRenderer renderer, std::atomic<int>* sceneVersion,
+       OSPRenderer renderer, std::atomic<int>* sceneVersion,
        std::shared_ptr<HdOSPRayRenderParam> renderParam)
     : HdRenderPass(index, collection)
     , _pendingResetImage(false)
@@ -58,7 +60,6 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _lastRenderedModelVersion(0)
     , _width(0)
     , _height(0)
-    , _model(model)
     , _inverseViewMatrix(1.0f) // == identity
     , _inverseProjMatrix(1.0f) // == identity
     , _clearColor(0.0707f, 0.0707f, 0.0707f)
@@ -90,7 +91,6 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     ospSet4f(_renderer, "bgColor", _clearColor[0], _clearColor[1],
              _clearColor[2], 1.f);
 
-    ospSetObject(_renderer, "model", _model);
     ospSetObject(_renderer, "camera", _camera);
 
     ospSet1i(_renderer, "maxDepth", 8);
@@ -299,20 +299,32 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (_pendingModelUpdate) {
+        std::cout << "model update" << std::endl;
         std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
-        if (_model)
-          ospRelease(_model);
-        _model = ospNewModel();
-        _renderParam->GetOSPRayModel() = _model;
-        for (auto instance : HdOSPRayConfig::GetMutableInstance().ospInstances) {
-            ospAddGeometry(_model, instance);
-            ospRelease(instance);
+        if (oldModel) {
+            //OSPRay has a memory leak if the geometry is not explicitly removed from the old model
+            for (auto instance : oldInstances)
+            {
+              ospRemoveGeometry(oldModel, instance);
+              ospRelease(instance);
+            }
+            ospRelease(oldModel);
+            oldModel = nullptr;
+            oldInstances.resize(0);
         }
-        ospCommit(_model);
-        ospSetObject(_renderer, "model", _model);
+        OSPModel model = ospNewModel();
+        for (auto instance : HdOSPRayConfig::GetMutableInstance().ospInstances) {
+            ospAddGeometry(model, instance);
+            oldInstances.push_back(instance);
+        }
+        ospCommit(model);
+        ospSetObject(_renderer, "model", model);
+        oldModel = model;
+        HdOSPRayConfig::GetMutableInstance().modelDirty = false;
         ospCommit(_renderer);
         _pendingModelUpdate = false;
         HdOSPRayConfig::GetMutableInstance().ospInstances.resize(0);
+        std::cout << "model update done" << std::endl;
     }
 
     int currentModelVersion = _renderParam->GetModelVersion();

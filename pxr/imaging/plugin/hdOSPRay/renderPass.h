@@ -53,7 +53,7 @@ public:
     ///   \param collection The initial rprim collection for this renderpass.
     ///   \param scene The OSPRay scene to raycast into.
     HdOSPRayRenderPass(HdRenderIndex* index,
-                       HdRprimCollection const& collection, OSPModel model,
+                       HdRprimCollection const& collection,
                        OSPRenderer renderer, std::atomic<int>* sceneVersion,
                        std::shared_ptr<HdOSPRayRenderParam> renderParam);
 
@@ -117,9 +117,6 @@ private:
     // The height of the viewport we're rendering into.
     unsigned int _height;
 
-    // OSPRay model that will hold OSPRay specific geometry
-    OSPModel _model;
-
     OSPCamera _camera;
 
     // The inverse view matrix: camera space to world space.
@@ -141,6 +138,9 @@ private:
     std::vector<osp::vec3f> _normalBuffer;
     std::vector<osp::vec3f> _albedoBuffer;
     std::vector<osp::vec4f> _denoisedBuffer;
+
+    std::vector<OSPGeometry> oldInstances;  //instances added to last model
+    OSPModel oldModel = nullptr;  //the last model created
 
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
     int _spp { 1 };

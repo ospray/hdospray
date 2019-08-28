@@ -44,8 +44,6 @@
 #include "ospcommon/AffineSpace.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
-// #define PINGY(x) { std::cout << __LINE__ << std::string(x) << std::endl; } 
-#define PINGY(x) { }
 
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
@@ -75,7 +73,10 @@ HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
 void
 HdOSPRayMesh::Finalize(HdRenderParam* renderParam)
 {
-    // _ospInstances.clear();
+    if (_ospMesh)
+      ospRelease(_ospMesh);
+    if (_instanceModel)
+      ospRelease(_instanceModel);
 }
 
 HdDirtyBits
@@ -167,7 +168,6 @@ HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
     // Pull top-level OSPRay state out of the render param.
     HdOSPRayRenderParam* ospRenderParam
            = static_cast<HdOSPRayRenderParam*>(renderParam);
-    OSPModel model = ospRenderParam->GetOSPRayModel();
     OSPRenderer renderer = ospRenderParam->GetOSPRayRenderer();
 
     if (*dirtyBits & HdChangeTracker::DirtyMaterialId) {
@@ -176,7 +176,7 @@ HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
     }
 
     // Create ospray geometry objects.
-     _PopulateOSPMesh(sceneDelegate, model, renderer, dirtyBits, desc,
+     _PopulateOSPMesh(sceneDelegate, renderer, dirtyBits, desc,
                       ospRenderParam);
 
     if (*dirtyBits & HdChangeTracker::DirtyTopology) {
@@ -231,7 +231,7 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
 }
 
 void
-HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
+HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                                OSPRenderer renderer, HdDirtyBits* dirtyBits,
                                HdMeshReprDesc const& desc,
                                HdOSPRayRenderParam* renderParam)
@@ -338,9 +338,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         }
     }
 
-
-    PINGY();
-
     // If the topology has changed, or the value of doRefine has changed, we
     // need to create or recreate the OSPRay mesh object.
     // _GetInitialDirtyBits() ensures that the topology is dirty the first time
@@ -418,34 +415,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         } 
         _refined = doRefine;
     }
-    PINGY();
-
-    // If the subdiv tags changed or the _ospMesh was recreated, we need to update
-    // the subdivision boundary mode.
-    if (newMesh || HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)) {
-        if (doRefine) {
-            TfToken const vertexRule
-                   = _topology.GetSubdivTags().GetVertexInterpolationRule();
-
-            // TODO: handle subdiv tags
-            if (vertexRule == PxOsdOpenSubdivTokens->none) {
-                // rtcSetBoundaryMode(_rtcMeshScene, _rtcMeshId,
-                //     RTC_BOUNDARY_NONE);
-            } else if (vertexRule == PxOsdOpenSubdivTokens->edgeOnly) {
-                // rtcSetBoundaryMode(_rtcMeshScene, _rtcMeshId,
-                //     RTC_BOUNDARY_EDGE_ONLY);
-            } else if (vertexRule == PxOsdOpenSubdivTokens->edgeAndCorner) {
-                // rtcSetBoundaryMode(_rtcMeshScene, _rtcMeshId,
-                //     RTC_BOUNDARY_EDGE_AND_CORNER);
-            } else {
-                if (!vertexRule.IsEmpty()) {
-                    TF_WARN("Unknown vertex interpolation rule: %s",
-                            vertexRule.GetText());
-                }
-            }
-        }
-    }
-    PINGY();
 
     // Update the smooth normals in steps:
     // 1. If the topology is dirty, update the adjacency table, a processed
@@ -453,39 +422,28 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     // 2. If the points are dirty, update the smooth normal buffer itself.
     _normalsValid = false;
     if (_smoothNormals && !_adjacencyValid) {
-    PINGY();
         _adjacency.BuildAdjacencyTable(&_topology);
         _adjacencyValid = true;
         // If we rebuilt the adjacency table, force a rebuild of normals.
         _normalsValid = false;
     }
     if (_smoothNormals && !_normalsValid && !doRefine) {
-    PINGY();
         _computedNormals = Hd_SmoothNormals::ComputeSmoothNormals(
                &_adjacency, _points.size(), _points.cdata());
         _normalsValid = true;
     }
-    PINGY();
 
     // Create new OSP Mesh
-    if (_instanceModel)
-    {
+    if (_instanceModel) {
+        ospRemoveGeometry(_instanceModel, _ospMesh);
         ospRelease(_instanceModel);
     }
     _instanceModel = ospNewModel();
+
     if (newMesh
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
-
-        //    if (_primvarSourceMap.count(HdTokens->color) > 0) {
-        //      auto& colorBuffer = _primvarSourceMap[HdTokens->color].data;
-        //      if (colorBuffer.GetArraySize() &&
-        //      colorBuffer.IsHolding<VtVec4fArray>()) {
-        //        _colors = colorBuffer.Get<VtVec4fArray>();
-        //        _colors.size() << "\n";
-        //      }
-        //    }
 
         const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
         const HdOSPRayMaterial* material
@@ -493,7 +451,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
                       HdPrimTypeTokens->material, GetMaterialId()));
 
         if (!_refined) {
-    PINGY();
             bool useQuads = _UseQuadIndices(renderIndex, _topology);
 
             if (useQuads) {
@@ -628,7 +585,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         ospCommit(vertices);
         ospSetData(_ospMesh, "vertex", vertices);
         ospRelease(vertices);
-    PINGY();
 
         if (_computedNormals.size()) {
             auto normals = ospNewData(_computedNormals.size(), OSP_FLOAT3,
@@ -637,7 +593,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             ospSetData(_ospMesh, "vertex.normal", normals);
             ospRelease(normals);
         }
-    PINGY();
 
         if (_colors.size() > 1) {
             // Carson: apparently colors are actually stored as a single color
@@ -647,7 +602,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             ospSetData(_ospMesh, "vertex.color", colors);
             ospRelease(colors);
         }
-    PINGY();
 
         if (_texcoords.size() > 1) {
             auto texcoords
@@ -657,7 +611,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
             ospSetData(_ospMesh, "vertex.texcoord", texcoords);
             ospRelease(texcoords);
         }
-    PINGY();
 
         OSPMaterial ospMaterial = nullptr;
 
@@ -672,19 +625,15 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         }
 
         ospSetMaterial(_ospMesh, ospMaterial);
-    PINGY();
         ospCommit(_ospMesh);
-    PINGY();
 
         ospAddGeometry(_instanceModel,
                        _ospMesh); 
         ospRelease(_ospMesh);
-    PINGY();
+        _ospMesh = nullptr;
         ospCommit(_instanceModel);
-    PINGY();
         renderParam->UpdateModelVersion();
     }
-    PINGY();
 
     ////////////////////////////////////////////////////////////////////////
     // 4. Populate ospray instance objects.
@@ -694,20 +643,17 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     // HdOSPRay to tell whether transforms will be dirty, so this code
     // pulls them every frame.
     if (!GetInstancerId().IsEmpty()) {
-    PINGY();
         // Retrieve instance transforms from the instancer.
         HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
         HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
-    PINGY();
         VtMatrix4dArray transforms
                = static_cast<HdOSPRayInstancer*>(instancer)
                         ->ComputeInstanceTransforms(GetId());
-    PINGY();
 
         size_t newSize = transforms.size();
         _ospInstances.resize(newSize);
         for (size_t i = 0; i < newSize; i++) {
-        // Create the new instance.
+            // Create the new instance.
             auto instance = ospNewInstance(_instanceModel, identity);
             // Combine the local transform and the instance transform.
             GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
@@ -724,7 +670,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
     // Otherwise, create our single instance (if necessary) and update
     // the transform (if necessary).
     else {
-    PINGY();
         std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
         _ospInstances.resize(0);
         auto instance = ospNewInstance(_instanceModel, identity);
@@ -739,7 +684,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
         ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
         ospCommit(instance);
     }
-    PINGY();
 
     // Update visibility by pulling the object into/out of the model.
     if (_sharedData.visible) {
@@ -753,7 +697,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
 
     // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
-    PINGY();
 }
 
 void
@@ -789,18 +732,6 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
 {
     const PxOsdSubdivTags& subdivTags = _topology.GetSubdivTags();
 
-    // The embree edge crease buffer expects ungrouped edges: a pair
-    // of indices marking an edge and one weight per crease.
-    // HdMeshTopology stores edge creases compactly. A crease length
-    // buffer stores the number of indices per crease and groups the
-    // crease index buffer, much like the face buffer groups the vertex index
-    // buffer except that creases don't automatically close. Crease weights
-    // can be specified per crease or per individual edge.
-    //
-    // For example, to add the edges [v0->v1@2.0f] and [v1->v2@2.0f],
-    // HdMeshTopology might store length = [3], indices = [v0, v1, v2],
-    // and weight = [2.0f], or it might store weight = [2.0f, 2.0f].
-    //
     // This loop calculates the number of edge creases, in preparation for
     // unrolling the edge crease buffer below.
     VtIntArray const creaseLengths = subdivTags.GetCreaseLengths();
@@ -819,44 +750,11 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
         numVertexCreases = 0;
     }
 
-    // Populate an embree subdiv object.
-    // _rtcMeshId = rtcNewSubdivisionMesh(scene, RTC_GEOMETRY_DEFORMABLE,
-    //     // numFaces is the size of RTC_FACE_BUFFER, which contains
-    //     // the number of indices for each face. This is equivalent to
-    //     // HdMeshTopology's GetFaceVertexCounts().
-    //     _topology.GetFaceVertexCounts().size(),
-    //     // numEdges is the size of RTC_INDEX_BUFFER, which contains
-    //     // the vertex indices for each face (grouped into faces by the
-    //     // face buffer). This is equivalent to HdMeshTopology's
-    //     // GetFaceVertexIndices(). Note this is more properly a count
-    //     // of half-edges.
-    //     _topology.GetFaceVertexIndices().size(),
-    //     // numVertices is the size of RTC_VERTEX_BUFFER, or vertex
-    //     // positions.
-    //     _points.size(),
-    //     // numEdgeCreases is the size of RTC_EDGE_CREASE_WEIGHT_BUFFER,
-    //     // and half the size of RTC_EDGE_CREASE_INDEX_BUFFER. See
-    //     // the calculation of numEdgeCreases above.
-    //     numEdgeCreases,
-    //     // numVertexCreases is the size of
-    //     // RTC_VERTEX_CREASE_WEIGHT_BUFFER and _INDEX_BUFFER.
-    //     numVertexCreases,
-    //     // numHoles is the size of RTC_HOLE_BUFFER.
-    //     _topology.GetHoleIndices().size());
-
     auto mesh = ospNewGeometry("subdivision");
     int numFaceVertices = _topology.GetFaceVertexCounts().size();
     int numIndices = _topology.GetFaceVertexIndices().size();
     int numVertices = _points.size();
     int numHoles = _topology.GetHoleIndices().size();
-
-    // Fill the topology buffers.
-    // rtcSetBuffer(scene, _rtcMeshId, RTC_FACE_BUFFER,
-    //     _topology.GetFaceVertexCounts().cdata(), 0, sizeof(int));
-    // rtcSetBuffer(scene, _rtcMeshId, RTC_INDEX_BUFFER,
-    //     _topology.GetFaceVertexIndices().cdata(), 0, sizeof(int));
-    // rtcSetBuffer(scene, _rtcMeshId, RTC_HOLE_BUFFER,
-    //     _topology.GetHoleIndices().cdata(), 0, sizeof(int));
 
     auto vertices = ospNewData(numVertices, OSP_FLOAT3, _points.cdata());
     ospSetData(mesh, "vertex", vertices);
@@ -885,10 +783,6 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     if (numEdgeCreases > 0) {
         std::vector<unsigned int> ospCreaseIndices(numEdgeCreases*2);
         std::vector<float> ospCreaseWeights(numEdgeCreases);
-    //     int *embreeCreaseIndices = static_cast<int*>(rtcMapBuffer(
-    //         scene, _rtcMeshId, RTC_EDGE_CREASE_INDEX_BUFFER));
-    //     float *embreeCreaseWeights = static_cast<float*>(rtcMapBuffer(
-    //         scene, _rtcMeshId, RTC_EDGE_CREASE_WEIGHT_BUFFER));
         int ospEdgeIndex = 0;
 
         VtIntArray const creaseIndices = subdivTags.GetCreaseIndices();
@@ -919,9 +813,6 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
             creaseIndexStart += creaseLengths[i];
         }
 
-    //     rtcUnmapBuffer(scene, _rtcMeshId, RTC_EDGE_CREASE_INDEX_BUFFER);
-    //     rtcUnmapBuffer(scene, _rtcMeshId, RTC_EDGE_CREASE_WEIGHT_BUFFER);
-
   auto edge_crease_indices = ospNewData(numEdgeCreases, OSP_UINT2, ospCreaseIndices.data());
   ospSetData(mesh, "edgeCrease.index", edge_crease_indices);
   ospRelease(edge_crease_indices);
@@ -937,10 +828,6 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
   auto vertex_crease_weights = ospNewData(numVertexCreases, OSP_FLOAT, subdivTags.GetCornerWeights().cdata());
   ospSetData(mesh, "vertexCrease.weight", vertex_crease_weights);
   ospRelease(vertex_crease_weights);
-    //     rtcSetBuffer(scene, _rtcMeshId, RTC_VERTEX_CREASE_INDEX_BUFFER,
-    //         subdivTags.GetCornerIndices().cdata(), 0, sizeof(int));
-    //     rtcSetBuffer(scene, _rtcMeshId, RTC_VERTEX_CREASE_WEIGHT_BUFFER,
-    //         subdivTags.GetCornerWeights().cdata(), 0, sizeof(float));
     }
 
     return mesh;

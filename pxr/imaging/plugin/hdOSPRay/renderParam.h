@@ -40,20 +40,13 @@ PXR_NAMESPACE_OPEN_SCOPE
 ///
 class HdOSPRayRenderParam final : public HdRenderParam {
 public:
-    HdOSPRayRenderParam(OSPModel model, OSPRenderer renderer,
+    HdOSPRayRenderParam(OSPRenderer renderer,
                         std::atomic<int>* sceneVersion)
-        : _model(model)
-        , _renderer(renderer)
+        : _renderer(renderer)
         , _sceneVersion(sceneVersion)
     {
     }
     virtual ~HdOSPRayRenderParam() = default;
-
-    OSPModel& GetOSPRayModel()
-    {
-        (_sceneVersion)++;
-        return _model;
-    }
 
     OSPRenderer GetOSPRayRenderer()
     {
@@ -71,7 +64,6 @@ public:
     }
 
 private:
-    OSPModel _model;
     OSPRenderer _renderer;
     /// A version counter for edits to _scene.
     std::atomic<int>* _sceneVersion;

@@ -164,7 +164,7 @@ protected:
 
 private:
     // Populate the ospray geometry object based on scene data.
-    void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
+    void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                           OSPRenderer renderer, HdDirtyBits* dirtyBits,
                           HdMeshReprDesc const& desc,
                           HdOSPRayRenderParam* renderParam);
