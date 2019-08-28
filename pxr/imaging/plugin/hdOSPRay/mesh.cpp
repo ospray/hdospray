@@ -462,7 +462,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                &_adjacency, _points.size(), _points.cdata());
         _normalsValid = true;
     }
-    PINGY();
 
     // Create new OSP Mesh
     if (_instanceModel)
@@ -616,7 +615,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         ospCommit(vertices);
         ospSetData(_ospMesh, "vertex", vertices);
         ospRelease(vertices);
-    PINGY();
 
         if (_computedNormals.size()) {
             auto normals = ospNewData(_computedNormals.size(), OSP_FLOAT3,
@@ -625,7 +623,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospSetData(_ospMesh, "vertex.normal", normals);
             ospRelease(normals);
         }
-    PINGY();
 
         if (_colors.size() > 1) {
             auto colors = ospNewData(_colors.size(), OSP_FLOAT4,
@@ -633,7 +630,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospSetData(_ospMesh, "vertex.color", colors);
             ospRelease(colors);
         }
-    PINGY();
 
         if (_texcoords.size() > 1) {
             auto texcoords
@@ -643,7 +639,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospSetData(_ospMesh, "vertex.texcoord", texcoords);
             ospRelease(texcoords);
         }
-    PINGY();
 
         OSPMaterial ospMaterial = nullptr;
 
@@ -665,7 +660,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         ospCommit(_instanceModel);
         renderParam->UpdateModelVersion();
     }
-    PINGY();
 
     ////////////////////////////////////////////////////////////////////////
     // 4. Populate ospray instance objects.
@@ -725,7 +719,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
     // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
-    PINGY();
 }
 
 void

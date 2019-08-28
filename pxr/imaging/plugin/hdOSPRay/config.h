@@ -134,6 +134,12 @@ public:
     // meshes populate global instances.  These are then committed by the renderPass into a scene.
     std::vector<OSPGeometry> ospInstances;
 
+    OSPModel ospModel {nullptr};
+
+    bool modelDirty {true};
+
+    bool ModelDirty() const { return modelDirty; }
+
 private:
     // The constructor initializes the config variables with their
     // default or environment-provided override, and optionally prints
