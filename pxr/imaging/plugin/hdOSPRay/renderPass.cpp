@@ -146,6 +146,19 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 {
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
 
+    // Update camera
+    auto inverseViewMatrix
+           = renderPassState->GetWorldToViewMatrix().GetInverse();
+    auto inverseProjMatrix
+           = renderPassState->GetProjectionMatrix().GetInverse();
+
+    if (inverseViewMatrix != _inverseViewMatrix
+        || inverseProjMatrix != _inverseProjMatrix) {
+        ResetImage();
+        _inverseViewMatrix = inverseViewMatrix;
+        _inverseProjMatrix = inverseProjMatrix;
+    }
+
     float aspect = _width / float(_height);
     ospSetf(_camera, "aspect", aspect);
     GfVec3f origin = GfVec3f(0, 0, 0);
@@ -275,7 +288,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _width = vp[2];
         _height = vp[3];
         if (_frameBuffer)
-          ospRelease(_frameBuffer);
+            ospRelease(_frameBuffer);
         _frameBuffer = ospNewFrameBuffer(
                osp::vec2i({ (int)_width, (int)_height }), OSP_FB_RGBA32F,
                OSP_FB_COLOR | OSP_FB_ACCUM |
@@ -299,20 +312,19 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (_pendingModelUpdate) {
-        std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
-        //release resources from last committed scene
+        // release resources from last committed scene
         if (oldModel) {
             for (auto instance : oldInstances) {
-              ospRemoveGeometry(oldModel, instance);
-              ospRelease(instance);
+                ospRemoveGeometry(oldModel, instance);
+                ospRelease(instance);
             }
             ospRelease(oldModel);
             oldModel = nullptr;
             oldInstances.resize(0);
         }
-        //create new model and populate with mesh instances
+        // create new model and populate with mesh instances
         OSPModel model = ospNewModel();
-        for (auto instance : HdOSPRayConfig::GetMutableInstance().ospInstances) {
+        for (auto instance : _renderParam->GetInstances()) {
             ospAddGeometry(model, instance);
             oldInstances.push_back(instance);
         }
@@ -321,7 +333,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         oldModel = model;
         ospCommit(_renderer);
         _pendingModelUpdate = false;
-        HdOSPRayConfig::GetMutableInstance().ospInstances.resize(0);
+        _renderParam->ClearInstances();
     }
 
     int currentModelVersion = _renderParam->GetModelVersion();
@@ -330,18 +342,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _lastRenderedModelVersion = currentModelVersion;
     }
 
-    // Update camera
-    auto inverseViewMatrix
-           = renderPassState->GetWorldToViewMatrix().GetInverse();
-    auto inverseProjMatrix
-           = renderPassState->GetProjectionMatrix().GetInverse();
-
-    if (inverseViewMatrix != _inverseViewMatrix
-        || inverseProjMatrix != _inverseProjMatrix) {
-        ResetImage();
-        _inverseViewMatrix = inverseViewMatrix;
-        _inverseProjMatrix = inverseProjMatrix;
-    }
 
     // Reset the sample buffer if it's been requested.
     if (_pendingResetImage) {
@@ -428,7 +428,7 @@ HdOSPRayRenderPass::Denoise()
 
     _denoiserFilter.execute();
     _colorBuffer = _denoisedBuffer;
-    // Carson: not sure we need two buffers
+    // Carson: we can avoid having 2 buffers
 #endif
 }
 

@@ -50,13 +50,11 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
   # add ptex module to ospray libraries
   option(HDOSPRAY_PLUGIN_PTEX "build hdOSPRay with Ptex support" OFF)
   if (HDOSPRAY_PLUGIN_PTEX)
-    #if (NOT TARGET ospray::ospray_module_ptex)
-    #  message(FATAL_ERROR "hdOSPRayPlugin requires building OSPRay with ptex module")
-    #endif()
+    if (NOT TARGET ospray::ospray_module_ptex)
+      message(FATAL_ERROR "hdOSPRayPlugin requires building OSPRay with ptex module")
+    endif()
 
-    #find_package(ptex CONFIG REQUIRED) # requires version 2.3.1 (ptex doesn't package version config)
-
-    #target_link_libraries(hdOSPRay PUBLIC ospray::ospray_module_ptex)
+    target_link_libraries(hdOSPRay PUBLIC ospray::ospray_module_ptex)
     target_compile_definitions(hdOSPRay PUBLIC -DHDOSPRAY_PLUGIN_PTEX)
   endif()
 

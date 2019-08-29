@@ -164,9 +164,8 @@ protected:
 
 private:
     // Populate the ospray geometry object based on scene data.
-    void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
-                          OSPRenderer renderer, HdDirtyBits* dirtyBits,
-                          HdMeshReprDesc const& desc,
+    void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPRenderer renderer,
+                          HdDirtyBits* dirtyBits, HdMeshReprDesc const& desc,
                           HdOSPRayRenderParam* renderParam);
 
     // Populate _primvarSourceMap (our local cache of primvar data) based on

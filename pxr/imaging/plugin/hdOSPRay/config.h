@@ -51,7 +51,6 @@ class HdOSPRayConfig {
 public:
     /// \brief Return the configuration singleton.
     static const HdOSPRayConfig& GetInstance();
-    static  HdOSPRayConfig& GetMutableInstance();
 
     /// How many samples does each pixel get per frame?
     ///

@@ -40,8 +40,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 ///
 class HdOSPRayRenderParam final : public HdRenderParam {
 public:
-    HdOSPRayRenderParam(OSPRenderer renderer,
-                        std::atomic<int>* sceneVersion)
+    HdOSPRayRenderParam(OSPRenderer renderer, std::atomic<int>* sceneVersion)
         : _renderer(renderer)
         , _sceneVersion(sceneVersion)
     {
@@ -63,7 +62,39 @@ public:
         return _modelVersion.load();
     }
 
+    // thread safe.  Instances added to scene and released by renderPass.
+    void AddInstance(const OSPGeometry instance)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _ospInstances.emplace_back(instance);
+    }
+
+    // thread safe.  Instances added to scene and released by renderPass.
+    void AddInstances(const std::vector<OSPGeometry>& instances)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _ospInstances.insert(_ospInstances.end(), instances.begin(),
+                             instances.end());
+    }
+
+    void ClearInstances()
+    {
+        _ospInstances.resize(0);
+    }
+
+    // not thread safe
+    std::vector<OSPGeometry>& GetInstances()
+    {
+        return _ospInstances;
+    }
+
 private:
+    // mutex over ospray calls to the global model and global instances. OSPRay
+    // is not thread safe
+    std::mutex _ospMutex;
+    // meshes populate global instances.  These are then committed by the
+    // renderPass into a scene.
+    std::vector<OSPGeometry> _ospInstances;
     OSPRenderer _renderer;
     /// A version counter for edits to _scene.
     std::atomic<int>* _sceneVersion;

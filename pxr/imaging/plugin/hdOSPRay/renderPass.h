@@ -97,7 +97,7 @@ private:
     bool _pendingResetImage;
     bool _pendingModelUpdate;
 
-    OSPFrameBuffer _frameBuffer {nullptr};
+    OSPFrameBuffer _frameBuffer { nullptr };
 
     OSPRenderer _renderer;
 
@@ -139,8 +139,8 @@ private:
     std::vector<osp::vec3f> _albedoBuffer;
     std::vector<osp::vec4f> _denoisedBuffer;
 
-    std::vector<OSPGeometry> oldInstances;  //instances added to last model
-    OSPModel oldModel = nullptr;  //the last model created
+    std::vector<OSPGeometry> oldInstances; // instances added to last model
+    OSPModel oldModel = nullptr; // the last model created
 
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
     int _spp { 1 };

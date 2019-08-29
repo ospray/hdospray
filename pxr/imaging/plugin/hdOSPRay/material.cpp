@@ -161,15 +161,13 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
 HdOSPRayMaterial::HdOSPRayMaterial(SdfPath const& id)
     : HdMaterial(id)
 {
-    std::cout << " new ospraymaterial\n";
     diffuseColor = GfVec4f(1, 1, 1, 1);
 }
 
 HdOSPRayMaterial::~HdOSPRayMaterial()
 {
-    std::cout << "release ospmaterial\n";
     if (_ospMaterial)
-  ospRelease(_ospMaterial);
+        ospRelease(_ospMaterial);
 }
 
 /// Synchronizes state from the delegate to this object.
@@ -177,16 +175,12 @@ void
 HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
                        HdRenderParam* renderParam, HdDirtyBits* dirtyBits)
 {
-    std::cout << "material sync\n";
     HD_TRACE_FUNCTION();
     HF_MALLOC_TAG_FUNCTION();
 
     TF_UNUSED(renderParam);
 
-    // std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
-
     if (*dirtyBits & HdMaterial::DirtyResource) {
-        std::cout << "update material\n";
         // update material
         VtValue networkMapResource
                = sceneDelegate->GetMaterialResource(GetId());
@@ -239,10 +233,8 @@ void
 HdOSPRayMaterial::_UpdateOSPRayMaterial()
 {
     if (_ospMaterial)
-    {
-        std::cout << "release ospMaterial\n";
-      ospRelease(_ospMaterial);
-    }
+        ospRelease(_ospMaterial);
+
     _ospMaterial = CreateDefaultMaterial(diffuseColor);
 
     if (map_diffuseColor.ospTexture) {

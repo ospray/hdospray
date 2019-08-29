@@ -80,8 +80,6 @@ HdOSPRayRenderDelegate::HdOSPRayRenderDelegate(
 void
 HdOSPRayRenderDelegate::_Initialize()
 {
-    std::cout << "RenderDelegate\n";
-    std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
     // Check plugin against pxr version
 #if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 19
 #    error This version of HdOSPRay is configured to built against USD v0.19.x
@@ -126,7 +124,9 @@ HdOSPRayRenderDelegate::_Initialize()
     }
     delete[] av;
 
+#ifdef HDOSPRAY_PLUGIN_PTEX
     ospLoadModule("ptex");
+#endif
 
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
         _renderer = ospNewRenderer("pt");
@@ -135,8 +135,8 @@ HdOSPRayRenderDelegate::_Initialize()
 
     // Store top-level OSPRay objects inside a render param that can be
     // passed to prims during Sync().
-    _renderParam = std::make_shared<HdOSPRayRenderParam>(_renderer,
-                                                         &_sceneVersion);
+    _renderParam
+           = std::make_shared<HdOSPRayRenderParam>(_renderer, &_sceneVersion);
 
     // Initialize one resource registry for all OSPRay plugins
     std::lock_guard<std::mutex> guard(_mutexResourceRegistry);
@@ -213,7 +213,6 @@ HdOSPRayRenderDelegate::CommitResources(HdChangeTracker* tracker)
     auto& rp = _renderParam;
     const auto modelVersion = rp->GetModelVersion();
     if (modelVersion > _lastCommittedModelVersion) {
-        std::lock_guard<std::mutex> lock(HdOSPRayConfig::GetMutableInstance().ospMutex);
         _lastCommittedModelVersion = modelVersion;
     }
 }
