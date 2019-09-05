@@ -21,8 +21,8 @@ quality renderers and [Intel® Open Image
 Denoise](http://openimagedenoise.org), and is released under the
 permissive Apache 2.0 license.
 
-As part of the [Intel® Rendering
-Framework](https://software.intel.com/en-us/rendering-framework), OSPRay
+As part of the [Intel oneAPI Rendering
+Toolkit](https://software.intel.com/en-us/rendering-framework), OSPRay
 is highly-optimized for Intel® CPU architectures ranging from laptops to
 large-scale distributed HPC systems. HdOSPRay leverages the Intel®
 Rendering Framework to deliver interactive rendering for large-scale

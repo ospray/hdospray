@@ -6,8 +6,8 @@ enables interactive scene preview by utilizing OSPRay's high quality renderers
 and [Intel&reg; Open Image Denoise](http://openimagedenoise.org), and is
 released under the permissive Apache 2.0 license.
 
-As part of the [Intel&reg; Rendering
-Framework](https://software.intel.com/en-us/rendering-framework), OSPRay is
+As part of the [Intel oneAPI Rendering
+Toolkit](https://software.intel.com/en-us/rendering-framework), OSPRay is
 highly-optimized for Intel&reg; CPU architectures ranging from laptops to
 large-scale distributed HPC systems. HdOSPRay leverages the Intel&reg;
 Rendering Framework to deliver interactive rendering for large-scale models at
