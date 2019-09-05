@@ -54,6 +54,7 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
       message(FATAL_ERROR "hdOSPRayPlugin requires building OSPRay with ptex module")
     endif()
 
+    find_package(ptex CONFIG REQUIRED)
     target_link_libraries(hdOSPRay PUBLIC ospray::ospray_module_ptex)
     target_compile_definitions(hdOSPRay PUBLIC -DHDOSPRAY_PLUGIN_PTEX)
   endif()
