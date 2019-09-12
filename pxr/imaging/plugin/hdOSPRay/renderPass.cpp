@@ -315,15 +315,16 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         // release resources from last committed scene
         if (oldModel) {
             for (auto instance : oldInstances) {
-                ospRemoveGeometry(oldModel, instance);
                 ospRelease(instance);
             }
             ospRelease(oldModel);
             oldModel = nullptr;
             oldInstances.resize(0);
         }
+
         // create new model and populate with mesh instances
         OSPModel model = ospNewModel();
+        oldInstances.reserve(_renderParam->GetInstances().size());
         for (auto instance : _renderParam->GetInstances()) {
             ospAddGeometry(model, instance);
             oldInstances.push_back(instance);
