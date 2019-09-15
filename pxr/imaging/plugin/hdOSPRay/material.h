@@ -67,7 +67,7 @@ public:
     }
 
     /// Create a default material based on the renderer type specified in config
-    static OSPMaterial CreateDefaultMaterial(GfVec4f color);
+    static OSPMaterial CreateDefaultMaterial(GfVec3f color);
 
     /// Summary flag. Returns true if the material is bound to one or more
     /// textures and any of those textures is a ptex texture.
@@ -103,9 +103,9 @@ protected:
         bool isPtex { false };
     };
 
-    GfVec4f diffuseColor { 0.8f, 0.8f, 0.8f, 0.8f };
-    GfVec4f emissveColor { 0.f, 0.f, 0.f, 0.f };
-    GfVec4f specularColor { 1.f, 1.f, 1.f, 1.f };
+    GfVec3f diffuseColor { 0.8f, 0.8f, 0.8f};
+    GfVec3f emissiveColor { 0.f, 0.f, 0.f };
+    GfVec3f specularColor { 1.f, 1.f, 1.f };
     float metallic { 0.f };
     float roughness { 0.f };
     GfVec4f clearcoat;

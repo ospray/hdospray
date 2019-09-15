@@ -624,6 +624,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospRelease(normals);
         }
 
+<<<<<<< HEAD
         if (_colors.size() > 1) {
             auto colors = ospNewData(_colors.size(), OSP_FLOAT4,
                                      _colors.cdata(), OSP_DATA_SHARED_BUFFER);
@@ -631,6 +632,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospRelease(colors);
         }
 
+=======
+>>>>>>> updated for usd v19.07.  color array swapped for single display color.
         if (_texcoords.size() > 1) {
             auto texcoords
                    = ospNewData(_texcoords.size(), OSP_FLOAT2,
@@ -646,10 +649,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospMaterial = material->GetOSPRayMaterial();
         } else {
             // Create new ospMaterial
-            GfVec4f color(1.f);
-            if (!_colors.empty())
-                color = _colors[0];
-            ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(color);
+            ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(_displayColor);
         }
 
         ospSetMaterial(_ospMesh, ospMaterial);
@@ -790,11 +790,8 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     ospSetData(mesh, "index", indices);
     ospRelease(indices);
     // TODO: set hole buffer
-    GfVec4f color(1.f);
-    if (!_colors.empty())
-        color = _colors[0];
-    std::vector<GfVec4f> colorDummy(_points.size(), color);
-    auto colors = ospNewData(colorDummy.size(), OSP_FLOAT4, colorDummy.data());
+    std::vector<GfVec3f> colorDummy(_points.size(), _displayColor);
+    auto colors = ospNewData(colorDummy.size(), OSP_FLOAT3, colorDummy.data());
     ospSetData(mesh, "color", colors);
     ospRelease(colors);
     // TODO: ospray subd appears to require color data... this will be fixed in
