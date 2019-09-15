@@ -214,9 +214,11 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
             }
 
             if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
-                                                HdTokens->color)) {
-                if (value.IsHolding<VtVec4fArray>())
-                    _colors = value.Get<VtVec4fArray>();
+                                                HdTokens->displayColor)) {
+                if (value.IsHolding<VtVec3fArray>())
+                {
+                    _displayColor = value.Get<VtVec3fArray>()[0];
+                }
             }
         }
     }
@@ -581,15 +583,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospRelease(normals);
         }
 
-        if (_colors.size() > 1) {
-            // Carson: apparently colors are actually stored as a single color
-            // value for entire object
-            auto colors = ospNewData(_colors.size(), OSP_FLOAT4,
-                                     _colors.cdata(), OSP_DATA_SHARED_BUFFER);
-            ospSetData(_ospMesh, "vertex.color", colors);
-            ospRelease(colors);
-        }
-
         if (_texcoords.size() > 1) {
             auto texcoords
                    = ospNewData(_texcoords.size(), OSP_FLOAT2,
@@ -605,10 +598,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospMaterial = material->GetOSPRayMaterial();
         } else {
             // Create new ospMaterial
-            GfVec4f color(1.f);
-            if (!_colors.empty())
-                color = _colors[0];
-            ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(color);
+            ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(_displayColor);
         }
 
         ospSetMaterial(_ospMesh, ospMaterial);
@@ -749,11 +739,8 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     ospSetData(mesh, "index", indices);
     ospRelease(indices);
     // TODO: set hole buffer
-    GfVec4f color(1.f);
-    if (!_colors.empty())
-        color = _colors[0];
-    std::vector<GfVec4f> colorDummy(_points.size(), color);
-    auto colors = ospNewData(colorDummy.size(), OSP_FLOAT4, colorDummy.data());
+    std::vector<GfVec3f> colorDummy(_points.size(), _displayColor);
+    auto colors = ospNewData(colorDummy.size(), OSP_FLOAT3, colorDummy.data());
     ospSetData(mesh, "color", colors);
     ospRelease(colors);
     // TODO: ospray subd appears to require color data... this will be fixed in

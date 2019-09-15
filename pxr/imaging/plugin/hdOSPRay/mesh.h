@@ -198,7 +198,7 @@ private:
     GfMatrix4f _transform;
     VtVec3fArray _points;
     VtVec2fArray _texcoords;
-    VtVec4fArray _colors;
+    GfVec3f _displayColor;
     VtVec3fArray _normals;
 
     // Derived scene data:

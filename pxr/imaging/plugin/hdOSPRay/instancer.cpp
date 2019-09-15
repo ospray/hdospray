@@ -126,7 +126,7 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const& prototypeId)
     // If any transform isn't provided, it's assumed to be the identity.
 
     GfMatrix4d instancerTransform
-           = GetDelegate()->GetInstancerTransform(GetId(), prototypeId);
+           = GetDelegate()->GetInstancerTransform(GetId());
     VtIntArray instanceIndices
            = GetDelegate()->GetInstanceIndices(GetId(), prototypeId);
 

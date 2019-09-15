@@ -161,7 +161,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
 HdOSPRayMaterial::HdOSPRayMaterial(SdfPath const& id)
     : HdMaterial(id)
 {
-    diffuseColor = GfVec4f(1, 1, 1, 1);
+    diffuseColor = GfVec3f(1, 1, 1);
 }
 
 HdOSPRayMaterial::~HdOSPRayMaterial()
@@ -269,7 +269,7 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
         const auto& name = param->first;
         const auto& value = param->second;
         if (name == HdOSPRayTokens->diffuseColor) {
-            diffuseColor = value.Get<GfVec4f>();
+            diffuseColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayTokens->metallic) {
             metallic = value.Get<float>();
         } else if (name == HdOSPRayTokens->roughness) {
@@ -277,7 +277,7 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
         } else if (name == HdOSPRayTokens->ior) {
             ior = value.Get<float>();
         } else if (name == HdOSPRayTokens->color) {
-            diffuseColor = value.Get<GfVec4f>();
+            diffuseColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayTokens->opacity) {
             opacity = value.Get<float>();
         }
@@ -334,7 +334,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
 }
 
 OSPMaterial
-HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
+HdOSPRayMaterial::CreateDefaultMaterial(GfVec3f color)
 {
     std::string rendererType = HdOSPRayConfig::GetInstance().usePathTracing
            ? "pathtracer"
