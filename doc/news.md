@@ -1,6 +1,11 @@
 News, Updates, and Announcements
 ================================
 
+September 15, 2019: Version v0.3 now released on GitHub
+--------------------------------------------------
+
+Subdivision surfaces support. GUI options 
+for usdview.  Various bug fixes.
 
 April 30, 2019: Version v0.2.2 now released on GitHub
 --------------------------------------------------

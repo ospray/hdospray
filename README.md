@@ -11,28 +11,6 @@ rates.
 Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more
 information.
 
-News, Updates, and Announcements
-================================
-
-April 30, 2019: Version v0.2.2 now released on GitHub
------------------------------------------------------
-
-Various bug fixes. OSPRay version updated to 1.8.5. CMake targets.
-Animation.
-
-Mar 7, 2019: Version v0.2.1 now released on GitHub
---------------------------------------------------
-
-Bug fixes, ptex updates, documentation.
-
-Feb 28, 2019: Version v0.2.0 now released on GitHub
----------------------------------------------------
-
-Initial Beta release version 0.2.0 is now available on the [HdOSPRay
-GitHub page](https://github.com/ospray/hdospray/releases/v0.2.0). This
-replaces the previous repository and versioning which was on my personal
-github account.
-
 HdOSPRay
 --------
 
@@ -79,10 +57,12 @@ Instructions are provided for loading the scenes below.
 <img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced with HdOSPRay in usdview" width=70%>
 <br/> Pixar Kitchen Set path traced with HdOSPRay in usdview <br/>
 </center>
+
 <br/>
 
 -   Download Kitchen Set asset from
     [Pixar](http://graphics.pixar.com/usd/downloads.html)
+
 -   Run usdview using HdOSPRay using
 
         HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Kitchen_set.usd
@@ -93,6 +73,7 @@ Instructions are provided for loading the scenes below.
 <img src="images/usd_gl_thumbnail.jpg" alt="Pixar Kitchen Set GL" width=30%>
 <br/> Pixar Kitchen Set rendered with default GL in usdview <br/>
 </center>
+
 <br/>
 
 <center>
@@ -100,6 +81,7 @@ Instructions are provided for loading the scenes below.
 <br/> Pixar Kitchen Set rendered with HdOSPRay and basic shadows in
 usdview <br/>
 </center>
+
 <br/>
 
 <center>
@@ -107,6 +89,7 @@ usdview <br/>
 <br/> Pixar Kitchen Set rendered with HdOSPRay and basic ambient
 occlusion in usdview <br/>
 </center>
+
 <br/>
 
 <center>
@@ -114,6 +97,7 @@ occlusion in usdview <br/>
 <br/> Pixar Kitchen Set rendered with HdOSPRay and path tracing in
 usdview <br/>
 </center>
+
 <br/>
 
 ### Teapot
@@ -122,10 +106,12 @@ usdview <br/>
 <img src="images/hdospray_teapot2_thumbnail.jpg" alt="Teapot" width=70%>
 <br/> Apple teapot rendered with HdOSPRay in usdview <br/>
 </center>
+
 <br/>
 
 -   Download the Apple ARKit teapot from
     [Apple](https://developer.apple.com/arkit/gallery/models/teapot/teapot.usdz)
+
 -   USDZ files are zip files, unzip using platform specific program of
     your choice
 
@@ -143,10 +129,12 @@ usdview <br/>
 <img src="images/hdospray_gramophone_thumbnail.jpg" alt="Gramophone" width=70%>
 <br/> Apple Gramophone rendered with HdOSPRay in usdview <br/>
 </center>
+
 <br/>
 
 -   Download the Apple ARKit gramophone from
     [Apple](https://developer.apple.com/arkit/gallery/models/gramophone/gramophone.usdz)
+
 -   USDZ files are zip files, unzip using platform specific program of
     your choice
 
@@ -179,7 +167,7 @@ own risk.
 Prerequisites
 -------------
 
--   [USD v19.03](https://graphics.pixar.com/usd/docs/index.html)
+-   [USD v19.07](https://graphics.pixar.com/usd/docs/index.html)
     -   USD is primarily tested with Linux, but has experimental support
         for MacOS and Windows. For a full list of USD dependencies, see
         the USD page.
@@ -225,15 +213,20 @@ following the build scripts provided.
 
 -   Set `pxr_DIR` to the install directory of USD which contains
     `pxrConfig.cmake`
+
 -   Set required USD options: `usd-imaging` and `openimageio` are
     required for both the USD and HdOSPRay builds
+
 -   Set `ospray_DIR` to the directory containing your
     `osprayConfig.cmake`
+
     -   This can be found in the root directory of the distributed
         binaries or if you are building and installing from source it
         can be found in `<install>/lib/cmake/ospray-\*/`
+
 -   Set `embree_DIR` to install directory of Embree. These will be the
     same as `ospray_DIR` if you downloaded the OSPRay binaries
+
 -   Compile and install HdOSPRay
 
         $ make -j install
@@ -266,6 +259,9 @@ OSPRay can be set to the default renderer by either
 -   Specifying `--renderer OSPRay` as a command line argument to usdview
 
 ### Environment variables
+
+Most of these options are also exposed through the usdview GUI under
+Hydra Settings.
 
 -   `HDOSPRAY_SAMPLES_PER_FRAME`
 
@@ -307,6 +303,7 @@ Features
 -   Ptex
 -   Triangle meshes
 -   Quad meshes
+-   Subdivision surfaces
 -   Shadows
 -   Ambient occlusion
 -   Path tracing
@@ -320,10 +317,33 @@ TODOs
     viewer yet
 -   Custom lights. We are waiting to get actual USD files that specify
     these to test
--   Custom GUI widgets. We will add the env vars as python widgets
--   Simple lights. These are GL specific in USD and are the lights
-    modified in the main menu
--   Subdivision surfaces. This was put into OSPRay and we will be
-    working on putting this in a future HdOSPRay release
 -   OSL shaders. They are a work in progress in OSPRay
 -   Binary releases. We hope to provide these soon
+
+News, Updates, and Announcements
+================================
+
+September 15, 2019: Version v0.3 now released on GitHub
+-------------------------------------------------------
+
+Subdivision surfaces support. GUI options for usdview. Various bug
+fixes.
+
+April 30, 2019: Version v0.2.2 now released on GitHub
+-----------------------------------------------------
+
+Various bug fixes. OSPRay version updated to 1.8.5. CMake targets.
+Animation.
+
+Mar 7, 2019: Version v0.2.1 now released on GitHub
+--------------------------------------------------
+
+Bug fixes, ptex updates, documentation.
+
+Feb 28, 2019: Version v0.2.0 now released on GitHub
+---------------------------------------------------
+
+Initial Beta release version 0.2.0 is now available on the [HdOSPRay
+GitHub page](https://github.com/ospray/hdospray/releases/v0.2.0). This
+replaces the previous repository and versioning which was on my personal
+github account.
