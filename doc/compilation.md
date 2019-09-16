@@ -16,7 +16,7 @@ at your own risk.
 
 ## Prerequisites
 
-- [USD v19.03](https://graphics.pixar.com/usd/docs/index.html)
+- [USD v19.07](https://graphics.pixar.com/usd/docs/index.html)
   - USD is primarily tested with Linux, but has experimental support for MacOS and Windows.
     For a full list of USD dependencies, see the USD page.
   - The plugin requires a minimum of `PXR_BUILD_IMAGING` and
