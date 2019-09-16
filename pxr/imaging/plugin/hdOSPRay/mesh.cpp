@@ -790,8 +790,10 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     ospSetData(mesh, "index", indices);
     ospRelease(indices);
     // TODO: set hole buffer
-    std::vector<GfVec3f> colorDummy(_points.size(), _displayColor);
-    auto colors = ospNewData(colorDummy.size(), OSP_FLOAT3, colorDummy.data());
+    GfVec4f displayColor4f(_displayColor[0], _displayColor[1],
+        _displayColor[2], 1.f);
+    std::vector<GfVec4f> colorDummy(_points.size(), displayColor4f);
+    auto colors = ospNewData(colorDummy.size(), OSP_FLOAT4, colorDummy.data());
     ospSetData(mesh, "color", colors);
     ospRelease(colors);
     // TODO: ospray subd appears to require color data... this will be fixed in
