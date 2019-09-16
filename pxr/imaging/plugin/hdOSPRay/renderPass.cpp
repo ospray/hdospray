@@ -311,6 +311,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _lastRenderedVersion = currentSceneVersion;
     }
 
+    int currentModelVersion = _renderParam->GetModelVersion();
+    if (_lastRenderedModelVersion != currentModelVersion) {
+        ResetImage();
+        _lastRenderedModelVersion = currentModelVersion;
+        _pendingModelUpdate = true;
+    }
+
     if (_pendingModelUpdate) {
         // release resources from last committed scene
         if (oldModel) {
@@ -336,13 +343,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _pendingModelUpdate = false;
         _renderParam->ClearInstances();
     }
-
-    int currentModelVersion = _renderParam->GetModelVersion();
-    if (_lastRenderedModelVersion != currentModelVersion) {
-        ResetImage();
-        _lastRenderedModelVersion = currentModelVersion;
-    }
-
 
     // Reset the sample buffer if it's been requested.
     if (_pendingResetImage) {
