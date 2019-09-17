@@ -200,6 +200,7 @@ private:
     VtVec2fArray _texcoords;
     VtVec4fArray _colors;
     VtVec3fArray _normals;
+    GfVec3f _displayColor {.5f, .5f, .5f};
 
     // Derived scene data:
     // - _triangulatedIndices holds a triangulation of the source topology,

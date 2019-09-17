@@ -227,6 +227,10 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                         _colors[i] = { colors[i].data()[0], colors[i].data()[1],
                                        colors[i].data()[2], 1.f };
                     }
+                    if (!_colors.empty()) {
+                        _displayColor = {_colors[0][0], _colors[0][1],
+                            _colors[0][2]};
+                    }
                 }
             }
 
@@ -615,10 +619,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospMaterial = material->GetOSPRayMaterial();
         } else {
             // Create new ospMaterial
-            GfVec4f color(1.f);
-            if (!_colors.empty())
-                color = _colors[0];
-            ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(color);
+            ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(_displayColor);
         }
 
         ospSetMaterial(_ospMesh, ospMaterial);
@@ -759,9 +760,21 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     ospSetData(mesh, "index", indices);
     ospRelease(indices);
     // TODO: set hole buffer
-    auto colorsData = ospNewData(_colors.size(), OSP_FLOAT4, _colors.data());
+
+    OSPData colorsData = nullptr;
+    if (_colors.size() < _points.size()) {
+        GfVec4f displayColor4f(_displayColor[0], _displayColor[1],
+                               _displayColor[2], 1.f);
+        std::vector<GfVec4f> colorDummy(_points.size(), displayColor4f);
+        colorsData
+               = ospNewData(colorDummy.size(), OSP_FLOAT4, colorDummy.data());
+    } else {
+        colorsData = ospNewData(_colors.size(), OSP_FLOAT4, _colors.data());
+    }
     ospSetData(mesh, "color", colorsData);
     ospRelease(colorsData);
+
+
     // TODO: ospray subd appears to require color data... this will be fixed in
     // next release
 
