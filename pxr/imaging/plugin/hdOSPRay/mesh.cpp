@@ -44,8 +44,6 @@
 #include "ospcommon/AffineSpace.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
-//#define PINGY(x) { std::cout << __LINE__ << std::string(x) << std::endl; } 
-#define PINGY(x) { }
 
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
@@ -229,16 +227,14 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                         _colors[i] = { colors[i].data()[0], colors[i].data()[1],
                                        colors[i].data()[2], 1.f };
                     }
-                } else 
-                if (value.IsHolding<VtVec4fArray>())
-                    _colors = value.Get<VtVec4fArray>();
+                }
             }
 
             if (pv.name == "displayOpacity"
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdTokens->displayOpacity)) {
                 // XXX assuming displayOpacity can't exist without displayColor
-                // and/or can a different size
+                // and/or have a different size
                 if (value.IsHolding<VtFloatArray>()) {
                     const VtFloatArray& opacities = value.Get<VtFloatArray>();
                     for (size_t i = 0; i < opacities.size(); i++)
@@ -361,11 +357,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         }
     }
 
-    //OSPRay calls are not thread safe.  All osp calls should be mutex guarded.
-    std::lock_guard<std::mutex> lock(g_mutex);
-
-    PINGY();
-
     // If the topology has changed, or the value of doRefine has changed, we
     // need to create or recreate the OSPRay mesh object.
     // _GetInitialDirtyBits() ensures that the topology is dirty the first time
@@ -421,26 +412,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                     std::cout << "ERROR: could not quadrangulate face-varying "
                                  "data\n";
                 }
-
-                if (faceVaryingTexcoord) {
-                    TfToken buffName = HdOSPRayTokens->st;
-                    VtValue buffValue = VtValue(_texcoords);
-                    HdVtBufferSource buffer(buffName, buffValue);
-                    VtValue quadPrimvar;
-
-                    auto success
-                           = meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(
-                                  buffer.GetData(), buffer.GetNumElements(),
-                                  buffer.GetTupleType().type, &quadPrimvar);
-                    if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
-                        _texcoords = quadPrimvar.Get<VtVec2fArray>();
-                    } else {
-                        std::cout
-                               << "ERROR: could not quadrangulate face-varying "
-                                  "data\n";
-                    }
-                }
-                _texcoords = texcoords2;
             }
         }
         _refined = doRefine;
@@ -479,8 +450,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                       HdPrimTypeTokens->material, GetMaterialId()));
 
         if (!_refined) {
-            ospRelease(_ospMesh);
-    PINGY();
             bool useQuads = _UseQuadIndices(renderIndex, _topology);
 
             if (useQuads) {
@@ -624,7 +593,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospRelease(normals);
         }
 
-<<<<<<< HEAD
         if (_colors.size() > 1) {
             auto colors = ospNewData(_colors.size(), OSP_FLOAT4,
                                      _colors.cdata(), OSP_DATA_SHARED_BUFFER);
@@ -632,8 +600,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospRelease(colors);
         }
 
-=======
->>>>>>> updated for usd v19.07.  color array swapped for single display color.
         if (_texcoords.size() > 1) {
             auto texcoords
                    = ospNewData(_texcoords.size(), OSP_FLOAT2,
@@ -649,7 +615,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospMaterial = material->GetOSPRayMaterial();
         } else {
             // Create new ospMaterial
-            ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(_displayColor);
+            GfVec4f color(1.f);
+            if (!_colors.empty())
+                color = _colors[0];
+            ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(color);
         }
 
         ospSetMaterial(_ospMesh, ospMaterial);
@@ -790,12 +759,9 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     ospSetData(mesh, "index", indices);
     ospRelease(indices);
     // TODO: set hole buffer
-    GfVec4f displayColor4f(_displayColor[0], _displayColor[1],
-        _displayColor[2], 1.f);
-    std::vector<GfVec4f> colorDummy(_points.size(), displayColor4f);
-    auto colors = ospNewData(colorDummy.size(), OSP_FLOAT4, colorDummy.data());
-    ospSetData(mesh, "color", colors);
-    ospRelease(colors);
+    auto colorsData = ospNewData(_colors.size(), OSP_FLOAT4, _colors.data());
+    ospSetData(mesh, "color", colorsData);
+    ospRelease(colorsData);
     // TODO: ospray subd appears to require color data... this will be fixed in
     // next release
 
