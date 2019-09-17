@@ -113,6 +113,11 @@ public:
 
     ///  Use an eye light
     ///
+    /// Override with *HDOSPRAY_STATIC_DIRECTIONAL_LIGHTS*.
+    bool staticDirectionalLights { true };
+
+    ///  Use an eye light
+    ///
     /// Override with *HDOSPRAY_EYE_LIGHT*.
     bool eyeLight { false };
 

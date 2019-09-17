@@ -103,7 +103,7 @@ protected:
         bool isPtex { false };
     };
 
-    GfVec3f diffuseColor { 0.8f, 0.8f, 0.8f };
+    GfVec3f diffuseColor { 0.5f, 0.5f, 0.5f };
     GfVec3f emissiveColor { 0.f, 0.f, 0.f };
     GfVec3f specularColor { 1.f, 1.f, 1.f };
     float metallic { 0.f };

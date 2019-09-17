@@ -197,6 +197,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                HdOSPRayRenderSettingsTokens->maxDepth, 5);
         _ambientLight = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->ambientLight, false);
+        //default static ospray directional lights
+        _staticDirectionalLights = renderDelegate->GetRenderSetting<bool>(
+               HdOSPRayRenderSettingsTokens->staticDirectionalLights, false);
+        //eye, key, fill, and back light are copied from USD GL (Storm) defaults.
         _eyeLight = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->eyeLight, false);
         _keyLight = renderDelegate->GetRenderSetting<bool>(
@@ -222,7 +226,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     // XXX: Add clip planes support.
 
     // add lights
-    const GfVec3f right = GfCross(dir, up);
+    GfVec3f up_light = up;
+    GfVec3f dir_light = dir;
+    if (_staticDirectionalLights) {
+        up_light = {0.f, 1.f, 0.f};
+        dir_light = {-.1f, -.1f, -.8f};
+    }
+    GfVec3f right_light = GfCross(dir_light, up_light);
     std::vector<OSPLight> lights;
     if (_ambientLight) {
         auto ambient = ospNewLight(_renderer, "ambient");
@@ -231,10 +241,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         ospCommit(ambient);
         lights.push_back(ambient);
     }
+
     if (_eyeLight) {
         auto eyeLight = ospNewLight3("directional");
         ospSet3f(eyeLight, "color", 1.f, 232.f / 255.f, 166.f / 255.f);
-        ospSet3fv(eyeLight, "direction", &dir[0]);
+        ospSet3fv(eyeLight, "direction", &dir_light[0]);
         ospSet1f(eyeLight, "intensity", 3.3f);
         ospCommit(eyeLight);
         lights.push_back(eyeLight);
@@ -243,8 +254,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     const float glToPTLightIntensityMultiplier = 6.f;
     if (_keyLight) {
         auto keyLight = ospNewLight3("directional");
-        auto keyHorz = -1.0f / tan(rad(45.0f)) * right;
-        auto keyVert = 1.0f / tan(rad(70.0f)) * up;
+        auto keyHorz = -1.0f / tan(rad(45.0f)) * right_light;
+        auto keyVert = 1.0f / tan(rad(70.0f)) * up_light;
         auto lightDir = -(keyVert + keyHorz);
         ospSet3f(keyLight, "color", .8f, .8f, .8f);
         ospSet3fv(keyLight, "direction", &lightDir[0]);
@@ -255,8 +266,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
     if (_fillLight) {
         auto fillLight = ospNewLight(_renderer, "directional");
-        auto fillHorz = 1.0f / tan(rad(30.0f)) * right;
-        auto fillVert = 1.0f / tan(rad(45.0f)) * up;
+        auto fillHorz = 1.0f / tan(rad(30.0f)) * right_light;
+        auto fillVert = 1.0f / tan(rad(45.0f)) * up_light;
         auto lightDir = (fillVert + fillHorz);
         ospSet3f(fillLight, "color", .6f, .6f, .6f);
         ospSet3fv(fillLight, "direction", &lightDir[0]);
@@ -267,8 +278,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
     if (_backLight) {
         auto backLight = ospNewLight(_renderer, "directional");
-        auto backHorz = 1.0f / tan(rad(60.0f)) * right;
-        auto backVert = -1.0f / tan(rad(60.0f)) * up;
+        auto backHorz = 1.0f / tan(rad(60.0f)) * right_light;
+        auto backVert = -1.0f / tan(rad(60.0f)) * up_light;
         auto lightDir = (backHorz + backVert);
         ospSet3f(backLight, "color", .6f, .6f, .6f);
         ospSet3fv(backLight, "direction", &lightDir[0]);
