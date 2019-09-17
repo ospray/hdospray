@@ -206,8 +206,9 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
             auto value = sceneDelegate->Get(id, pv.name);
 
             // texcoords
-            if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
-                                                HdOSPRayTokens->st)) {
+            if (pv.name == "Texture_uv"
+                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                   HdOSPRayTokens->st)) {
                 if (value.IsHolding<VtVec2fArray>()) {
                     _texcoords = value.Get<VtVec2fArray>();
                 }
@@ -267,6 +268,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->normals)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->widths)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->primvar)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
+                                           HdTokens->displayColor)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
+                                           HdTokens->displayOpacity)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
         _UpdatePrimvarSources(sceneDelegate, *dirtyBits);
@@ -387,21 +392,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                     std::cout << "ERROR: could not quadrangulate face-varying "
                                  "data\n";
                 }
-
-                // usd stores texcoords in face indexed -> each quad has 4
-                // unique texcoords.
-                // let's try converting it to match our vertex indices
-                VtVec2fArray texcoords2;
-                texcoords2.resize(_points.size());
-                for (size_t q = 0; q < _quadIndices.size(); q++) {
-                    for (int i = 0; i < 4; i++) {
-                        // value at quadindex[q][i] maps to q*4+i texcoord;
-                        const size_t tc1index = q * 4 + i;
-                        const size_t tc2index = _quadIndices[q][i];
-                        texcoords2[tc2index] = _texcoords[tc1index];
-                    }
-                }
-                _texcoords = texcoords2;
             }
         }
         _refined = doRefine;
@@ -583,6 +573,13 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospRelease(normals);
         }
 
+        if (_colors.size() > 1) {
+            auto colors = ospNewData(_colors.size(), OSP_FLOAT4,
+                                     _colors.cdata(), OSP_DATA_SHARED_BUFFER);
+            ospSetData(_ospMesh, "vertex.color", colors);
+            ospRelease(colors);
+        }
+
         if (_texcoords.size() > 1) {
             auto texcoords
                    = ospNewData(_texcoords.size(), OSP_FLOAT2,
@@ -739,12 +736,21 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     ospSetData(mesh, "index", indices);
     ospRelease(indices);
     // TODO: set hole buffer
-    GfVec4f displayColor4f(_displayColor[0], _displayColor[1],
-        _displayColor[2], 1.f);
-    std::vector<GfVec4f> colorDummy(_points.size(), displayColor4f);
-    auto colors = ospNewData(colorDummy.size(), OSP_FLOAT4, colorDummy.data());
-    ospSetData(mesh, "color", colors);
-    ospRelease(colors);
+
+    OSPData colorsData = nullptr;
+    if (_colors.size() < _points.size()) {
+        GfVec4f displayColor4f(_displayColor[0], _displayColor[1],
+                               _displayColor[2], 1.f);
+        std::vector<GfVec4f> colorDummy(_points.size(), displayColor4f);
+        colorsData
+               = ospNewData(colorDummy.size(), OSP_FLOAT4, colorDummy.data());
+    } else {
+        colorsData = ospNewData(_colors.size(), OSP_FLOAT4, _colors.data());
+    }
+    ospSetData(mesh, "color", colorsData);
+    ospRelease(colorsData);
+
+
     // TODO: ospray subd appears to require color data... this will be fixed in
     // next release
 
