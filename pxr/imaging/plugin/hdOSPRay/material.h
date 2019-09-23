@@ -67,7 +67,7 @@ public:
     }
 
     /// Create a default material based on the renderer type specified in config
-    static OSPMaterial CreateDefaultMaterial(GfVec3f color);
+    static OSPMaterial CreateDefaultMaterial(GfVec4f color);
 
     /// Summary flag. Returns true if the material is bound to one or more
     /// textures and any of those textures is a ptex texture.

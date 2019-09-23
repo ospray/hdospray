@@ -235,7 +235,8 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
     if (_ospMaterial)
         ospRelease(_ospMaterial);
 
-    _ospMaterial = CreateDefaultMaterial(diffuseColor);
+    _ospMaterial = CreateDefaultMaterial({diffuseColor[0], diffuseColor[1],
+        diffuseColor[2], 1.f});
 
     if (map_diffuseColor.ospTexture) {
         ospSetObject(_ospMaterial, "baseColorMap", map_diffuseColor.ospTexture);
@@ -334,7 +335,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
 }
 
 OSPMaterial
-HdOSPRayMaterial::CreateDefaultMaterial(GfVec3f color)
+HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
 {
     std::string rendererType = HdOSPRayConfig::GetInstance().usePathTracing
            ? "pathtracer"
