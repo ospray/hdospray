@@ -131,7 +131,8 @@ public:
     /// Override with *HDOSPRAY_BACK_LIGHT*.
     bool backLight { true };
 
-    // meshes populate global instances.  These are then committed by the renderPass into a scene.
+    // meshes populate global instances.  These are then committed by the
+    // renderPass into a scene.
     std::vector<OSPGeometry> ospInstances;
 
 private:
