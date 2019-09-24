@@ -775,6 +775,9 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     // TODO: set hole buffer
 
     OSPData colorsData = nullptr;
+    // there is a bug in ospray subd requiring a color array of size points.  
+    // if the color array is less than points size we create an array
+    // of white colors as a workaround.
     if (_colors.size() < _points.size()) {
         GfVec4f white = {1.f,1.f,1.f,1.f};
         std::vector<GfVec4f> colorDummy(_points.size(), white);
