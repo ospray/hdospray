@@ -231,8 +231,13 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                                        colors[i].data()[2], 1.f };
                     }
                     if (!_colors.empty()) {
-                        _singleColor = {_colors[0][0], _colors[0][1],
-                            _colors[0][2], 1.f};
+                        // for vertex coloring, make diffuse color white
+                        if (_colors.size() > 1) {
+                            _singleColor = {1.f, 1.f, 1.f, 1.f};
+                        } else {
+                            _singleColor = {_colors[0][0], _colors[0][1],
+                                _colors[0][2], 1.f};
+                        }
                     }
                 }
             }
@@ -771,7 +776,8 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
 
     OSPData colorsData = nullptr;
     if (_colors.size() < _points.size()) {
-        std::vector<GfVec4f> colorDummy(_points.size(), _singleColor);
+        GfVec4f white = {1.f,1.f,1.f,1.f};
+        std::vector<GfVec4f> colorDummy(_points.size(), white);
         colorsData
                = ospNewData(colorDummy.size(), OSP_FLOAT4, colorDummy.data());
     } else {
