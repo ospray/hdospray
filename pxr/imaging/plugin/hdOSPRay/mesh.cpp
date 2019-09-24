@@ -340,13 +340,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     _smoothNormals = _smoothNormals
            && ((_topology.GetScheme() != PxOsdOpenSubdivTokens->none));
 
-    // If the scene delegate has provided authored normals, force us to not use
-    // smooth normals.
-    bool authoredNormals = false;
-    if (_primvarSourceMap.count(HdTokens->normals) > 0) {
-        authoredNormals = true;
-    }
-
     if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)
         && _topology.GetRefineLevel() > 0) {
         _topology.SetSubdivTags(sceneDelegate->GetSubdivTags(id));
@@ -759,7 +752,6 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     int numFaceVertices = _topology.GetFaceVertexCounts().size();
     int numIndices = _topology.GetFaceVertexIndices().size();
     int numVertices = _points.size();
-    int numHoles = _topology.GetHoleIndices().size();
 
     auto vertices = ospNewData(numVertices, OSP_FLOAT3, _points.cdata());
     ospSetData(mesh, "vertex", vertices);
