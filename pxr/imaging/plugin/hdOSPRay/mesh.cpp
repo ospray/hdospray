@@ -205,22 +205,23 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
 
             auto value = sceneDelegate->Get(id, pv.name);
 
-            if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
-                                                HdTokens->displayColor)) {
-
-                // texcoords
-                if (pv.name == "Texture_uv") {
-                    if (value.IsHolding<VtVec2fArray>()) {
-                        _texcoords = value.Get<VtVec2fArray>();
-                    }
+            // texcoords
+            if (pv.name == "Texture_uv"
+                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                   HdOSPRayTokens->st)) {
+                if (value.IsHolding<VtVec2fArray>()) {
+                    _texcoords = value.Get<VtVec2fArray>();
                 }
+            }
+
+            if (pv.name == "displayColor"
+                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                   HdTokens->displayColor)) {
 
                 // Create 4 component displayColor/opacity array for OSPRay
                 // XXX OSPRay currently expects 4 component color array.
                 // XXX Extend OSPRay to support separate RGB/Opacity arrays
-                if (pv.name == "displayColor"
-                    && HdChangeTracker::IsPrimvarDirty(
-                           dirtyBits, id, HdTokens->displayColor)) {
+                if (pv.name == "displayColor") {
                     if (value.IsHolding<VtVec3fArray>()) {
                         const VtVec3fArray& colors = value.Get<VtVec3fArray>();
                         _colors.resize(colors.size());
