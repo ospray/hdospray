@@ -217,46 +217,41 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
             if (pv.name == "displayColor"
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdTokens->displayColor)) {
-
                 // Create 4 component displayColor/opacity array for OSPRay
                 // XXX OSPRay currently expects 4 component color array.
                 // XXX Extend OSPRay to support separate RGB/Opacity arrays
-                if (pv.name == "displayColor") {
-                    if (value.IsHolding<VtVec3fArray>()) {
-                        const VtVec3fArray& colors = value.Get<VtVec3fArray>();
-                        _colors.resize(colors.size());
-                        for (size_t i = 0; i < colors.size(); i++) {
-                            _colors[i]
-                                   = { colors[i].data()[0], colors[i].data()[1],
+                if (value.IsHolding<VtVec3fArray>()) {
+                    const VtVec3fArray& colors = value.Get<VtVec3fArray>();
+                    _colors.resize(colors.size());
+                    for (size_t i = 0; i < colors.size(); i++) {
+                        _colors[i] = { colors[i].data()[0], colors[i].data()[1],
                                        colors[i].data()[2], 1.f };
-                        }
-                        if (!_colors.empty()) {
-                            // for vertex coloring, make diffuse color white
-                            if (_colors.size() > 1) {
-                                _singleColor = { 1.f, 1.f, 1.f, 1.f };
-                            } else {
-                                _singleColor = { _colors[0][0], _colors[0][1],
-                                                 _colors[0][2], 1.f };
-                            }
+                    }
+                    if (!_colors.empty()) {
+                        // for vertex coloring, make diffuse color white
+                        if (_colors.size() > 1) {
+                            _singleColor = { 1.f, 1.f, 1.f, 1.f };
+                        } else {
+                            _singleColor = { _colors[0][0], _colors[0][1],
+                                             _colors[0][2], 1.f };
                         }
                     }
                 }
+            }
 
-                if (pv.name == "displayOpacity"
-                    && HdChangeTracker::IsPrimvarDirty(
-                           dirtyBits, id, HdTokens->displayOpacity)) {
-                    // XXX assuming displayOpacity can't exist without
-                    // displayColor and/or have a different size
-                    if (value.IsHolding<VtFloatArray>()) {
-                        const VtFloatArray& opacities
-                               = value.Get<VtFloatArray>();
-                        if (_colors.size() < opacities.size())
-                            _colors.resize(opacities.size());
-                        for (size_t i = 0; i < opacities.size(); i++)
-                            _colors[i].data()[3] = opacities[i];
-                        if (!_colors.empty())
-                            _singleColor[3] = _colors[0][3];
-                    }
+            if (pv.name == "displayOpacity"
+                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                   HdTokens->displayOpacity)) {
+                // XXX assuming displayOpacity can't exist without
+                // displayColor and/or have a different size
+                if (value.IsHolding<VtFloatArray>()) {
+                    const VtFloatArray& opacities = value.Get<VtFloatArray>();
+                    if (_colors.size() < opacities.size())
+                        _colors.resize(opacities.size());
+                    for (size_t i = 0; i < opacities.size(); i++)
+                        _colors[i].data()[3] = opacities[i];
+                    if (!_colors.empty())
+                        _singleColor[3] = _colors[0][3];
                 }
             }
         }
