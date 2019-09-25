@@ -148,6 +148,7 @@ private:
     int _samplesToConvergence { 100 };
     int _denoiserSPPThreshold { 3 };
     int _aoSamples { 1 };
+    bool _staticDirectionalLights { true };
     bool _ambientLight { true };
     bool _eyeLight { true };
     bool _keyLight { true };

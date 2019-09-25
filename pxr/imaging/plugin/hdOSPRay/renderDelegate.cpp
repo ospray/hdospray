@@ -173,7 +173,7 @@ HdOSPRayRenderDelegate::_Initialize()
            { "ambientLight", HdOSPRayRenderSettingsTokens->ambientLight,
              VtValue(bool(HdOSPRayConfig::GetInstance().ambientLight)) });
     _settingDescriptors.push_back(
-           { "eyeLight", HdOSPRayRenderSettingsTokens->staticDirectionalLights,
+           { "staticDirectionalLights", HdOSPRayRenderSettingsTokens->staticDirectionalLights,
              VtValue(bool(HdOSPRayConfig::GetInstance().staticDirectionalLights)) });
     _settingDescriptors.push_back(
            { "eyeLight", HdOSPRayRenderSettingsTokens->eyeLight,
