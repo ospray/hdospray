@@ -44,6 +44,9 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+TF_DEFINE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
+                        HDOSPRAY_RENDER_SETTINGS_TOKENS);
+
 TF_DEFINE_PUBLIC_TOKENS(HdOSPRayTokens, HDOSPRAY_TOKENS);
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_RPRIM_TYPES = {
@@ -62,10 +65,24 @@ std::atomic_int HdOSPRayRenderDelegate::_counterResourceRegistry;
 HdResourceRegistrySharedPtr HdOSPRayRenderDelegate::_resourceRegistry;
 
 HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
+    : HdRenderDelegate()
 {
-    //Check plugin against pxr version
+    _Initialize();
+}
+
+HdOSPRayRenderDelegate::HdOSPRayRenderDelegate(
+       HdRenderSettingsMap const& settingsMap)
+    : HdRenderDelegate(settingsMap)
+{
+    _Initialize();
+}
+
+void
+HdOSPRayRenderDelegate::_Initialize()
+{
+    // Check plugin against pxr version
 #if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 19
-        #error This version of HdOSPRay is configured to built against USD v0.19.x
+#    error This version of HdOSPRay is configured to built against USD v0.19.x
 #endif
 
     int ac = 1;
@@ -107,8 +124,10 @@ HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
     }
     delete[] av;
 
-    _model = ospNewModel();
-    ospCommit(_model);
+#ifdef HDOSPRAY_PLUGIN_PTEX
+    ospLoadModule("ptex");
+#endif
+
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
         _renderer = ospNewRenderer("pt");
     else
@@ -116,8 +135,8 @@ HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
 
     // Store top-level OSPRay objects inside a render param that can be
     // passed to prims during Sync().
-    _renderParam = std::make_shared<HdOSPRayRenderParam>(_model, _renderer,
-                                                         &_sceneVersion);
+    _renderParam
+           = std::make_shared<HdOSPRayRenderParam>(_renderer, &_sceneVersion);
 
     // Initialize one resource registry for all OSPRay plugins
     std::lock_guard<std::mutex> guard(_mutexResourceRegistry);
@@ -125,6 +144,50 @@ HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
     if (_counterResourceRegistry.fetch_add(1) == 0) {
         _resourceRegistry.reset(new HdResourceRegistry());
     }
+
+    // Initialize the settings and settings descriptors.
+    // _settingDescriptors.resize(11);
+    _settingDescriptors.push_back(
+           { "Ambient occlusion samples",
+             HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
+             VtValue(int(
+                    HdOSPRayConfig::GetInstance().ambientOcclusionSamples)) });
+    _settingDescriptors.push_back(
+           { "Samples per frame", HdOSPRayRenderSettingsTokens->samplesPerFrame,
+             VtValue(int(HdOSPRayConfig::GetInstance().samplesPerFrame)) });
+    _settingDescriptors.push_back(
+           { "Toggle denoiser", HdOSPRayRenderSettingsTokens->useDenoiser,
+             VtValue(bool(HdOSPRayConfig::GetInstance().useDenoiser)) });
+    _settingDescriptors.push_back(
+           { "maxDepth", HdOSPRayRenderSettingsTokens->maxDepth,
+             VtValue(int(HdOSPRayConfig::GetInstance().maxDepth)) });
+    _settingDescriptors.push_back(
+           { "aoDistance", HdOSPRayRenderSettingsTokens->aoDistance,
+             VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) });
+    _settingDescriptors.push_back(
+           { "samplesToConvergence",
+             HdOSPRayRenderSettingsTokens->samplesToConvergence,
+             VtValue(
+                    int(HdOSPRayConfig::GetInstance().samplesToConvergence)) });
+    _settingDescriptors.push_back(
+           { "ambientLight", HdOSPRayRenderSettingsTokens->ambientLight,
+             VtValue(bool(HdOSPRayConfig::GetInstance().ambientLight)) });
+    _settingDescriptors.push_back(
+           { "staticDirectionalLights", HdOSPRayRenderSettingsTokens->staticDirectionalLights,
+             VtValue(bool(HdOSPRayConfig::GetInstance().staticDirectionalLights)) });
+    _settingDescriptors.push_back(
+           { "eyeLight", HdOSPRayRenderSettingsTokens->eyeLight,
+             VtValue(bool(HdOSPRayConfig::GetInstance().eyeLight)) });
+    _settingDescriptors.push_back(
+           { "keyLight", HdOSPRayRenderSettingsTokens->keyLight,
+             VtValue(bool(HdOSPRayConfig::GetInstance().keyLight)) });
+    _settingDescriptors.push_back(
+           { "fillLight", HdOSPRayRenderSettingsTokens->fillLight,
+             VtValue(bool(HdOSPRayConfig::GetInstance().fillLight)) });
+    _settingDescriptors.push_back(
+           { "backLight", HdOSPRayRenderSettingsTokens->backLight,
+             VtValue(bool(HdOSPRayConfig::GetInstance().backLight)) });
+    _PopulateDefaultSettings(_settingDescriptors);
 }
 
 HdOSPRayRenderDelegate::~HdOSPRayRenderDelegate()
@@ -150,6 +213,11 @@ HdOSPRayRenderDelegate::CommitResources(HdChangeTracker* tracker)
 {
     // CommitResources() is called after prim sync has finished, but before any
     // tasks (such as draw tasks) have run.
+    auto& rp = _renderParam;
+    const auto modelVersion = rp->GetModelVersion();
+    if (modelVersion > _lastCommittedModelVersion) {
+        _lastCommittedModelVersion = modelVersion;
+    }
 }
 
 TfToken
@@ -216,7 +284,7 @@ HdOSPRayRenderDelegate::CreateRenderPass(HdRenderIndex* index,
                                          HdRprimCollection const& collection)
 {
     return HdRenderPassSharedPtr(new HdOSPRayRenderPass(
-           index, collection, _model, _renderer, &_sceneVersion));
+           index, collection, _renderer, &_sceneVersion, _renderParam));
 }
 
 HdInstancer*
@@ -299,6 +367,12 @@ void
 HdOSPRayRenderDelegate::DestroyBprim(HdBprim* bPrim)
 {
     delete bPrim;
+}
+
+HdRenderSettingDescriptorList
+HdOSPRayRenderDelegate::GetRenderSettingDescriptors() const
+{
+    return _settingDescriptors;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -36,6 +36,8 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+class HdOSPRayRenderParam;
+
 /// \class HdOSPRayRenderPass
 ///
 /// HdRenderPass represents a single render iteration, rendering a view of the
@@ -51,8 +53,9 @@ public:
     ///   \param collection The initial rprim collection for this renderpass.
     ///   \param scene The OSPRay scene to raycast into.
     HdOSPRayRenderPass(HdRenderIndex* index,
-                       HdRprimCollection const& collection, OSPModel model,
-                       OSPRenderer renderer, std::atomic<int>* sceneVersion);
+                       HdRprimCollection const& collection,
+                       OSPRenderer renderer, std::atomic<int>* sceneVersion,
+                       std::shared_ptr<HdOSPRayRenderParam> renderParam);
 
     /// Renderpass destructor.
     virtual ~HdOSPRayRenderPass();
@@ -94,14 +97,16 @@ private:
     bool _pendingResetImage;
     bool _pendingModelUpdate;
 
-    OSPFrameBuffer _frameBuffer;
+    OSPFrameBuffer _frameBuffer { nullptr };
 
     OSPRenderer _renderer;
 
     // A reference to the global scene version.
     std::atomic<int>* _sceneVersion;
     // The last scene version we rendered with.
-    int _lastRenderedVersion;
+    int _lastRenderedVersion { -1 };
+    int _lastRenderedModelVersion { -1 };
+    int _lastSettingsVersion { -1 };
 
     // The resolved output buffer, in GL_RGBA. This is an intermediate between
     // _sampleBuffer and the GL framebuffer.
@@ -111,9 +116,6 @@ private:
     unsigned int _width;
     // The height of the viewport we're rendering into.
     unsigned int _height;
-
-    // OSPRay model that will hold OSPRay specific geometry
-    OSPModel _model;
 
     OSPCamera _camera;
 
@@ -125,6 +127,8 @@ private:
     // The color of a ray miss.
     GfVec3f _clearColor;
 
+    std::shared_ptr<HdOSPRayRenderParam> _renderParam;
+
 #if HDOSPRAY_ENABLE_DENOISER
     oidn::DeviceRef _denoiserDevice;
     oidn::FilterRef _denoiserFilter;
@@ -135,10 +139,23 @@ private:
     std::vector<osp::vec3f> _albedoBuffer;
     std::vector<osp::vec4f> _denoisedBuffer;
 
+    std::vector<OSPGeometry> oldInstances; // instances added to last model
+    OSPModel oldModel = nullptr; // the last model created
+
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
     int _spp { 1 };
     bool _useDenoiser { false };
+    int _samplesToConvergence { 100 };
     int _denoiserSPPThreshold { 3 };
+    int _aoSamples { 1 };
+    bool _staticDirectionalLights { true };
+    bool _ambientLight { true };
+    bool _eyeLight { true };
+    bool _keyLight { true };
+    bool _fillLight { true };
+    bool _backLight { true };
+    int _maxDepth { 5 };
+    float _aoDistance { 10.f };
 
     void Denoise();
 };

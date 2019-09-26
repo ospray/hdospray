@@ -35,6 +35,14 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+#define HDOSPRAY_RENDER_SETTINGS_TOKENS                                        \
+    (ambientOcclusionSamples)(samplesPerFrame)(useDenoiser)(maxDepth)(         \
+           aoDistance)(samplesToConvergence)(ambientLight)(eyeLight)(          \
+           keyLight)(fillLight)(backLight)(pathTracer)(staticDirectionalLights)
+
+TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
+                         HDOSPRAY_RENDER_SETTINGS_TOKENS);
+
 #define HDOSPRAY_TOKENS (ospray)(glslfx)
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayTokens, HDOSPRAY_API, HDOSPRAY_TOKENS);
@@ -59,6 +67,12 @@ public:
     /// Render delegate constructor. This method creates the RTC device and
     /// scene, and links OSPRay error handling to hydra error handling.
     HdOSPRayRenderDelegate();
+
+    /// Render delegate constructor. This method creates the RTC device and
+    /// scene, and links OSPRay error handling to hydra error handling.
+    //  Sets render settings.
+    HdOSPRayRenderDelegate(HdRenderSettingsMap const& settingsMap);
+
     /// Render delegate destructor. This method destroys the RTC device and
     /// scene.
     virtual ~HdOSPRayRenderDelegate();
@@ -109,7 +123,7 @@ public:
     ///   \param instancer The instancer to be destroyed.
     virtual void DestroyInstancer(HdInstancer* instancer);
 
-    /// Create an OSPRay specific hydra Rprim, representing scene geometry. 
+    /// Create an OSPRay specific hydra Rprim, representing scene geometry.
     ///   \param typeId The rprim type to create. This must be one of the types
     ///                 from GetSupportedRprimTypes().
     ///   \param rprimId The scene graph ID of this rprim, used when pulling
@@ -192,6 +206,13 @@ public:
     virtual HdAovDescriptor
     GetDefaultAovDescriptor(TfToken const& name) const override;
 
+    /// Returns a list of user-configurable render settings.
+    /// This is a reflection API for the render settings dictionary; it need
+    /// not be exhaustive, but can be used for populating application settings
+    /// UI.
+    virtual HdRenderSettingDescriptorList
+    GetRenderSettingDescriptors() const override;
+
 private:
     static const TfTokenVector SUPPORTED_RPRIM_TYPES;
     static const TfTokenVector SUPPORTED_SPRIM_TYPES;
@@ -206,13 +227,21 @@ private:
     HdOSPRayRenderDelegate(const HdOSPRayRenderDelegate&) = delete;
     HdOSPRayRenderDelegate& operator=(const HdOSPRayRenderDelegate&) = delete;
 
+    // constructor helper
+    void _Initialize();
+
     // Handle for the top-level OSPRay model
     OSPModel _model;
     OSPRenderer
            _renderer; // moved from Pass to Delegate due to Material dependancy
 
+    // A list of render setting exports.
+    HdRenderSettingDescriptorList _settingDescriptors;
+
     // A version counter for edits to _scene.
     std::atomic<int> _sceneVersion;
+
+    int _lastCommittedModelVersion { -1 };
 
     // A shared HdOSPRayRenderParam object that stores top-level OSPRay state;
     // passed to prims during Sync().

@@ -81,7 +81,9 @@ osprayTextureFormat(int depth, int channels, bool preferLinear = false)
 {
     if (depth == 1) {
         if (channels == 1)
-            return OSP_TEXTURE_R8;
+            return preferLinear ? OSP_TEXTURE_R8 : OSP_TEXTURE_L8;
+        if (channels == 2)
+            return preferLinear ? OSP_TEXTURE_RA8 : OSP_TEXTURE_LA8;
         if (channels == 3)
             return preferLinear ? OSP_TEXTURE_RGB8 : OSP_TEXTURE_SRGB;
         if (channels == 4)
@@ -159,7 +161,13 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
 HdOSPRayMaterial::HdOSPRayMaterial(SdfPath const& id)
     : HdMaterial(id)
 {
-    diffuseColor = GfVec4f(1, 1, 1, 1);
+    diffuseColor = GfVec3f(1, 1, 1);
+}
+
+HdOSPRayMaterial::~HdOSPRayMaterial()
+{
+    if (_ospMaterial)
+        ospRelease(_ospMaterial);
 }
 
 /// Synchronizes state from the delegate to this object.
@@ -224,7 +232,11 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
 void
 HdOSPRayMaterial::_UpdateOSPRayMaterial()
 {
-    _ospMaterial = CreateDefaultMaterial(diffuseColor);
+    if (_ospMaterial)
+        ospRelease(_ospMaterial);
+
+    _ospMaterial = CreateDefaultMaterial(
+           { diffuseColor[0], diffuseColor[1], diffuseColor[2], 1.f });
 
     if (map_diffuseColor.ospTexture) {
         ospSetObject(_ospMaterial, "baseColorMap", map_diffuseColor.ospTexture);
@@ -258,7 +270,7 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
         const auto& name = param->first;
         const auto& value = param->second;
         if (name == HdOSPRayTokens->diffuseColor) {
-            diffuseColor = value.Get<GfVec4f>();
+            diffuseColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayTokens->metallic) {
             metallic = value.Get<float>();
         } else if (name == HdOSPRayTokens->roughness) {
@@ -266,7 +278,7 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
         } else if (name == HdOSPRayTokens->ior) {
             ior = value.Get<float>();
         } else if (name == HdOSPRayTokens->color) {
-            diffuseColor = value.Get<GfVec4f>();
+            diffuseColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayTokens->opacity) {
             opacity = value.Get<float>();
         }

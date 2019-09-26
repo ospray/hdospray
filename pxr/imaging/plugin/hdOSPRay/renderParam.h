@@ -27,42 +27,79 @@
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/pxr.h"
 
+#include "ospray/ospray.h"
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 ///
 /// \class HdOSPRayRenderParam
 ///
 /// The render delegate can create an object of type HdRenderParam, to pass
-/// to each prim during Sync(). HdOSPRay uses this class to pass 
+/// to each prim during Sync(). HdOSPRay uses this class to pass
 /// OSPRay state around.
 ///
 class HdOSPRayRenderParam final : public HdRenderParam {
 public:
-    HdOSPRayRenderParam(OSPModel model, OSPRenderer renderer,
-                        std::atomic<int>* sceneVersion)
-        : _model(model)
-        , _renderer(renderer)
+    HdOSPRayRenderParam(OSPRenderer renderer, std::atomic<int>* sceneVersion)
+        : _renderer(renderer)
         , _sceneVersion(sceneVersion)
     {
     }
     virtual ~HdOSPRayRenderParam() = default;
-
-    OSPModel GetOSPRayModel()
-    {
-        (_sceneVersion)++;
-        return _model;
-    }
 
     OSPRenderer GetOSPRayRenderer()
     {
         return _renderer;
     }
 
+    void UpdateModelVersion()
+    {
+        _modelVersion++;
+    }
+
+    int GetModelVersion()
+    {
+        return _modelVersion.load();
+    }
+
+    // thread safe.  Instances added to scene and released by renderPass.
+    void AddInstance(const OSPGeometry instance)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _ospInstances.emplace_back(instance);
+    }
+
+    // thread safe.  Instances added to scene and released by renderPass.
+    void AddInstances(const std::vector<OSPGeometry>& instances)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _ospInstances.insert(_ospInstances.end(), instances.begin(),
+                             instances.end());
+    }
+
+    void ClearInstances()
+    {
+        _ospInstances.resize(0);
+    }
+
+    // not thread safe
+    std::vector<OSPGeometry>& GetInstances()
+    {
+        return _ospInstances;
+    }
+
 private:
-    OSPModel _model;
+    // mutex over ospray calls to the global model and global instances. OSPRay
+    // is not thread safe
+    std::mutex _ospMutex;
+    // meshes populate global instances.  These are then committed by the
+    // renderPass into a scene.
+    std::vector<OSPGeometry> _ospInstances;
     OSPRenderer _renderer;
     /// A version counter for edits to _scene.
     std::atomic<int>* _sceneVersion;
+    // version of osp model.  Used for tracking image changes
+    std::atomic<int> _modelVersion { 1 };
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

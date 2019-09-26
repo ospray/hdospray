@@ -18,6 +18,9 @@ OSPRay can be set to the default renderer by either
 
 ### Environment variables
 
+Most of these options are also exposed through the usdview GUI under
+Hydra Settings.
+
 
 - `HDOSPRAY_SAMPLES_PER_FRAME`
 
@@ -55,6 +58,7 @@ OSPRay can be set to the default renderer by either
 - Ptex 
 - Triangle meshes
 - Quad meshes
+- Subdivision surfaces
 - Shadows
 - Ambient occlusion
 - Path tracing
@@ -65,8 +69,5 @@ OSPRay can be set to the default renderer by either
 
 - Picking does not work in HdOSPRay.  You cannot select objects in the viewer yet
 - Custom lights.  We are waiting to get actual USD files that specify these to test
-- Custom GUI widgets.  We will add the env vars as python widgets
-- Simple lights.  These are GL specific in USD and are the lights modified in the main menu
-- Subdivision surfaces.  This was put into OSPRay and we will be working on putting this in a future HdOSPRay release
 - OSL shaders.  They are a work in progress in OSPRay
 - Binary releases.  We hope to provide these soon

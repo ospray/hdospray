@@ -27,7 +27,10 @@
 #include "pxr/base/tf/singleton.h"
 #include "pxr/pxr.h"
 
+#include "ospray/ospray.h"
+
 #include <string>
+#include <vector>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -92,6 +95,50 @@ public:
     ///
     /// Override with *HDOSPRAY_FORCE_QUADRANGULATE*.
     bool forceQuadrangulate;
+
+    ///  Maximum ray depth
+    ///
+    /// Override with *HDOSPRAY_MAX_DEPTH*.
+    int maxDepth { 8 };
+
+    ///  Ao rays maximum distance
+    ///
+    /// Override with *HDOSPRAY_AO_DISTANCE*.
+    float aoDistance { 15.0f };
+
+    ///  Use an ambient light
+    ///
+    /// Override with *HDOSPRAY_AMBIENT_LIGHT*.
+    bool ambientLight { true };
+
+    ///  Use an eye light
+    ///
+    /// Override with *HDOSPRAY_STATIC_DIRECTIONAL_LIGHTS*.
+    bool staticDirectionalLights { true };
+
+    ///  Use an eye light
+    ///
+    /// Override with *HDOSPRAY_EYE_LIGHT*.
+    bool eyeLight { false };
+
+    ///  Use a key light
+    ///
+    /// Override with *HDOSPRAY_KEY_LIGHT*.
+    bool keyLight { true };
+
+    ///  Use a fill light
+    ///
+    /// Override with *HDOSPRAY_FILL_LIGHT*.
+    bool fillLight { true };
+
+    ///  Use a back light
+    ///
+    /// Override with *HDOSPRAY_BACK_LIGHT*.
+    bool backLight { true };
+
+    // meshes populate global instances.  These are then committed by the
+    // renderPass into a scene.
+    std::vector<OSPGeometry> ospInstances;
 
 private:
     // The constructor initializes the config variables with their

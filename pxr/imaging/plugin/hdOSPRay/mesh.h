@@ -39,6 +39,7 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 class HdStDrawItem;
+class HdOSPRayRenderParam;
 
 // class HdOSPRayPrototypeContext;
 // class HdOSPRayInstanceContext;
@@ -163,9 +164,9 @@ protected:
 
 private:
     // Populate the ospray geometry object based on scene data.
-    void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPModel model,
-                          OSPRenderer renderer, HdDirtyBits* dirtyBits,
-                          HdMeshReprDesc const& desc);
+    void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPRenderer renderer,
+                          HdDirtyBits* dirtyBits, HdMeshReprDesc const& desc,
+                          HdOSPRayRenderParam* renderParam);
 
     // Populate _primvarSourceMap (our local cache of primvar data) based on
     // scene data. Primvars will be turned into samplers in _PopulateRtMesh,
@@ -180,9 +181,12 @@ private:
     void _CreatePrimvarSampler(TfToken const& name, VtValue const& data,
                                HdInterpolation interpolation, bool refined);
 
+    OSPGeometry _CreateOSPRaySubdivMesh();
+
     // Every HdOSPRayMesh is treated as instanced; if there's no instancer,
     // the prototype has a single identity istance.
     OSPGeometry _ospMesh;
+    OSPModel _instanceModel;
     // Each instance of the mesh in the top-level scene is stored in
     // _ospInstances.
     std::vector<OSPGeometry> _ospInstances;
@@ -194,8 +198,9 @@ private:
     GfMatrix4f _transform;
     VtVec3fArray _points;
     VtVec2fArray _texcoords;
-    VtVec4fArray _colors;
     VtVec3fArray _normals;
+    VtVec4fArray _colors;
+    GfVec4f _singleColor { .5f, .5f, .5f, 1.f };
 
     // Derived scene data:
     // - _triangulatedIndices holds a triangulation of the source topology,
@@ -225,6 +230,7 @@ private:
     bool _smoothNormals;
     bool _doubleSided;
     HdCullStyle _cullStyle;
+    int _tessellationRate { 32 };
 
     // A local cache of primvar scene data. "data" is a copy-on-write handle to
     // the actual primvar buffer, and "interpolation" is the interpolation mode
