@@ -6,9 +6,14 @@ option(PXR_BUILD_OSPRAY_PLUGIN "build Intel hdOSPRay rendering backend" ON)
 
 if (PXR_BUILD_OSPRAY_PLUGIN)
 
-  if(NOT PXR_BUILD_OPENIMAGEIO_PLUGIN)
-    message(FATAL_ERROR "hdOSPRayPlugin requires PXR_BUILD_OPENIMAGEIO_PLUGIN")
-  endif()
+  # Do we really depend on PXR_BUILD_OPENIMAGEIO_PLUGIN this plugin takes care about the
+  # file formates to write out the results??
+  # Aren't we just depending on it so that we have the OIIO libraries (which we need)
+  #if(NOT PXR_BUILD_OPENIMAGEIO_PLUGIN)
+  #  message(FATAL_ERROR "hdOSPRayPlugin requires PXR_BUILD_OPENIMAGEIO_PLUGIN")
+  #endif()
+
+  find_package(OpenImageIO REQUIRED)
 
   pxr_plugin(hdOSPRay
     PUBLIC_CLASSES
