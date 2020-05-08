@@ -5,7 +5,7 @@
                 "Types": {
                     "HdOSPRayRendererPlugin": {
                         "bases": [
-                            "HdxRendererPlugin"
+                            "HdRendererPlugin"
                         ],
                         "displayName": "OSPRay",
                         "priority": 99

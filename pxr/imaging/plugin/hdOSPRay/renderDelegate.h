@@ -59,7 +59,7 @@ class HdOSPRayRenderParam;
 /// objects like cameras and materials), and Bprims (buffer objects like
 /// textures). The minimum set of primitives a renderer needs to support is
 /// one Rprim (so the scene's not empty) and the "camera" Sprim, which is
-/// required by HdxRenderTask, the task implementing basic hydra drawing.
+/// required by HdRenderTask, the task implementing basic hydra drawing.
 ///
 ///
 class HdOSPRayRenderDelegate final : public HdRenderDelegate {

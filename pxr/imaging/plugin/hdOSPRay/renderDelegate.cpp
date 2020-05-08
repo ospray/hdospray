@@ -81,8 +81,8 @@ void
 HdOSPRayRenderDelegate::_Initialize()
 {
     // Check plugin against pxr version
-#if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 19
-#    error This version of HdOSPRay is configured to built against USD v0.19.x
+#if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 20
+    error This version of HdOSPRay is configured to built against USD v0.20.x
 #endif
 
     int ac = 1;
@@ -264,8 +264,8 @@ HdOSPRayRenderDelegate::GetDefaultAovDescriptor(TfToken const& name) const
                                VtValue(GfVec3f(-1.0f)));
     } else if (name == HdAovTokens->depth) {
         return HdAovDescriptor(HdFormatFloat32, false, VtValue(1.0f));
-    } else if (name == HdAovTokens->linearDepth) {
-        return HdAovDescriptor(HdFormatFloat32, false, VtValue(0.0f));
+    //} else if (name == HdAovTokens->linearDepth) {
+    //    return HdAovDescriptor(HdFormatFloat32, false, VtValue(0.0f));
     } else if (name == HdAovTokens->primId) {
         return HdAovDescriptor(HdFormatInt32, false, VtValue(0));
     } else {
