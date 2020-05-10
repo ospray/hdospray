@@ -38,6 +38,9 @@
 #include "pxr/imaging/hdSt/surfaceShader.h"
 #include <OpenImageIO/imageio.h>
 
+#include "ospray/ospray_util.h"
+#include "ospcommon/math/vec.h"
+
 OIIO_NAMESPACE_USING
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -122,7 +125,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
     }
 
     const ImageSpec& spec = in->spec();
-    osp::vec2i size;
+    ospcommon::math::vec2i size;
     size.x = spec.width;
     size.y = spec.height;
     int channels = spec.nchannels;
@@ -145,15 +148,18 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
             std::swap(src[x], dest[x]);
     }
 
-    OSPData ospData = ospNewData(stride * size.y, OSP_UCHAR, data);
+    OSPData ospData = ospNewSharedData1D(data, OSP_UCHAR, stride * size.y);
     ospCommit(ospData);
 
     OSPTexture ospTexture = ospNewTexture("texture2d");
-    ospSet1i(ospTexture, "type", (int)osprayTextureFormat(depth, channels));
-    ospSet1i(ospTexture, "flags",
+    ospSetInt(ospTexture, "type", (int)osprayTextureFormat(depth, channels));
+    ospSetInt(ospTexture, "flags",
              nearestFilter ? OSP_TEXTURE_FILTER_NEAREST : 0);
-    ospSet2i(ospTexture, "size", size.x, size.y);
-    ospSetData(ospTexture, "data", ospData);
+    ospSetVec2i(ospTexture, "size", size.x, size.y);
+    ospSetObject(ospTexture, "data", ospData);
+
+
+    //TODO: free data!!!
 
     return ospTexture;
 }
@@ -254,11 +260,11 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
         ospSetObject(_ospMaterial, "normalMap", map_normal.ospTexture);
         normal = 1.f;
     }
-    ospSet1f(_ospMaterial, "ior", ior);
-    ospSet3fv(_ospMaterial, "baseColor", diffuseColor.data());
-    ospSet1f(_ospMaterial, "metallic", metallic);
-    ospSet1f(_ospMaterial, "roughness", roughness);
-    ospSet1f(_ospMaterial, "normal", normal);
+    ospSetFloat(_ospMaterial, "ior", ior);
+    ospSetVec3f(_ospMaterial, "baseColor", diffuseColor[0], diffuseColor[1], diffuseColor[2]);
+    ospSetFloat(_ospMaterial, "metallic", metallic);
+    ospSetFloat(_ospMaterial, "roughness", roughness);
+    ospSetFloat(_ospMaterial, "normal", normal);
 
     ospCommit(_ospMaterial);
 }
@@ -342,16 +348,16 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
            : "scivis";
     OSPMaterial ospMaterial;
     if (rendererType == "pathtracer") {
-        ospMaterial = ospNewMaterial2(rendererType.c_str(), "Principled");
-        ospSet3f(ospMaterial, "baseColor", color[0], color[1], color[2]);
+        ospMaterial = ospNewMaterial(rendererType.c_str(), "principled");
+        ospSetVec3f(ospMaterial, "baseColor", color[0], color[1], color[2]);
     } else {
-        ospMaterial = ospNewMaterial2(rendererType.c_str(), "OBJMaterial");
+        ospMaterial = ospNewMaterial(rendererType.c_str(), "obj");
         // Carson: apparently colors are actually stored as a single color value
         // for entire object
-        ospSetf(ospMaterial, "Ns", 10.f);
-        ospSet3f(ospMaterial, "Ks", 0.2f, 0.2f, 0.2f);
-        ospSet3fv(ospMaterial, "Kd", static_cast<float*>(&color[0]));
-        ospSet1f(ospMaterial, "d", color.data()[3]);
+        ospSetFloat(ospMaterial, "ns", 10.f);
+        ospSetVec3f(ospMaterial, "ks", 0.2f, 0.2f, 0.2f);
+        ospSetVec3f(ospMaterial, "kd", color[0], color[1], color[2]);
+        ospSetFloat(ospMaterial, "d", color.data()[3]);
     }
     ospCommit(ospMaterial);
     return ospMaterial;

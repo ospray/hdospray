@@ -186,10 +186,10 @@ private:
     // Every HdOSPRayMesh is treated as instanced; if there's no instancer,
     // the prototype has a single identity istance.
     OSPGeometry _ospMesh;
-    OSPModel _instanceModel;
+    OSPGeometricModel _instanceModel;
     // Each instance of the mesh in the top-level scene is stored in
     // _ospInstances.
-    std::vector<OSPGeometry> _ospInstances;
+    std::vector<OSPInstance> _ospInstances;
 
     // Cached scene data. VtArrays are reference counted, so as long as we
     // only call const accessors keeping them around doesn't incur a buffer
