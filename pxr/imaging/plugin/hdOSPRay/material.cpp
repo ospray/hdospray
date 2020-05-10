@@ -115,14 +115,13 @@ LoadPtexTexture(std::string file)
 OSPTexture
 LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
 {
-    ImageSpec spec;
-    std::unique_ptr<ImageInput> in = ImageInput::open(file,&spec);
+    ImageInput* in = ImageInput::open(file.c_str());
     if (!in) {
         std::cerr << "#osp: failed to load texture '" + file + "'" << std::endl;
         return nullptr;
     }
 
-    //const ImageSpec& spec = in->spec();
+    const ImageSpec& spec = in->spec();
     osp::vec2i size;
     size.x = spec.width;
     size.y = spec.height;
@@ -135,7 +134,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
 
     in->read_image(hdr ? TypeDesc::FLOAT : TypeDesc::UINT8, data);
     in->close();
-    //ImageInput::destroy(in);
+    ImageInput::destroy(in);
 
     // flip image (because OSPRay's textures have the origin at the lower left
     // corner)

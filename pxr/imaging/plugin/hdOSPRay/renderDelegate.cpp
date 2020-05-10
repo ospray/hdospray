@@ -264,8 +264,6 @@ HdOSPRayRenderDelegate::GetDefaultAovDescriptor(TfToken const& name) const
                                VtValue(GfVec3f(-1.0f)));
     } else if (name == HdAovTokens->depth) {
         return HdAovDescriptor(HdFormatFloat32, false, VtValue(1.0f));
-    //} else if (name == HdAovTokens->linearDepth) {
-    //    return HdAovDescriptor(HdFormatFloat32, false, VtValue(0.0f));
     } else if (name == HdAovTokens->primId) {
         return HdAovDescriptor(HdFormatInt32, false, VtValue(0));
     } else {
