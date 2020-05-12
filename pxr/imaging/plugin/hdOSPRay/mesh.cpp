@@ -662,21 +662,37 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
         size_t newSize = transforms.size();
         //TODO: CARSON: reform instancer for ospray2
-        // _ospInstances.resize(newSize);
-        // for (size_t i = 0; i < newSize; i++) {
-        //     // Create the new instance.
-        //     auto instance = ospNewInstance(_instanceModel, identity);
-        //     // Combine the local transform and the instance transform.
-        //     GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
-        //     float* xfm = matf.GetArray();
-        //     // convert aligned matrix to unalighned 4x3 matrix
-        //     ospSet3f(instance, "xfm.l.vx", xfm[0], xfm[1], xfm[2]);
-        //     ospSet3f(instance, "xfm.l.vy", xfm[4], xfm[5], xfm[6]);
-        //     ospSet3f(instance, "xfm.l.vz", xfm[8], xfm[9], xfm[10]);
-        //     ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
-        //     ospCommit(instance);
-        //     _ospInstances[i] = instance;
-        // }
+        _ospInstances.reserve(newSize);
+        for (size_t i = 0; i < newSize; i++) {
+            // Create the new instance.
+
+            OSPGroup group = ospNewGroup();
+            OSPInstance instance = ospNewInstance(group);
+            // ospRelease(group);
+            OSPData data = ospNewCopyData1D(&_instanceModel, OSP_GEOMETRIC_MODEL, 1);
+            // ospRelease(_instanceModel);
+            ospCommit(data);
+            ospSetObject(group, "geometry", data);
+            ospCommit(group);
+
+            // Combine the local transform and the instance transform.
+            GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
+            float* xfmf = matf.GetArray();
+            ospcommon::math::affine3f xfm(ospcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
+            ospcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
+            ospcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
+            ospcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
+            auto xfmData = ospNewCopyData1D(&xfm, OSP_AFFINE3F, 1);
+            ospSetObject(instance, "xfm", xfmData);
+            ospCommit(instance);
+            // convert aligned matrix to unalighned 4x3 matrix
+            // ospSet3f(instance, "xfm.l.vx", xfm[0], xfm[1], xfm[2]);
+            // ospSet3f(instance, "xfm.l.vy", xfm[4], xfm[5], xfm[6]);
+            // ospSet3f(instance, "xfm.l.vz", xfm[8], xfm[9], xfm[10]);
+            // ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
+            // ospCommit(instance);
+            _ospInstances.push_back(instance);
+        }
     }
     // Otherwise, create our single instance (if necessary) and update
     // the transform (if necessary).
