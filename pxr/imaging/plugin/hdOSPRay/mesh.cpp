@@ -85,10 +85,10 @@ HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
 void
 HdOSPRayMesh::Finalize(HdRenderParam* renderParam)
 {
-    if (_instanceModel && _ospMesh) {
-        // ospRemoveGeometry(_instanceModel, _ospMesh);
-        ospRelease(_instanceModel);
-    }
+    // if (_instanceModel && _ospMesh) {
+    //     // ospRemoveGeometry(_instanceModel, _ospMesh);
+    //     ospRelease(_instanceModel);
+    // }
 }
 
 HdDirtyBits
@@ -633,10 +633,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         // Create new OSP Mesh
         ospRelease(_instanceModel);
         _instanceModel = ospNewGeometricModel(_ospMesh);
-        ospRelease(_ospMesh);
 
         ospSetObject(_instanceModel, "material", ospMaterial);
         ospCommit(_ospMesh);
+        ospCommit(_instanceModel);
+        ospRelease(_ospMesh);
 
         // ospAddGeometry(_instanceModel, _ospMesh);
         // ospRelease(_ospMesh);
@@ -684,15 +685,14 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
         OSPGroup group = ospNewGroup();
         OSPInstance instance = ospNewInstance(group);
-        _ospInstances.push_back(instance);
         ospCommit(instance);
-        ospRelease(group);
-        OSPData data = ospNewCopyData1D(_instanceModel, OSP_GEOMETRIC_MODEL, 1);
-        ospRelease(_instanceModel);
+        // ospRelease(group);
+        OSPData data = ospNewCopyData1D(&_instanceModel, OSP_GEOMETRIC_MODEL, 1);
+        // ospRelease(_instanceModel);
         ospCommit(data);
         ospSetObject(group, "geometry", data);
         ospCommit(group);
-        ospRelease(data);
+        // ospRelease(data);
         _ospInstances.push_back(instance);
 
         // auto instance = ospNewInstance(_instanceModel, identity);

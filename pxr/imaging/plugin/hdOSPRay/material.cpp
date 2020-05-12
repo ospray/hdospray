@@ -147,16 +147,35 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
         for (size_t x = 0; x < stride; x++)
             std::swap(src[x], dest[x]);
     }
+    OSPTextureFormat format = osprayTextureFormat(depth, channels);
 
-    OSPData ospData = ospNewSharedData1D(data, OSP_UCHAR, stride * size.y);
+    OSPDataType dataType
+        = OSP_UNKNOWN;
+    if (format == OSP_TEXTURE_R32F)
+        dataType = OSP_FLOAT;
+    else if (format == OSP_TEXTURE_RGB32F)
+        dataType = OSP_VEC3F;
+    else if (format == OSP_TEXTURE_RGBA32F)
+        dataType = OSP_VEC4F;
+    else if ((format == OSP_TEXTURE_R8) || (format == OSP_TEXTURE_L8))
+        dataType = OSP_UCHAR;
+    else if ((format == OSP_TEXTURE_RGB8) || (format == OSP_TEXTURE_SRGB)) 
+        dataType = OSP_VEC3UC;
+    else if (format == OSP_TEXTURE_RGBA8)
+        dataType = OSP_VEC4UC;
+    else
+        throw std::runtime_error("hdOSPRay::LoadOIIOTexture2D: \
+                                         Unknown texture format");
+
+    OSPData ospData = ospNewSharedData2D(data, dataType, size.x, size.y);
     ospCommit(ospData);
 
     OSPTexture ospTexture = ospNewTexture("texture2d");
-    ospSetInt(ospTexture, "type", (int)osprayTextureFormat(depth, channels));
-    ospSetInt(ospTexture, "flags",
-             nearestFilter ? OSP_TEXTURE_FILTER_NEAREST : 0);
-    ospSetVec2i(ospTexture, "size", size.x, size.y);
+    ospSetInt(ospTexture, "format", format);
+    ospSetInt(ospTexture, "filter",
+             nearestFilter ? OSP_TEXTURE_FILTER_NEAREST : OSP_TEXTURE_FILTER_BILINEAR);
     ospSetObject(ospTexture, "data", ospData);
+    ospCommit(ospTexture);
 
 
     //TODO: free data!!!
@@ -244,27 +263,28 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
     _ospMaterial = CreateDefaultMaterial(
            { diffuseColor[0], diffuseColor[1], diffuseColor[2], 1.f });
 
-    if (map_diffuseColor.ospTexture) {
-        ospSetObject(_ospMaterial, "baseColorMap", map_diffuseColor.ospTexture);
-        ospSetObject(_ospMaterial, "map_Kd", map_diffuseColor.ospTexture);
-    }
-    if (map_metallic.ospTexture) {
-        ospSetObject(_ospMaterial, "metallicMap", map_metallic.ospTexture);
-        metallic = 1.0f;
-    }
-    if (map_roughness.ospTexture) {
-        ospSetObject(_ospMaterial, "roughnessMap", map_roughness.ospTexture);
-        roughness = 1.0f;
-    }
-    if (map_normal.ospTexture) {
-        ospSetObject(_ospMaterial, "normalMap", map_normal.ospTexture);
-        normal = 1.f;
-    }
     ospSetFloat(_ospMaterial, "ior", ior);
     ospSetVec3f(_ospMaterial, "baseColor", diffuseColor[0], diffuseColor[1], diffuseColor[2]);
     ospSetFloat(_ospMaterial, "metallic", metallic);
     ospSetFloat(_ospMaterial, "roughness", roughness);
     ospSetFloat(_ospMaterial, "normal", normal);
+
+    if (map_diffuseColor.ospTexture) {
+        ospSetObject(_ospMaterial, "map_baseColor", map_diffuseColor.ospTexture);
+        ospSetObject(_ospMaterial, "map_kd", map_diffuseColor.ospTexture);
+    }
+    if (map_metallic.ospTexture) {
+        ospSetObject(_ospMaterial, "map_metallic", map_metallic.ospTexture);
+        metallic = 1.0f;
+    }
+    if (map_roughness.ospTexture) {
+        ospSetObject(_ospMaterial, "map_roughness", map_roughness.ospTexture);
+        roughness = 1.0f;
+    }
+    if (map_normal.ospTexture) {
+        ospSetObject(_ospMaterial, "map_normal", map_normal.ospTexture);
+        normal = 1.f;
+    }
 
     ospCommit(_ospMaterial);
 }

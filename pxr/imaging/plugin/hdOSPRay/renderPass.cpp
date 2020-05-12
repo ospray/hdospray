@@ -68,7 +68,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _renderParam(renderParam)
 {
     _camera = ospNewCamera("perspective");
-    ospSetVec4f(_renderer, "bgColor", _clearColor[0], _clearColor[1],
+    ospSetVec4f(_renderer, "backgroundColor", _clearColor[0], _clearColor[1],
              _clearColor[2], 1.f);
 
     // ospSetObject(_renderer, "camera", _camera);
@@ -153,8 +153,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     renderPassState->GetProjectionMatrix().Get(prjMatrix);
     float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
 
-    ospSetVec3f(_camera, "pos", origin[0], origin[1], origin[2]);
-    ospSetVec3f(_camera, "dir", dir[0], dir[1], dir[2]);
+    ospSetVec3f(_camera, "position", origin[0], origin[1], origin[2]);
+    ospSetVec3f(_camera, "direction", dir[0], dir[1], dir[2]);
     ospSetVec3f(_camera, "up", up[0], up[1], up[2]);
     ospSetFloat(_camera, "fovy", fov);
     ospCommit(_camera);
@@ -194,10 +194,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _spp = spp;
             _aoSamples = aoSamples;
             _maxDepth = maxDepth;
-            ospSetInt(_renderer, "spp", _spp);
+            ospSetInt(_renderer, "pixelSamples", _spp);
             ospSetInt(_renderer, "aoSamples", _aoSamples);
             ospSetFloat(_renderer, "aoDistance", _aoSamples);
-            ospSetInt(_renderer, "maxDepth", _maxDepth);
+            ospSetInt(_renderer, "maxPathLength", _maxDepth);
             ospCommit(_renderer);
         }
         _lastSettingsVersion = currentSettingsVersion;
@@ -223,17 +223,18 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (_eyeLight) {
-        auto eyeLight = ospNewLight("distance");
+        auto eyeLight = ospNewLight("distant");
         ospSetVec3f(eyeLight, "color", 1.f, 232.f / 255.f, 166.f / 255.f);
         ospSetVec3f(eyeLight, "direction", dir_light[0], dir_light[1], dir_light[2]);
         ospSetFloat(eyeLight, "intensity", 3.3f);
+        ospSetBool(eyeLight, "visible", false);
         ospCommit(eyeLight);
         lights.push_back(eyeLight);
     }
     const float angularDiameter = 4.5f;
     const float glToPTLightIntensityMultiplier = 1.5f;
     if (_keyLight) {
-        auto keyLight = ospNewLight("distance");
+        auto keyLight = ospNewLight("distant");
         auto keyHorz = -1.0f / tan(rad(45.0f)) * right_light;
         auto keyVert = 1.0f / tan(rad(70.0f)) * up_light;
         auto lightDir = -(keyVert + keyHorz);
@@ -241,11 +242,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         ospSetVec3f(keyLight, "direction", lightDir[0], lightDir[1], lightDir[2]);
         ospSetFloat(keyLight, "intensity", glToPTLightIntensityMultiplier);
         ospSetFloat(keyLight, "angularDiameter", angularDiameter);
+        ospSetBool(keyLight, "visible", false);
         ospCommit(keyLight);
         lights.push_back(keyLight);
     }
     if (_fillLight) {
-        auto fillLight = ospNewLight("distance");
+        auto fillLight = ospNewLight("distant");
         auto fillHorz = 1.0f / tan(rad(30.0f)) * right_light;
         auto fillVert = 1.0f / tan(rad(45.0f)) * up_light;
         auto lightDir = (fillVert + fillHorz);
@@ -253,11 +255,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         ospSetVec3f(fillLight, "direction", lightDir[0], lightDir[1], lightDir[2]);
         ospSetFloat(fillLight, "intensity", glToPTLightIntensityMultiplier);
         ospSetFloat(fillLight, "angularDiameter", angularDiameter);
+        ospSetBool(fillLight, "visible", false);
         ospCommit(fillLight);
         lights.push_back(fillLight);
     }
     if (_backLight) {
-        auto backLight = ospNewLight("distance");
+        auto backLight = ospNewLight("distant");
         auto backHorz = 1.0f / tan(rad(60.0f)) * right_light;
         auto backVert = -1.0f / tan(rad(60.0f)) * up_light;
         auto lightDir = (backHorz + backVert);
@@ -265,12 +268,14 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         ospSetVec3f(backLight, "direction", lightDir[0], lightDir[1], lightDir[2]);
         ospSetFloat(backLight, "intensity", glToPTLightIntensityMultiplier);
         ospSetFloat(backLight, "angularDiameter", angularDiameter);
+        ospSetBool(backLight, "visible", false);
         ospCommit(backLight);
         lights.push_back(backLight);
     }
-    OSPData lightArray = ospNewSharedData1D(lights.data(), OSP_OBJECT, lights.size());
+    OSPData lightArray = ospNewSharedData1D(lights.data(), OSP_LIGHT, lights.size());
+    ospCommit(lightArray);
     ospSetObject(_world, "light", lightArray);
-    ospRelease(lightArray);
+    // ospRelease(lightArray);
     ospCommit(_world);
 
     // If the viewport has changed, resize the sample buffer.
@@ -310,6 +315,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (_pendingModelUpdate) {
+        std::cout << "update render model, new world\n";
         // release resources from last committed scene
         for (auto instance : _oldInstances) {
             ospRelease(instance);
@@ -328,10 +334,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _oldInstances.push_back(instance);
         }
         if (!_oldInstances.empty()) {
+            std::cout << "rendering num instances: " << _oldInstances.size() << std::endl;
             auto data = ospNewSharedData1D(_oldInstances.data(), OSP_INSTANCE, _oldInstances.size());
             ospCommit(data);
             ospSetObject(_world, "instance", data);
         } else {
+            std::cout << "rendering with no instances\n";
             ospRemoveParam(_world, "instance");
         }
         // ospCommit(model);
@@ -345,19 +353,18 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     // Reset the sample buffer if it's been requested.
     if (_pendingResetImage) {
-        // ospFrameBufferClear(_frameBuffer, OSP_FB_ACCUM);
         ospResetAccumulation(_frameBuffer);
         _pendingResetImage = false;
         _numSamplesAccumulated = 0;
         if (_useDenoiser) {
             _spp = HdOSPRayConfig::GetInstance().samplesPerFrame;
-            ospSetInt(_renderer, "spp", _spp);
+            ospSetInt(_renderer, "pixelSamples", _spp);
             ospCommit(_renderer);
         }
     }
 
     // Render the frame
-    ospRenderFrame(_frameBuffer, _renderer, _camera, _world);
+    ospRenderFrameBlocking(_frameBuffer, _renderer, _camera, _world);
 //                    OSP_FB_COLOR | OSP_FB_ACCUM |
 // #if HDOSPRAY_ENABLE_DENOISER
 //                           OSP_FB_NORMAL | OSP_FB_ALBEDO |
@@ -376,7 +383,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                = std::max((int)HdOSPRayConfig::GetInstance().samplesPerFrame, 1)
                * 4;
         if (_spp != newSPP) {
-            ospSetInt(_renderer, "spp", _spp);
+            ospSetInt(_renderer, "pixelSamples", _spp);
             ospCommit(_renderer);
         }
         Denoise();
