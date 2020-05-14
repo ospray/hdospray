@@ -274,9 +274,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
     OSPData lightArray = ospNewSharedData1D(lights.data(), OSP_LIGHT, lights.size());
     ospCommit(lightArray);
-    ospSetObject(_world, "light", lightArray);
-    // ospRelease(lightArray);
-    ospCommit(_world);
+    if(_world){
+        ospSetObject(_world, "light", lightArray);
+        // ospRelease(lightArray);
+        ospCommit(_world);
+    }
 
     // If the viewport has changed, resize the sample buffer.
     GfVec4f vp = renderPassState->GetViewport();
