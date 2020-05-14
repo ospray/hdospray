@@ -80,7 +80,6 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     ospSetFloat(_renderer, "minContribution", 0.05f);
     ospSetFloat(_renderer, "epsilon", 0.001f);
     ospSetInt(_renderer, "useGeometryLights", 0);
-
     ospCommit(_renderer);
 
 #if HDOSPRAY_ENABLE_DENOISER
@@ -192,6 +191,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                HdOSPRayRenderSettingsTokens->aoDistance, 10.f);
         _useDenoiser = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->useDenoiser, false);
+        _pixelFilterType
+               = (OSPPixelFilterTypes)renderDelegate->GetRenderSetting<int>(
+                      HdOSPRayRenderSettingsTokens->pixelFilterType,
+                      (int)OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS);
         int spp = renderDelegate->GetRenderSetting<int>(
                HdOSPRayRenderSettingsTokens->samplesPerFrame, 1);
         int aoSamples = renderDelegate->GetRenderSetting<int>(
@@ -222,6 +225,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             ospSetInt(_renderer, "aoSamples", _aoSamples);
             ospSetFloat(_renderer, "aoDistance", _aoSamples);
             ospSetInt(_renderer, "maxPathLength", _maxDepth);
+            ospSetInt(_renderer, "pixelFilter", (int)_pixelFilterType);
             ospCommit(_renderer);
         }
         _lastSettingsVersion = currentSettingsVersion;

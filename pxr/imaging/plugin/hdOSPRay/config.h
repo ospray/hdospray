@@ -85,6 +85,11 @@ public:
     /// Override with *HDOSPRAY_USE_DENOISER*.
     bool useDenoiser;
 
+    /// The type of pixel filter used by OSPRay
+    ///
+    /// Override with *HDOSPRAY_PIXELFILTER_TYPE*.
+    OSPPixelFilterTypes pixelFilterType;
+
     /// Initialization arguments sent to OSPRay.
     ///  This can be used to set ospray configurations like mpi.
     ///

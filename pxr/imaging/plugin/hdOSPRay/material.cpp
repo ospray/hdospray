@@ -290,7 +290,6 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
         ospSetObject(_ospMaterial, "map_normal", map_normal.ospTexture);
         normal = 1.f;
     }
-
     ospCommit(_ospMaterial);
 }
 

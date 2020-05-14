@@ -160,6 +160,9 @@ HdOSPRayRenderDelegate::_Initialize()
            { "Toggle denoiser", HdOSPRayRenderSettingsTokens->useDenoiser,
              VtValue(bool(HdOSPRayConfig::GetInstance().useDenoiser)) });
     _settingDescriptors.push_back(
+           { "Pixelfilter type", HdOSPRayRenderSettingsTokens->pixelFilterType,
+             VtValue(int(HdOSPRayConfig::GetInstance().pixelFilterType)) });
+    _settingDescriptors.push_back(
            { "maxDepth", HdOSPRayRenderSettingsTokens->maxDepth,
              VtValue(int(HdOSPRayConfig::GetInstance().maxDepth)) });
     _settingDescriptors.push_back(

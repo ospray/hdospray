@@ -146,6 +146,9 @@ private:
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
     int _spp { 1 };
     bool _useDenoiser { false };
+    OSPPixelFilterTypes _pixelFilterType {
+        OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS
+    };
     int _samplesToConvergence { 100 };
     int _denoiserSPPThreshold { 3 };
     int _aoSamples { 1 };
