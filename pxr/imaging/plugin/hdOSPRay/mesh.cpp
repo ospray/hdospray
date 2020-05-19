@@ -682,8 +682,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             ospcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
             ospcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
             ospcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
-            auto xfmData = ospNewCopyData1D(&xfm, OSP_AFFINE3F, 1);
-            ospSetObject(instance, "xfm", xfmData);
+            ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
             ospCommit(instance);
             // convert aligned matrix to unalighned 4x3 matrix
             // ospSet3f(instance, "xfm.l.vx", xfm[0], xfm[1], xfm[2]);
@@ -701,6 +700,15 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
         OSPGroup group = ospNewGroup();
         OSPInstance instance = ospNewInstance(group);
+        // TODO: do we need to check for a local transform as well?
+        GfMatrix4f matf = _transform;
+        //std::cout << "matf: " << matf << std::endl;
+        float* xfmf = matf.GetArray();
+        ospcommon::math::affine3f xfm(ospcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
+        ospcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
+        ospcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
+        ospcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
+        ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
         ospCommit(instance);
         // ospRelease(group);
         OSPData data = ospNewCopyData1D(&_instanceModel, OSP_GEOMETRIC_MODEL, 1);
