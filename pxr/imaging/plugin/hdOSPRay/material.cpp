@@ -39,7 +39,7 @@
 #include <OpenImageIO/imageio.h>
 
 #include "ospray/ospray_util.h"
-#include "ospcommon/math/vec.h"
+#include "rkcommon/math/vec.h"
 
 OIIO_NAMESPACE_USING
 
@@ -125,7 +125,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
     }
 
     const ImageSpec& spec = in->spec();
-    ospcommon::math::vec2i size;
+    rkcommon::math::vec2i size;
     size.x = spec.width;
     size.y = spec.height;
     int channels = spec.nchannels;
@@ -309,6 +309,10 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
             diffuseColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayTokens->opacity) {
             opacity = value.Get<float>();
+        } else if (name == HdOSPRayTokens->clearcoat) {
+            clearcoat = value.Get<float>();
+        } else if (name == HdOSPRayTokens->clearcoatRoughness) {
+            clearcoatRoughness = value.Get<float>();
         }
     }
 }

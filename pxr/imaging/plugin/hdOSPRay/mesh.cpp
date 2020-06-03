@@ -41,7 +41,7 @@
 #include "pxr/imaging/hdSt/geometricShader.h"
 #include "pxr/imaging/hdSt/material.h"
 
-#include "ospcommon/math/AffineSpace.h"
+#include "rkcommon/math/AffineSpace.h"
 
 #include "ospray/ospray_util.h"
 
@@ -66,7 +66,7 @@ OSPData ospNewCopyData1D(const void *source, OSPDataType dataType, size_t numEle
     return data;
 }
 
-// USD forces warnings when converting ospcommon::affine3f to osp::affine3f
+// USD forces warnings when converting rkcommon::affine3f to osp::affine3f
 // const osp::affine3f identity({ 1, 0, 0, 0, 1, 0, 0, 0, 1 });
 
 HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
@@ -219,8 +219,10 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
 
             auto value = sceneDelegate->Get(id, pv.name);
 
+            // TODO: need to find a better way to identify the primvar for 
+            // the texture coordinates
             // texcoords
-            if (pv.name == "Texture_uv"
+            if ((pv.name == "Texture_uv" || pv.name == "st")
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdOSPRayTokens->st)) {
                 if (value.IsHolding<VtVec2fArray>()) {
@@ -678,10 +680,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             // Combine the local transform and the instance transform.
             GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
             float* xfmf = matf.GetArray();
-            ospcommon::math::affine3f xfm(ospcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
-            ospcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
-            ospcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
-            ospcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
+            rkcommon::math::affine3f xfm(rkcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
+            rkcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
+            rkcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
+            rkcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
             ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
             ospCommit(instance);
             // convert aligned matrix to unalighned 4x3 matrix
@@ -704,10 +706,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         GfMatrix4f matf = _transform;
         //std::cout << "matf: " << matf << std::endl;
         float* xfmf = matf.GetArray();
-        ospcommon::math::affine3f xfm(ospcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
-        ospcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
-        ospcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
-        ospcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
+        rkcommon::math::affine3f xfm(rkcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
+        rkcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
+        rkcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
+        rkcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
         ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
         ospCommit(instance);
         // ospRelease(group);
@@ -801,7 +803,7 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     int numVertices = _points.size();
 
     auto vertices = ospNewSharedData1D(_points.data(), OSP_VEC3F, numVertices);
-    ospSetObject(mesh, "vertex", vertices);
+    ospSetObject(mesh, "vertex.position", vertices);
     ospRelease(vertices);
     auto faces = ospNewSharedData1D(_topology.GetFaceVertexCounts().data(), OSP_UINT,
                             numFaceVertices);
@@ -810,6 +812,13 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     auto indices = ospNewSharedData1D(
                               _topology.GetFaceVertexIndices().data(), OSP_UINT, numIndices);
     ospSetObject(mesh, "index", indices);
+
+	// TODO: need to handle subivion types correctly
+    //ospSetInt(mesh,"mode",OSP_SUBDIVISION_PIN_CORNERS);
+    //ospSetInt(mesh,"mode",OSP_SUBDIVISION_PIN_BOUNDARY);
+    ospSetInt(mesh,"mode",OSP_SUBDIVISION_PIN_ALL);
+
+
     ospRelease(indices);
     // TODO: set hole buffer
 

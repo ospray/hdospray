@@ -55,6 +55,10 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_PRINT_CONFIGURATION, 0,
 TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_PATH_TRACING, 1,
         "Should HdOSPRay use path tracing");
 
+
+TF_DEFINE_ENV_SETTING(HDOSPRAY_MAX_PATH_DEPTH, 8,
+        "Maximum path tracing depth.");
+
 TF_DEFINE_ENV_SETTING(HDOSPRAY_INIT_ARGS, "",
         "Initialization arguments sent to OSPRay");
 
@@ -79,6 +83,7 @@ HdOSPRayConfig::HdOSPRayConfig()
     initArgs =TfGetEnvSetting(HDOSPRAY_INIT_ARGS);
     useDenoiser = TfGetEnvSetting(HDOSPRAY_USE_DENOISER);
     forceQuadrangulate = TfGetEnvSetting(HDOSPRAY_FORCE_QUADRANGULATE);
+    maxDepth = TfGetEnvSetting(HDOSPRAY_MAX_PATH_DEPTH);
 
     if (TfGetEnvSetting(HDOSPRAY_PRINT_CONFIGURATION) > 0) {
         std::cout

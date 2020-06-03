@@ -126,6 +126,31 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 {
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
 
+    // If the viewport has changed, resize the sample buffer.
+    GfVec4f vp = renderPassState->GetViewport();
+    if (_width != vp[2] || _height != vp[3]) {
+        _width = vp[2];
+        _height = vp[3];
+        if (_frameBuffer)
+            ospRelease(_frameBuffer);
+        std::cout << "ospNewFrameBuffer" << std::endl;
+        _frameBuffer = ospNewFrameBuffer(
+               (int)_width, (int)_height, OSP_FB_RGBA32F,
+               OSP_FB_COLOR | OSP_FB_ACCUM |
+#if HDOSPRAY_ENABLE_DENOISER
+                      OSP_FB_NORMAL | OSP_FB_ALBEDO |
+#endif
+                      0);
+        ospCommit(_frameBuffer);
+        _colorBuffer.resize(_width * _height);
+        _normalBuffer.resize(_width * _height);
+        _albedoBuffer.resize(_width * _height);
+        _denoisedBuffer.resize(_width * _height);
+        _pendingResetImage = true;
+        _denoiserDirty = true;
+    }
+
+
     // Update camera
     auto inverseViewMatrix
            = renderPassState->GetWorldToViewMatrix().GetInverse();
@@ -280,29 +305,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         ospCommit(_world);
     }
 
-    // If the viewport has changed, resize the sample buffer.
-    GfVec4f vp = renderPassState->GetViewport();
-    if (_width != vp[2] || _height != vp[3]) {
-        _width = vp[2];
-        _height = vp[3];
-        if (_frameBuffer)
-            ospRelease(_frameBuffer);
-        _frameBuffer = ospNewFrameBuffer(
-               (int)_width, (int)_height, OSP_FB_RGBA32F,
-               OSP_FB_COLOR | OSP_FB_ACCUM |
-#if HDOSPRAY_ENABLE_DENOISER
-                      OSP_FB_NORMAL | OSP_FB_ALBEDO |
-#endif
-                      0);
-        ospCommit(_frameBuffer);
-        _colorBuffer.resize(_width * _height);
-        _normalBuffer.resize(_width * _height);
-        _albedoBuffer.resize(_width * _height);
-        _denoisedBuffer.resize(_width * _height);
-        _pendingResetImage = true;
-        _denoiserDirty = true;
-    }
-
     int currentSceneVersion = _sceneVersion->load();
     if (_lastRenderedVersion != currentSceneVersion) {
         ResetImage();
@@ -347,6 +349,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         // ospCommit(model);
         // ospSetObject(_renderer, "model", model);
         // oldModel = model;
+        ospSetObject(_world, "light", lightArray);
         ospCommit(_world);
         ospCommit(_renderer);
         _pendingModelUpdate = false;
