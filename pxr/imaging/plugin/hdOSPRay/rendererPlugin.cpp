@@ -23,8 +23,8 @@
 //
 #include "pxr/imaging/hdOSPRay/rendererPlugin.h"
 
-#include "pxr/imaging/hdOSPRay/renderDelegate.h"
 #include "pxr/imaging/hd/rendererPluginRegistry.h"
+#include "pxr/imaging/hdOSPRay/renderDelegate.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 

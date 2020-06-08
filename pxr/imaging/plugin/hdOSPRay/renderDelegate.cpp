@@ -82,10 +82,11 @@ HdOSPRayRenderDelegate::_Initialize()
 {
     // Check plugin against pxr version
 #if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 20
-    error This version of HdOSPRay is configured to built against USD v0.20.x
+    error This version of HdOSPRay is configured to built against USD v0 .20.x
 #endif
 
-    int ac = 1;
+           int ac
+           = 1;
     std::string initArgs = HdOSPRayConfig::GetInstance().initArgs;
     std::stringstream ss(initArgs);
     std::string arg;
@@ -173,8 +174,10 @@ HdOSPRayRenderDelegate::_Initialize()
            { "ambientLight", HdOSPRayRenderSettingsTokens->ambientLight,
              VtValue(bool(HdOSPRayConfig::GetInstance().ambientLight)) });
     _settingDescriptors.push_back(
-           { "staticDirectionalLights", HdOSPRayRenderSettingsTokens->staticDirectionalLights,
-             VtValue(bool(HdOSPRayConfig::GetInstance().staticDirectionalLights)) });
+           { "staticDirectionalLights",
+             HdOSPRayRenderSettingsTokens->staticDirectionalLights,
+             VtValue(bool(
+                    HdOSPRayConfig::GetInstance().staticDirectionalLights)) });
     _settingDescriptors.push_back(
            { "eyeLight", HdOSPRayRenderSettingsTokens->eyeLight,
              VtValue(bool(HdOSPRayConfig::GetInstance().eyeLight)) });

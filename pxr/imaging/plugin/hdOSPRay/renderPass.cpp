@@ -69,7 +69,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
 {
     _camera = ospNewCamera("perspective");
     ospSetVec4f(_renderer, "backgroundColor", _clearColor[0], _clearColor[1],
-             _clearColor[2], 1.f);
+                _clearColor[2], 1.f);
 
     // ospSetObject(_renderer, "camera", _camera);
 
@@ -133,13 +133,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _height = vp[3];
         if (_frameBuffer)
             ospRelease(_frameBuffer);
-        _frameBuffer = ospNewFrameBuffer(
-               (int)_width, (int)_height, OSP_FB_RGBA32F,
-               OSP_FB_COLOR | OSP_FB_ACCUM |
+        _frameBuffer
+               = ospNewFrameBuffer((int)_width, (int)_height, OSP_FB_RGBA32F,
+                                   OSP_FB_COLOR | OSP_FB_ACCUM |
 #if HDOSPRAY_ENABLE_DENOISER
-                      OSP_FB_NORMAL | OSP_FB_ALBEDO |
+                                          OSP_FB_NORMAL | OSP_FB_ALBEDO |
 #endif
-                      0);
+                                          0);
         ospCommit(_frameBuffer);
         _colorBuffer.resize(_width * _height);
         _normalBuffer.resize(_width * _height);
@@ -148,7 +148,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _pendingResetImage = true;
         _denoiserDirty = true;
     }
-
 
     // Update camera
     auto inverseViewMatrix
@@ -201,10 +200,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                HdOSPRayRenderSettingsTokens->maxDepth, 5);
         _ambientLight = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->ambientLight, false);
-        //default static ospray directional lights
+        // default static ospray directional lights
         _staticDirectionalLights = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->staticDirectionalLights, false);
-        //eye, key, fill, and back light are copied from USD GL (Storm) defaults.
+        // eye, key, fill, and back light are copied from USD GL (Storm)
+        // defaults.
         _eyeLight = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->eyeLight, false);
         _keyLight = renderDelegate->GetRenderSetting<bool>(
@@ -233,8 +233,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     GfVec3f up_light = up;
     GfVec3f dir_light = dir;
     if (_staticDirectionalLights) {
-        up_light = {0.f, 1.f, 0.f};
-        dir_light = {-.1f, -.1f, -.8f};
+        up_light = { 0.f, 1.f, 0.f };
+        dir_light = { -.1f, -.1f, -.8f };
     }
     GfVec3f right_light = GfCross(dir_light, up_light);
     std::vector<OSPLight> lights;
@@ -249,7 +249,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (_eyeLight) {
         auto eyeLight = ospNewLight("distant");
         ospSetVec3f(eyeLight, "color", 1.f, 232.f / 255.f, 166.f / 255.f);
-        ospSetVec3f(eyeLight, "direction", dir_light[0], dir_light[1], dir_light[2]);
+        ospSetVec3f(eyeLight, "direction", dir_light[0], dir_light[1],
+                    dir_light[2]);
         ospSetFloat(eyeLight, "intensity", 3.3f);
         ospSetBool(eyeLight, "visible", false);
         ospCommit(eyeLight);
@@ -263,7 +264,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto keyVert = 1.0f / tan(rad(70.0f)) * up_light;
         auto lightDir = -(keyVert + keyHorz);
         ospSetVec3f(keyLight, "color", .8f, .8f, .8f);
-        ospSetVec3f(keyLight, "direction", lightDir[0], lightDir[1], lightDir[2]);
+        ospSetVec3f(keyLight, "direction", lightDir[0], lightDir[1],
+                    lightDir[2]);
         ospSetFloat(keyLight, "intensity", glToPTLightIntensityMultiplier);
         ospSetFloat(keyLight, "angularDiameter", angularDiameter);
         ospSetBool(keyLight, "visible", false);
@@ -276,7 +278,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto fillVert = 1.0f / tan(rad(45.0f)) * up_light;
         auto lightDir = (fillVert + fillHorz);
         ospSetVec3f(fillLight, "color", .6f, .6f, .6f);
-        ospSetVec3f(fillLight, "direction", lightDir[0], lightDir[1], lightDir[2]);
+        ospSetVec3f(fillLight, "direction", lightDir[0], lightDir[1],
+                    lightDir[2]);
         ospSetFloat(fillLight, "intensity", glToPTLightIntensityMultiplier);
         ospSetFloat(fillLight, "angularDiameter", angularDiameter);
         ospSetBool(fillLight, "visible", false);
@@ -289,16 +292,18 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto backVert = -1.0f / tan(rad(60.0f)) * up_light;
         auto lightDir = (backHorz + backVert);
         ospSetVec3f(backLight, "color", .6f, .6f, .6f);
-        ospSetVec3f(backLight, "direction", lightDir[0], lightDir[1], lightDir[2]);
+        ospSetVec3f(backLight, "direction", lightDir[0], lightDir[1],
+                    lightDir[2]);
         ospSetFloat(backLight, "intensity", glToPTLightIntensityMultiplier);
         ospSetFloat(backLight, "angularDiameter", angularDiameter);
         ospSetBool(backLight, "visible", false);
         ospCommit(backLight);
         lights.push_back(backLight);
     }
-    OSPData lightArray = ospNewSharedData1D(lights.data(), OSP_LIGHT, lights.size());
+    OSPData lightArray
+           = ospNewSharedData1D(lights.data(), OSP_LIGHT, lights.size());
     ospCommit(lightArray);
-    if(_world){
+    if (_world) {
         ospSetObject(_world, "light", lightArray);
         // ospRelease(lightArray);
         ospCommit(_world);
@@ -336,7 +341,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _oldInstances.push_back(instance);
         }
         if (!_oldInstances.empty()) {
-            auto data = ospNewSharedData1D(_oldInstances.data(), OSP_INSTANCE, _oldInstances.size());
+            auto data = ospNewSharedData1D(_oldInstances.data(), OSP_INSTANCE,
+                                           _oldInstances.size());
             ospCommit(data);
             ospSetObject(_world, "instance", data);
         } else {
@@ -366,11 +372,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     // Render the frame
     ospRenderFrameBlocking(_frameBuffer, _renderer, _camera, _world);
-//                    OSP_FB_COLOR | OSP_FB_ACCUM |
-// #if HDOSPRAY_ENABLE_DENOISER
-//                           OSP_FB_NORMAL | OSP_FB_ALBEDO |
-// #endif
-//                           0);
+    //                    OSP_FB_COLOR | OSP_FB_ACCUM |
+    // #if HDOSPRAY_ENABLE_DENOISER
+    //                           OSP_FB_NORMAL | OSP_FB_ALBEDO |
+    // #endif
+    //                           0);
     _numSamplesAccumulated += std::max(1, _spp);
 
     // Resolve the image buffer: find the average color per pixel by

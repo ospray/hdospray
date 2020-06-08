@@ -54,11 +54,14 @@ TF_DEFINE_PRIVATE_TOKENS(
 );
 // clang-format on
 
-OSPData ospNewCopyData1D(const void *source, OSPDataType dataType, size_t numElements)
+OSPData
+ospNewCopyData1D(const void* source, OSPDataType dataType, size_t numElements)
 {
-    OSPData data = ospNewData1D(static_cast<OSPDataType>(dataType), numElements);
+    OSPData data
+           = ospNewData1D(static_cast<OSPDataType>(dataType), numElements);
     ospCommit(data);
-    OSPData shared = ospNewSharedData1D(source, static_cast<OSPDataType>(dataType), numElements);
+    OSPData shared = ospNewSharedData1D(
+           source, static_cast<OSPDataType>(dataType), numElements);
     ospCommit(shared);
     ospCopyData1D(shared, data, 0);
     ospCommit(data);
@@ -219,7 +222,7 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
 
             auto value = sceneDelegate->Get(id, pv.name);
 
-            // TODO: need to find a better way to identify the primvar for 
+            // TODO: need to find a better way to identify the primvar for
             // the texture coordinates
             // texcoords
             if ((pv.name == "Texture_uv" || pv.name == "st")
@@ -456,7 +459,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _normalsValid = true;
     }
 
-
     if (newMesh
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
@@ -477,8 +479,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                 meshUtil.ComputeQuadIndices(&_quadIndices,
                                             &_quadPrimitiveParams);
 
-                auto indices = ospNewSharedData1D(_quadIndices.cdata(), OSP_VEC4UI,
-                                          _quadIndices.size());
+                auto indices = ospNewSharedData1D(
+                       _quadIndices.cdata(), OSP_VEC4UI, _quadIndices.size());
 
                 ospCommit(indices);
                 ospSetObject(_ospMesh, "index", indices);
@@ -537,8 +539,9 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                 meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
                                                 &_trianglePrimitiveParams);
 
-                auto indices = ospNewSharedData1D(_triangulatedIndices.cdata(), OSP_VEC3UI,
-                                          _triangulatedIndices.size());
+                auto indices = ospNewSharedData1D(_triangulatedIndices.cdata(),
+                                                  OSP_VEC3UI,
+                                                  _triangulatedIndices.size());
 
                 ospCommit(indices);
                 ospSetObject(_ospMesh, "index", indices);
@@ -595,29 +598,30 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             }
         }
 
-        auto vertices = ospNewSharedData1D(_points.cdata(), OSP_VEC3F, _points.size());
+        auto vertices
+               = ospNewSharedData1D(_points.cdata(), OSP_VEC3F, _points.size());
         ospCommit(vertices);
         ospSetObject(_ospMesh, "vertex.position", vertices);
         ospRelease(vertices);
 
         if (_computedNormals.size()) {
-            auto normals = ospNewSharedData1D(_computedNormals.cdata(), OSP_VEC3F,
-                                      _computedNormals.size());
+            auto normals
+                   = ospNewSharedData1D(_computedNormals.cdata(), OSP_VEC3F,
+                                        _computedNormals.size());
             ospSetObject(_ospMesh, "vertex.normal", normals);
             ospRelease(normals);
         }
 
         if (_colors.size() > 1) {
             auto colors = ospNewSharedData1D(_colors.cdata(), OSP_VEC4F,
-                                     _colors.size());
+                                             _colors.size());
             ospSetObject(_ospMesh, "vertex.color", colors);
             ospRelease(colors);
         }
 
         if (_texcoords.size() > 1) {
-            auto texcoords
-                   = ospNewSharedData1D(_texcoords.cdata(), OSP_VEC2F,
-                                _texcoords.size());
+            auto texcoords = ospNewSharedData1D(_texcoords.cdata(), OSP_VEC2F,
+                                                _texcoords.size());
             ospCommit(texcoords);
             ospSetObject(_ospMesh, "vertex.texcoord", texcoords);
             ospRelease(texcoords);
@@ -663,7 +667,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                         ->ComputeInstanceTransforms(GetId());
 
         size_t newSize = transforms.size();
-        //TODO: CARSON: reform instancer for ospray2
+        // TODO: CARSON: reform instancer for ospray2
         _ospInstances.reserve(newSize);
         for (size_t i = 0; i < newSize; i++) {
             // Create the new instance.
@@ -671,7 +675,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             OSPGroup group = ospNewGroup();
             OSPInstance instance = ospNewInstance(group);
             // ospRelease(group);
-            OSPData data = ospNewCopyData1D(&_instanceModel, OSP_GEOMETRIC_MODEL, 1);
+            OSPData data
+                   = ospNewCopyData1D(&_instanceModel, OSP_GEOMETRIC_MODEL, 1);
             // ospRelease(_instanceModel);
             ospCommit(data);
             ospSetObject(group, "geometry", data);
@@ -680,10 +685,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             // Combine the local transform and the instance transform.
             GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
             float* xfmf = matf.GetArray();
-            rkcommon::math::affine3f xfm(rkcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
-            rkcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
-            rkcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
-            rkcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
+            rkcommon::math::affine3f xfm(
+                   rkcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
+                   rkcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
+                   rkcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
+                   rkcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
             ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
             ospCommit(instance);
             // convert aligned matrix to unalighned 4x3 matrix
@@ -705,14 +711,16 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         // TODO: do we need to check for a local transform as well?
         GfMatrix4f matf = _transform;
         float* xfmf = matf.GetArray();
-        rkcommon::math::affine3f xfm(rkcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
-        rkcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
-        rkcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
-        rkcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
+        rkcommon::math::affine3f xfm(
+               rkcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
+               rkcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
+               rkcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
+               rkcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
         ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
         ospCommit(instance);
         // ospRelease(group);
-        OSPData data = ospNewCopyData1D(&_instanceModel, OSP_GEOMETRIC_MODEL, 1);
+        OSPData data
+               = ospNewCopyData1D(&_instanceModel, OSP_GEOMETRIC_MODEL, 1);
         // ospRelease(_instanceModel);
         ospCommit(data);
         ospSetObject(group, "geometry", data);
@@ -723,7 +731,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         // auto instance = ospNewInstance(_instanceModel, identity);
         // _ospInstances.push_back(instance);
         // ospCommit(instance);
-        //TODO: Carson:  update xfm for ospray2
+        // TODO: Carson:  update xfm for ospray2
         // convert aligned matrix to unalighned 4x3 matrix
         // float* xfm = _transform.GetArray();
         // // convert aligned matrix to unalighned 4x3 matrix
@@ -804,19 +812,18 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     auto vertices = ospNewSharedData1D(_points.data(), OSP_VEC3F, numVertices);
     ospSetObject(mesh, "vertex.position", vertices);
     ospRelease(vertices);
-    auto faces = ospNewSharedData1D(_topology.GetFaceVertexCounts().data(), OSP_UINT,
-                            numFaceVertices);
+    auto faces = ospNewSharedData1D(_topology.GetFaceVertexCounts().data(),
+                                    OSP_UINT, numFaceVertices);
     ospSetObject(mesh, "face", faces);
     ospRelease(faces);
-    auto indices = ospNewSharedData1D(
-                              _topology.GetFaceVertexIndices().data(), OSP_UINT, numIndices);
+    auto indices = ospNewSharedData1D(_topology.GetFaceVertexIndices().data(),
+                                      OSP_UINT, numIndices);
     ospSetObject(mesh, "index", indices);
 
-	// TODO: need to handle subivion types correctly
-    //ospSetInt(mesh,"mode",OSP_SUBDIVISION_PIN_CORNERS);
-    //ospSetInt(mesh,"mode",OSP_SUBDIVISION_PIN_BOUNDARY);
-    ospSetInt(mesh,"mode",OSP_SUBDIVISION_PIN_ALL);
-
+    // TODO: need to handle subivion types correctly
+    // ospSetInt(mesh,"mode",OSP_SUBDIVISION_PIN_CORNERS);
+    // ospSetInt(mesh,"mode",OSP_SUBDIVISION_PIN_BOUNDARY);
+    ospSetInt(mesh, "mode", OSP_SUBDIVISION_PIN_ALL);
 
     ospRelease(indices);
     // TODO: set hole buffer
@@ -828,16 +835,17 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     if (_colors.size() < _points.size()) {
         GfVec4f white = { 1.f, 1.f, 1.f, 1.f };
         std::vector<GfVec4f> colorDummy(_points.size(), white);
-        colorsData
-               = ospNewData1D(OSP_VEC4F, colorDummy.size());
+        colorsData = ospNewData1D(OSP_VEC4F, colorDummy.size());
         ospCommit(colorsData);
-        OSPData shared = ospNewSharedData1D(colorDummy.data(), OSP_VEC4F, colorDummy.size());
+        OSPData shared = ospNewSharedData1D(colorDummy.data(), OSP_VEC4F,
+                                            colorDummy.size());
         ospCommit(shared);
         ospCopyData1D(shared, colorsData, 0);
         ospCommit(colorsData);
         ospRelease(shared);
     } else {
-        colorsData = ospNewCopyData1D(_colors.cdata(), OSP_VEC4F, _colors.size());
+        colorsData
+               = ospNewCopyData1D(_colors.cdata(), OSP_VEC4F, _colors.size());
     }
     ospSetObject(mesh, "color", colorsData);
     ospRelease(colorsData);
@@ -880,25 +888,25 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
             creaseIndexStart += creaseLengths[i];
         }
 
-        auto edge_crease_indices
-               = ospNewCopyData1D(ospCreaseIndices.data(), OSP_VEC2UI, numEdgeCreases);
+        auto edge_crease_indices = ospNewCopyData1D(ospCreaseIndices.data(),
+                                                    OSP_VEC2UI, numEdgeCreases);
         ospSetObject(mesh, "edgeCrease.index", edge_crease_indices);
         ospRelease(edge_crease_indices);
-        auto edge_crease_weights
-               = ospNewCopyData1D(ospCreaseWeights.data(), OSP_FLOAT, numEdgeCreases);
+        auto edge_crease_weights = ospNewCopyData1D(ospCreaseWeights.data(),
+                                                    OSP_FLOAT, numEdgeCreases);
         ospSetObject(mesh, "edgeCrease.weight", edge_crease_weights);
         ospRelease(edge_crease_weights);
     }
 
     if (numVertexCreases > 0) {
         auto vertex_crease_indices
-               = ospNewCopyData1D(
-                            subdivTags.GetCornerIndices().cdata(), OSP_UINT, numVertexCreases);
+               = ospNewCopyData1D(subdivTags.GetCornerIndices().cdata(),
+                                  OSP_UINT, numVertexCreases);
         ospSetObject(mesh, "vertexCrease.index", vertex_crease_indices);
         ospRelease(vertex_crease_indices);
         auto vertex_crease_weights
-               = ospNewCopyData1D(
-                            subdivTags.GetCornerWeights().cdata(), OSP_FLOAT, numVertexCreases);
+               = ospNewCopyData1D(subdivTags.GetCornerWeights().cdata(),
+                                  OSP_FLOAT, numVertexCreases);
         ospSetObject(mesh, "vertexCrease.weight", vertex_crease_weights);
         ospRelease(vertex_crease_weights);
     }

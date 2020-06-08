@@ -151,8 +151,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
     }
     OSPTextureFormat format = osprayTextureFormat(depth, channels);
 
-    OSPDataType dataType
-        = OSP_UNKNOWN;
+    OSPDataType dataType = OSP_UNKNOWN;
     if (format == OSP_TEXTURE_R32F)
         dataType = OSP_FLOAT;
     else if (format == OSP_TEXTURE_RGB32F)
@@ -161,7 +160,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
         dataType = OSP_VEC4F;
     else if ((format == OSP_TEXTURE_R8) || (format == OSP_TEXTURE_L8))
         dataType = OSP_UCHAR;
-    else if ((format == OSP_TEXTURE_RGB8) || (format == OSP_TEXTURE_SRGB)) 
+    else if ((format == OSP_TEXTURE_RGB8) || (format == OSP_TEXTURE_SRGB))
         dataType = OSP_VEC3UC;
     else if (format == OSP_TEXTURE_RGBA8)
         dataType = OSP_VEC4UC;
@@ -175,12 +174,12 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
     OSPTexture ospTexture = ospNewTexture("texture2d");
     ospSetInt(ospTexture, "format", format);
     ospSetInt(ospTexture, "filter",
-             nearestFilter ? OSP_TEXTURE_FILTER_NEAREST : OSP_TEXTURE_FILTER_BILINEAR);
+              nearestFilter ? OSP_TEXTURE_FILTER_NEAREST
+                            : OSP_TEXTURE_FILTER_BILINEAR);
     ospSetObject(ospTexture, "data", ospData);
     ospCommit(ospTexture);
 
-
-    //TODO: free data!!!
+    // TODO: free data!!!
 
     return ospTexture;
 }
@@ -266,13 +265,15 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
            { diffuseColor[0], diffuseColor[1], diffuseColor[2], 1.f });
 
     ospSetFloat(_ospMaterial, "ior", ior);
-    ospSetVec3f(_ospMaterial, "baseColor", diffuseColor[0], diffuseColor[1], diffuseColor[2]);
+    ospSetVec3f(_ospMaterial, "baseColor", diffuseColor[0], diffuseColor[1],
+                diffuseColor[2]);
     ospSetFloat(_ospMaterial, "metallic", metallic);
     ospSetFloat(_ospMaterial, "roughness", roughness);
     ospSetFloat(_ospMaterial, "normal", normal);
 
     if (map_diffuseColor.ospTexture) {
-        ospSetObject(_ospMaterial, "map_baseColor", map_diffuseColor.ospTexture);
+        ospSetObject(_ospMaterial, "map_baseColor",
+                     map_diffuseColor.ospTexture);
         ospSetObject(_ospMaterial, "map_kd", map_diffuseColor.ospTexture);
     }
     if (map_metallic.ospTexture) {

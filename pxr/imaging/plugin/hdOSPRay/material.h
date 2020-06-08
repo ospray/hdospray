@@ -34,8 +34,7 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-typedef std::shared_ptr<class HdStTextureResource>
-       HdStTextureResourceSharedPtr;
+typedef std::shared_ptr<class HdStTextureResource> HdStTextureResourceSharedPtr;
 
 /// OSPRay hdMaterial
 ///  supports uvtextures and ptex when pxr_oiio_plugin
@@ -108,8 +107,8 @@ protected:
     GfVec3f specularColor { 1.f, 1.f, 1.f };
     float metallic { 0.f };
     float roughness { 0.f };
-    float clearcoat{0.0f};
-    float clearcoatRoughness{0.01f};
+    float clearcoat { 0.0f };
+    float clearcoatRoughness { 0.01f };
     float ior { 1.f };
     float opacity { 1.f };
     float normal { 1.f };
