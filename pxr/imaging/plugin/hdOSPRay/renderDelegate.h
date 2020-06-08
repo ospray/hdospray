@@ -230,8 +230,6 @@ private:
     // constructor helper
     void _Initialize();
 
-    // Handle for the top-level OSPRay model
-    // OSPModel _model;
     OSPRenderer
            _renderer; // moved from Pass to Delegate due to Material dependancy
 
