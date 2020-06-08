@@ -133,7 +133,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _height = vp[3];
         if (_frameBuffer)
             ospRelease(_frameBuffer);
-        std::cout << "ospNewFrameBuffer" << std::endl;
         _frameBuffer = ospNewFrameBuffer(
                (int)_width, (int)_height, OSP_FB_RGBA32F,
                OSP_FB_COLOR | OSP_FB_ACCUM |
@@ -319,7 +318,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (_pendingModelUpdate) {
-        std::cout << "update render model, new world\n";
         // release resources from last committed scene
         for (auto instance : _oldInstances) {
             ospRelease(instance);
@@ -338,12 +336,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _oldInstances.push_back(instance);
         }
         if (!_oldInstances.empty()) {
-            std::cout << "rendering num instances: " << _oldInstances.size() << std::endl;
             auto data = ospNewSharedData1D(_oldInstances.data(), OSP_INSTANCE, _oldInstances.size());
             ospCommit(data);
             ospSetObject(_world, "instance", data);
         } else {
-            std::cout << "rendering with no instances\n";
             ospRemoveParam(_world, "instance");
         }
         // ospCommit(model);

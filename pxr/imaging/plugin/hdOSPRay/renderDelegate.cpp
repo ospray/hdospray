@@ -128,7 +128,6 @@ HdOSPRayRenderDelegate::_Initialize()
     ospLoadModule("ptex");
 #endif
 
-std::cout << "newrenderer\n";
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
         _renderer = ospNewRenderer("pathtracer");
     else

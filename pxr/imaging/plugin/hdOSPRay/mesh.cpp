@@ -704,7 +704,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         OSPInstance instance = ospNewInstance(group);
         // TODO: do we need to check for a local transform as well?
         GfMatrix4f matf = _transform;
-        //std::cout << "matf: " << matf << std::endl;
         float* xfmf = matf.GetArray();
         rkcommon::math::affine3f xfm(rkcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
         rkcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
