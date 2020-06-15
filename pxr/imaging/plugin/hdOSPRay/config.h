@@ -95,6 +95,13 @@ public:
     /// Override with *HDOSPRAY_PIXELFILTER_TYPE*.
     OSPPixelFilterTypes pixelFilterType;
 
+    /// Whether OSPRay should use a simple
+    /// diffuse + phong lobe BRDF instead of the 
+    /// principled material.
+    ///
+    /// Override with *HDOSPRAY_USE_SIMPLE_MATERIAL*.
+    bool useSimpleMaterial{false};
+
     /// Initialization arguments sent to OSPRay.
     ///  This can be used to set ospray configurations like mpi.
     ///

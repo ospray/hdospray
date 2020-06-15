@@ -74,6 +74,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
                 _clearColor[2], 0.f));
 
     _renderer.setParam("maxDepth", 8);
+    _renderer.setParam("roulettePathLength", 8);
     _renderer.setParam("aoDistance", 15.0f);
     _renderer.setParam("shadowsEnabled", true);
     _renderer.setParam("maxContribution", 2.f);

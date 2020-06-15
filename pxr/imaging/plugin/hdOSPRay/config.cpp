@@ -65,6 +65,9 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_MAX_PATH_DEPTH, 8,
 TF_DEFINE_ENV_SETTING(HDOSPRAY_INIT_ARGS, "",
         "Initialization arguments sent to OSPRay");
 
+TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_SIMPLE_MATERIAL, 0,
+        "If OSPRay uses a simple diffuse + phong based material instead of the principled material");
+
 TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_DENOISER, 0,
         "OSPRay uses denoiser");
 
@@ -94,6 +97,7 @@ HdOSPRayConfig::HdOSPRayConfig()
     pixelFilterType = (OSPPixelFilterTypes) TfGetEnvSetting(HDOSPRAY_PIXELFILTER_TYPE);
     forceQuadrangulate = TfGetEnvSetting(HDOSPRAY_FORCE_QUADRANGULATE);
     maxDepth = TfGetEnvSetting(HDOSPRAY_MAX_PATH_DEPTH);
+    useSimpleMaterial = TfGetEnvSetting(HDOSPRAY_USE_SIMPLE_MATERIAL);
 
     if (TfGetEnvSetting(HDOSPRAY_PRINT_CONFIGURATION) > 0) {
         std::cout

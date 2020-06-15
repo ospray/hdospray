@@ -70,6 +70,19 @@ public:
     /// Create a default material based on the renderer type specified in config
     static OSPMaterial CreateDefaultMaterial(GfVec4f color);
 
+    /// Create a default material based on the renderer type specified in config
+    // static OSPMaterial CreateDiffuseMaterial(GfVec4f color);
+
+    /// Create a default material based on the renderer type specified in config
+    OSPMaterial CreatePrincipledMaterial(std::string renderType);
+
+        /// Create a default material based on the renderer type specified in config
+    OSPMaterial CreateSimpleMaterial(std::string renderType);
+
+        /// Create a default material based on the renderer type specified in config
+    OSPMaterial CreateScivisMaterial(std::string renderType);
+
+
     /// Summary flag. Returns true if the material is bound to one or more
     /// textures and any of those textures is a ptex texture.
     /// If no textures are bound or all textures are uv textures, then
@@ -83,6 +96,41 @@ public:
     inline const opp::Material GetOSPRayMaterial() const
     {
         return _ospMaterial;
+    }
+private:
+
+    inline float RoughnesToPhongExponent( float roughness)
+    {
+        if (roughness > 0.0f)
+        {
+            return std::min(2.0f/std::pow(roughness, 4.f) - 2.0f, 1000.0f);
+        }
+        else
+        {
+            return 1000.0f;
+        }
+    }
+
+
+
+    inline float EvalAvgFresnel( float ior )
+    {
+        if ( ior >= 400.0f )
+        {
+            return 1.0f;
+        }
+        else if ( 1.0f == ior )
+        {
+            return 0.0f;
+        }
+        else if ( 1.0 < ior )
+        {
+            return ( ior -1.0f )/( 4.08567f + 1.00071f * ior );
+        }
+        else
+        {
+            return 0.997118f + 0.1014 * ior - 0.965241 * ior*ior - 0.130607 * ior * ior *ior;
+        }
     }
 
 protected:
@@ -109,7 +157,7 @@ protected:
     GfVec3f specularColor { 1.f, 1.f, 1.f };
     float metallic { 0.f };
     float roughness { 0.f };
-    float clearcoat { 0.0f };
+    float clearcoat { 0.f };
     float clearcoatRoughness { 0.01f };
     float ior { 1.f };
     float opacity { 1.f };

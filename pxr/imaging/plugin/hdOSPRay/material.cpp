@@ -151,32 +151,24 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
 void
 HdOSPRayMaterial::_UpdateOSPRayMaterial()
 {
-    _ospMaterial = CreateDefaultMaterial(
-           { diffuseColor[0], diffuseColor[1], diffuseColor[2], 1.f });
+    std::string rendererType = HdOSPRayConfig::GetInstance().usePathTracing
+           ? "pathtracer"
+           : "scivis";
 
-    _ospMaterial.setParam("ior", ior);
-    _ospMaterial.setParam("baseColor", vec3f(diffuseColor[0], diffuseColor[1],
-      diffuseColor[2]));
-    _ospMaterial.setParam("metallic", metallic);
-    _ospMaterial.setParam("roughness", roughness);
-    _ospMaterial.setParam("normal", normal);
-
-    if (map_diffuseColor.ospTexture) {
-        _ospMaterial.setParam("map_baseColor",
-                     map_diffuseColor.ospTexture);
-        _ospMaterial.setParam("map_kd", map_diffuseColor.ospTexture);
+    if ( rendererType == "pathtracer" )
+    {
+        if ( !HdOSPRayConfig::GetInstance().useSimpleMaterial )
+        {
+            _ospMaterial = CreatePrincipledMaterial(rendererType);
+        }
+        else
+        {
+            _ospMaterial = CreateSimpleMaterial(rendererType);
+        }
     }
-    if (map_metallic.ospTexture) {
-        _ospMaterial.setParam("map_metallic", map_metallic.ospTexture);
-        metallic = 1.0f;
-    }
-    if (map_roughness.ospTexture) {
-        _ospMaterial.setParam("map_roughness", map_roughness.ospTexture);
-        roughness = 1.0f;
-    }
-    if (map_normal.ospTexture) {
-        _ospMaterial.setParam("map_normal", map_normal.ospTexture);
-        normal = 1.f;
+    else
+    {
+        _ospMaterial = CreateScivisMaterial(rendererType);
     }
 
     _ospMaterial.commit();
@@ -257,16 +249,19 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
                   << std::endl;
 }
 
-OSPMaterial
+opp::Material
 HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
 {
     std::string rendererType = HdOSPRayConfig::GetInstance().usePathTracing
            ? "pathtracer"
            : "scivis";
     OSPMaterial ospMaterial;
-    if (rendererType == "pathtracer") {
+    if (rendererType == "pathtracer" && !HdOSPRayConfig::GetInstance().useSimpleMaterial) {
         ospMaterial = ospNewMaterial(rendererType.c_str(), "principled");
         ospSetVec3f(ospMaterial, "baseColor", color[0], color[1], color[2]);
+        ospSetFloat(ospMaterial, "ior", 1.5f);
+        ospSetFloat(ospMaterial, "metallic", 0.0f);
+        ospSetFloat(ospMaterial, "roughness", 0.25f);
     } else {
         ospMaterial = ospNewMaterial(rendererType.c_str(), "obj");
         // Carson: apparently colors are actually stored as a single color value
@@ -278,6 +273,88 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
     }
     ospCommit(ospMaterial);
     return ospMaterial;
+}
+
+opp::Material
+HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
+{
+        opp::Material ospMaterial = ospNewMaterial(rendererType.c_str(), "principled");
+        ospMaterial.setParam("ior", ior);
+        ospMaterial.setParam("baseColor", vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
+        ospMaterial.setParam("metallic", metallic);
+        ospMaterial.setParam("roughness", roughness);
+        ospMaterial.setParam("normal", normal);
+        ospMaterial.setParam("transmission", 1.0-opacity);
+
+        if (map_diffuseColor.ospTexture) {
+            ospMaterial.setParam( "map_baseColor", map_diffuseColor.ospTexture);
+        }
+        if (map_metallic.ospTexture) {
+            ospMaterial.setParam(  "map_metallic", map_metallic.ospTexture);
+            metallic = 1.0f;
+        }
+        if (map_roughness.ospTexture) {
+            ospMaterial.setParam(  "map_roughness", map_roughness.ospTexture);
+            roughness = 1.0f;
+        }
+        if (map_normal.ospTexture) {
+            ospMaterial.setParam(  "map_normal", map_normal.ospTexture);
+            normal = 1.f;
+        }
+        ospMaterial.commit();
+        return ospMaterial;
+}
+
+opp::Material
+HdOSPRayMaterial::CreateSimpleMaterial(std::string rendererType)
+{
+        opp::Material ospMaterial = ospNewMaterial(rendererType.c_str(), "obj");
+        float avgFresnel = EvalAvgFresnel(ior);
+
+        std::cout << "material: "  << std::endl;
+        std::cout << "avgFresnel: " << avgFresnel << std::endl;
+        std::cout << "roughness: " << roughness << "\t exponent: "<< RoughnesToPhongExponent(std::sqrt(roughness)) << std::endl;
+        std::cout << "diffuseColor: " << diffuseColor << std::endl;
+        std::cout << "specularColor: " << specularColor << std::endl;
+        std::cout << "metallic: " << metallic << std::endl;
+
+        if ( metallic == 0.f )
+        {
+            ospMaterial.setParam("kd", vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]) * (1.0f-avgFresnel));
+            ospMaterial.setParam("ks", vec3f(specularColor[0], specularColor[1], specularColor[2]) * avgFresnel);
+            ospMaterial.setParam("ns", RoughnesToPhongExponent(std::sqrt(roughness)));
+        }
+        else
+        {
+            ospMaterial.setParam("kd", vec3f(0.0f, 0.0f, 0.0f));
+            ospMaterial.setParam("ks", vec3f(specularColor[0], specularColor[1], specularColor[2]));
+            ospMaterial.setParam("ns", RoughnesToPhongExponent(std::sqrt(roughness)));
+        }
+        ospMaterial.setParam("d", opacity);
+        if (map_diffuseColor.ospTexture) {
+            ospMaterial.setParam("map_kd", map_diffuseColor.ospTexture);
+            diffuseColor = GfVec3f(1.0);
+        }
+        ospMaterial.commit();
+        return ospMaterial;
+}
+
+opp::Material
+HdOSPRayMaterial::CreateScivisMaterial(std::string rendererType)
+{
+        opp::Material ospMaterial = ospNewMaterial(rendererType.c_str(), "obj");
+        // Carson: apparently colors are actually stored as a single color value
+        // for entire object
+        ospMaterial.setParam("ns", 10.f);
+        ospMaterial.setParam("ks", vec3f(0.2f, 0.2f, 0.2f));
+        ospMaterial.setParam("kd", vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
+        if (map_diffuseColor.ospTexture) {
+            ospMaterial.setParam("map_kd", map_diffuseColor.ospTexture);
+            diffuseColor = GfVec3f(1.0);
+        }
+        ospMaterial.setParam( "d", opacity);
+        ospMaterial.commit();
+        return ospMaterial;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
