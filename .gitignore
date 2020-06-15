@@ -1,5 +1,11 @@
 # ignore vim files
 .*.swp
 
+#ignore VS Code files
+.vscode
+*.code-workspace
 # ignore built documentation
 doc/www
+
+# ignore build folder
+build

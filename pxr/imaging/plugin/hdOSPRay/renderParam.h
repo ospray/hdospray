@@ -88,6 +88,31 @@ public:
         return _ospInstances;
     }
 
+    // thread safe.  Lights added to scene and released by renderPass.
+    void AddLight(const OSPLight light)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _ospLights.emplace_back(light);
+    }
+
+    // thread safe.  Lights added to scene and released by renderPass.
+    void AddLights(const std::vector<OSPLight>& lights)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _ospLights.insert(_ospLights.end(), lights.begin(), lights.end());
+    }
+
+    void ClearLights()
+    {
+        _ospLights.resize(0);
+    }
+
+    // not thread safe
+    std::vector<OSPLight>& GetLights()
+    {
+        return _ospLights;
+    }
+
 private:
     // mutex over ospray calls to the global model and global instances. OSPRay
     // is not thread safe
@@ -95,6 +120,8 @@ private:
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.
     std::vector<OSPInstance> _ospInstances;
+
+    std::vector<OSPLight> _ospLights;
     OSPRenderer _renderer;
     /// A version counter for edits to _scene.
     std::atomic<int>* _sceneVersion;

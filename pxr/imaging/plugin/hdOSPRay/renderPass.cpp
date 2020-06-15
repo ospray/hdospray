@@ -242,6 +242,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
     GfVec3f right_light = GfCross(dir_light, up_light);
     std::vector<OSPLight> lights;
+
+    // push scene lights
+    for (auto sceneLight : _renderParam->GetLights()) {
+        lights.push_back(sceneLight);
+    }
+
     if (_ambientLight) {
         auto ambient = ospNewLight("ambient");
         ospSetVec3f(ambient, "color", 1.f, 1.f, 1.f);

@@ -18,6 +18,14 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
       renderDelegate
       renderPass
       sampler
+      texture
+      lights/light
+      lights/diskLight
+      lights/distantLight
+      lights/domeLight
+      lights/rectLight
+      lights/sphereLight
+      #lights/simpleLight
 
     PUBLIC_HEADERS
       context.h
