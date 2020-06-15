@@ -114,12 +114,12 @@ public:
     ///  Use an ambient light
     ///
     /// Override with *HDOSPRAY_AMBIENT_LIGHT*.
-    bool ambientLight { true };
+    bool ambientLight { false };
 
     ///  Use an eye light
     ///
     /// Override with *HDOSPRAY_STATIC_DIRECTIONAL_LIGHTS*.
-    bool staticDirectionalLights { true };
+    bool staticDirectionalLights { false };
 
     ///  Use an eye light
     ///
@@ -129,17 +129,17 @@ public:
     ///  Use a key light
     ///
     /// Override with *HDOSPRAY_KEY_LIGHT*.
-    bool keyLight { true };
+    bool keyLight { false };
 
     ///  Use a fill light
     ///
     /// Override with *HDOSPRAY_FILL_LIGHT*.
-    bool fillLight { true };
+    bool fillLight { false };
 
     ///  Use a back light
     ///
     /// Override with *HDOSPRAY_BACK_LIGHT*.
-    bool backLight { true };
+    bool backLight { false };
 
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.

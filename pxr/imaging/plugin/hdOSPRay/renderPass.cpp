@@ -64,12 +64,12 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _height(0)
     , _inverseViewMatrix(1.0f) // == identity
     , _inverseProjMatrix(1.0f) // == identity
-    , _clearColor(0.0707f, 0.0707f, 0.0707f)
+    , _clearColor(0.0f, 0.0f, 0.0f)
     , _renderParam(renderParam)
 {
     _camera = ospNewCamera("perspective");
     ospSetVec4f(_renderer, "backgroundColor", _clearColor[0], _clearColor[1],
-                _clearColor[2], 1.f);
+                _clearColor[2], 0.f);
 
     // ospSetObject(_renderer, "camera", _camera);
 
@@ -248,10 +248,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         lights.push_back(sceneLight);
     }
 
-    if (_ambientLight) {
+    if (_ambientLight || lights.size() == 0) {
         auto ambient = ospNewLight("ambient");
         ospSetVec3f(ambient, "color", 1.f, 1.f, 1.f);
-        ospSetFloat(ambient, "intensity", 0.45f);
+        ospSetFloat(ambient, "intensity", 1.f);
         ospCommit(ambient);
         lights.push_back(ambient);
     }
