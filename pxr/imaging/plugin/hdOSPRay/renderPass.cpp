@@ -327,17 +327,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         for (auto instance : _oldInstances) {
             ospRelease(instance);
         }
-        // ospRelease(oldModel);
-        // oldModel = nullptr;
         _oldInstances.resize(0);
         _world = ospNewWorld();
         ospCommit(_world);
 
         // create new model and populate with mesh instances
-        // OSPModel model = ospNewModel();
         _oldInstances.reserve(_renderParam->GetInstances().size());
         for (auto instance : _renderParam->GetInstances()) {
-            // ospAddGeometry(model, instance);
             _oldInstances.push_back(instance);
         }
         if (!_oldInstances.empty()) {
@@ -348,9 +344,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         } else {
             ospRemoveParam(_world, "instance");
         }
-        // ospCommit(model);
-        // ospSetObject(_renderer, "model", model);
-        // oldModel = model;
         ospSetObject(_world, "light", lightArray);
         ospCommit(_world);
         ospCommit(_renderer);
@@ -372,11 +365,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     // Render the frame
     ospRenderFrameBlocking(_frameBuffer, _renderer, _camera, _world);
-    //                    OSP_FB_COLOR | OSP_FB_ACCUM |
-    // #if HDOSPRAY_ENABLE_DENOISER
-    //                           OSP_FB_NORMAL | OSP_FB_ALBEDO |
-    // #endif
-    //                           0);
     _numSamplesAccumulated += std::max(1, _spp);
 
     // Resolve the image buffer: find the average color per pixel by

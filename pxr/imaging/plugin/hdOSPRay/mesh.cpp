@@ -45,6 +45,8 @@
 
 #include "ospray/ospray_util.h"
 
+using namespace ospcommon::math;
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 // clang-format off
@@ -85,10 +87,6 @@ HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
 void
 HdOSPRayMesh::Finalize(HdRenderParam* renderParam)
 {
-    // if (_instanceModel && _ospMesh) {
-    //     // ospRemoveGeometry(_instanceModel, _ospMesh);
-    //     ospRelease(_instanceModel);
-    // }
 }
 
 HdDirtyBits
@@ -642,9 +640,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         ospCommit(_instanceModel);
         ospRelease(_ospMesh);
 
-        // ospAddGeometry(_instanceModel, _ospMesh);
-        // ospRelease(_ospMesh);
-        // ospCommit(_instanceModel);
         renderParam->UpdateModelVersion();
     }
 
@@ -671,30 +666,24 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
             OSPGroup group = ospNewGroup();
             OSPInstance instance = ospNewInstance(group);
-            // ospRelease(group);
+            ospRelease(group);
             OSPData data
                    = ospNewCopyData1D(&_instanceModel, OSP_GEOMETRIC_MODEL, 1);
-            // ospRelease(_instanceModel);
             ospCommit(data);
             ospSetObject(group, "geometry", data);
+            ospRelease(data);
             ospCommit(group);
 
             // Combine the local transform and the instance transform.
             GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
             float* xfmf = matf.GetArray();
-            ospcommon::math::affine3f xfm(
-                   ospcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
-                   ospcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
-                   ospcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
-                   ospcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
+            affine3f xfm(
+                   vec3f(xfmf[0], xfmf[1], xfmf[2]),
+                   vec3f(xfmf[4], xfmf[5], xfmf[6]),
+                   vec3f(xfmf[8], xfmf[9], xfmf[10]),
+                   vec3f(xfmf[12], xfmf[13], xfmf[14]));
             ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
             ospCommit(instance);
-            // convert aligned matrix to unalighned 4x3 matrix
-            // ospSet3f(instance, "xfm.l.vx", xfm[0], xfm[1], xfm[2]);
-            // ospSet3f(instance, "xfm.l.vy", xfm[4], xfm[5], xfm[6]);
-            // ospSet3f(instance, "xfm.l.vz", xfm[8], xfm[9], xfm[10]);
-            // ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
-            // ospCommit(instance);
             _ospInstances.push_back(instance);
         }
     }
@@ -705,38 +694,24 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
         OSPGroup group = ospNewGroup();
         OSPInstance instance = ospNewInstance(group);
+        ospRelease(group);
         // TODO: do we need to check for a local transform as well?
         GfMatrix4f matf = _transform;
         float* xfmf = matf.GetArray();
-        ospcommon::math::affine3f xfm(
-               ospcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
-               ospcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
-               ospcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
-               ospcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
+        affine3f xfm(
+               vec3f(xfmf[0], xfmf[1], xfmf[2]),
+               vec3f(xfmf[4], xfmf[5], xfmf[6]),
+               vec3f(xfmf[8], xfmf[9], xfmf[10]),
+               vec3f(xfmf[12], xfmf[13], xfmf[14]));
         ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
         ospCommit(instance);
-        // ospRelease(group);
         OSPData data
                = ospNewCopyData1D(&_instanceModel, OSP_GEOMETRIC_MODEL, 1);
-        // ospRelease(_instanceModel);
         ospCommit(data);
         ospSetObject(group, "geometry", data);
         ospCommit(group);
-        // ospRelease(data);
+        ospRelease(data);
         _ospInstances.push_back(instance);
-
-        // auto instance = ospNewInstance(_instanceModel, identity);
-        // _ospInstances.push_back(instance);
-        // ospCommit(instance);
-        // TODO: Carson:  update xfm for ospray2
-        // convert aligned matrix to unalighned 4x3 matrix
-        // float* xfm = _transform.GetArray();
-        // // convert aligned matrix to unalighned 4x3 matrix
-        // ospSet3f(instance, "xfm.l.vx", xfm[0], xfm[1], xfm[2]);
-        // ospSet3f(instance, "xfm.l.vy", xfm[4], xfm[5], xfm[6]);
-        // ospSet3f(instance, "xfm.l.vz", xfm[8], xfm[9], xfm[10]);
-        // ospSet3f(instance, "xfm.p", xfm[12], xfm[13], xfm[14]);
-        // ospCommit(instance);
     }
 
     // Update visibility by pulling the object into/out of the model.
@@ -818,8 +793,6 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     ospSetObject(mesh, "index", indices);
 
     // TODO: need to handle subivion types correctly
-    // ospSetInt(mesh,"mode",OSP_SUBDIVISION_PIN_CORNERS);
-    // ospSetInt(mesh,"mode",OSP_SUBDIVISION_PIN_BOUNDARY);
     ospSetInt(mesh, "mode", OSP_SUBDIVISION_PIN_ALL);
 
     ospRelease(indices);
