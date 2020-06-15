@@ -27,7 +27,7 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
       plugInfo.json
     )
 
-  find_package(ospray 2.1.1 CONFIG REQUIRED)
+  find_package(ospray 2.1.0 CONFIG REQUIRED)
 
   target_link_libraries(hdOSPRay PUBLIC
     plug
@@ -39,7 +39,6 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
     hd
     hdx
     ospray::ospray
-    ospray::ospray_module_ispc
     ${OIIO_LIBRARIES}
     )
 

@@ -39,7 +39,7 @@
 #include <OpenImageIO/imageio.h>
 
 #include "ospray/ospray_util.h"
-#include "rkcommon/math/vec.h"
+#include "ospcommon/math/vec.h"
 
 OIIO_NAMESPACE_USING
 
@@ -125,7 +125,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
     }
 
     const ImageSpec& spec = in->spec();
-    rkcommon::math::vec2i size;
+    ospcommon::math::vec2i size;
     size.x = spec.width;
     size.y = spec.height;
     int channels = spec.nchannels;
