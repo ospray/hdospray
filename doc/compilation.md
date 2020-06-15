@@ -19,10 +19,10 @@ at your own risk.
 - [USD v20.05](https://graphics.pixar.com/usd/docs/index.html)
   - USD is primarily tested with Linux, but has experimental support for MacOS and Windows.
     For a full list of USD dependencies, see the USD page.
-- [OSPRay 2.1.1](http://www.ospray.org/)
+- [OSPRay 2.1.0](http://www.ospray.org/)
+  - We recommend using ospray's superbuild to build dependencies such as embree,
+   ospcommon, and openvkl.
 - [OpenImageIO 1.8.9](https://sites.google.com/site/openimageio/home)
-- [rkCommon 1.4.0](https://github.com/ospray/rkcommon)
-- [Embree 3.2.x](https://embree.github.io/)
 - CMake 3.1.1+
 
 ## Optional Dependencies
