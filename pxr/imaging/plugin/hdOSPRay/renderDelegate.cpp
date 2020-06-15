@@ -66,7 +66,9 @@ const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES = {
     HdPrimTypeTokens->distantLight,
 };
 
-const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {};
+const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {
+    // HdPrimTypeTokens->renderBuffer,
+};
 
 std::mutex HdOSPRayRenderDelegate::_mutexResourceRegistry;
 std::atomic_int HdOSPRayRenderDelegate::_counterResourceRegistry;
@@ -346,6 +348,11 @@ HdOSPRayRenderDelegate::CreateSprim(TfToken const& typeId,
         return new HdOSPRayMaterial(sprimId);
     } else if (typeId == HdPrimTypeTokens->rectLight) {
         return new HdOSPRayRectLight(sprimId);
+<<<<<<< HEAD
+=======
+        //    } else if (typeId == HdPrimTypeTokens->simpleLight) {
+        //		return new HdOSPRaySimpleLight(sprimId);
+>>>>>>> 90d6e9d... [lights] Add support for virtual light sources (dome, distant, sphere, disk and quad)
     } else if (typeId == HdPrimTypeTokens->diskLight) {
         return new HdOSPRayDiskLight(sprimId);
     } else if (typeId == HdPrimTypeTokens->sphereLight) {

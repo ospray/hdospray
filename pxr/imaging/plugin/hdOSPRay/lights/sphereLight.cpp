@@ -55,6 +55,7 @@ HdOSPRaySphereLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
     if (bits & DirtyParams) {
         _radius = sceneDelegate->GetLightParamValue(id, HdLightTokens->radius)
                          .Get<float>();
+        // TODO: find a way to query treatAsPoint
         _treatAsPoint
                = sceneDelegate
                         ->GetLightParamValue(
