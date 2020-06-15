@@ -71,7 +71,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
 {
     _camera = opp::Camera("perspective");
     _renderer.setParam("backgroundColor", vec4f(_clearColor[0], _clearColor[1],
-                _clearColor[2], 1.f));
+                _clearColor[2], 0.f));
 
     _renderer.setParam("maxDepth", 8);
     _renderer.setParam("aoDistance", 15.0f);
@@ -253,7 +253,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (_ambientLight || light.size() == 0) {
         auto ambient = opp::Light("ambient");
         ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
-        ambient.setParam("intensity", 0.45f);
+        ambient.setParam("intensity", 1.f);
         ambient.commit();
         lights.push_back(ambient);
     }
