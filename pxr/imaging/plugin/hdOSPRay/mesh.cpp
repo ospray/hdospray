@@ -41,7 +41,7 @@
 #include "pxr/imaging/hdSt/geometricShader.h"
 #include "pxr/imaging/hdSt/material.h"
 
-#include "rkcommon/math/AffineSpace.h"
+#include "ospcommon/math/AffineSpace.h"
 
 #include "ospray/ospray_util.h"
 
@@ -68,9 +68,6 @@ ospNewCopyData1D(const void* source, OSPDataType dataType, size_t numElements)
     ospRelease(shared);
     return data;
 }
-
-// USD forces warnings when converting rkcommon::affine3f to osp::affine3f
-// const osp::affine3f identity({ 1, 0, 0, 0, 1, 0, 0, 0, 1 });
 
 HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
     : HdMesh(id, instancerId)
@@ -685,11 +682,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             // Combine the local transform and the instance transform.
             GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
             float* xfmf = matf.GetArray();
-            rkcommon::math::affine3f xfm(
-                   rkcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
-                   rkcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
-                   rkcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
-                   rkcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
+            ospcommon::math::affine3f xfm(
+                   ospcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
+                   ospcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
+                   ospcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
+                   ospcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
             ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
             ospCommit(instance);
             // convert aligned matrix to unalighned 4x3 matrix
@@ -711,11 +708,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         // TODO: do we need to check for a local transform as well?
         GfMatrix4f matf = _transform;
         float* xfmf = matf.GetArray();
-        rkcommon::math::affine3f xfm(
-               rkcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
-               rkcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
-               rkcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
-               rkcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
+        ospcommon::math::affine3f xfm(
+               ospcommon::math::vec3f(xfmf[0], xfmf[1], xfmf[2]),
+               ospcommon::math::vec3f(xfmf[4], xfmf[5], xfmf[6]),
+               ospcommon::math::vec3f(xfmf[8], xfmf[9], xfmf[10]),
+               ospcommon::math::vec3f(xfmf[12], xfmf[13], xfmf[14]));
         ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
         ospCommit(instance);
         // ospRelease(group);
