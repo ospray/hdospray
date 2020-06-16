@@ -38,6 +38,11 @@
 #include "pxr/imaging/hdSt/surfaceShader.h"
 #include <OpenImageIO/imageio.h>
 
+#include "ospray/ospray_util.h"
+#include "ospcommon/math/vec.h"
+
+using namespace ospcommon::math;
+
 OIIO_NAMESPACE_USING
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -115,14 +120,14 @@ LoadPtexTexture(std::string file)
 OSPTexture
 LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
 {
-    ImageInput* in = ImageInput::open(file.c_str());
+    auto in = ImageInput::open(file.c_str());
     if (!in) {
         std::cerr << "#osp: failed to load texture '" + file + "'" << std::endl;
         return nullptr;
     }
 
     const ImageSpec& spec = in->spec();
-    osp::vec2i size;
+    vec2i size;
     size.x = spec.width;
     size.y = spec.height;
     int channels = spec.nchannels;
@@ -134,7 +139,9 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
 
     in->read_image(hdr ? TypeDesc::FLOAT : TypeDesc::UINT8, data);
     in->close();
+#if OIIO_VERSION < 10903
     ImageInput::destroy(in);
+#endif
 
     // flip image (because OSPRay's textures have the origin at the lower left
     // corner)
@@ -144,16 +151,37 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
         for (size_t x = 0; x < stride; x++)
             std::swap(src[x], dest[x]);
     }
+    OSPTextureFormat format = osprayTextureFormat(depth, channels);
 
-    OSPData ospData = ospNewData(stride * size.y, OSP_UCHAR, data);
+    OSPDataType dataType = OSP_UNKNOWN;
+    if (format == OSP_TEXTURE_R32F)
+        dataType = OSP_FLOAT;
+    else if (format == OSP_TEXTURE_RGB32F)
+        dataType = OSP_VEC3F;
+    else if (format == OSP_TEXTURE_RGBA32F)
+        dataType = OSP_VEC4F;
+    else if ((format == OSP_TEXTURE_R8) || (format == OSP_TEXTURE_L8))
+        dataType = OSP_UCHAR;
+    else if ((format == OSP_TEXTURE_RGB8) || (format == OSP_TEXTURE_SRGB))
+        dataType = OSP_VEC3UC;
+    else if (format == OSP_TEXTURE_RGBA8)
+        dataType = OSP_VEC4UC;
+    else
+        throw std::runtime_error("hdOSPRay::LoadOIIOTexture2D: \
+                                         Unknown texture format");
+
+    OSPData ospData = ospNewSharedData2D(data, dataType, size.x, size.y);
     ospCommit(ospData);
 
     OSPTexture ospTexture = ospNewTexture("texture2d");
-    ospSet1i(ospTexture, "type", (int)osprayTextureFormat(depth, channels));
-    ospSet1i(ospTexture, "flags",
-             nearestFilter ? OSP_TEXTURE_FILTER_NEAREST : 0);
-    ospSet2i(ospTexture, "size", size.x, size.y);
-    ospSetData(ospTexture, "data", ospData);
+    ospSetInt(ospTexture, "format", format);
+    ospSetInt(ospTexture, "filter",
+              nearestFilter ? OSP_TEXTURE_FILTER_NEAREST
+                            : OSP_TEXTURE_FILTER_BILINEAR);
+    ospSetObject(ospTexture, "data", ospData);
+    ospCommit(ospTexture);
+
+    // TODO: free data!!!
 
     return ospTexture;
 }
@@ -238,27 +266,30 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
     _ospMaterial = CreateDefaultMaterial(
            { diffuseColor[0], diffuseColor[1], diffuseColor[2], 1.f });
 
+    ospSetFloat(_ospMaterial, "ior", ior);
+    ospSetVec3f(_ospMaterial, "baseColor", diffuseColor[0], diffuseColor[1],
+                diffuseColor[2]);
+    ospSetFloat(_ospMaterial, "metallic", metallic);
+    ospSetFloat(_ospMaterial, "roughness", roughness);
+    ospSetFloat(_ospMaterial, "normal", normal);
+
     if (map_diffuseColor.ospTexture) {
-        ospSetObject(_ospMaterial, "baseColorMap", map_diffuseColor.ospTexture);
-        ospSetObject(_ospMaterial, "map_Kd", map_diffuseColor.ospTexture);
+        ospSetObject(_ospMaterial, "map_baseColor",
+                     map_diffuseColor.ospTexture);
+        ospSetObject(_ospMaterial, "map_kd", map_diffuseColor.ospTexture);
     }
     if (map_metallic.ospTexture) {
-        ospSetObject(_ospMaterial, "metallicMap", map_metallic.ospTexture);
+        ospSetObject(_ospMaterial, "map_metallic", map_metallic.ospTexture);
         metallic = 1.0f;
     }
     if (map_roughness.ospTexture) {
-        ospSetObject(_ospMaterial, "roughnessMap", map_roughness.ospTexture);
+        ospSetObject(_ospMaterial, "map_roughness", map_roughness.ospTexture);
         roughness = 1.0f;
     }
     if (map_normal.ospTexture) {
-        ospSetObject(_ospMaterial, "normalMap", map_normal.ospTexture);
+        ospSetObject(_ospMaterial, "map_normal", map_normal.ospTexture);
         normal = 1.f;
     }
-    ospSet1f(_ospMaterial, "ior", ior);
-    ospSet3fv(_ospMaterial, "baseColor", diffuseColor.data());
-    ospSet1f(_ospMaterial, "metallic", metallic);
-    ospSet1f(_ospMaterial, "roughness", roughness);
-    ospSet1f(_ospMaterial, "normal", normal);
 
     ospCommit(_ospMaterial);
 }
@@ -281,6 +312,10 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
             diffuseColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayTokens->opacity) {
             opacity = value.Get<float>();
+        } else if (name == HdOSPRayTokens->clearcoat) {
+            clearcoat = value.Get<float>();
+        } else if (name == HdOSPRayTokens->clearcoatRoughness) {
+            clearcoatRoughness = value.Get<float>();
         }
     }
 }
@@ -342,16 +377,16 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
            : "scivis";
     OSPMaterial ospMaterial;
     if (rendererType == "pathtracer") {
-        ospMaterial = ospNewMaterial2(rendererType.c_str(), "Principled");
-        ospSet3f(ospMaterial, "baseColor", color[0], color[1], color[2]);
+        ospMaterial = ospNewMaterial(rendererType.c_str(), "principled");
+        ospSetVec3f(ospMaterial, "baseColor", color[0], color[1], color[2]);
     } else {
-        ospMaterial = ospNewMaterial2(rendererType.c_str(), "OBJMaterial");
+        ospMaterial = ospNewMaterial(rendererType.c_str(), "obj");
         // Carson: apparently colors are actually stored as a single color value
         // for entire object
-        ospSetf(ospMaterial, "Ns", 10.f);
-        ospSet3f(ospMaterial, "Ks", 0.2f, 0.2f, 0.2f);
-        ospSet3fv(ospMaterial, "Kd", static_cast<float*>(&color[0]));
-        ospSet1f(ospMaterial, "d", color.data()[3]);
+        ospSetFloat(ospMaterial, "ns", 10.f);
+        ospSetVec3f(ospMaterial, "ks", 0.2f, 0.2f, 0.2f);
+        ospSetVec3f(ospMaterial, "kd", color[0], color[1], color[2]);
+        ospSetFloat(ospMaterial, "d", color.data()[3]);
     }
     ospCommit(ospMaterial);
     return ospMaterial;

@@ -6,9 +6,7 @@ option(PXR_BUILD_OSPRAY_PLUGIN "build Intel hdOSPRay rendering backend" ON)
 
 if (PXR_BUILD_OSPRAY_PLUGIN)
 
-  if(NOT PXR_BUILD_OPENIMAGEIO_PLUGIN)
-    message(FATAL_ERROR "hdOSPRayPlugin requires PXR_BUILD_OPENIMAGEIO_PLUGIN")
-  endif()
+  find_package(OpenImageIO 1.8.9 REQUIRED)
 
   pxr_plugin(hdOSPRay
     PUBLIC_CLASSES
@@ -29,7 +27,7 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
       plugInfo.json
     )
 
-  find_package(ospray 1.8.5 CONFIG REQUIRED)
+  find_package(ospray 2.1.0 CONFIG REQUIRED)
 
   target_link_libraries(hdOSPRay PUBLIC
     plug
@@ -41,7 +39,6 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
     hd
     hdx
     ospray::ospray
-    ospray::ospray_module_ispc
     ${OIIO_LIBRARIES}
     )
 

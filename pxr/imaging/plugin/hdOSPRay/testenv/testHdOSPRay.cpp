@@ -32,7 +32,7 @@
 #include "pxr/imaging/hdSt/glConversions.h"
 #include "pxr/imaging/hdSt/unitTestGLDrawing.h"
 
-#include "pxr/imaging/hdx/renderTask.h"
+#include "pxr/imaging/hd/renderTask.h"
 
 #include "pxr/imaging/hd/camera.h"
 #include "pxr/imaging/hd/renderBuffer.h"
@@ -103,7 +103,7 @@ private:
     // invocation executes a single render task, which draws the scene to
     // the framebuffer.
     //
-    // HdxRendererPlugin (or derived classes like HdOSPRayRendererPlugin)
+    // HdRendererPlugin (or derived classes like HdOSPRayRendererPlugin)
     // are a discoverable way to create render delegates.
 
     HdEngine _engine;
@@ -164,7 +164,7 @@ HdOSPRay_TestGLDrawing::InitTest()
     // Prepare an OSPRay render task.  The render task is responsible for
     // rendering the scene.
     SdfPath renderTask("/renderTask");
-    _sceneDelegate->AddTask<HdxRenderTask>(renderTask);
+    _sceneDelegate->AddTask<RenderTask>(renderTask);
 
     // We can optionally supply output buffer bindings to hydra (triggered
     // by the --aov flag), so create a buffer and attachment if necessary.
@@ -196,7 +196,7 @@ HdOSPRay_TestGLDrawing::InitTest()
     // - Specify the viewport size.
     // - If we are using the AOV API, specify attachments. (Otherwise, the
     //   default is to blit color to the GL framebuffer).
-    HdxRenderTaskParams params;
+    HdRenderTaskParams params;
     params.camera = camera;
     params.viewport = GfVec4f(0, 0, GetWidth(), GetHeight());
     if (_aov.size() > 0) {
@@ -359,8 +359,8 @@ HdOSPRay_TestGLDrawing::OffscreenTest()
     glViewport(0, 0, GetWidth(), GetHeight());
 
     // Ask hydra to execute our render task (producing an image).
-    boost::shared_ptr<HdxRenderTask> renderTask
-           = boost::static_pointer_cast<HdxRenderTask>(
+    std::shared_ptr<HdRenderTask> renderTask
+           = std::static_pointer_cast<HdRenderTask>(
                   _renderIndex->GetTask(SdfPath("/renderTask")));
 
     // For offline rendering, make sure we render to convergence.

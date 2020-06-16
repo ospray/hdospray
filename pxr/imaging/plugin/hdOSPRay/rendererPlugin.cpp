@@ -23,15 +23,15 @@
 //
 #include "pxr/imaging/hdOSPRay/rendererPlugin.h"
 
+#include "pxr/imaging/hd/rendererPluginRegistry.h"
 #include "pxr/imaging/hdOSPRay/renderDelegate.h"
-#include "pxr/imaging/hdx/rendererPluginRegistry.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
 // Register the OSPRay plugin with the renderer plugin system.
 TF_REGISTRY_FUNCTION(TfType)
 {
-    HdxRendererPluginRegistry::Define<HdOSPRayRendererPlugin>();
+    HdRendererPluginRegistry::Define<HdOSPRayRendererPlugin>();
 }
 
 HdRenderDelegate*

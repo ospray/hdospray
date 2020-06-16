@@ -21,8 +21,8 @@ build-arch-gcc:
    <<: *build_job_docker
    image: hdospray/docker-images:arch
 
-build-centos7-gcc:
-  <<: *build_job_docker
+   #build-centos7-gcc:
+   #<<: *build_job_docker
 
 #build-osx-clang:
 #  <<: *build_job_shell

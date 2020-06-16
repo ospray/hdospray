@@ -16,13 +16,13 @@ at your own risk.
 
 ## Prerequisites
 
-- [USD v19.07](https://graphics.pixar.com/usd/docs/index.html)
+- [USD v20.05](https://graphics.pixar.com/usd/docs/index.html)
   - USD is primarily tested with Linux, but has experimental support for MacOS and Windows.
     For a full list of USD dependencies, see the USD page.
-  - The plugin requires a minimum of `PXR_BUILD_IMAGING` and
-    `PXR_BUILD_OPENIMAGEIO_PLUGIN` to be set to `ON` for USD.
-- [OSPRay 1.8.5](http://www.ospray.org/)
-- [Embree 3.2.x](https://embree.github.io/)
+- [OSPRay 2.1.0](http://www.ospray.org/)
+  - We recommend using ospray's superbuild to build dependencies such as embree,
+   ospcommon, and openvkl.
+- [OpenImageIO 1.8.9](https://sites.google.com/site/openimageio/home)
 - CMake 3.1.1+
 
 ## Optional Dependencies

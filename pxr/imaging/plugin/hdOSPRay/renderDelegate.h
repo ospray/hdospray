@@ -38,7 +38,8 @@ PXR_NAMESPACE_OPEN_SCOPE
 #define HDOSPRAY_RENDER_SETTINGS_TOKENS                                        \
     (ambientOcclusionSamples)(samplesPerFrame)(useDenoiser)(maxDepth)(         \
            aoDistance)(samplesToConvergence)(ambientLight)(eyeLight)(          \
-           keyLight)(fillLight)(backLight)(pathTracer)(staticDirectionalLights)
+           keyLight)(fillLight)(backLight)(pathTracer)(                        \
+           staticDirectionalLights)
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
                          HDOSPRAY_RENDER_SETTINGS_TOKENS);
@@ -59,7 +60,7 @@ class HdOSPRayRenderParam;
 /// objects like cameras and materials), and Bprims (buffer objects like
 /// textures). The minimum set of primitives a renderer needs to support is
 /// one Rprim (so the scene's not empty) and the "camera" Sprim, which is
-/// required by HdxRenderTask, the task implementing basic hydra drawing.
+/// required by HdRenderTask, the task implementing basic hydra drawing.
 ///
 ///
 class HdOSPRayRenderDelegate final : public HdRenderDelegate {
@@ -230,8 +231,6 @@ private:
     // constructor helper
     void _Initialize();
 
-    // Handle for the top-level OSPRay model
-    OSPModel _model;
     OSPRenderer
            _renderer; // moved from Pass to Delegate due to Material dependancy
 

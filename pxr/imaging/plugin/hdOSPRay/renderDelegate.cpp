@@ -81,11 +81,12 @@ void
 HdOSPRayRenderDelegate::_Initialize()
 {
     // Check plugin against pxr version
-#if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 19
-#    error This version of HdOSPRay is configured to built against USD v0.19.x
+#if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 20
+    error This version of HdOSPRay is configured to built against USD v0 .20.x
 #endif
 
-    int ac = 1;
+           int ac
+           = 1;
     std::string initArgs = HdOSPRayConfig::GetInstance().initArgs;
     std::stringstream ss(initArgs);
     std::string arg;
@@ -129,9 +130,9 @@ HdOSPRayRenderDelegate::_Initialize()
 #endif
 
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
-        _renderer = ospNewRenderer("pt");
+        _renderer = ospNewRenderer("pathtracer");
     else
-        _renderer = ospNewRenderer("sv");
+        _renderer = ospNewRenderer("scivis");
 
     // Store top-level OSPRay objects inside a render param that can be
     // passed to prims during Sync().
@@ -173,8 +174,10 @@ HdOSPRayRenderDelegate::_Initialize()
            { "ambientLight", HdOSPRayRenderSettingsTokens->ambientLight,
              VtValue(bool(HdOSPRayConfig::GetInstance().ambientLight)) });
     _settingDescriptors.push_back(
-           { "staticDirectionalLights", HdOSPRayRenderSettingsTokens->staticDirectionalLights,
-             VtValue(bool(HdOSPRayConfig::GetInstance().staticDirectionalLights)) });
+           { "staticDirectionalLights",
+             HdOSPRayRenderSettingsTokens->staticDirectionalLights,
+             VtValue(bool(
+                    HdOSPRayConfig::GetInstance().staticDirectionalLights)) });
     _settingDescriptors.push_back(
            { "eyeLight", HdOSPRayRenderSettingsTokens->eyeLight,
              VtValue(bool(HdOSPRayConfig::GetInstance().eyeLight)) });
@@ -264,8 +267,6 @@ HdOSPRayRenderDelegate::GetDefaultAovDescriptor(TfToken const& name) const
                                VtValue(GfVec3f(-1.0f)));
     } else if (name == HdAovTokens->depth) {
         return HdAovDescriptor(HdFormatFloat32, false, VtValue(1.0f));
-    } else if (name == HdAovTokens->linearDepth) {
-        return HdAovDescriptor(HdFormatFloat32, false, VtValue(0.0f));
     } else if (name == HdAovTokens->primId) {
         return HdAovDescriptor(HdFormatInt32, false, VtValue(0));
     } else {
