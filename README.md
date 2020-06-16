@@ -3,7 +3,7 @@ HdOSPRay
 
 OSPRay interactive rendering plugin for USD Hydra
 
-<img src="images/hdospray_kitchen_pt.jpg" style="padding: 0px 0px 0px 0px; box-shadow: 0px 0px 24px rgba(0,0,0,0.4);">
+`<img src="images/hdospray_kitchen_pt.jpg" style="padding: 0px 0px 0px 0px; box-shadow: 0px 0px 24px rgba(0,0,0,0.4);">`{=html}
 
 Pixar's Kitchen asset rendered with OSPRay's path tracer at interactive
 rates.
@@ -53,12 +53,16 @@ Instructions are provided for loading the scenes below.
 
 ### Kitchen Set
 
+```{=html}
 <center>
-<img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced with HdOSPRay in usdview" width=70%>
-<br/> Pixar Kitchen Set path traced with HdOSPRay in usdview <br/>
+```
+`<img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced with HdOSPRay in usdview" width=70%>`{=html}
+`<br/>`{=html} Pixar Kitchen Set path traced with HdOSPRay in usdview
+`<br/>`{=html}
+```{=html}
 </center>
-
-<br/>
+```
+`<br/>`{=html}
 
 -   Download Kitchen Set asset from
     [Pixar](http://graphics.pixar.com/usd/downloads.html)
@@ -67,47 +71,64 @@ Instructions are provided for loading the scenes below.
 
         HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Kitchen_set.usd
 
-    <br/>
+    `<br/>`{=html}
 
+```{=html}
 <center>
-<img src="images/usd_gl_thumbnail.jpg" alt="Pixar Kitchen Set GL" width=30%>
-<br/> Pixar Kitchen Set rendered with default GL in usdview <br/>
+```
+`<img src="images/usd_gl_thumbnail.jpg" alt="Pixar Kitchen Set GL" width=30%>`{=html}
+`<br/>`{=html} Pixar Kitchen Set rendered with default GL in usdview
+`<br/>`{=html}
+```{=html}
 </center>
+```
+`<br/>`{=html}
 
-<br/>
-
+```{=html}
 <center>
-<img src="images/usd_shadows_thumbnail.jpg" alt="Pixar Kitchen Set shadows" width=30%>
-<br/> Pixar Kitchen Set rendered with HdOSPRay and basic shadows in
-usdview <br/>
+```
+`<img src="images/usd_shadows_thumbnail.jpg" alt="Pixar Kitchen Set shadows" width=30%>`{=html}
+`<br/>`{=html} Pixar Kitchen Set rendered with HdOSPRay and basic
+shadows in usdview `<br/>`{=html}
+```{=html}
 </center>
+```
+`<br/>`{=html}
 
-<br/>
-
+```{=html}
 <center>
-<img src="images/usd_ao_thumbnail.jpg" alt="Pixar Kitchen Set AO" width=30%>
-<br/> Pixar Kitchen Set rendered with HdOSPRay and basic ambient
-occlusion in usdview <br/>
+```
+`<img src="images/usd_ao_thumbnail.jpg" alt="Pixar Kitchen Set AO" width=30%>`{=html}
+`<br/>`{=html} Pixar Kitchen Set rendered with HdOSPRay and basic
+ambient occlusion in usdview `<br/>`{=html}
+```{=html}
 </center>
+```
+`<br/>`{=html}
 
-<br/>
-
+```{=html}
 <center>
-<img src="images/usd_pt_thumbnail.jpg" alt="Pixar Kitchen Set path traced" width=30%>
-<br/> Pixar Kitchen Set rendered with HdOSPRay and path tracing in
-usdview <br/>
+```
+`<img src="images/usd_pt_thumbnail.jpg" alt="Pixar Kitchen Set path traced" width=30%>`{=html}
+`<br/>`{=html} Pixar Kitchen Set rendered with HdOSPRay and path tracing
+in usdview `<br/>`{=html}
+```{=html}
 </center>
-
-<br/>
+```
+`<br/>`{=html}
 
 ### Teapot
 
+```{=html}
 <center>
-<img src="images/hdospray_teapot2_thumbnail.jpg" alt="Teapot" width=70%>
-<br/> Apple teapot rendered with HdOSPRay in usdview <br/>
+```
+`<img src="images/hdospray_teapot2_thumbnail.jpg" alt="Teapot" width=70%>`{=html}
+`<br/>`{=html} Apple teapot rendered with HdOSPRay in usdview
+`<br/>`{=html}
+```{=html}
 </center>
-
-<br/>
+```
+`<br/>`{=html}
 
 -   Download the Apple ARKit teapot from
     [Apple](https://developer.apple.com/arkit/gallery/models/teapot/teapot.usdz)
@@ -121,16 +142,20 @@ usdview <br/>
 
         HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Teapot.usdc
 
-    <br/>
+    `<br/>`{=html}
 
 ### Gramophone
 
+```{=html}
 <center>
-<img src="images/hdospray_gramophone_thumbnail.jpg" alt="Gramophone" width=70%>
-<br/> Apple Gramophone rendered with HdOSPRay in usdview <br/>
+```
+`<img src="images/hdospray_gramophone_thumbnail.jpg" alt="Gramophone" width=70%>`{=html}
+`<br/>`{=html} Apple Gramophone rendered with HdOSPRay in usdview
+`<br/>`{=html}
+```{=html}
 </center>
-
-<br/>
+```
+`<br/>`{=html}
 
 -   Download the Apple ARKit gramophone from
     [Apple](https://developer.apple.com/arkit/gallery/models/gramophone/gramophone.usdz)
@@ -144,7 +169,7 @@ usdview <br/>
 
         HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Gramophone.usdc
 
-    <br/>
+    `<br/>`{=html}
 
 Building HdOSPRay
 =================
@@ -167,14 +192,14 @@ own risk.
 Prerequisites
 -------------
 
--   [USD v19.07](https://graphics.pixar.com/usd/docs/index.html)
+-   [USD v20.05](https://graphics.pixar.com/usd/docs/index.html)
     -   USD is primarily tested with Linux, but has experimental support
         for MacOS and Windows. For a full list of USD dependencies, see
         the USD page.
-    -   The plugin requires a minimum of `PXR_BUILD_IMAGING` and
-        `PXR_BUILD_OPENIMAGEIO_PLUGIN` to be set to `ON` for USD.
--   [OSPRay 1.8.5](http://www.ospray.org/)
--   [Embree 3.2.x](https://embree.github.io/)
+-   [OSPRay 2.1.0](http://www.ospray.org/)
+    -   We recommend using ospray's superbuild to build dependencies
+        such as embree, ospcommon, and openvkl.
+-   [OpenImageIO 1.8.9](https://sites.google.com/site/openimageio/home)
 -   CMake 3.1.1+
 
 Optional Dependencies
@@ -322,6 +347,11 @@ TODOs
 
 News, Updates, and Announcements
 ================================
+
+June 15, 2020: Version v0.4 now released on GitHub
+--------------------------------------------------
+
+Update to OSPRay 2.1.0. Update to USD 20.05.
 
 September 15, 2019: Version v0.3 now released on GitHub
 -------------------------------------------------------
