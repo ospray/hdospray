@@ -1,6 +1,11 @@
 News, Updates, and Announcements
 ================================
 
+June 15, 2020: Version v0.4 now released on GitHub
+--------------------------------------------------
+
+Update to OSPRay 2.1.0.  Update to USD 20.05.
+
 September 15, 2019: Version v0.3 now released on GitHub
 --------------------------------------------------
 
