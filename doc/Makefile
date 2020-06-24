@@ -65,7 +65,7 @@ www/documentation.html: compilation.md documentation.md
 convert_nbsp_width = sed -e 's@\\ @ @g' -e 's/" style="width:/" width="/g' -e "s@^</figure>@\0\n\n@"
 
 ../README.md: readme_head.md overview.md gallery.md compilation.md documentation.md news.md
-	$(PANDOC) --from=markdown --to=markdown --verbose --output $@ $+
+	$(PANDOC) --from markdown --to=gfm --verbose --output $@ $+
 
 #html $+ | $(PANDOC) --from=html --to=markdown-raw_html-native_divs --output $@
 
