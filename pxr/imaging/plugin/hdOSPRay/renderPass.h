@@ -153,6 +153,7 @@ private:
     bool _backLight { true };
     int _maxDepth { 5 };
     float _aoDistance { 10.f };
+	float _aoIntensity { 1.f };
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

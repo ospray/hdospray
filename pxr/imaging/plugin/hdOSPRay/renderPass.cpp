@@ -76,6 +76,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("maxDepth", 8);
     _renderer.setParam("roulettePathLength", 8);
     _renderer.setParam("aoDistance", 15.0f);
+    _renderer.setParam("aoIntensity", 1.0f);
     _renderer.setParam("shadowsEnabled", true);
     _renderer.setParam("maxContribution", 2.f);
     _renderer.setParam("minContribution", 0.05f);
@@ -188,6 +189,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                HdOSPRayRenderSettingsTokens->samplesToConvergence, 100);
         float aoDistance = renderDelegate->GetRenderSetting<float>(
                HdOSPRayRenderSettingsTokens->aoDistance, 10.f);
+        float aoIntensity = renderDelegate->GetRenderSetting<float>(
+               HdOSPRayRenderSettingsTokens->aoIntensity, 1.f);
         _useDenoiser = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->useDenoiser, false);
         _pixelFilterType
@@ -217,8 +220,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                HdOSPRayRenderSettingsTokens->fillLight, false);
         _backLight = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->backLight, false);
-        if (spp != _spp || aoSamples != _aoSamples || aoDistance != aoDistance
-            || maxDepth != _maxDepth || lSamples != _lightSamples) {
+        if (spp != _spp || aoSamples != _aoSamples || aoDistance != _aoDistance
+            || aoIntensity != _aoIntensity || maxDepth != _maxDepth || lSamples != _lightSamples) {
             _spp = spp;
             _aoSamples = aoSamples;
             _maxDepth = maxDepth;
@@ -226,7 +229,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _renderer.setParam("pixelSamples", _spp);
             _renderer.setParam("lightSamples", _lightSamples);
             _renderer.setParam("aoSamples", _aoSamples);
-            _renderer.setParam("aoDistance", _aoSamples);
+            _renderer.setParam("aoRadius", _aoDistance);
+            _renderer.setParam("aoIntensity", _aoIntensity);
             _renderer.setParam("maxPathLength", _maxDepth);
             _renderer.setParam("pixelFilter", (int)_pixelFilterType);
             _renderer.commit();

@@ -179,6 +179,9 @@ HdOSPRayRenderDelegate::_Initialize()
            { "aoDistance", HdOSPRayRenderSettingsTokens->aoDistance,
              VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) });
     _settingDescriptors.push_back(
+           { "aoIntensity", HdOSPRayRenderSettingsTokens->aoIntensity,
+             VtValue(float(HdOSPRayConfig::GetInstance().aoIntensity)) });
+    _settingDescriptors.push_back(
            { "samplesToConvergence",
              HdOSPRayRenderSettingsTokens->samplesToConvergence,
              VtValue(

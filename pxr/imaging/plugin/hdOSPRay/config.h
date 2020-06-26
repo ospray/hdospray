@@ -123,6 +123,12 @@ public:
     /// Override with *HDOSPRAY_AO_DISTANCE*.
     float aoDistance { 15.0f };
 
+
+    ///  The strength of the Ao effect.
+    ///
+    /// Override with *HDOSPRAY_AO_INTENSITY*.
+    float aoIntensity { 1.0f };
+    
     ///  Use an ambient light
     ///
     /// Override with *HDOSPRAY_AMBIENT_LIGHT*.
