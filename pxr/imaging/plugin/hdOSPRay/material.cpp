@@ -278,6 +278,7 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
 opp::Material
 HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
 {
+        
         opp::Material ospMaterial = ospNewMaterial(rendererType.c_str(), "principled");
         ospMaterial.setParam("ior", ior);
         ospMaterial.setParam("baseColor", vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
@@ -285,7 +286,27 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
         ospMaterial.setParam("roughness", roughness);
         ospMaterial.setParam("normal", normal);
         ospMaterial.setParam("transmission", 1.0-opacity);
-
+/*
+        if ( opacity > 0.1)
+        {
+            ospSetFloat(ospMaterial, "opacity", opacity);
+        }
+        else
+        {
+            
+            //float t = 1.0f - opacity;
+            ////float t = opacity;
+            //ospSetFloat(ospMaterial, "transmission", t);
+            //ospSetVec3f(ospMaterial, "transmissionColor", diffuseColor[0], diffuseColor[1], diffuseColor[2]);
+            
+           ospSetFloat(ospMaterial, "opacity", 0.f);
+        }
+        ospSetFloat(ospMaterial, "opacity", 1.0f);
+        float t = 1.0f - opacity;
+        ospSetFloat(ospMaterial, "transmission", t);
+        ospSetVec3f(ospMaterial, "transmissionColor", diffuseColor[0], diffuseColor[1], diffuseColor[2]);
+        //
+*/
         if (map_diffuseColor.ospTexture) {
             ospMaterial.setParam( "map_baseColor", map_diffuseColor.ospTexture);
         }
@@ -330,7 +351,14 @@ HdOSPRayMaterial::CreateSimpleMaterial(std::string rendererType)
             ospMaterial.setParam("ks", vec3f(specularColor[0], specularColor[1], specularColor[2]));
             ospMaterial.setParam("ns", RoughnesToPhongExponent(std::sqrt(roughness)));
         }
-        ospMaterial.setParam("d", opacity);
+
+        if ( opacity < 1.0f)
+        {
+            float tf = 1.0f - opacity;
+            ospMaterial.setParam("kd", vec3f(0.0f, 0.0f, 0.0f));
+            ospMaterial.setParam("tf", vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]) * tf);
+        }
+        //ospSetFloat(ospMaterial, "d", opacity);
         if (map_diffuseColor.ospTexture) {
             ospMaterial.setParam("map_kd", map_diffuseColor.ospTexture);
             diffuseColor = GfVec3f(1.0);
