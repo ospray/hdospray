@@ -35,6 +35,8 @@ namespace opp = ospray::cpp;
 
 using namespace rkcommon::math;
 
+using namespace rkcommon::math;
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 class HdOSPRayRenderParam;
@@ -132,11 +134,17 @@ private:
 
     bool _denoiserDirty { true };
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     std::vector<vec3f> _normalBuffer;
     std::vector<vec3f> _albedoBuffer;
     std::vector<vec4f> _denoisedBuffer;
 >>>>>>> 7224591... [rkcommon] switched from ospcommon to rk common
+=======
+    std::vector<vec3f> _normalBuffer;
+    std::vector<vec3f> _albedoBuffer;
+    std::vector<vec4f> _denoisedBuffer;
+>>>>>>> 631df8a... [rkcommon] switched from ospcommon to rk common
 
     std::vector<opp::Instance> _oldInstances; // instances added to last model
     opp::World _world = nullptr; // the last model created
