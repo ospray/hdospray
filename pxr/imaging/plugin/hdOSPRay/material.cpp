@@ -39,9 +39,9 @@
 #include <OpenImageIO/imageio.h>
 
 #include "ospray/ospray_util.h"
-#include "ospcommon/math/vec.h"
+#include "rkcommon/math/vec.h"
 
-using namespace ospcommon::math;
+using namespace rkcommon::math;
 
 OIIO_NAMESPACE_USING
 

@@ -28,12 +28,14 @@
 #include "pxr/imaging/hd/renderPass.h"
 #include "pxr/pxr.h"
 
-#include "ospcommon/math/vec.h"
 #include "ospray/ospray.h"
+#include "rkcommon/math/vec.h"
 
 #if HDOSPRAY_ENABLE_DENOISER
 #    include <OpenImageDenoise/oidn.hpp>
 #endif
+
+using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -111,7 +113,7 @@ private:
 
     // The resolved output buffer, in GL_RGBA. This is an intermediate between
     // _sampleBuffer and the GL framebuffer.
-    std::vector<ospcommon::math::vec4f> _colorBuffer;
+    std::vector<vec4f> _colorBuffer;
 
     // The width of the viewport we're rendering into.
     unsigned int _width;
@@ -136,9 +138,9 @@ private:
 #endif
 
     bool _denoiserDirty { true };
-    std::vector<ospcommon::math::vec3f> _normalBuffer;
-    std::vector<ospcommon::math::vec3f> _albedoBuffer;
-    std::vector<ospcommon::math::vec4f> _denoisedBuffer;
+    std::vector<vec3f> _normalBuffer;
+    std::vector<vec3f> _albedoBuffer;
+    std::vector<vec4f> _denoisedBuffer;
 
     std::vector<OSPInstance> _oldInstances; // instances added to last model
     OSPWorld _world = nullptr; // the last model created
