@@ -40,6 +40,8 @@
 #include <OpenImageIO/imageio.h>
 
 #include "ospray/ospray_cpp.h"
+#include "ospray/ospray_util.h"
+#include "rkcommon/math/vec.h"
 
 using namespace rkcommon::math;
 

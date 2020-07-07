@@ -131,6 +131,12 @@ private:
     std::shared_ptr<HdOSPRayRenderParam> _renderParam;
 
     bool _denoiserDirty { true };
+<<<<<<< HEAD
+=======
+    std::vector<vec3f> _normalBuffer;
+    std::vector<vec3f> _albedoBuffer;
+    std::vector<vec4f> _denoisedBuffer;
+>>>>>>> 7224591... [rkcommon] switched from ospcommon to rk common
 
     std::vector<opp::Instance> _oldInstances; // instances added to last model
     opp::World _world = nullptr; // the last model created
