@@ -75,10 +75,10 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
 
     _renderer.setParam("maxDepth", 8);
     _renderer.setParam("roulettePathLength", 8);
-    _renderer.setParam("aoDistance", 15.0f);
+    _renderer.setParam("aoRadius", 15.0f);
     _renderer.setParam("aoIntensity", 1.0f);
     _renderer.setParam("shadowsEnabled", true);
-    _renderer.setParam("maxContribution", 2.f);
+    _renderer.setParam("maxContribution", 200.f);
     _renderer.setParam("minContribution", 0.05f);
     _renderer.setParam("epsilon", 0.001f);
     _renderer.setParam("useGeometryLights", 0);

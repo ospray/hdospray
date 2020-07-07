@@ -70,7 +70,7 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
   # add OpenImageDenoise
   option(HDOSPRAY_ENABLE_DENOISER "build OSPRay plugin using OpenImageDenoise" OFF)
   if (HDOSPRAY_ENABLE_DENOISER)
-    find_package(OpenImageDenoise 0.8.1 CONFIG REQUIRED)
+    find_package(OpenImageDenoise 1.2.1 CONFIG)
     if (NOT TARGET OpenImageDenoise)
       message(FATAL_ERROR "hdOSPRayPlugin requires OpenImageDenoise be installed")
     endif()
