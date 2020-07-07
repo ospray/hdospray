@@ -63,6 +63,11 @@ public:
     /// Override with *HDOSPRAY_SAMPLES_TO_CONVERGENCE*.
     unsigned int samplesToConvergence;
 
+    /// How many light samples are performed at a path vertex?
+    /// A value of -1 means that all light are sampled.
+    /// Override with *HDOSPRAY_LIGHT_SAMPLES*.
+    unsigned int lightSamples;
+
     /// How many ambient occlusion rays should we generate per
     /// camera ray?
     ///

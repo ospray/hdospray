@@ -94,6 +94,8 @@ HdOSPRayDiskLight::_PrepareOSPLight()
         // light
         float power = (M_PI * radius * radius) * intensity * M_PI;
         intensity = power / (2.0f * M_PI);
+        // scaling factor to correct for a legacy factor on OSPRay
+        intensity *= 2.0;
     }
 
     // in OSPRay a disk light is represented by a spot light
