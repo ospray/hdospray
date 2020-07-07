@@ -155,19 +155,13 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
            ? "pathtracer"
            : "scivis";
 
-    if ( rendererType == "pathtracer" )
-    {
-        if ( !HdOSPRayConfig::GetInstance().useSimpleMaterial )
-        {
+    if (rendererType == "pathtracer") {
+        if (!HdOSPRayConfig::GetInstance().useSimpleMaterial) {
             _ospMaterial = CreatePrincipledMaterial(rendererType);
-        }
-        else
-        {
+        } else {
             _ospMaterial = CreateSimpleMaterial(rendererType);
         }
-    }
-    else
-    {
+    } else {
         _ospMaterial = CreateScivisMaterial(rendererType);
     }
 
@@ -256,7 +250,8 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
            ? "pathtracer"
            : "scivis";
     OSPMaterial ospMaterial;
-    if (rendererType == "pathtracer" && !HdOSPRayConfig::GetInstance().useSimpleMaterial) {
+    if (rendererType == "pathtracer"
+        && !HdOSPRayConfig::GetInstance().useSimpleMaterial) {
         ospMaterial = ospNewMaterial(rendererType.c_str(), "principled");
         ospSetVec3f(ospMaterial, "baseColor", color[0], color[1], color[2]);
         ospSetFloat(ospMaterial, "ior", 1.5f);

@@ -68,20 +68,19 @@ public:
     }
 
     /// Create a default material based on the renderer type specified in config
-    static OSPMaterial CreateDefaultMaterial(GfVec4f color);
+    static opp::Material CreateDefaultMaterial(GfVec4f color);
 
     /// Create a default material based on the renderer type specified in config
     // static OSPMaterial CreateDiffuseMaterial(GfVec4f color);
 
     /// Create a default material based on the renderer type specified in config
-    OSPMaterial CreatePrincipledMaterial(std::string renderType);
+    opp::Material CreatePrincipledMaterial(std::string renderType);
 
-        /// Create a default material based on the renderer type specified in config
-    OSPMaterial CreateSimpleMaterial(std::string renderType);
+    /// Create a default material based on the renderer type specified in config
+    opp::Material CreateSimpleMaterial(std::string renderType);
 
-        /// Create a default material based on the renderer type specified in config
-    OSPMaterial CreateScivisMaterial(std::string renderType);
-
+    /// Create a default material based on the renderer type specified in config
+    opp::Material CreateScivisMaterial(std::string renderType);
 
     /// Summary flag. Returns true if the material is bound to one or more
     /// textures and any of those textures is a ptex texture.
@@ -97,39 +96,28 @@ public:
     {
         return _ospMaterial;
     }
-private:
 
-    inline float RoughnesToPhongExponent( float roughness)
+private:
+    inline float RoughnesToPhongExponent(float roughness)
     {
-        if (roughness > 0.0f)
-        {
-            return std::min(2.0f/std::pow(roughness, 4.f) - 2.0f, 1000.0f);
-        }
-        else
-        {
+        if (roughness > 0.0f) {
+            return std::min(2.0f / std::pow(roughness, 4.f) - 2.0f, 1000.0f);
+        } else {
             return 1000.0f;
         }
     }
 
-
-
-    inline float EvalAvgFresnel( float ior )
+    inline float EvalAvgFresnel(float ior)
     {
-        if ( ior >= 400.0f )
-        {
+        if (ior >= 400.0f) {
             return 1.0f;
-        }
-        else if ( 1.0f == ior )
-        {
+        } else if (1.0f == ior) {
             return 0.0f;
-        }
-        else if ( 1.0 < ior )
-        {
-            return ( ior -1.0f )/( 4.08567f + 1.00071f * ior );
-        }
-        else
-        {
-            return 0.997118f + 0.1014 * ior - 0.965241 * ior*ior - 0.130607 * ior * ior *ior;
+        } else if (1.0 < ior) {
+            return (ior - 1.0f) / (4.08567f + 1.00071f * ior);
+        } else {
+            return 0.997118f + 0.1014 * ior - 0.965241 * ior * ior
+                   - 0.130607 * ior * ior * ior;
         }
     }
 

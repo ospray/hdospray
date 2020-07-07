@@ -96,11 +96,11 @@ public:
     OSPPixelFilterTypes pixelFilterType;
 
     /// Whether OSPRay should use a simple
-    /// diffuse + phong lobe BRDF instead of the 
+    /// diffuse + phong lobe BRDF instead of the
     /// principled material.
     ///
     /// Override with *HDOSPRAY_USE_SIMPLE_MATERIAL*.
-    bool useSimpleMaterial{false};
+    bool useSimpleMaterial { false };
 
     /// Initialization arguments sent to OSPRay.
     ///  This can be used to set ospray configurations like mpi.
@@ -123,12 +123,11 @@ public:
     /// Override with *HDOSPRAY_AO_DISTANCE*.
     float aoDistance { 15.0f };
 
-
     ///  The strength of the Ao effect.
     ///
     /// Override with *HDOSPRAY_AO_INTENSITY*.
     float aoIntensity { 1.0f };
-    
+
     ///  Use an ambient light
     ///
     /// Override with *HDOSPRAY_AMBIENT_LIGHT*.

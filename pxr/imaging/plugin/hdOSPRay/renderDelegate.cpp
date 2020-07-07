@@ -186,7 +186,7 @@ HdOSPRayRenderDelegate::_Initialize()
              HdOSPRayRenderSettingsTokens->samplesToConvergence,
              VtValue(
                     int(HdOSPRayConfig::GetInstance().samplesToConvergence)) });
-     _settingDescriptors.push_back(
+    _settingDescriptors.push_back(
            { "lightSamples", HdOSPRayRenderSettingsTokens->lightSamples,
              VtValue(int(HdOSPRayConfig::GetInstance().lightSamples)) });
     _settingDescriptors.push_back(

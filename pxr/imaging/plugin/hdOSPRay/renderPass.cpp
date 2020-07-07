@@ -221,7 +221,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _backLight = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->backLight, false);
         if (spp != _spp || aoSamples != _aoSamples || aoDistance != _aoDistance
-            || aoIntensity != _aoIntensity || maxDepth != _maxDepth || lSamples != _lightSamples) {
+            || aoIntensity != _aoIntensity || maxDepth != _maxDepth
+            || lSamples != _lightSamples) {
             _spp = spp;
             _aoSamples = aoSamples;
             _maxDepth = maxDepth;
