@@ -197,6 +197,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                       (int)OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS);
         int spp = renderDelegate->GetRenderSetting<int>(
                HdOSPRayRenderSettingsTokens->samplesPerFrame, 1);
+        int lSamples = renderDelegate->GetRenderSetting<int>(
+               HdOSPRayRenderSettingsTokens->lightSamples, -1);
         int aoSamples = renderDelegate->GetRenderSetting<int>(
                HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
         int maxDepth = renderDelegate->GetRenderSetting<int>(
@@ -217,11 +219,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _backLight = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->backLight, false);
         if (spp != _spp || aoSamples != _aoSamples || aoDistance != aoDistance
-            || maxDepth != _maxDepth) {
+            || maxDepth != _maxDepth || lSamples != _lightSamples) {
             _spp = spp;
             _aoSamples = aoSamples;
             _maxDepth = maxDepth;
+            _lightSamples = lSamples;
             ospSetInt(_renderer, "pixelSamples", _spp);
+            ospSetInt(_renderer, "lightSamples", _lightSamples);
             ospSetInt(_renderer, "aoSamples", _aoSamples);
             ospSetFloat(_renderer, "aoDistance", _aoSamples);
             ospSetInt(_renderer, "maxPathLength", _maxDepth);
