@@ -327,13 +327,6 @@ HdOSPRayMaterial::CreateSimpleMaterial(std::string rendererType)
         opp::Material ospMaterial = ospNewMaterial(rendererType.c_str(), "obj");
         float avgFresnel = EvalAvgFresnel(ior);
 
-        std::cout << "material: "  << std::endl;
-        std::cout << "avgFresnel: " << avgFresnel << std::endl;
-        std::cout << "roughness: " << roughness << "\t exponent: "<< RoughnesToPhongExponent(std::sqrt(roughness)) << std::endl;
-        std::cout << "diffuseColor: " << diffuseColor << std::endl;
-        std::cout << "specularColor: " << specularColor << std::endl;
-        std::cout << "metallic: " << metallic << std::endl;
-
         if ( metallic == 0.f )
         {
             ospMaterial.setParam("kd", vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]) * (1.0f-avgFresnel));
