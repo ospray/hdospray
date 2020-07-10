@@ -30,8 +30,10 @@
 
 #include "api.h"
 
-#include "ospray/ospray.h"
+#include "ospray/ospray_cpp.h"
 #include <mutex>
+
+namespace opp = ospray::cpp;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -231,7 +233,7 @@ private:
     // constructor helper
     void _Initialize();
 
-    OSPRenderer
+    opp::Renderer
            _renderer; // moved from Pass to Delegate due to Material dependancy
 
     // A list of render setting exports.

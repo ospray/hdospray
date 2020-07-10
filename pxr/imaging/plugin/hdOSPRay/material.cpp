@@ -39,8 +39,7 @@
 #include "pxr/imaging/hdSt/surfaceShader.h"
 #include <OpenImageIO/imageio.h>
 
-#include "ospray/ospray_util.h"
-#include "rkcommon/math/vec.h"
+#include "ospray/ospray_cpp.h"
 
 using namespace rkcommon::math;
 
@@ -86,12 +85,6 @@ HdOSPRayMaterial::HdOSPRayMaterial(SdfPath const& id)
     : HdMaterial(id)
 {
     diffuseColor = GfVec3f(1, 1, 1);
-}
-
-HdOSPRayMaterial::~HdOSPRayMaterial()
-{
-    if (_ospMaterial)
-        ospRelease(_ospMaterial);
 }
 
 /// Synchronizes state from the delegate to this object.
@@ -156,37 +149,35 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
 void
 HdOSPRayMaterial::_UpdateOSPRayMaterial()
 {
-    if (_ospMaterial)
-        ospRelease(_ospMaterial);
-
     _ospMaterial = CreateDefaultMaterial(
            { diffuseColor[0], diffuseColor[1], diffuseColor[2], 1.f });
 
-    ospSetFloat(_ospMaterial, "ior", ior);
-    ospSetVec3f(_ospMaterial, "baseColor", diffuseColor[0], diffuseColor[1],
-                diffuseColor[2]);
-    ospSetFloat(_ospMaterial, "metallic", metallic);
-    ospSetFloat(_ospMaterial, "roughness", roughness);
-    ospSetFloat(_ospMaterial, "normal", normal);
+    _ospMaterial.setParam("ior", ior);
+    _ospMaterial.setParam("baseColor", vec3f(diffuseColor[0], diffuseColor[1],
+      diffuseColor[2]));
+    _ospMaterial.setParam("metallic", metallic);
+    _ospMaterial.setParam("roughness", roughness);
+    _ospMaterial.setParam("normal", normal);
 
     if (map_diffuseColor.ospTexture) {
-        ospSetObject(_ospMaterial, "map_baseColor",
+        _ospMaterial.setParam("map_baseColor",
                      map_diffuseColor.ospTexture);
-        ospSetObject(_ospMaterial, "map_kd", map_diffuseColor.ospTexture);
+        _ospMaterial.setParam("map_kd", map_diffuseColor.ospTexture);
     }
     if (map_metallic.ospTexture) {
-        ospSetObject(_ospMaterial, "map_metallic", map_metallic.ospTexture);
+        _ospMaterial.setParam("map_metallic", map_metallic.ospTexture);
         metallic = 1.0f;
     }
     if (map_roughness.ospTexture) {
-        ospSetObject(_ospMaterial, "map_roughness", map_roughness.ospTexture);
+        _ospMaterial.setParam("map_roughness", map_roughness.ospTexture);
         roughness = 1.0f;
     }
     if (map_normal.ospTexture) {
-        ospSetObject(_ospMaterial, "map_normal", map_normal.ospTexture);
+        _ospMaterial.setParam("map_normal", map_normal.ospTexture);
         normal = 1.f;
     }
-    ospCommit(_ospMaterial);
+
+    _ospMaterial.commit();
 }
 
 void
@@ -249,7 +240,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
     }
 
     if (texture.ospTexture)
-        ospCommit(texture.ospTexture);
+        texture.ospTexture.commit();
 
     if (textureName == HdOSPRayTokens->diffuseColor) {
         map_diffuseColor = texture;

@@ -28,12 +28,14 @@
 #include "pxr/imaging/hd/renderPass.h"
 #include "pxr/pxr.h"
 
-#include "ospray/ospray.h"
+#include "ospray/ospray_cpp.h"
 #include "rkcommon/math/vec.h"
 
 #if HDOSPRAY_ENABLE_DENOISER
 #    include <OpenImageDenoise/oidn.hpp>
 #endif
+
+namespace opp = ospray::cpp;
 
 using namespace rkcommon::math;
 
@@ -57,7 +59,7 @@ public:
     ///   \param scene The OSPRay scene to raycast into.
     HdOSPRayRenderPass(HdRenderIndex* index,
                        HdRprimCollection const& collection,
-                       OSPRenderer renderer, std::atomic<int>* sceneVersion,
+                       opp::Renderer renderer, std::atomic<int>* sceneVersion,
                        std::shared_ptr<HdOSPRayRenderParam> renderParam);
 
     /// Renderpass destructor.
@@ -100,9 +102,9 @@ private:
     bool _pendingResetImage;
     bool _pendingModelUpdate;
 
-    OSPFrameBuffer _frameBuffer { nullptr };
+    opp::FrameBuffer _frameBuffer;
 
-    OSPRenderer _renderer;
+    opp::Renderer _renderer;
 
     // A reference to the global scene version.
     std::atomic<int>* _sceneVersion;
@@ -120,7 +122,7 @@ private:
     // The height of the viewport we're rendering into.
     unsigned int _height;
 
-    OSPCamera _camera;
+    opp::Camera _camera;
 
     // The inverse view matrix: camera space to world space.
     GfMatrix4d _inverseViewMatrix;
@@ -142,8 +144,8 @@ private:
     std::vector<vec3f> _albedoBuffer;
     std::vector<vec4f> _denoisedBuffer;
 
-    std::vector<OSPInstance> _oldInstances; // instances added to last model
-    OSPWorld _world = nullptr; // the last model created
+    std::vector<opp::Instance> _oldInstances; // instances added to last model
+    opp::World _world = nullptr; // the last model created
 
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
     int _spp { 1 };
