@@ -21,7 +21,7 @@ cd build
 
 cmake \
   -D pxr_DIR=/gitlab/USD-install \
-  -D ospray_DIR=/gitlab/ospray-install-2.1.0/lib/cmake/ospray-2.1.0 \
+  -D ospray_DIR=/gitlab/ospray-install-2.2.0/lib/cmake/ospray-2.2.0 \
   -D embree_DIR=/usr \
   -D ospcommon_DIR=/usr \
   -D openvkl_DIR=/usr \
