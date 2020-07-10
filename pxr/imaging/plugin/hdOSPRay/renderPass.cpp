@@ -69,27 +69,9 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _clearColor(0.0f, 0.0f, 0.0f)
     , _renderParam(renderParam)
 {
-<<<<<<< HEAD
-    _camera = ospNewCamera("perspective");
-    ospSetVec4f(_renderer, "backgroundColor", _clearColor[0], _clearColor[1],
-                _clearColor[2], 0.f);
-
-    // ospSetObject(_renderer, "camera", _camera);
-
-    ospSetInt(_renderer, "maxDepth", 8);
-    ospSetFloat(_renderer, "aoDistance", 15.0f);
-    ospSetInt(_renderer, "shadowsEnabled", true);
-    ospSetFloat(_renderer, "maxContribution", 2.f);
-    ospSetFloat(_renderer, "minContribution", 0.05f);
-    ospSetFloat(_renderer, "epsilon", 0.001f);
-    ospSetInt(_renderer, "useGeometryLights", 0);
-    ospCommit(_renderer);
-=======
     _camera = opp::Camera("perspective");
     _renderer.setParam("backgroundColor", vec4f(_clearColor[0], _clearColor[1],
                 _clearColor[2], 1.f));
-
-    // ospSetObject(_renderer, "camera", _camera);
 
     _renderer.setParam("maxDepth", 8);
     _renderer.setParam("aoDistance", 15.0f);
@@ -100,7 +82,6 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("useGeometryLights", 0);
 
     _renderer.commit();
->>>>>>> 4b787c0... cpp conversion working
 
 #if 0 //HDOSPRAY_ENABLE_DENOISER
     _denoiserDevice = oidn::newDevice();
@@ -161,9 +142,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
           _frameBuffer.setParam("imageOperation", opp::ImageOperation("denoise"));
         _frameBuffer.commit();
         _colorBuffer.resize(_width * _height);
-        _normalBuffer.resize(_width * _height);
-        _albedoBuffer.resize(_width * _height);
-        _denoisedBuffer.resize(_width * _height);
         _pendingResetImage = true;
         _denoiserDirty = true;
     }
@@ -243,22 +221,14 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _spp = spp;
             _aoSamples = aoSamples;
             _maxDepth = maxDepth;
-<<<<<<< HEAD
             _lightSamples = lSamples;
-            ospSetInt(_renderer, "pixelSamples", _spp);
-            ospSetInt(_renderer, "lightSamples", _lightSamples);
-            ospSetInt(_renderer, "aoSamples", _aoSamples);
-            ospSetFloat(_renderer, "aoDistance", _aoSamples);
-            ospSetInt(_renderer, "maxPathLength", _maxDepth);
-            ospSetInt(_renderer, "pixelFilter", (int)_pixelFilterType);
-            ospCommit(_renderer);
-=======
             _renderer.setParam("pixelSamples", _spp);
+            _renderer.setParam("lightSamples", _lightSamples);
             _renderer.setParam("aoSamples", _aoSamples);
             _renderer.setParam("aoDistance", _aoSamples);
             _renderer.setParam("maxPathLength", _maxDepth);
+            _renderer.setParam("pixelFilter", (int)_pixelFilterType);
             _renderer.commit();
->>>>>>> 4b787c0... cpp conversion working
         }
         _lastSettingsVersion = currentSettingsVersion;
         ResetImage();
@@ -272,29 +242,19 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         up_light = { 0.f, 1.f, 0.f };
         dir_light = { -.1f, -.1f, -.8f };
     }
-<<<<<<< HEAD
-    GfVec3f right_light = GfCross(dir_light, up_light);
-    std::vector<OSPLight> lights;
+    GfVec3f right_light = GfCross(dir, up);
+    std::vector<opp::Light> lights;
 
     // push scene lights
     for (auto sceneLight : _renderParam->GetLights()) {
         lights.push_back(sceneLight);
     }
 
-    if (_ambientLight || lights.size() == 0) {
-        auto ambient = ospNewLight("ambient");
-        ospSetVec3f(ambient, "color", 1.f, 1.f, 1.f);
-        ospSetFloat(ambient, "intensity", 1.f);
-        ospCommit(ambient);
-=======
-    GfVec3f right_light = GfCross(dir, up);
-    std::vector<opp::Light> lights;
-    if (_ambientLight) {
+    if (_ambientLight || light.size() == 0) {
         auto ambient = opp::Light("ambient");
         ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
         ambient.setParam("intensity", 0.45f);
         ambient.commit();
->>>>>>> 4b787c0... cpp conversion working
         lights.push_back(ambient);
     }
 
@@ -353,7 +313,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     ospCommit(lightArray);
     if (_world) {
         _world.setParam("light", lightArray);
-        // ospRelease(lightArray);
         _world.commit();
     }
 
@@ -372,9 +331,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     if (_pendingModelUpdate) {
         // release resources from last committed scene
-        for (auto instance : _oldInstances) {
-            // ospRelease(instance);
-        }
         _oldInstances.resize(0);
         _world = opp::World();
         _world.commit();
@@ -429,58 +385,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _renderer.setParam("pixelSamples", _spp);
             _renderer.commit();
         }
-        Denoise();
     }
 
     // Blit!
-    glDrawPixels(_width, _height, GL_RGBA, GL_FLOAT, &_colorBuffer[0]);
-}
-
-void
-HdOSPRayRenderPass::Denoise()
-{
-    _denoisedBuffer = _colorBuffer;
-#if 0 //HDOSPRAY_ENABLE_DENOISER
-    const auto size = _width * _height;
-    const osp::vec4f* rgba
-           = (const osp::vec4f*)ospMapFrameBuffer(_frameBuffer, OSP_FB_COLOR);
-    std::copy(rgba, rgba + size, _colorBuffer.begin());
-    ospUnmapFrameBuffer(rgba, _frameBuffer);
-    const osp::vec3f* normal
-           = (const osp::vec3f*)ospMapFrameBuffer(_frameBuffer, OSP_FB_NORMAL);
-    std::copy(normal, normal + size, _normalBuffer.begin());
-    ospUnmapFrameBuffer(normal, _frameBuffer);
-    const osp::vec3f* albedo
-           = (const osp::vec3f*)ospMapFrameBuffer(_frameBuffer, OSP_FB_ALBEDO);
-    std::copy(albedo, albedo + size, _albedoBuffer.begin());
-    ospUnmapFrameBuffer(albedo, _frameBuffer);
-
-    if (_denoiserDirty) {
-        _denoiserFilter.setImage("color", (void*)_colorBuffer.data(),
-                                 oidn::Format::Float3, _width, _height, 0,
-                                 sizeof(osp::vec4f));
-
-        _denoiserFilter.setImage("normal", (void*)_normalBuffer.data(),
-                                 oidn::Format::Float3, _width, _height, 0,
-                                 sizeof(osp::vec3f));
-
-        _denoiserFilter.setImage("albedo", (void*)_albedoBuffer.data(),
-                                 oidn::Format::Float3, _width, _height, 0,
-                                 sizeof(osp::vec3f));
-
-        _denoiserFilter.setImage("output", _denoisedBuffer.data(),
-                                 oidn::Format::Float3, _width, _height, 0,
-                                 sizeof(osp::vec4f));
-
-        _denoiserFilter.set("hdr", true);
-        _denoiserFilter.commit();
-        _denoiserDirty = false;
-    }
-
-    _denoiserFilter.execute();
-    _colorBuffer = _denoisedBuffer;
-    // Carson: we can avoid having 2 buffers
-#endif
+    glDrawPixels(_width, _height, GL_RGBA, GL_FLOAT, _colorBuffer.data());
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

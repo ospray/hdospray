@@ -31,10 +31,6 @@
 #include "ospray/ospray_cpp.h"
 #include "rkcommon/math/vec.h"
 
-#if HDOSPRAY_ENABLE_DENOISER
-#    include <OpenImageDenoise/oidn.hpp>
-#endif
-
 namespace opp = ospray::cpp;
 
 using namespace rkcommon::math;
@@ -134,15 +130,7 @@ private:
 
     std::shared_ptr<HdOSPRayRenderParam> _renderParam;
 
-#if HDOSPRAY_ENABLE_DENOISER
-    oidn::DeviceRef _denoiserDevice;
-    oidn::FilterRef _denoiserFilter;
-#endif
-
     bool _denoiserDirty { true };
-    std::vector<vec3f> _normalBuffer;
-    std::vector<vec3f> _albedoBuffer;
-    std::vector<vec4f> _denoisedBuffer;
 
     std::vector<opp::Instance> _oldInstances; // instances added to last model
     opp::World _world = nullptr; // the last model created
@@ -165,8 +153,6 @@ private:
     bool _backLight { true };
     int _maxDepth { 5 };
     float _aoDistance { 10.f };
-
-    void Denoise();
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
