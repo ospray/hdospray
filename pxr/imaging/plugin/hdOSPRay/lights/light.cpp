@@ -37,7 +37,6 @@ PXR_NAMESPACE_OPEN_SCOPE
 HdOSPRayLight::HdOSPRayLight(SdfPath const& id)
     : HdLight(id)
 {
-    // std::cout << __PRETTY_FUNCTION__ << std::endl;
 }
 
 HdOSPRayLight::~HdOSPRayLight()
@@ -49,7 +48,6 @@ void
 HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
                     HdDirtyBits* dirtyBits)
 {
-    // std::cout << __PRETTY_FUNCTION__ << std::endl;
     HD_TRACE_FUNCTION();
     HF_MALLOC_TAG_FUNCTION();
 
@@ -115,8 +113,7 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         _emissionParam.normalize
                = sceneDelegate->GetLightParamValue(id, HdLightTokens->normalize)
                         .Get<bool>();
-        //_visibility = sceneDelegate->GetVisible(id);
-        _visibility = true;
+        _visibility = sceneDelegate->GetVisible(id);
     }
 
     // query light type specific parameters
@@ -129,41 +126,6 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
     _PopulateOSPLight(ospRenderParam);
 
     // TODO: implement handling of shadow collections
-
-    // Shadow Params
-    /*
-    if (bits & DirtyShadowParams) {
-        //_params[HdLightTokens->shadowParams] =
-        //        sceneDelegate->Get(id, HdLightTokens->shadowParams);
-        _params[HdLightTokens->shadowParams] =
-                sceneDelegate->GetLightParamValue(id,
-    HdLightTokens->shadowParams);
-    }
-
-    // Shadow Collection
-    if (bits & DirtyCollection) {
-        VtValue vtShadowCollection =
-                sceneDelegate->Get(id, HdLightTokens->shadowCollection);
-
-        // Optional
-        if (vtShadowCollection.IsHolding<HdRprimCollection>()) {
-            HdRprimCollection newCollection =
-                vtShadowCollection.UncheckedGet<HdRprimCollection>();
-
-            if (_params[HdLightTokens->shadowCollection] != newCollection) {
-                _params[HdLightTokens->shadowCollection] = newCollection;
-
-                HdChangeTracker& changeTracker =
-                             sceneDelegate->GetRenderIndex().GetChangeTracker();
-
-                changeTracker.MarkCollectionDirty(newCollection.GetName());
-            }
-
-        } else {
-            _params[HdLightTokens->shadowCollection] = HdRprimCollection();
-        }
-    }
-    */
 
     *dirtyBits = Clean;
 }

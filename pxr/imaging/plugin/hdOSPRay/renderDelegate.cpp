@@ -60,19 +60,13 @@ const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_RPRIM_TYPES = {
 };
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES = {
-    HdPrimTypeTokens->camera,
-    HdPrimTypeTokens->material,
-    HdPrimTypeTokens->rectLight,
-    HdPrimTypeTokens->diskLight,
-    //    HdPrimTypeTokens->simpleLight,
-    HdPrimTypeTokens->sphereLight,
-    HdPrimTypeTokens->domeLight,
+    HdPrimTypeTokens->camera,       HdPrimTypeTokens->material,
+    HdPrimTypeTokens->rectLight,    HdPrimTypeTokens->diskLight,
+    HdPrimTypeTokens->sphereLight,  HdPrimTypeTokens->domeLight,
     HdPrimTypeTokens->distantLight,
 };
 
-const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {
-    // HdPrimTypeTokens->renderBuffer,
-};
+const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {};
 
 std::mutex HdOSPRayRenderDelegate::_mutexResourceRegistry;
 std::atomic_int HdOSPRayRenderDelegate::_counterResourceRegistry;
@@ -352,8 +346,6 @@ HdOSPRayRenderDelegate::CreateSprim(TfToken const& typeId,
         return new HdOSPRayMaterial(sprimId);
     } else if (typeId == HdPrimTypeTokens->rectLight) {
         return new HdOSPRayRectLight(sprimId);
-        //    } else if (typeId == HdPrimTypeTokens->simpleLight) {
-        //		return new HdOSPRaySimpleLight(sprimId);
     } else if (typeId == HdPrimTypeTokens->diskLight) {
         return new HdOSPRayDiskLight(sprimId);
     } else if (typeId == HdPrimTypeTokens->sphereLight) {
