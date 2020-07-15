@@ -23,6 +23,7 @@
 //
 
 #include "pxr/imaging/hdOSPRay/material.h"
+#include "pxr/imaging/hdOSPRay/texture.h"
 
 #include "pxr/base/gf/vec3f.h"
 #include "pxr/imaging/hd/material.h"
@@ -39,9 +40,9 @@
 #include <OpenImageIO/imageio.h>
 
 #include "ospray/ospray_util.h"
-#include "ospcommon/math/vec.h"
+#include "rkcommon/math/vec.h"
 
-using namespace ospcommon::math;
+using namespace rkcommon::math;
 
 OIIO_NAMESPACE_USING
 
@@ -80,111 +81,6 @@ TF_DEFINE_PRIVATE_TOKENS(
     (HwPtexTexture_1)
 );
 // clang-format on
-
-OSPTextureFormat
-osprayTextureFormat(int depth, int channels, bool preferLinear = false)
-{
-    if (depth == 1) {
-        if (channels == 1)
-            return preferLinear ? OSP_TEXTURE_R8 : OSP_TEXTURE_L8;
-        if (channels == 2)
-            return preferLinear ? OSP_TEXTURE_RA8 : OSP_TEXTURE_LA8;
-        if (channels == 3)
-            return preferLinear ? OSP_TEXTURE_RGB8 : OSP_TEXTURE_SRGB;
-        if (channels == 4)
-            return preferLinear ? OSP_TEXTURE_RGBA8 : OSP_TEXTURE_SRGBA;
-    } else if (depth == 4) {
-        if (channels == 1)
-            return OSP_TEXTURE_R32F;
-        if (channels == 3)
-            return OSP_TEXTURE_RGB32F;
-        if (channels == 4)
-            return OSP_TEXTURE_RGBA32F;
-    }
-
-    return OSP_TEXTURE_FORMAT_INVALID;
-}
-
-/// creates ptex texture and sets to file, does not commit
-OSPTexture
-LoadPtexTexture(std::string file)
-{
-    if (file == "")
-        return nullptr;
-    OSPTexture ospTexture = ospNewTexture("ptex");
-    ospSetString(ospTexture, "filename", file.c_str());
-    return ospTexture;
-}
-
-// creates 2d osptexture from file, does not commit
-OSPTexture
-LoadOIIOTexture2D(std::string file, bool nearestFilter = false)
-{
-    auto in = ImageInput::open(file.c_str());
-    if (!in) {
-        std::cerr << "#osp: failed to load texture '" + file + "'" << std::endl;
-        return nullptr;
-    }
-
-    const ImageSpec& spec = in->spec();
-    vec2i size;
-    size.x = spec.width;
-    size.y = spec.height;
-    int channels = spec.nchannels;
-    const bool hdr = spec.format.size() > 1;
-    int depth = hdr ? 4 : 1;
-    const size_t stride = size.x * channels * depth;
-    unsigned char* data
-           = (unsigned char*)malloc(sizeof(unsigned char) * size.y * stride);
-
-    in->read_image(hdr ? TypeDesc::FLOAT : TypeDesc::UINT8, data);
-    in->close();
-#if OIIO_VERSION < 10903
-    ImageInput::destroy(in);
-#endif
-
-    // flip image (because OSPRay's textures have the origin at the lower left
-    // corner)
-    for (int y = 0; y < size.y / 2; y++) {
-        unsigned char* src = &data[y * stride];
-        unsigned char* dest = &data[(size.y - 1 - y) * stride];
-        for (size_t x = 0; x < stride; x++)
-            std::swap(src[x], dest[x]);
-    }
-    OSPTextureFormat format = osprayTextureFormat(depth, channels);
-
-    OSPDataType dataType = OSP_UNKNOWN;
-    if (format == OSP_TEXTURE_R32F)
-        dataType = OSP_FLOAT;
-    else if (format == OSP_TEXTURE_RGB32F)
-        dataType = OSP_VEC3F;
-    else if (format == OSP_TEXTURE_RGBA32F)
-        dataType = OSP_VEC4F;
-    else if ((format == OSP_TEXTURE_R8) || (format == OSP_TEXTURE_L8))
-        dataType = OSP_UCHAR;
-    else if ((format == OSP_TEXTURE_RGB8) || (format == OSP_TEXTURE_SRGB))
-        dataType = OSP_VEC3UC;
-    else if (format == OSP_TEXTURE_RGBA8)
-        dataType = OSP_VEC4UC;
-    else
-        throw std::runtime_error("hdOSPRay::LoadOIIOTexture2D: \
-                                         Unknown texture format");
-
-    OSPData ospData = ospNewSharedData2D(data, dataType, size.x, size.y);
-    ospCommit(ospData);
-
-    OSPTexture ospTexture = ospNewTexture("texture2d");
-    ospSetInt(ospTexture, "format", format);
-    ospSetInt(ospTexture, "filter",
-              nearestFilter ? OSP_TEXTURE_FILTER_NEAREST
-                            : OSP_TEXTURE_FILTER_BILINEAR);
-    ospSetObject(ospTexture, "data", ospData);
-    ospCommit(ospTexture);
-
-    // TODO: free data!!!
-
-    return ospTexture;
-}
 
 HdOSPRayMaterial::HdOSPRayMaterial(SdfPath const& id)
     : HdMaterial(id)
@@ -290,7 +186,6 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
         ospSetObject(_ospMaterial, "map_normal", map_normal.ospTexture);
         normal = 1.f;
     }
-
     ospCommit(_ospMaterial);
 }
 

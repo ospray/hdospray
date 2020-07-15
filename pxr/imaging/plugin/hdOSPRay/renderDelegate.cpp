@@ -31,6 +31,12 @@
 
 #include "pxr/imaging/hd/resourceRegistry.h"
 
+#include "pxr/imaging/hdOSPRay/lights/diskLight.h"
+#include "pxr/imaging/hdOSPRay/lights/distantLight.h"
+#include "pxr/imaging/hdOSPRay/lights/domeLight.h"
+#include "pxr/imaging/hdOSPRay/lights/rectLight.h"
+#include "pxr/imaging/hdOSPRay/lights/sphereLight.h"
+//#include "pxr/imaging/hdOSPRay/simpleLight.h"
 #include "pxr/imaging/hdOSPRay/material.h"
 #include "pxr/imaging/hdOSPRay/mesh.h"
 // XXX: Add other Rprim types later
@@ -54,8 +60,10 @@ const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_RPRIM_TYPES = {
 };
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES = {
-    HdPrimTypeTokens->camera,
-    HdPrimTypeTokens->material,
+    HdPrimTypeTokens->camera,       HdPrimTypeTokens->material,
+    HdPrimTypeTokens->rectLight,    HdPrimTypeTokens->diskLight,
+    HdPrimTypeTokens->sphereLight,  HdPrimTypeTokens->domeLight,
+    HdPrimTypeTokens->distantLight,
 };
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {};
@@ -160,6 +168,9 @@ HdOSPRayRenderDelegate::_Initialize()
            { "Toggle denoiser", HdOSPRayRenderSettingsTokens->useDenoiser,
              VtValue(bool(HdOSPRayConfig::GetInstance().useDenoiser)) });
     _settingDescriptors.push_back(
+           { "Pixelfilter type", HdOSPRayRenderSettingsTokens->pixelFilterType,
+             VtValue(int(HdOSPRayConfig::GetInstance().pixelFilterType)) });
+    _settingDescriptors.push_back(
            { "maxDepth", HdOSPRayRenderSettingsTokens->maxDepth,
              VtValue(int(HdOSPRayConfig::GetInstance().maxDepth)) });
     _settingDescriptors.push_back(
@@ -170,6 +181,9 @@ HdOSPRayRenderDelegate::_Initialize()
              HdOSPRayRenderSettingsTokens->samplesToConvergence,
              VtValue(
                     int(HdOSPRayConfig::GetInstance().samplesToConvergence)) });
+    _settingDescriptors.push_back(
+           { "lightSamples", HdOSPRayRenderSettingsTokens->lightSamples,
+             VtValue(int(HdOSPRayConfig::GetInstance().lightSamples)) });
     _settingDescriptors.push_back(
            { "ambientLight", HdOSPRayRenderSettingsTokens->ambientLight,
              VtValue(bool(HdOSPRayConfig::GetInstance().ambientLight)) });
@@ -330,6 +344,16 @@ HdOSPRayRenderDelegate::CreateSprim(TfToken const& typeId,
         return new HdCamera(sprimId);
     } else if (typeId == HdPrimTypeTokens->material) {
         return new HdOSPRayMaterial(sprimId);
+    } else if (typeId == HdPrimTypeTokens->rectLight) {
+        return new HdOSPRayRectLight(sprimId);
+    } else if (typeId == HdPrimTypeTokens->diskLight) {
+        return new HdOSPRayDiskLight(sprimId);
+    } else if (typeId == HdPrimTypeTokens->sphereLight) {
+        return new HdOSPRaySphereLight(sprimId);
+    } else if (typeId == HdPrimTypeTokens->domeLight) {
+        return new HdOSPRayDomeLight(sprimId);
+    } else if (typeId == HdPrimTypeTokens->distantLight) {
+        return new HdOSPRayDistantLight(sprimId);
     } else {
         TF_CODING_ERROR("Unknown Sprim Type %s", typeId.GetText());
     }

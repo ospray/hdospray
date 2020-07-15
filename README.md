@@ -276,8 +276,13 @@ Hydra Settings.
     Will progressively render frames until this many samples per pixel,
     then stop rendering
 
+-   `HDOSPRAY_LIGTH_SAMPLES`
+
+    Number of light samples at every path intersection. A value of -1 leads to sampling all light
+    sources in the scene. *Does not affect scivis renderer.*
+   
   - `HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES`
-    
+
     Number of ambient occlusion samples to compute per pixel. *Does not
     affect path tracer.*
 

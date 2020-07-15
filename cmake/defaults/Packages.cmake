@@ -63,10 +63,6 @@ else()
     )
 endif()
 
-# --TBB
-find_package(TBB REQUIRED COMPONENTS tbb)
-add_definitions(${TBB_DEFINITIONS})
-
 # --math
 if(WIN32)
     # Math functions are linked automatically by including math.h on Windows.

@@ -41,11 +41,11 @@
 #include "pxr/imaging/hdSt/geometricShader.h"
 #include "pxr/imaging/hdSt/material.h"
 
-#include "ospcommon/math/AffineSpace.h"
+#include "rkcommon/math/AffineSpace.h"
 
 #include "ospray/ospray_util.h"
 
-using namespace ospcommon::math;
+using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -677,11 +677,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             // Combine the local transform and the instance transform.
             GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
             float* xfmf = matf.GetArray();
-            affine3f xfm(
-                   vec3f(xfmf[0], xfmf[1], xfmf[2]),
-                   vec3f(xfmf[4], xfmf[5], xfmf[6]),
-                   vec3f(xfmf[8], xfmf[9], xfmf[10]),
-                   vec3f(xfmf[12], xfmf[13], xfmf[14]));
+            affine3f xfm(vec3f(xfmf[0], xfmf[1], xfmf[2]),
+                         vec3f(xfmf[4], xfmf[5], xfmf[6]),
+                         vec3f(xfmf[8], xfmf[9], xfmf[10]),
+                         vec3f(xfmf[12], xfmf[13], xfmf[14]));
             ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
             ospCommit(instance);
             _ospInstances.push_back(instance);
@@ -698,11 +697,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         // TODO: do we need to check for a local transform as well?
         GfMatrix4f matf = _transform;
         float* xfmf = matf.GetArray();
-        affine3f xfm(
-               vec3f(xfmf[0], xfmf[1], xfmf[2]),
-               vec3f(xfmf[4], xfmf[5], xfmf[6]),
-               vec3f(xfmf[8], xfmf[9], xfmf[10]),
-               vec3f(xfmf[12], xfmf[13], xfmf[14]));
+        affine3f xfm(vec3f(xfmf[0], xfmf[1], xfmf[2]),
+                     vec3f(xfmf[4], xfmf[5], xfmf[6]),
+                     vec3f(xfmf[8], xfmf[9], xfmf[10]),
+                     vec3f(xfmf[12], xfmf[13], xfmf[14]));
         ospSetParam(instance, "xfm", OSP_AFFINE3F, xfm);
         ospCommit(instance);
         OSPData data

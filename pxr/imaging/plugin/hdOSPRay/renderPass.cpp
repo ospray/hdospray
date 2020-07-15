@@ -64,12 +64,12 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _height(0)
     , _inverseViewMatrix(1.0f) // == identity
     , _inverseProjMatrix(1.0f) // == identity
-    , _clearColor(0.0707f, 0.0707f, 0.0707f)
+    , _clearColor(0.0f, 0.0f, 0.0f)
     , _renderParam(renderParam)
 {
     _camera = ospNewCamera("perspective");
     ospSetVec4f(_renderer, "backgroundColor", _clearColor[0], _clearColor[1],
-                _clearColor[2], 1.f);
+                _clearColor[2], 0.f);
 
     // ospSetObject(_renderer, "camera", _camera);
 
@@ -80,7 +80,6 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     ospSetFloat(_renderer, "minContribution", 0.05f);
     ospSetFloat(_renderer, "epsilon", 0.001f);
     ospSetInt(_renderer, "useGeometryLights", 0);
-
     ospCommit(_renderer);
 
 #if HDOSPRAY_ENABLE_DENOISER
@@ -192,8 +191,14 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                HdOSPRayRenderSettingsTokens->aoDistance, 10.f);
         _useDenoiser = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->useDenoiser, false);
+        _pixelFilterType
+               = (OSPPixelFilterTypes)renderDelegate->GetRenderSetting<int>(
+                      HdOSPRayRenderSettingsTokens->pixelFilterType,
+                      (int)OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS);
         int spp = renderDelegate->GetRenderSetting<int>(
                HdOSPRayRenderSettingsTokens->samplesPerFrame, 1);
+        int lSamples = renderDelegate->GetRenderSetting<int>(
+               HdOSPRayRenderSettingsTokens->lightSamples, -1);
         int aoSamples = renderDelegate->GetRenderSetting<int>(
                HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
         int maxDepth = renderDelegate->GetRenderSetting<int>(
@@ -214,14 +219,17 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _backLight = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->backLight, false);
         if (spp != _spp || aoSamples != _aoSamples || aoDistance != aoDistance
-            || maxDepth != _maxDepth) {
+            || maxDepth != _maxDepth || lSamples != _lightSamples) {
             _spp = spp;
             _aoSamples = aoSamples;
             _maxDepth = maxDepth;
+            _lightSamples = lSamples;
             ospSetInt(_renderer, "pixelSamples", _spp);
+            ospSetInt(_renderer, "lightSamples", _lightSamples);
             ospSetInt(_renderer, "aoSamples", _aoSamples);
             ospSetFloat(_renderer, "aoDistance", _aoSamples);
             ospSetInt(_renderer, "maxPathLength", _maxDepth);
+            ospSetInt(_renderer, "pixelFilter", (int)_pixelFilterType);
             ospCommit(_renderer);
         }
         _lastSettingsVersion = currentSettingsVersion;
@@ -238,10 +246,16 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
     GfVec3f right_light = GfCross(dir_light, up_light);
     std::vector<OSPLight> lights;
-    if (_ambientLight) {
+
+    // push scene lights
+    for (auto sceneLight : _renderParam->GetLights()) {
+        lights.push_back(sceneLight);
+    }
+
+    if (_ambientLight || lights.size() == 0) {
         auto ambient = ospNewLight("ambient");
         ospSetVec3f(ambient, "color", 1.f, 1.f, 1.f);
-        ospSetFloat(ambient, "intensity", 0.45f);
+        ospSetFloat(ambient, "intensity", 1.f);
         ospCommit(ambient);
         lights.push_back(ambient);
     }

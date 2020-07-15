@@ -63,6 +63,11 @@ public:
     /// Override with *HDOSPRAY_SAMPLES_TO_CONVERGENCE*.
     unsigned int samplesToConvergence;
 
+    /// How many light samples are performed at a path vertex?
+    /// A value of -1 means that all light are sampled.
+    /// Override with *HDOSPRAY_LIGHT_SAMPLES*.
+    unsigned int lightSamples;
+
     /// How many ambient occlusion rays should we generate per
     /// camera ray?
     ///
@@ -84,6 +89,11 @@ public:
     ///
     /// Override with *HDOSPRAY_USE_DENOISER*.
     bool useDenoiser;
+
+    /// The type of pixel filter used by OSPRay
+    ///
+    /// Override with *HDOSPRAY_PIXELFILTER_TYPE*.
+    OSPPixelFilterTypes pixelFilterType;
 
     /// Initialization arguments sent to OSPRay.
     ///  This can be used to set ospray configurations like mpi.
@@ -109,12 +119,12 @@ public:
     ///  Use an ambient light
     ///
     /// Override with *HDOSPRAY_AMBIENT_LIGHT*.
-    bool ambientLight { true };
+    bool ambientLight { false };
 
     ///  Use an eye light
     ///
     /// Override with *HDOSPRAY_STATIC_DIRECTIONAL_LIGHTS*.
-    bool staticDirectionalLights { true };
+    bool staticDirectionalLights { false };
 
     ///  Use an eye light
     ///
@@ -124,17 +134,17 @@ public:
     ///  Use a key light
     ///
     /// Override with *HDOSPRAY_KEY_LIGHT*.
-    bool keyLight { true };
+    bool keyLight { false };
 
     ///  Use a fill light
     ///
     /// Override with *HDOSPRAY_FILL_LIGHT*.
-    bool fillLight { true };
+    bool fillLight { false };
 
     ///  Use a back light
     ///
     /// Override with *HDOSPRAY_BACK_LIGHT*.
-    bool backLight { true };
+    bool backLight { false };
 
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.

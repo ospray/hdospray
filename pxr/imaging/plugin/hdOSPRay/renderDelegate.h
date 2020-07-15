@@ -36,10 +36,10 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 #define HDOSPRAY_RENDER_SETTINGS_TOKENS                                        \
-    (ambientOcclusionSamples)(samplesPerFrame)(useDenoiser)(maxDepth)(         \
-           aoDistance)(samplesToConvergence)(ambientLight)(eyeLight)(          \
-           keyLight)(fillLight)(backLight)(pathTracer)(                        \
-           staticDirectionalLights)
+    (ambientOcclusionSamples)(samplesPerFrame)(lightSamples)(useDenoiser)(     \
+           pixelFilterType)(maxDepth)(aoDistance)(samplesToConvergence)(       \
+           ambientLight)(eyeLight)(keyLight)(fillLight)(backLight)(            \
+           pathTracer)(staticDirectionalLights)
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
                          HDOSPRAY_RENDER_SETTINGS_TOKENS);
