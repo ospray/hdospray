@@ -41,7 +41,7 @@
 
 #include <iostream>
 
-using namespace ospcommon::math;
+using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -132,7 +132,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _width = vp[2];
         _height = vp[3];
         _frameBuffer
-               = opp::FrameBuffer(vec2i((int)_width, (int)_height), OSP_FB_RGBA32F,
+               = opp::FrameBuffer((int)_width, (int)_height, OSP_FB_RGBA32F,
                                    OSP_FB_COLOR | OSP_FB_ACCUM |
 #if HDOSPRAY_ENABLE_DENOISER
                                           OSP_FB_NORMAL | OSP_FB_ALBEDO |
@@ -250,7 +250,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         lights.push_back(sceneLight);
     }
 
-    if (_ambientLight || light.size() == 0) {
+    if (_ambientLight || lights.empty()) {
         auto ambient = opp::Light("ambient");
         ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
         ambient.setParam("intensity", 1.f);

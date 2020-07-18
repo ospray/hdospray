@@ -110,7 +110,7 @@ public:
     }
 
     // not thread safe
-    std::vector<OSPLight>& GetLights()
+    std::vector<opp::Light>& GetLights()
     {
         return _ospLights;
     }
@@ -121,16 +121,9 @@ private:
     std::mutex _ospMutex;
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.
-<<<<<<< HEAD
     std::vector<opp::Instance> _ospInstances;
-    std::vector<OSPLight> _ospLights;
+    std::vector<opp::Light> _ospLights;
     opp::Renderer _renderer;
-=======
-    std::vector<OSPInstance> _ospInstances;
-
-    std::vector<OSPLight> _ospLights;
-    OSPRenderer _renderer;
->>>>>>> b245fd9... [lights] Add support for virtual light sources (dome, distant, sphere, disk and quad)
     /// A version counter for edits to _scene.
     std::atomic<int>* _sceneVersion;
     // version of osp model.  Used for tracking image changes

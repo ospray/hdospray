@@ -674,7 +674,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             // OSPGroup group = ospNewGroup();
             opp::Group group;
             opp::Instance instance(group);
-            group.setParam("geometry", opp::Data(*_instanceModel));
+            group.setParam("geometry", opp::CopiedData(*_instanceModel));
             group.commit();
 
             // Combine the local transform and the instance transform.
@@ -707,7 +707,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                vec3f(xfmf[12], xfmf[13], xfmf[14]));
         instance.setParam("xfm", xfm);
         instance.commit();
-        group.setParam("geometry", opp::Data(*_instanceModel));
+        group.setParam("geometry", opp::CopiedData(*_instanceModel));
         group.commit();
         _ospInstances.push_back(instance);
     }
@@ -804,7 +804,7 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     if (_colors.size() < _points.size()) {
         vec4f white = { 1.f, 1.f, 1.f, 1.f };
         std::vector<vec4f> colorDummy(_points.size(), white);
-        mesh.setParam("vertex.color", opp::Data(colorDummy));
+        mesh.setParam("vertex.color", opp::CopiedData(colorDummy));
     } else {
         auto colorsData
                = ospNewCopyData1D(_colors.cdata(), OSP_VEC4F, _colors.size());
@@ -850,8 +850,8 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
             creaseIndexStart += creaseLengths[i];
         }
 
-        mesh.setParam("edgeCrease.index", opp::Data(ospCreaseIndices));
-        mesh.setParam("edgeCrease.weight", opp::Data(ospCreaseWeights));
+        mesh.setParam("edgeCrease.index", opp::CopiedData(ospCreaseIndices));
+        mesh.setParam("edgeCrease.weight", opp::CopiedData(ospCreaseWeights));
     }
 
     if (numVertexCreases > 0) {

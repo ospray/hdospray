@@ -48,6 +48,8 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
     hd
     hdx
     ospray::ospray
+    ospray::ospray_sdk
+    rkcommon::rkcommon
     ${OIIO_LIBRARIES}
     )
 
