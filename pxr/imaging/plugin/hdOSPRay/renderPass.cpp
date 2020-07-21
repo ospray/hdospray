@@ -70,8 +70,9 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _renderParam(renderParam)
 {
     _camera = opp::Camera("perspective");
-    _renderer.setParam("backgroundColor", vec4f(_clearColor[0], _clearColor[1],
-                _clearColor[2], 0.f));
+    _renderer.setParam(
+           "backgroundColor",
+           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
 
     _renderer.setParam("maxDepth", 8);
     _renderer.setParam("roulettePathLength", 8);
@@ -85,7 +86,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
 
     _renderer.commit();
 
-#if 0 //HDOSPRAY_ENABLE_DENOISER
+#if 0 // HDOSPRAY_ENABLE_DENOISER
     _denoiserDevice = oidn::newDevice();
     _denoiserDevice.commit();
     _denoiserFilter = _denoiserDevice.newFilter("RT");
@@ -135,13 +136,14 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _height = vp[3];
         _frameBuffer
                = opp::FrameBuffer((int)_width, (int)_height, OSP_FB_RGBA32F,
-                                   OSP_FB_COLOR | OSP_FB_ACCUM |
+                                  OSP_FB_COLOR | OSP_FB_ACCUM |
 #if HDOSPRAY_ENABLE_DENOISER
-                                          OSP_FB_NORMAL | OSP_FB_ALBEDO |
+                                         OSP_FB_NORMAL | OSP_FB_ALBEDO |
 #endif
-                                          0);
+                                         0);
         if (_useDenoiser)
-          _frameBuffer.setParam("imageOperation", opp::ImageOperation("denoise"));
+            _frameBuffer.setParam("imageOperation",
+                                  opp::ImageOperation("denoise"));
         _frameBuffer.commit();
         _colorBuffer.resize(_width * _height);
         _pendingResetImage = true;
@@ -267,7 +269,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (_eyeLight) {
         auto eyeLight = opp::Light("distant");
         eyeLight.setParam("color", vec3f(1.f, 232.f / 255.f, 166.f / 255.f));
-        eyeLight.setParam("direction", vec3f(dir_light[0], dir_light[1], dir_light[2]));
+        eyeLight.setParam("direction",
+                          vec3f(dir_light[0], dir_light[1], dir_light[2]));
         eyeLight.setParam("intensity", 3.3f);
         eyeLight.setParam("visible", false);
         eyeLight.commit();
@@ -281,7 +284,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto keyVert = 1.0f / tan(rad(70.0f)) * up_light;
         auto lightDir = -(keyVert + keyHorz);
         keyLight.setParam("color", vec3f(.8f, .8f, .8f));
-        keyLight.setParam("direction", vec3f(lightDir[0], lightDir[1], lightDir[2]));
+        keyLight.setParam("direction",
+                          vec3f(lightDir[0], lightDir[1], lightDir[2]));
         keyLight.setParam("intensity", glToPTLightIntensityMultiplier);
         keyLight.setParam("angularDiameter", angularDiameter);
         keyLight.setParam("visible", false);
@@ -294,7 +298,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto fillVert = 1.0f / tan(rad(45.0f)) * up_light;
         auto lightDir = (fillVert + fillHorz);
         fillLight.setParam("color", vec3f(.6f, .6f, .6f));
-        fillLight.setParam("direction", vec3f(lightDir[0], lightDir[1], lightDir[2]));
+        fillLight.setParam("direction",
+                           vec3f(lightDir[0], lightDir[1], lightDir[2]));
         fillLight.setParam("intensity", glToPTLightIntensityMultiplier);
         fillLight.setParam("angularDiameter", angularDiameter);
         fillLight.setParam("visible", false);
@@ -307,7 +312,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         auto backVert = -1.0f / tan(rad(60.0f)) * up_light;
         auto lightDir = (backHorz + backVert);
         backLight.setParam("color", vec3f(.6f, .6f, .6f));
-        backLight.setParam("direction", vec3f(lightDir[0], lightDir[1], lightDir[2]));
+        backLight.setParam("direction",
+                           vec3f(lightDir[0], lightDir[1], lightDir[2]));
         backLight.setParam("intensity", glToPTLightIntensityMultiplier);
         backLight.setParam("angularDiameter", angularDiameter);
         backLight.setParam("visible", false);

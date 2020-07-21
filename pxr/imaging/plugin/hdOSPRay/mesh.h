@@ -166,8 +166,9 @@ protected:
 
 private:
     // Populate the ospray geometry object based on scene data.
-    void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate, opp::Renderer renderer,
-                          HdDirtyBits* dirtyBits, HdMeshReprDesc const& desc,
+    void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
+                          opp::Renderer renderer, HdDirtyBits* dirtyBits,
+                          HdMeshReprDesc const& desc,
                           HdOSPRayRenderParam* renderParam);
 
     // Populate _primvarSourceMap (our local cache of primvar data) based on
@@ -188,7 +189,7 @@ private:
     // Every HdOSPRayMesh is treated as instanced; if there's no instancer,
     // the prototype has a single identity istance.
     opp::Geometry _ospMesh;
-    opp::GeometricModel *_instanceModel;
+    opp::GeometricModel* _instanceModel;
     // Each instance of the mesh in the top-level scene is stored in
     // _ospInstances.
     std::vector<opp::Instance> _ospInstances;
