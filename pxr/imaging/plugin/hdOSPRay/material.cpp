@@ -341,7 +341,6 @@ HdOSPRayMaterial::CreateSimpleMaterial(std::string rendererType)
                "tf",
                vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]) * tf);
     }
-    // ospSetFloat(ospMaterial, "d", opacity);
     if (map_diffuseColor.ospTexture) {
         ospMaterial.setParam("map_kd", map_diffuseColor.ospTexture);
         diffuseColor = GfVec3f(1.0);
