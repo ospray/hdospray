@@ -103,7 +103,7 @@ HdOSPRayRenderPass::ResetImage()
 bool
 HdOSPRayRenderPass::IsConverged() const
 {
-    return ((unsigned int)_numSamplesAccumulated >= _samplesToConvergence);
+    return ((unsigned int)_numSamplesAccumulated >= (unsigned int)_samplesToConvergence);
 }
 
 void
