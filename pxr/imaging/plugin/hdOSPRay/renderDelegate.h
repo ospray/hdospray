@@ -41,7 +41,8 @@ PXR_NAMESPACE_OPEN_SCOPE
     (ambientOcclusionSamples)(samplesPerFrame)(lightSamples)(useDenoiser)(     \
            pixelFilterType)(maxDepth)(aoDistance)(aoIntensity)(                \
            samplesToConvergence)(ambientLight)(eyeLight)(keyLight)(fillLight)( \
-           backLight)(pathTracer)(staticDirectionalLights)
+           backLight)(pathTracer)(staticDirectionalLights)(minContribution)(   \
+           maxContribution)
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
                          HDOSPRAY_RENDER_SETTINGS_TOKENS);

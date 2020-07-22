@@ -58,8 +58,7 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_PRINT_CONFIGURATION, 0,
 TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_PATH_TRACING, 1,
         "Should HdOSPRay use path tracing");
 
-
-TF_DEFINE_ENV_SETTING(HDOSPRAY_MAX_PATH_DEPTH, 8,
+TF_DEFINE_ENV_SETTING(HDOSPRAY_MAX_PATH_DEPTH, 5,
         "Maximum path tracing depth.");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_INIT_ARGS, "",
@@ -110,6 +109,10 @@ HdOSPRayConfig::HdOSPRayConfig()
             <<    ambientOcclusionSamples << "\n"
             << "  cameraLightIntensity      = "
             <<    cameraLightIntensity   << "\n"
+            << "  minContribution      = "
+            <<    minContribution   << "\n"
+            << "  maxContribution      = "
+            <<    maxContribution   << "\n"
             << "  initArgs                  = "
             <<    initArgs   << "\n"
             ;

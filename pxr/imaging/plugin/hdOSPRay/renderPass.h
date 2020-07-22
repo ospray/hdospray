@@ -130,19 +130,18 @@ private:
 
     std::shared_ptr<HdOSPRayRenderParam> _renderParam;
 
-    bool _denoiserDirty { true };
-
     std::vector<opp::Instance> _oldInstances; // instances added to last model
     opp::World _world = nullptr; // the last model created
 
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
     int _spp { 1 };
     bool _useDenoiser { false };
+    bool _denoiserState { false };
     OSPPixelFilterTypes _pixelFilterType {
         OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS
     };
     int _samplesToConvergence { 100 };
-    int _denoiserSPPThreshold { 3 };
+    int _denoiserSPPThreshold { 6 };
     int _aoSamples { 1 };
     int _lightSamples { -1 };
     bool _staticDirectionalLights { true };
@@ -152,6 +151,8 @@ private:
     bool _fillLight { true };
     bool _backLight { true };
     int _maxDepth { 5 };
+    float _minContribution {0.1f};
+    float _maxContribution {3.0f};
     float _aoDistance { 10.f };
     float _aoIntensity { 1.f };
 };

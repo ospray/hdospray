@@ -182,6 +182,12 @@ HdOSPRayRenderDelegate::_Initialize()
            { "aoIntensity", HdOSPRayRenderSettingsTokens->aoIntensity,
              VtValue(float(HdOSPRayConfig::GetInstance().aoIntensity)) });
     _settingDescriptors.push_back(
+           { "minContribution", HdOSPRayRenderSettingsTokens->minContribution,
+             VtValue(float(HdOSPRayConfig::GetInstance().minContribution)) });
+    _settingDescriptors.push_back(
+           { "maxContribution", HdOSPRayRenderSettingsTokens->maxContribution,
+             VtValue(float(HdOSPRayConfig::GetInstance().maxContribution)) });
+    _settingDescriptors.push_back(
            { "samplesToConvergence",
              HdOSPRayRenderSettingsTokens->samplesToConvergence,
              VtValue(

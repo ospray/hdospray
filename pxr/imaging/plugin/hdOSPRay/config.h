@@ -116,7 +116,17 @@ public:
     ///  Maximum ray depth
     ///
     /// Override with *HDOSPRAY_MAX_DEPTH*.
-    int maxDepth { 8 };
+    int maxDepth { 5 };
+
+    ///  Minimum intensity contribution
+    ///
+    /// Override with *HDOSPRAY_MIN_CONTRIBUTION*.
+    float minContribution { 0.1f };
+
+    ///  Maximum intensity contribution
+    ///
+    /// Override with *HDOSPRAY_MAX_CONTRIBUTION*.
+    float maxContribution { 3.f };
 
     ///  Ao rays maximum distance
     ///

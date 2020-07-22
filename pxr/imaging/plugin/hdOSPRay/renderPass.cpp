@@ -74,23 +74,19 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
            "backgroundColor",
            vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
 
-    _renderer.setParam("maxDepth", 8);
-    _renderer.setParam("roulettePathLength", 8);
+    _useDenoiser &= ospLoadModule("denoiser") == OSP_NO_ERROR;
+
+    _renderer.setParam("maxDepth", 5);
+    _renderer.setParam("roulettePathLength", 5);
     _renderer.setParam("aoRadius", 15.0f);
-    _renderer.setParam("aoIntensity", 1.0f);
+    _renderer.setParam("aoIntensity", _aoIntensity);
     _renderer.setParam("shadowsEnabled", true);
-    _renderer.setParam("maxContribution", 200.f);
-    _renderer.setParam("minContribution", 0.05f);
+    _renderer.setParam("minContribution", _minContribution);
+    _renderer.setParam("maxContribution", _maxContribution);
     _renderer.setParam("epsilon", 0.001f);
     _renderer.setParam("useGeometryLights", 0);
 
     _renderer.commit();
-
-#if 0 // HDOSPRAY_ENABLE_DENOISER
-    _denoiserDevice = oidn::newDevice();
-    _denoiserDevice.commit();
-    _denoiserFilter = _denoiserDevice.newFilter("RT");
-#endif
 }
 
 HdOSPRayRenderPass::~HdOSPRayRenderPass()
@@ -107,12 +103,7 @@ HdOSPRayRenderPass::ResetImage()
 bool
 HdOSPRayRenderPass::IsConverged() const
 {
-    // A super simple heuristic: consider ourselves converged after N
-    // samples. Since we currently uniformly sample the framebuffer, we can
-    // use the sample count from pixel(0,0).
-    unsigned int samplesToConvergence
-           = HdOSPRayConfig::GetInstance().samplesToConvergence;
-    return ((unsigned int)_numSamplesAccumulated >= samplesToConvergence);
+    return ((unsigned int)_numSamplesAccumulated >= _samplesToConvergence);
 }
 
 void
@@ -138,16 +129,35 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                = opp::FrameBuffer((int)_width, (int)_height, OSP_FB_RGBA32F,
                                   OSP_FB_COLOR | OSP_FB_ACCUM |
 #if HDOSPRAY_ENABLE_DENOISER
-                                         OSP_FB_NORMAL | OSP_FB_ALBEDO |
+                                  OSP_FB_NORMAL | OSP_FB_ALBEDO | OSP_FB_VARIANCE |
+                                  OSP_FB_DEPTH |
 #endif
                                          0);
-        if (_useDenoiser)
-            _frameBuffer.setParam("imageOperation",
-                                  opp::ImageOperation("denoise"));
         _frameBuffer.commit();
         _colorBuffer.resize(_width * _height);
         _pendingResetImage = true;
-        _denoiserDirty = true;
+    }
+    bool useDenoiser = (_useDenoiser && _numSamplesAccumulated >= _denoiserSPPThreshold);
+    if (useDenoiser != _denoiserState)
+    {
+        if (useDenoiser) {
+            _frameBuffer.setParam("imageOperation",
+                                    opp::CopiedData(opp::ImageOperation("denoiser")));
+
+            //use more pixel samples when denoising.
+            int newSPP
+                = std::max((int)HdOSPRayConfig::GetInstance().samplesPerFrame, 1)
+                * 4;
+            if (_spp != newSPP) {
+                _renderer.setParam("pixelSamples", _spp);
+                _renderer.commit();
+            }
+        }
+        else
+          _frameBuffer.removeParam("imageOperation");
+
+        _denoiserState = useDenoiser;
+        _frameBuffer.commit();
     }
 
     // Update camera
@@ -195,7 +205,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                HdOSPRayRenderSettingsTokens->aoIntensity, 1.f);
         _useDenoiser = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->useDenoiser, false);
-        _pixelFilterType
+        auto pixelFilterType
                = (OSPPixelFilterTypes)renderDelegate->GetRenderSetting<int>(
                       HdOSPRayRenderSettingsTokens->pixelFilterType,
                       (int)OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS);
@@ -207,6 +217,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
         int maxDepth = renderDelegate->GetRenderSetting<int>(
                HdOSPRayRenderSettingsTokens->maxDepth, 5);
+        int minContribution = renderDelegate->GetRenderSetting<float>(
+               HdOSPRayRenderSettingsTokens->minContribution, 0.1f);
+        int maxContribution = renderDelegate->GetRenderSetting<float>(
+               HdOSPRayRenderSettingsTokens->maxContribution, 3.f);
         _ambientLight = renderDelegate->GetRenderSetting<bool>(
                HdOSPRayRenderSettingsTokens->ambientLight, false);
         // default static ospray directional lights
@@ -224,17 +238,25 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                HdOSPRayRenderSettingsTokens->backLight, false);
         if (spp != _spp || aoSamples != _aoSamples || aoDistance != _aoDistance
             || aoIntensity != _aoIntensity || maxDepth != _maxDepth
-            || lSamples != _lightSamples) {
+            || lSamples != _lightSamples || minContribution != _minContribution
+            || _maxContribution != maxContribution || pixelFilterType != _pixelFilterType) {
             _spp = spp;
             _aoSamples = aoSamples;
             _maxDepth = maxDepth;
             _lightSamples = lSamples;
+            _minContribution = minContribution;
+            _maxContribution = maxContribution;
+            _aoIntensity = aoIntensity;
+            _aoDistance = aoDistance;
+            _pixelFilterType = pixelFilterType;
             _renderer.setParam("pixelSamples", _spp);
             _renderer.setParam("lightSamples", _lightSamples);
             _renderer.setParam("aoSamples", _aoSamples);
             _renderer.setParam("aoRadius", _aoDistance);
             _renderer.setParam("aoIntensity", _aoIntensity);
             _renderer.setParam("maxPathLength", _maxDepth);
+            _renderer.setParam("minContribution", _minContribution);
+            _renderer.setParam("maxContribution", _maxContribution);
             _renderer.setParam("pixelFilter", (int)_pixelFilterType);
             _renderer.commit();
         }
@@ -379,9 +401,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         }
     }
 
-    // Render the frame
-    _frameBuffer.renderFrame(_renderer, _camera, _world);
-    _numSamplesAccumulated += std::max(1, _spp);
+    if (!IsConverged()) {
+        // Render the frame
+        _frameBuffer.renderFrame(_renderer, _camera, _world);
+        _numSamplesAccumulated += std::max(1, _spp);
+    }
 
     // Resolve the image buffer: find the average color per pixel by
     // dividing the summed color by the number of samples;
@@ -389,15 +413,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     void* rgba = _frameBuffer.map(OSP_FB_COLOR);
     memcpy((void*)&_colorBuffer[0], rgba, _width * _height * 4 * sizeof(float));
     _frameBuffer.unmap(rgba);
-    if (_useDenoiser && _numSamplesAccumulated >= _denoiserSPPThreshold) {
-        int newSPP
-               = std::max((int)HdOSPRayConfig::GetInstance().samplesPerFrame, 1)
-               * 4;
-        if (_spp != newSPP) {
-            _renderer.setParam("pixelSamples", _spp);
-            _renderer.commit();
-        }
-    }
 
     // Blit!
     glDrawPixels(_width, _height, GL_RGBA, GL_FLOAT, _colorBuffer.data());
