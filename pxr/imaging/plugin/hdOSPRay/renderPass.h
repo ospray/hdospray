@@ -155,6 +155,9 @@ private:
     float _maxContribution {3.0f};
     float _aoDistance { 10.f };
     float _aoIntensity { 1.f };
+
+  // OpenGL framebuffer texture
+  GLuint framebufferTexture = 0;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

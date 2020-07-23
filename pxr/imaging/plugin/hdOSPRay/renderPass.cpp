@@ -87,6 +87,17 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("useGeometryLights", 0);
 
     _renderer.commit();
+
+
+  // set initial OpenGL state
+  glEnable(GL_TEXTURE_2D);
+  glDisable(GL_LIGHTING);
+
+  // create OpenGL frame buffer texture
+  glGenTextures(1, &framebufferTexture);
+  glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 HdOSPRayRenderPass::~HdOSPRayRenderPass()
@@ -118,6 +129,7 @@ void
 HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                              TfTokenVector const& renderTags)
 {
+    std::cout << "renderpass::execute\n";
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
 
     // If the viewport has changed, resize the sample buffer.
@@ -415,7 +427,44 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     _frameBuffer.unmap(rgba);
 
     // Blit!
-    glDrawPixels(_width, _height, GL_RGBA, GL_FLOAT, _colorBuffer.data());
+    // glDrawPixels(_width, _height, GL_RGBA, GL_FLOAT, _colorBuffer.data());
+
+  // Turn on SRGB conversion for OSPRay frame
+  glEnable(GL_FRAMEBUFFER_SRGB);
+
+    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+    glTexImage2D(GL_TEXTURE_2D,
+        0,
+        GL_RGBA32F,
+        _width,
+        _height,
+        0,
+        GL_RGBA,
+        GL_FLOAT,
+        _colorBuffer.data());
+
+  // clear current OpenGL color buffer
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  // render textured quad with OSPRay frame buffer contents
+  glBegin(GL_QUADS);
+
+  glTexCoord2f(0.f, 0.f);
+  glVertex2f(0.f, 0.f);
+
+  glTexCoord2f(0.f, 1.f);
+  glVertex2f(0.f, _height);
+
+  glTexCoord2f(1.f, 1.f);
+  glVertex2f(_width, _height);
+
+  glTexCoord2f(1.f, 0.f);
+  glVertex2f(_width, 0.f);
+
+  glEnd();
+
+  // Disable SRGB conversion for UI
+  glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
