@@ -71,16 +71,18 @@ public:
     ///   \return True if the image has enough samples to be considered final.
     virtual bool IsConverged() const override;
 
-    struct RenderFrame 
-    {
+    struct RenderFrame {
         opp::Future osprayFrame;
-        unsigned int width{0};
-        unsigned int height{0};
-        // The resolved output buffer, in GL_RGBA. This is an intermediate between
-        // _sampleBuffer and the GL framebuffer.
+        unsigned int width { 0 };
+        unsigned int height { 0 };
+        // The resolved output buffer, in GL_RGBA. This is an intermediate
+        // between _sampleBuffer and the GL framebuffer.
         std::vector<vec4f> colorBuffer;
 
-        bool isValid() { return osprayFrame;}
+        bool isValid()
+        {
+            return osprayFrame;
+        }
     };
 
     virtual void DisplayRenderBuffer(RenderFrame& renderFrame);
@@ -118,12 +120,12 @@ private:
 
     opp::FrameBuffer _frameBuffer;
     opp::FrameBuffer _interactiveFrameBuffer;
-    int _interactiveFrameBufferScale {2};
+    int _interactiveFrameBufferScale { 2 };
 
     opp::Renderer _renderer;
 
-    bool _interacting {true};
-    bool _interactingLastFrame {true};
+    bool _interacting { true };
+    bool _interactingLastFrame { true };
 
     // A reference to the global scene version.
     std::atomic<int>* _sceneVersion;
@@ -131,7 +133,6 @@ private:
     int _lastRenderedVersion { -1 };
     int _lastRenderedModelVersion { -1 };
     int _lastSettingsVersion { -1 };
-
 
     RenderFrame _currentFrame;
     RenderFrame _previousFrame;
@@ -174,8 +175,8 @@ private:
     bool _fillLight { true };
     bool _backLight { true };
     int _maxDepth { 5 };
-    float _minContribution {0.1f};
-    float _maxContribution {3.0f};
+    float _minContribution { 0.1f };
+    float _maxContribution { 3.0f };
     float _aoDistance { 10.f };
     float _aoIntensity { 1.f };
 

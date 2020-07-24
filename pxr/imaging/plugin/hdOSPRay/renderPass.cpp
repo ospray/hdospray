@@ -88,15 +88,14 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
 
     _renderer.commit();
 
+    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
 
-  glEnable(GL_TEXTURE_2D);
-  glDisable(GL_LIGHTING);
-
-  // create OpenGL frame buffer texture
-  glGenTextures(1, &framebufferTexture);
-  glBindTexture(GL_TEXTURE_2D, framebufferTexture);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // create OpenGL frame buffer texture
+    glGenTextures(1, &framebufferTexture);
+    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 HdOSPRayRenderPass::~HdOSPRayRenderPass()
@@ -113,7 +112,8 @@ HdOSPRayRenderPass::ResetImage()
 bool
 HdOSPRayRenderPass::IsConverged() const
 {
-    return ((unsigned int)_numSamplesAccumulated >= (unsigned int)_samplesToConvergence);
+    return ((unsigned int)_numSamplesAccumulated
+            >= (unsigned int)_samplesToConvergence);
 }
 
 void
@@ -131,15 +131,16 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
 
     GfVec4f vp = renderPassState->GetViewport();
-    bool frameBufferDirty =  (_width != vp[2] || _height != vp[3]);
-    bool useDenoiser = _useDenoiser && (_numSamplesAccumulated >= _denoiserSPPThreshold);
+    bool frameBufferDirty = (_width != vp[2] || _height != vp[3]);
+    bool useDenoiser
+           = _useDenoiser && (_numSamplesAccumulated >= _denoiserSPPThreshold);
     bool denoiserDirty = (useDenoiser != _denoiserState);
     auto inverseViewMatrix
            = renderPassState->GetWorldToViewMatrix().GetInverse();
     auto inverseProjMatrix
            = renderPassState->GetProjectionMatrix().GetInverse();
-    bool cameraDirty =  (inverseViewMatrix != _inverseViewMatrix
-       || inverseProjMatrix != _inverseProjMatrix);
+    bool cameraDirty = (inverseViewMatrix != _inverseViewMatrix
+                        || inverseProjMatrix != _inverseProjMatrix);
     int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
     bool settingsDirty = (_lastSettingsVersion != currentSettingsVersion);
     int currentSceneVersion = _sceneVersion->load();
@@ -152,11 +153,9 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _pendingModelUpdate = true;
     }
 
-    _pendingResetImage |= (frameBufferDirty || cameraDirty ||
-      settingsDirty);
+    _pendingResetImage |= (frameBufferDirty || cameraDirty || settingsDirty);
 
-    if (_currentFrame.isValid())
-    {
+    if (_currentFrame.isValid()) {
         if (frameBufferDirty || (_pendingResetImage && !_interacting)) {
             _currentFrame.osprayFrame.cancel();
             if (_previousFrame.isValid() && !frameBufferDirty)
@@ -181,8 +180,9 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             // dividing the summed color by the number of samples;
             // and convert the image into a GL-compatible format.
             void* rgba = frameBuffer.map(OSP_FB_COLOR);
-            memcpy(_currentFrame.colorBuffer.data(), rgba, _currentFrame.width * 
-              _currentFrame.height * 4 * sizeof(float));
+            memcpy(_currentFrame.colorBuffer.data(), rgba,
+                   _currentFrame.width * _currentFrame.height * 4
+                          * sizeof(float));
             frameBuffer.unmap(rgba);
             DisplayRenderBuffer(_currentFrame);
             _previousFrame = _currentFrame;
@@ -210,42 +210,44 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                = opp::FrameBuffer((int)_width, (int)_height, OSP_FB_RGBA32F,
                                   OSP_FB_COLOR | OSP_FB_ACCUM |
 #if HDOSPRAY_ENABLE_DENOISER
-                                  OSP_FB_NORMAL | OSP_FB_ALBEDO | OSP_FB_VARIANCE |
-                                  OSP_FB_DEPTH |
+                                         OSP_FB_NORMAL | OSP_FB_ALBEDO
+                                         | OSP_FB_VARIANCE | OSP_FB_DEPTH |
 #endif
                                          0);
         _frameBuffer.commit();
         _interactiveFrameBuffer
-               = opp::FrameBuffer((int)_width/_interactiveFrameBufferScale, 
-               (int)_height/_interactiveFrameBufferScale, OSP_FB_RGBA32F,
-                                  OSP_FB_COLOR);
+               = opp::FrameBuffer((int)_width / _interactiveFrameBufferScale,
+                                  (int)_height / _interactiveFrameBufferScale,
+                                  OSP_FB_RGBA32F, OSP_FB_COLOR);
         _interactiveFrameBuffer.commit();
-        _currentFrame.colorBuffer.resize(_width * _height, vec4f({0.f,0.f,0.f,0.f}));
+        _currentFrame.colorBuffer.resize(_width * _height,
+                                         vec4f({ 0.f, 0.f, 0.f, 0.f }));
         _pendingResetImage = true;
     }
     if (denoiserDirty) {
         if (useDenoiser) {
-            _frameBuffer.setParam("imageOperation",
-                                    opp::CopiedData(opp::ImageOperation("denoiser")));
+            _frameBuffer.setParam(
+                   "imageOperation",
+                   opp::CopiedData(opp::ImageOperation("denoiser")));
 
-            //use more pixel samples when denoising.
+            // use more pixel samples when denoising.
             int newSPP
-                = std::max((int)HdOSPRayConfig::GetInstance().samplesPerFrame, 1)
-                * 4;
+                   = std::max(
+                            (int)HdOSPRayConfig::GetInstance().samplesPerFrame,
+                            1)
+                   * 4;
             if (_spp != newSPP) {
                 _renderer.setParam("pixelSamples", _spp);
                 _renderer.commit();
             }
-        }
-        else
-          _frameBuffer.removeParam("imageOperation");
+        } else
+            _frameBuffer.removeParam("imageOperation");
 
         _denoiserState = useDenoiser;
         _frameBuffer.commit();
     }
 
-    if (_interacting != cameraDirty)
-    {
+    if (_interacting != cameraDirty) {
         _renderer.setParam("maxPathLength", (cameraDirty ? 2 : _maxDepth));
         _renderer.commit();
     }
@@ -267,43 +269,42 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
     up = _inverseViewMatrix.TransformDir(up).GetNormalized();
 
-    //set render frames size based on interaction mode
-    if (_interacting)
-    {
-        if (_currentFrame.width != _width/_interactiveFrameBufferScale)
-        {
-            _currentFrame.width = _width/_interactiveFrameBufferScale;
-            _currentFrame.height = _height/_interactiveFrameBufferScale;
-            _currentFrame.colorBuffer.resize(_currentFrame.width * _currentFrame.height, vec4f({0.f,0.f,0.f,0.f}));
+    // set render frames size based on interaction mode
+    if (_interacting) {
+        if (_currentFrame.width != _width / _interactiveFrameBufferScale) {
+            _currentFrame.width = _width / _interactiveFrameBufferScale;
+            _currentFrame.height = _height / _interactiveFrameBufferScale;
+            _currentFrame.colorBuffer.resize(_currentFrame.width
+                                                    * _currentFrame.height,
+                                             vec4f({ 0.f, 0.f, 0.f, 0.f }));
         }
     } else {
-        if (_currentFrame.width != _width)
-        {
+        if (_currentFrame.width != _width) {
             _currentFrame.width = _width;
             _currentFrame.height = _height;
-            _currentFrame.colorBuffer.resize(_currentFrame.width * _currentFrame.height, vec4f({0.f,0.f,0.f,0.f}));
+            _currentFrame.colorBuffer.resize(_currentFrame.width
+                                                    * _currentFrame.height,
+                                             vec4f({ 0.f, 0.f, 0.f, 0.f }));
         }
     }
 
-        float aspect = _width / float(_height);
-        _camera.setParam("aspect", aspect);
+    float aspect = _width / float(_height);
+    _camera.setParam("aspect", aspect);
 
-        double prjMatrix[4][4];
-        renderPassState->GetProjectionMatrix().Get(prjMatrix);
-        float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
+    double prjMatrix[4][4];
+    renderPassState->GetProjectionMatrix().Get(prjMatrix);
+    float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
 
-        _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));
-        _camera.setParam("direction", vec3f(dir[0], dir[1], dir[2]));
-        _camera.setParam("up", vec3f(up[0], up[1], up[2]));
-        _camera.setParam("fovy", fov);
-        _camera.commit();
+    _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));
+    _camera.setParam("direction", vec3f(dir[0], dir[1], dir[2]));
+    _camera.setParam("up", vec3f(up[0], up[1], up[2]));
+    _camera.setParam("fovy", fov);
+    _camera.commit();
 
     if (settingsDirty) {
         ProcessSettings();
     }
     // XXX: Add clip planes support.
-
-
 
     if (_pendingModelUpdate) {
         ProcessInstances();
@@ -326,56 +327,52 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     opp::FrameBuffer frameBuffer = _frameBuffer;
     if (_interacting)
-      frameBuffer = _interactiveFrameBuffer;
+        frameBuffer = _interactiveFrameBuffer;
 
     if (!IsConverged()) {
         // Render the frame
-        _currentFrame.osprayFrame = frameBuffer.renderFrame(_renderer, _camera, _world);
+        _currentFrame.osprayFrame
+               = frameBuffer.renderFrame(_renderer, _camera, _world);
         _numSamplesAccumulated += std::max(1, _spp);
     }
-
 }
 
-void HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
+void
+HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
 {
 
-  // set initial OpenGL state
-  glEnable(GL_TEXTURE_2D);
-  glDisable(GL_LIGHTING);
+    // set initial OpenGL state
+    glEnable(GL_TEXTURE_2D);
+    glDisable(GL_LIGHTING);
 
     glBindTexture(GL_TEXTURE_2D, framebufferTexture);
-    glTexImage2D(GL_TEXTURE_2D,
-        0,
-        GL_RGBA32F,
-        renderBuffer.width,
-        renderBuffer.height,
-        0,
-        GL_RGBA,
-        GL_FLOAT,
-        renderBuffer.colorBuffer.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, renderBuffer.width,
+                 renderBuffer.height, 0, GL_RGBA, GL_FLOAT,
+                 renderBuffer.colorBuffer.data());
 
-  // clear current OpenGL color buffer
-  glClear(GL_COLOR_BUFFER_BIT);
+    // clear current OpenGL color buffer
+    glClear(GL_COLOR_BUFFER_BIT);
 
-  // render textured quad with OSPRay frame buffer contents
-  glBegin(GL_QUADS);
+    // render textured quad with OSPRay frame buffer contents
+    glBegin(GL_QUADS);
 
-  glTexCoord2f(0.f, 0.f);
-  glVertex2f(0.f, 0.f);
+    glTexCoord2f(0.f, 0.f);
+    glVertex2f(0.f, 0.f);
 
-  glTexCoord2f(0.f, 1.f);
-  glVertex2f(0.f, _height);
+    glTexCoord2f(0.f, 1.f);
+    glVertex2f(0.f, _height);
 
-  glTexCoord2f(1.f, 1.f);
-  glVertex2f(_width, _height);
+    glTexCoord2f(1.f, 1.f);
+    glVertex2f(_width, _height);
 
-  glTexCoord2f(1.f, 0.f);
-  glVertex2f(_width, 0.f);
+    glTexCoord2f(1.f, 0.f);
+    glVertex2f(_width, 0.f);
 
-  glEnd();
+    glEnd();
 }
 
-void HdOSPRayRenderPass::ProcessLights()
+void
+HdOSPRayRenderPass::ProcessLights()
 {
     GfVec3f origin = GfVec3f(0, 0, 0);
     GfVec3f dir = GfVec3f(0, 0, -1);
@@ -466,7 +463,8 @@ void HdOSPRayRenderPass::ProcessLights()
     }
 }
 
-void HdOSPRayRenderPass::ProcessSettings()
+void
+HdOSPRayRenderPass::ProcessSettings()
 {
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
     _samplesToConvergence = renderDelegate->GetRenderSetting<int>(
@@ -537,7 +535,8 @@ void HdOSPRayRenderPass::ProcessSettings()
     ResetImage();
 }
 
-void HdOSPRayRenderPass::ProcessInstances()
+void
+HdOSPRayRenderPass::ProcessInstances()
 {
     // release resources from last committed scene
     _oldInstances.resize(0);
