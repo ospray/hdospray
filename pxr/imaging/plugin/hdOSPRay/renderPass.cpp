@@ -163,8 +163,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _currentFrame.cancel();
         } else {
             if (!_currentFrame.isReady()) {
-              return;
               DisplayRenderBuffer();
+              return;
             }
         }
         _currentFrame.wait();
