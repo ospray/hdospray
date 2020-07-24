@@ -299,186 +299,18 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _camera.commit();
 
     if (settingsDirty) {
-        _samplesToConvergence = renderDelegate->GetRenderSetting<int>(
-               HdOSPRayRenderSettingsTokens->samplesToConvergence, 100);
-        float aoDistance = renderDelegate->GetRenderSetting<float>(
-               HdOSPRayRenderSettingsTokens->aoDistance, 10.f);
-        float aoIntensity = renderDelegate->GetRenderSetting<float>(
-               HdOSPRayRenderSettingsTokens->aoIntensity, 1.f);
-        _useDenoiser = renderDelegate->GetRenderSetting<bool>(
-               HdOSPRayRenderSettingsTokens->useDenoiser, false);
-        auto pixelFilterType
-               = (OSPPixelFilterTypes)renderDelegate->GetRenderSetting<int>(
-                      HdOSPRayRenderSettingsTokens->pixelFilterType,
-                      (int)OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS);
-        int spp = renderDelegate->GetRenderSetting<int>(
-               HdOSPRayRenderSettingsTokens->samplesPerFrame, 1);
-        int lSamples = renderDelegate->GetRenderSetting<int>(
-               HdOSPRayRenderSettingsTokens->lightSamples, -1);
-        int aoSamples = renderDelegate->GetRenderSetting<int>(
-               HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
-        int maxDepth = renderDelegate->GetRenderSetting<int>(
-               HdOSPRayRenderSettingsTokens->maxDepth, 5);
-        int minContribution = renderDelegate->GetRenderSetting<float>(
-               HdOSPRayRenderSettingsTokens->minContribution, 0.1f);
-        int maxContribution = renderDelegate->GetRenderSetting<float>(
-               HdOSPRayRenderSettingsTokens->maxContribution, 3.f);
-        _ambientLight = renderDelegate->GetRenderSetting<bool>(
-               HdOSPRayRenderSettingsTokens->ambientLight, false);
-        // default static ospray directional lights
-        _staticDirectionalLights = renderDelegate->GetRenderSetting<bool>(
-               HdOSPRayRenderSettingsTokens->staticDirectionalLights, false);
-        // eye, key, fill, and back light are copied from USD GL (Storm)
-        // defaults.
-        _eyeLight = renderDelegate->GetRenderSetting<bool>(
-               HdOSPRayRenderSettingsTokens->eyeLight, false);
-        _keyLight = renderDelegate->GetRenderSetting<bool>(
-               HdOSPRayRenderSettingsTokens->keyLight, false);
-        _fillLight = renderDelegate->GetRenderSetting<bool>(
-               HdOSPRayRenderSettingsTokens->fillLight, false);
-        _backLight = renderDelegate->GetRenderSetting<bool>(
-               HdOSPRayRenderSettingsTokens->backLight, false);
-        if (spp != _spp || aoSamples != _aoSamples || aoDistance != _aoDistance
-            || aoIntensity != _aoIntensity || maxDepth != _maxDepth
-            || lSamples != _lightSamples || minContribution != _minContribution
-            || _maxContribution != maxContribution || pixelFilterType != _pixelFilterType) {
-            _spp = spp;
-            _aoSamples = aoSamples;
-            _maxDepth = maxDepth;
-            _lightSamples = lSamples;
-            _minContribution = minContribution;
-            _maxContribution = maxContribution;
-            _aoIntensity = aoIntensity;
-            _aoDistance = aoDistance;
-            _pixelFilterType = pixelFilterType;
-            _renderer.setParam("pixelSamples", _spp);
-            _renderer.setParam("lightSamples", _lightSamples);
-            _renderer.setParam("aoSamples", _aoSamples);
-            _renderer.setParam("aoRadius", _aoDistance);
-            _renderer.setParam("aoIntensity", _aoIntensity);
-            _renderer.setParam("maxPathLength", _maxDepth);
-            _renderer.setParam("minContribution", _minContribution);
-            _renderer.setParam("maxContribution", _maxContribution);
-            _renderer.setParam("pixelFilter", (int)_pixelFilterType);
-            _renderer.commit();
-        }
-        _lastSettingsVersion = currentSettingsVersion;
-        ResetImage();
+        ProcessSettings();
     }
     // XXX: Add clip planes support.
 
 
 
     if (_pendingModelUpdate) {
-        // release resources from last committed scene
-        _oldInstances.resize(0);
-        _world = opp::World();
-        _world.commit();
-
-        // create new model and populate with mesh instances
-        _oldInstances.reserve(_renderParam->GetInstances().size());
-        for (auto instance : _renderParam->GetInstances()) {
-            _oldInstances.push_back(instance);
-        }
-        if (!_oldInstances.empty()) {
-            auto data = ospNewSharedData1D(_oldInstances.data(), OSP_INSTANCE,
-                                           _oldInstances.size());
-            ospCommit(data);
-            _world.setParam("instance", data);
-        } else {
-            _world.removeParam("instance");
-        }
-        _world.commit();
-        _renderer.commit();
-        _pendingModelUpdate = false;
-        _renderParam->ClearInstances();
+        ProcessInstances();
     }
 
     // add lights
-    //  if (1) {
-        GfVec3f up_light(up[0], up[1], up[2]);
-        GfVec3f dir_light(dir[0], dir[1], dir[2]);
-        if (_staticDirectionalLights) {
-            up_light = { 0.f, 1.f, 0.f };
-            dir_light = { -.1f, -.1f, -.8f };
-        }
-        GfVec3f right_light = GfCross(dir, up);
-        std::vector<opp::Light> lights;
-
-        // push scene lights
-        for (auto sceneLight : _renderParam->GetLights()) {
-            lights.push_back(sceneLight);
-        }
-
-        if (_ambientLight || lights.empty()) {
-            auto ambient = opp::Light("ambient");
-            ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
-            ambient.setParam("intensity", 1.f);
-            ambient.commit();
-            lights.push_back(ambient);
-        }
-
-        if (_eyeLight) {
-            auto eyeLight = opp::Light("distant");
-            eyeLight.setParam("color",
-                              vec3f(1.f, 232.f / 255.f, 166.f / 255.f));
-            eyeLight.setParam("direction",
-                              vec3f(dir_light[0], dir_light[1], dir_light[2]));
-            eyeLight.setParam("intensity", 3.3f);
-            eyeLight.setParam("visible", false);
-            eyeLight.commit();
-            lights.push_back(eyeLight);
-        }
-        const float angularDiameter = 4.5f;
-        const float glToPTLightIntensityMultiplier = 1.5f;
-        if (_keyLight) {
-            auto keyLight = opp::Light("distant");
-            auto keyHorz = -1.0f / tan(rad(45.0f)) * right_light;
-            auto keyVert = 1.0f / tan(rad(70.0f)) * up_light;
-            auto lightDir = -(keyVert + keyHorz);
-            keyLight.setParam("color", vec3f(.8f, .8f, .8f));
-            keyLight.setParam("direction",
-                              vec3f(lightDir[0], lightDir[1], lightDir[2]));
-            keyLight.setParam("intensity", glToPTLightIntensityMultiplier);
-            keyLight.setParam("angularDiameter", angularDiameter);
-            keyLight.setParam("visible", false);
-            keyLight.commit();
-            lights.push_back(keyLight);
-        }
-        if (_fillLight) {
-            auto fillLight = opp::Light("distant");
-            auto fillHorz = 1.0f / tan(rad(30.0f)) * right_light;
-            auto fillVert = 1.0f / tan(rad(45.0f)) * up_light;
-            auto lightDir = (fillVert + fillHorz);
-            fillLight.setParam("color", vec3f(.6f, .6f, .6f));
-            fillLight.setParam("direction",
-                               vec3f(lightDir[0], lightDir[1], lightDir[2]));
-            fillLight.setParam("intensity", glToPTLightIntensityMultiplier);
-            fillLight.setParam("angularDiameter", angularDiameter);
-            fillLight.setParam("visible", false);
-            fillLight.commit();
-            lights.push_back(fillLight);
-        }
-        if (_backLight) {
-            auto backLight = opp::Light("distant");
-            auto backHorz = 1.0f / tan(rad(60.0f)) * right_light;
-            auto backVert = -1.0f / tan(rad(60.0f)) * up_light;
-            auto lightDir = (backHorz + backVert);
-            backLight.setParam("color", vec3f(.6f, .6f, .6f));
-            backLight.setParam("direction",
-                               vec3f(lightDir[0], lightDir[1], lightDir[2]));
-            backLight.setParam("intensity", glToPTLightIntensityMultiplier);
-            backLight.setParam("angularDiameter", angularDiameter);
-            backLight.setParam("visible", false);
-            backLight.commit();
-            lights.push_back(backLight);
-        }
-        if (_world)
-        {
-            _world.setParam("light", opp::CopiedData(lights));
-            _world.commit();
-        }
-    // }
+    ProcessLights();
 
     // Reset the sample buffer if it's been requested.
     if (_pendingResetImage) {
@@ -499,33 +331,17 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (!IsConverged()) {
         // Render the frame
         _currentFrame.osprayFrame = frameBuffer.renderFrame(_renderer, _camera, _world);
-        // _currentFrame.wait();
         _numSamplesAccumulated += std::max(1, _spp);
     }
-
-    // Resolve the image buffer: find the average color per pixel by
-    // dividing the summed color by the number of samples;
-    // and convert the image into a GL-compatible format.
-    // void* rgba = frameBuffer.map(OSP_FB_COLOR);
-    // memcpy(_colorBuffer.data(), rgba, _width * _height * 4 * sizeof(float));
-    // frameBuffer.unmap(rgba);
-
-    // DisplayRenderBuffer();
 
 }
 
 void HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
 {
-    // Blit!
-    // glDrawPixels(_width, _height, GL_RGBA, GL_FLOAT, _colorBuffer.data());
-  // Disable SRGB conversion for UI
 
   // set initial OpenGL state
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_LIGHTING);
-
-//   Turn on SRGB conversion for OSPRay frame
-//   glEnable(GL_FRAMEBUFFER_SRGB);
 
     glBindTexture(GL_TEXTURE_2D, framebufferTexture);
     glTexImage2D(GL_TEXTURE_2D,
@@ -557,8 +373,194 @@ void HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
   glVertex2f(_width, 0.f);
 
   glEnd();
+}
 
-//    glDisable(GL_FRAMEBUFFER_SRGB);
+void HdOSPRayRenderPass::ProcessLights()
+{
+    GfVec3f origin = GfVec3f(0, 0, 0);
+    GfVec3f dir = GfVec3f(0, 0, -1);
+    GfVec3f up = GfVec3f(0, 1, 0);
+    dir = _inverseProjMatrix.Transform(dir);
+    origin = _inverseViewMatrix.Transform(origin);
+    dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
+    up = _inverseViewMatrix.TransformDir(up).GetNormalized();
+    GfVec3f up_light(up[0], up[1], up[2]);
+    GfVec3f dir_light(dir[0], dir[1], dir[2]);
+    if (_staticDirectionalLights) {
+        up_light = { 0.f, 1.f, 0.f };
+        dir_light = { -.1f, -.1f, -.8f };
+    }
+    GfVec3f right_light = GfCross(dir, up);
+    std::vector<opp::Light> lights;
+
+    // push scene lights
+    for (auto sceneLight : _renderParam->GetLights()) {
+        lights.push_back(sceneLight);
+    }
+
+    if (_ambientLight || lights.empty()) {
+        auto ambient = opp::Light("ambient");
+        ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
+        ambient.setParam("intensity", 1.f);
+        ambient.commit();
+        lights.push_back(ambient);
+    }
+
+    if (_eyeLight) {
+        auto eyeLight = opp::Light("distant");
+        eyeLight.setParam("color", vec3f(1.f, 232.f / 255.f, 166.f / 255.f));
+        eyeLight.setParam("direction",
+                          vec3f(dir_light[0], dir_light[1], dir_light[2]));
+        eyeLight.setParam("intensity", 3.3f);
+        eyeLight.setParam("visible", false);
+        eyeLight.commit();
+        lights.push_back(eyeLight);
+    }
+    const float angularDiameter = 4.5f;
+    const float glToPTLightIntensityMultiplier = 1.5f;
+    if (_keyLight) {
+        auto keyLight = opp::Light("distant");
+        auto keyHorz = -1.0f / tan(rad(45.0f)) * right_light;
+        auto keyVert = 1.0f / tan(rad(70.0f)) * up_light;
+        auto lightDir = -(keyVert + keyHorz);
+        keyLight.setParam("color", vec3f(.8f, .8f, .8f));
+        keyLight.setParam("direction",
+                          vec3f(lightDir[0], lightDir[1], lightDir[2]));
+        keyLight.setParam("intensity", glToPTLightIntensityMultiplier);
+        keyLight.setParam("angularDiameter", angularDiameter);
+        keyLight.setParam("visible", false);
+        keyLight.commit();
+        lights.push_back(keyLight);
+    }
+    if (_fillLight) {
+        auto fillLight = opp::Light("distant");
+        auto fillHorz = 1.0f / tan(rad(30.0f)) * right_light;
+        auto fillVert = 1.0f / tan(rad(45.0f)) * up_light;
+        auto lightDir = (fillVert + fillHorz);
+        fillLight.setParam("color", vec3f(.6f, .6f, .6f));
+        fillLight.setParam("direction",
+                           vec3f(lightDir[0], lightDir[1], lightDir[2]));
+        fillLight.setParam("intensity", glToPTLightIntensityMultiplier);
+        fillLight.setParam("angularDiameter", angularDiameter);
+        fillLight.setParam("visible", false);
+        fillLight.commit();
+        lights.push_back(fillLight);
+    }
+    if (_backLight) {
+        auto backLight = opp::Light("distant");
+        auto backHorz = 1.0f / tan(rad(60.0f)) * right_light;
+        auto backVert = -1.0f / tan(rad(60.0f)) * up_light;
+        auto lightDir = (backHorz + backVert);
+        backLight.setParam("color", vec3f(.6f, .6f, .6f));
+        backLight.setParam("direction",
+                           vec3f(lightDir[0], lightDir[1], lightDir[2]));
+        backLight.setParam("intensity", glToPTLightIntensityMultiplier);
+        backLight.setParam("angularDiameter", angularDiameter);
+        backLight.setParam("visible", false);
+        backLight.commit();
+        lights.push_back(backLight);
+    }
+    if (_world) {
+        _world.setParam("light", opp::CopiedData(lights));
+        _world.commit();
+    }
+}
+
+void HdOSPRayRenderPass::ProcessSettings()
+{
+    HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
+    _samplesToConvergence = renderDelegate->GetRenderSetting<int>(
+           HdOSPRayRenderSettingsTokens->samplesToConvergence, 100);
+    float aoDistance = renderDelegate->GetRenderSetting<float>(
+           HdOSPRayRenderSettingsTokens->aoDistance, 10.f);
+    float aoIntensity = renderDelegate->GetRenderSetting<float>(
+           HdOSPRayRenderSettingsTokens->aoIntensity, 1.f);
+    _useDenoiser = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->useDenoiser, false);
+    auto pixelFilterType
+           = (OSPPixelFilterTypes)renderDelegate->GetRenderSetting<int>(
+                  HdOSPRayRenderSettingsTokens->pixelFilterType,
+                  (int)OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS);
+    int spp = renderDelegate->GetRenderSetting<int>(
+           HdOSPRayRenderSettingsTokens->samplesPerFrame, 1);
+    int lSamples = renderDelegate->GetRenderSetting<int>(
+           HdOSPRayRenderSettingsTokens->lightSamples, -1);
+    int aoSamples = renderDelegate->GetRenderSetting<int>(
+           HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
+    int maxDepth = renderDelegate->GetRenderSetting<int>(
+           HdOSPRayRenderSettingsTokens->maxDepth, 5);
+    int minContribution = renderDelegate->GetRenderSetting<float>(
+           HdOSPRayRenderSettingsTokens->minContribution, 0.1f);
+    int maxContribution = renderDelegate->GetRenderSetting<float>(
+           HdOSPRayRenderSettingsTokens->maxContribution, 3.f);
+    _ambientLight = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->ambientLight, false);
+    // default static ospray directional lights
+    _staticDirectionalLights = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->staticDirectionalLights, false);
+    // eye, key, fill, and back light are copied from USD GL (Storm)
+    // defaults.
+    _eyeLight = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->eyeLight, false);
+    _keyLight = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->keyLight, false);
+    _fillLight = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->fillLight, false);
+    _backLight = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->backLight, false);
+    if (spp != _spp || aoSamples != _aoSamples || aoDistance != _aoDistance
+        || aoIntensity != _aoIntensity || maxDepth != _maxDepth
+        || lSamples != _lightSamples || minContribution != _minContribution
+        || _maxContribution != maxContribution
+        || pixelFilterType != _pixelFilterType) {
+        _spp = spp;
+        _aoSamples = aoSamples;
+        _maxDepth = maxDepth;
+        _lightSamples = lSamples;
+        _minContribution = minContribution;
+        _maxContribution = maxContribution;
+        _aoIntensity = aoIntensity;
+        _aoDistance = aoDistance;
+        _pixelFilterType = pixelFilterType;
+        _renderer.setParam("pixelSamples", _spp);
+        _renderer.setParam("lightSamples", _lightSamples);
+        _renderer.setParam("aoSamples", _aoSamples);
+        _renderer.setParam("aoRadius", _aoDistance);
+        _renderer.setParam("aoIntensity", _aoIntensity);
+        _renderer.setParam("maxPathLength", _maxDepth);
+        _renderer.setParam("minContribution", _minContribution);
+        _renderer.setParam("maxContribution", _maxContribution);
+        _renderer.setParam("pixelFilter", (int)_pixelFilterType);
+        _renderer.commit();
+    }
+    _lastSettingsVersion = renderDelegate->GetRenderSettingsVersion();
+    ResetImage();
+}
+
+void HdOSPRayRenderPass::ProcessInstances()
+{
+    // release resources from last committed scene
+    _oldInstances.resize(0);
+    _world = opp::World();
+    _world.commit();
+
+    // create new model and populate with mesh instances
+    _oldInstances.reserve(_renderParam->GetInstances().size());
+    for (auto instance : _renderParam->GetInstances()) {
+        _oldInstances.push_back(instance);
+    }
+    if (!_oldInstances.empty()) {
+        auto data = ospNewSharedData1D(_oldInstances.data(), OSP_INSTANCE,
+                                       _oldInstances.size());
+        ospCommit(data);
+        _world.setParam("instance", data);
+    } else {
+        _world.removeParam("instance");
+    }
+    _world.commit();
+    _renderer.commit();
+    _pendingModelUpdate = false;
+    _renderParam->ClearInstances();
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

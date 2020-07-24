@@ -99,6 +99,10 @@ protected:
     /// Update internal tracking to reflect a dirty collection.
     virtual void _MarkCollectionDirty() override;
 
+    virtual void ProcessLights();
+    virtual void ProcessSettings();
+    virtual void ProcessInstances();
+
 private:
     // -----------------------------------------------------------------------
     // Internal API
@@ -160,7 +164,7 @@ private:
         OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS
     };
     int _samplesToConvergence { 100 };
-    int _denoiserSPPThreshold { 6 };
+    int _denoiserSPPThreshold { 4 };
     int _aoSamples { 1 };
     int _lightSamples { -1 };
     bool _staticDirectionalLights { true };
