@@ -71,7 +71,19 @@ public:
     ///   \return True if the image has enough samples to be considered final.
     virtual bool IsConverged() const override;
 
-    virtual void DisplayRenderBuffer();
+    struct RenderFrame 
+    {
+        opp::Future osprayFrame;
+        unsigned int width{0};
+        unsigned int height{0};
+        // The resolved output buffer, in GL_RGBA. This is an intermediate between
+        // _sampleBuffer and the GL framebuffer.
+        std::vector<vec4f> colorBuffer;
+
+        bool isValid() { return osprayFrame;}
+    };
+
+    virtual void DisplayRenderBuffer(RenderFrame& renderFrame);
 
 protected:
     // -----------------------------------------------------------------------
@@ -116,11 +128,9 @@ private:
     int _lastRenderedModelVersion { -1 };
     int _lastSettingsVersion { -1 };
 
-    // The resolved output buffer, in GL_RGBA. This is an intermediate between
-    // _sampleBuffer and the GL framebuffer.
-    std::vector<vec4f> _colorBuffer;
 
-    opp::Future _currentFrame;
+    RenderFrame _currentFrame;
+    RenderFrame _previousFrame;
 
     // The width of the viewport we're rendering into.
     unsigned int _width;

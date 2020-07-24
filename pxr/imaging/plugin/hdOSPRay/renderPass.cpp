@@ -76,7 +76,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
 
     _useDenoiser &= ospLoadModule("denoiser") == OSP_NO_ERROR;
 
-    _renderer.setParam("maxDepth", 5);
+    _renderer.setParam("maxPathLength", 5);
     _renderer.setParam("roulettePathLength", 5);
     _renderer.setParam("aoRadius", 15.0f);
     _renderer.setParam("aoIntensity", _aoIntensity);
@@ -145,29 +145,56 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     int currentSceneVersion = _sceneVersion->load();
     if (_lastRenderedVersion != currentSceneVersion) {
         ResetImage();
-        _lastRenderedVersion = currentSceneVersion;
     }
     int currentModelVersion = _renderParam->GetModelVersion();
     if (_lastRenderedModelVersion != currentModelVersion) {
         ResetImage();
-        _lastRenderedModelVersion = currentModelVersion;
         _pendingModelUpdate = true;
     }
 
-    _pendingResetImage |= (frameBufferDirty || denoiserDirty || cameraDirty ||
+    _pendingResetImage |= (frameBufferDirty || cameraDirty ||
       settingsDirty);
 
-    if (_currentFrame)
+    if (_currentFrame.isValid())
     {
-        if (_pendingResetImage) {
-            _currentFrame.cancel();
+        if (frameBufferDirty || (_pendingResetImage && !_interacting)) {
+            _currentFrame.osprayFrame.cancel();
+            if (_previousFrame.isValid() && !frameBufferDirty)
+                DisplayRenderBuffer(_previousFrame);
+            _currentFrame.osprayFrame.wait();
+            _interacting = true;
+            _renderer.setParam("maxPathLength", 2);
+            _renderer.commit();
         } else {
-            if (!_currentFrame.isReady()) {
-              DisplayRenderBuffer();
-              return;
+            if (!_currentFrame.osprayFrame.isReady()) {
+                if (_previousFrame.isValid())
+                    DisplayRenderBuffer(_previousFrame);
+                return;
             }
+            _currentFrame.osprayFrame.wait();
+
+            opp::FrameBuffer frameBuffer = _frameBuffer;
+            if (_interacting)
+                frameBuffer = _interactiveFrameBuffer;
+
+            // Resolve the image buffer: find the average color per pixel by
+            // dividing the summed color by the number of samples;
+            // and convert the image into a GL-compatible format.
+            void* rgba = frameBuffer.map(OSP_FB_COLOR);
+            memcpy(_currentFrame.colorBuffer.data(), rgba, _currentFrame.width * 
+              _currentFrame.height * 4 * sizeof(float));
+            frameBuffer.unmap(rgba);
+            DisplayRenderBuffer(_currentFrame);
+            _previousFrame = _currentFrame;
         }
-        _currentFrame.wait();
+    }
+
+    if (_lastRenderedVersion != currentSceneVersion) {
+        _lastRenderedVersion = currentSceneVersion;
+    }
+    if (_lastRenderedModelVersion != currentModelVersion) {
+        _lastRenderedModelVersion = currentModelVersion;
+        _pendingModelUpdate = true;
     }
 
     if (frameBufferDirty) {
@@ -193,7 +220,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                (int)_height/_interactiveFrameBufferScale, OSP_FB_RGBA32F,
                                   OSP_FB_COLOR);
         _interactiveFrameBuffer.commit();
-        _colorBuffer.resize(_width * _height);
+        _currentFrame.colorBuffer.resize(_width * _height, vec4f({0.f,0.f,0.f,0.f}));
         _pendingResetImage = true;
     }
     if (denoiserDirty) {
@@ -217,12 +244,21 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _frameBuffer.commit();
     }
 
-if (cameraDirty)
-{
-    ResetImage();
-    _inverseViewMatrix = inverseViewMatrix;
-    _inverseProjMatrix = inverseProjMatrix;
-}
+    if (_interacting != cameraDirty)
+    {
+        _renderer.setParam("maxPathLength", (cameraDirty ? 2 : _maxDepth));
+        _renderer.commit();
+    }
+
+    if (cameraDirty) {
+        ResetImage();
+        _inverseViewMatrix = inverseViewMatrix;
+        _inverseProjMatrix = inverseProjMatrix;
+        _interacting = true;
+    } else {
+        _interacting = false;
+    }
+
     GfVec3f origin = GfVec3f(0, 0, 0);
     GfVec3f dir = GfVec3f(0, 0, -1);
     GfVec3f up = GfVec3f(0, 1, 0);
@@ -231,12 +267,22 @@ if (cameraDirty)
     dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
     up = _inverseViewMatrix.TransformDir(up).GetNormalized();
 
-    if (cameraDirty)
+    //set render frames size based on interaction mode
+    if (_interacting)
     {
-        _interacting = true;
-
+        if (_currentFrame.width != _width/_interactiveFrameBufferScale)
+        {
+            _currentFrame.width = _width/_interactiveFrameBufferScale;
+            _currentFrame.height = _height/_interactiveFrameBufferScale;
+            _currentFrame.colorBuffer.resize(_currentFrame.width * _currentFrame.height, vec4f({0.f,0.f,0.f,0.f}));
+        }
     } else {
-        _interacting = false;
+        if (_currentFrame.width != _width)
+        {
+            _currentFrame.width = _width;
+            _currentFrame.height = _height;
+            _currentFrame.colorBuffer.resize(_currentFrame.width * _currentFrame.height, vec4f({0.f,0.f,0.f,0.f}));
+        }
     }
 
         float aspect = _width / float(_height);
@@ -446,14 +492,13 @@ if (cameraDirty)
         }
     }
 
-
     opp::FrameBuffer frameBuffer = _frameBuffer;
     if (_interacting)
       frameBuffer = _interactiveFrameBuffer;
 
     if (!IsConverged()) {
         // Render the frame
-        _currentFrame = frameBuffer.renderFrame(_renderer, _camera, _world);
+        _currentFrame.osprayFrame = frameBuffer.renderFrame(_renderer, _camera, _world);
         // _currentFrame.wait();
         _numSamplesAccumulated += std::max(1, _spp);
     }
@@ -461,20 +506,19 @@ if (cameraDirty)
     // Resolve the image buffer: find the average color per pixel by
     // dividing the summed color by the number of samples;
     // and convert the image into a GL-compatible format.
-    void* rgba = frameBuffer.map(OSP_FB_COLOR);
-    memcpy(_colorBuffer.data(), rgba, _width * _height * 4 * sizeof(float));
-    frameBuffer.unmap(rgba);
+    // void* rgba = frameBuffer.map(OSP_FB_COLOR);
+    // memcpy(_colorBuffer.data(), rgba, _width * _height * 4 * sizeof(float));
+    // frameBuffer.unmap(rgba);
 
-    DisplayRenderBuffer();
+    // DisplayRenderBuffer();
 
 }
 
-void HdOSPRayRenderPass::DisplayRenderBuffer()
+void HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
 {
     // Blit!
     // glDrawPixels(_width, _height, GL_RGBA, GL_FLOAT, _colorBuffer.data());
   // Disable SRGB conversion for UI
-//   glDisable(GL_FRAMEBUFFER_SRGB);
 
   // set initial OpenGL state
   glEnable(GL_TEXTURE_2D);
@@ -487,12 +531,12 @@ void HdOSPRayRenderPass::DisplayRenderBuffer()
     glTexImage2D(GL_TEXTURE_2D,
         0,
         GL_RGBA32F,
-        (_interacting ? _width / _interactiveFrameBufferScale : _width),
-        (_interacting ? _height / _interactiveFrameBufferScale : _height),
+        renderBuffer.width,
+        renderBuffer.height,
         0,
         GL_RGBA,
         GL_FLOAT,
-        _colorBuffer.data());
+        renderBuffer.colorBuffer.data());
 
   // clear current OpenGL color buffer
   glClear(GL_COLOR_BUFFER_BIT);
@@ -513,6 +557,8 @@ void HdOSPRayRenderPass::DisplayRenderBuffer()
   glVertex2f(_width, 0.f);
 
   glEnd();
+
+//    glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
