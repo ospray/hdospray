@@ -71,6 +71,8 @@ public:
     ///   \return True if the image has enough samples to be considered final.
     virtual bool IsConverged() const override;
 
+    virtual void DisplayRenderBuffer();
+
 protected:
     // -----------------------------------------------------------------------
     // HdRenderPass API
@@ -99,8 +101,13 @@ private:
     bool _pendingModelUpdate;
 
     opp::FrameBuffer _frameBuffer;
+    opp::FrameBuffer _interactiveFrameBuffer;
+    int _interactiveFrameBufferScale {2};
 
     opp::Renderer _renderer;
+
+    bool _interacting {true};
+    bool _interactingLastFrame {true};
 
     // A reference to the global scene version.
     std::atomic<int>* _sceneVersion;
@@ -112,6 +119,8 @@ private:
     // The resolved output buffer, in GL_RGBA. This is an intermediate between
     // _sampleBuffer and the GL framebuffer.
     std::vector<vec4f> _colorBuffer;
+
+    opp::Future _currentFrame;
 
     // The width of the viewport we're rendering into.
     unsigned int _width;
@@ -156,8 +165,8 @@ private:
     float _aoDistance { 10.f };
     float _aoIntensity { 1.f };
 
-  // OpenGL framebuffer texture
-  GLuint framebufferTexture = 0;
+    // OpenGL framebuffer texture
+    GLuint framebufferTexture = 0;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

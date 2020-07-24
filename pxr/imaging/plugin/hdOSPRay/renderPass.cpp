@@ -72,7 +72,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _camera = opp::Camera("perspective");
     _renderer.setParam(
            "backgroundColor",
-           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
+           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
 
     _useDenoiser &= ospLoadModule("denoiser") == OSP_NO_ERROR;
 
@@ -89,7 +89,6 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.commit();
 
 
-  // set initial OpenGL state
   glEnable(GL_TEXTURE_2D);
   glDisable(GL_LIGHTING);
 
@@ -129,14 +128,57 @@ void
 HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                              TfTokenVector const& renderTags)
 {
-    std::cout << "renderpass::execute\n";
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
 
-    // If the viewport has changed, resize the sample buffer.
     GfVec4f vp = renderPassState->GetViewport();
-    if (_width != vp[2] || _height != vp[3]) {
+    bool frameBufferDirty =  (_width != vp[2] || _height != vp[3]);
+    bool useDenoiser = _useDenoiser && (_numSamplesAccumulated >= _denoiserSPPThreshold);
+    bool denoiserDirty = (useDenoiser != _denoiserState);
+    auto inverseViewMatrix
+           = renderPassState->GetWorldToViewMatrix().GetInverse();
+    auto inverseProjMatrix
+           = renderPassState->GetProjectionMatrix().GetInverse();
+    bool cameraDirty =  (inverseViewMatrix != _inverseViewMatrix
+       || inverseProjMatrix != _inverseProjMatrix);
+    int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
+    bool settingsDirty = (_lastSettingsVersion != currentSettingsVersion);
+    int currentSceneVersion = _sceneVersion->load();
+    if (_lastRenderedVersion != currentSceneVersion) {
+        ResetImage();
+        _lastRenderedVersion = currentSceneVersion;
+    }
+    int currentModelVersion = _renderParam->GetModelVersion();
+    if (_lastRenderedModelVersion != currentModelVersion) {
+        ResetImage();
+        _lastRenderedModelVersion = currentModelVersion;
+        _pendingModelUpdate = true;
+    }
+
+    _pendingResetImage |= (frameBufferDirty || denoiserDirty || cameraDirty ||
+      settingsDirty);
+
+    if (_currentFrame)
+    {
+        if (_pendingResetImage) {
+            _currentFrame.cancel();
+        } else {
+            if (!_currentFrame.isReady()) {
+              return;
+              DisplayRenderBuffer();
+            }
+        }
+        _currentFrame.wait();
+    }
+
+    if (frameBufferDirty) {
         _width = vp[2];
         _height = vp[3];
+        // reset OpenGL viewport and orthographic projection
+        glViewport(0, 0, _width, _height);
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0.0, _width, 0.0, _height, -1.0, 1.0);
         _frameBuffer
                = opp::FrameBuffer((int)_width, (int)_height, OSP_FB_RGBA32F,
                                   OSP_FB_COLOR | OSP_FB_ACCUM |
@@ -146,12 +188,15 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 #endif
                                          0);
         _frameBuffer.commit();
+        _interactiveFrameBuffer
+               = opp::FrameBuffer((int)_width/_interactiveFrameBufferScale, 
+               (int)_height/_interactiveFrameBufferScale, OSP_FB_RGBA32F,
+                                  OSP_FB_COLOR);
+        _interactiveFrameBuffer.commit();
         _colorBuffer.resize(_width * _height);
         _pendingResetImage = true;
     }
-    bool useDenoiser = (_useDenoiser && _numSamplesAccumulated >= _denoiserSPPThreshold);
-    if (useDenoiser != _denoiserState)
-    {
+    if (denoiserDirty) {
         if (useDenoiser) {
             _frameBuffer.setParam("imageOperation",
                                     opp::CopiedData(opp::ImageOperation("denoiser")));
@@ -172,21 +217,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _frameBuffer.commit();
     }
 
-    // Update camera
-    auto inverseViewMatrix
-           = renderPassState->GetWorldToViewMatrix().GetInverse();
-    auto inverseProjMatrix
-           = renderPassState->GetProjectionMatrix().GetInverse();
-
-    if (inverseViewMatrix != _inverseViewMatrix
-        || inverseProjMatrix != _inverseProjMatrix) {
-        ResetImage();
-        _inverseViewMatrix = inverseViewMatrix;
-        _inverseProjMatrix = inverseProjMatrix;
-    }
-
-    float aspect = _width / float(_height);
-    _camera.setParam("aspect", aspect);
+if (cameraDirty)
+{
+    ResetImage();
+    _inverseViewMatrix = inverseViewMatrix;
+    _inverseProjMatrix = inverseProjMatrix;
+}
     GfVec3f origin = GfVec3f(0, 0, 0);
     GfVec3f dir = GfVec3f(0, 0, -1);
     GfVec3f up = GfVec3f(0, 1, 0);
@@ -195,20 +231,28 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
     up = _inverseViewMatrix.TransformDir(up).GetNormalized();
 
-    double prjMatrix[4][4];
-    renderPassState->GetProjectionMatrix().Get(prjMatrix);
-    float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
+    if (cameraDirty)
+    {
+        _interacting = true;
 
-    _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));
-    _camera.setParam("direction", vec3f(dir[0], dir[1], dir[2]));
-    _camera.setParam("up", vec3f(up[0], up[1], up[2]));
-    _camera.setParam("fovy", fov);
-    _camera.commit();
+    } else {
+        _interacting = false;
+    }
 
-    // XXX: Add collection and renderTags support.
-    // update conig options
-    int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
-    if (_lastSettingsVersion != currentSettingsVersion) {
+        float aspect = _width / float(_height);
+        _camera.setParam("aspect", aspect);
+
+        double prjMatrix[4][4];
+        renderPassState->GetProjectionMatrix().Get(prjMatrix);
+        float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
+
+        _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));
+        _camera.setParam("direction", vec3f(dir[0], dir[1], dir[2]));
+        _camera.setParam("up", vec3f(up[0], up[1], up[2]));
+        _camera.setParam("fovy", fov);
+        _camera.commit();
+
+    if (settingsDirty) {
         _samplesToConvergence = renderDelegate->GetRenderSetting<int>(
                HdOSPRayRenderSettingsTokens->samplesToConvergence, 100);
         float aoDistance = renderDelegate->GetRenderSetting<float>(
@@ -277,103 +321,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
     // XXX: Add clip planes support.
 
-    // add lights
-    GfVec3f up_light(up[0], up[1], up[2]);
-    GfVec3f dir_light(dir[0], dir[1], dir[2]);
-    if (_staticDirectionalLights) {
-        up_light = { 0.f, 1.f, 0.f };
-        dir_light = { -.1f, -.1f, -.8f };
-    }
-    GfVec3f right_light = GfCross(dir, up);
-    std::vector<opp::Light> lights;
 
-    // push scene lights
-    for (auto sceneLight : _renderParam->GetLights()) {
-        lights.push_back(sceneLight);
-    }
-
-    if (_ambientLight || lights.empty()) {
-        auto ambient = opp::Light("ambient");
-        ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
-        ambient.setParam("intensity", 1.f);
-        ambient.commit();
-        lights.push_back(ambient);
-    }
-
-    if (_eyeLight) {
-        auto eyeLight = opp::Light("distant");
-        eyeLight.setParam("color", vec3f(1.f, 232.f / 255.f, 166.f / 255.f));
-        eyeLight.setParam("direction",
-                          vec3f(dir_light[0], dir_light[1], dir_light[2]));
-        eyeLight.setParam("intensity", 3.3f);
-        eyeLight.setParam("visible", false);
-        eyeLight.commit();
-        lights.push_back(eyeLight);
-    }
-    const float angularDiameter = 4.5f;
-    const float glToPTLightIntensityMultiplier = 1.5f;
-    if (_keyLight) {
-        auto keyLight = opp::Light("distant");
-        auto keyHorz = -1.0f / tan(rad(45.0f)) * right_light;
-        auto keyVert = 1.0f / tan(rad(70.0f)) * up_light;
-        auto lightDir = -(keyVert + keyHorz);
-        keyLight.setParam("color", vec3f(.8f, .8f, .8f));
-        keyLight.setParam("direction",
-                          vec3f(lightDir[0], lightDir[1], lightDir[2]));
-        keyLight.setParam("intensity", glToPTLightIntensityMultiplier);
-        keyLight.setParam("angularDiameter", angularDiameter);
-        keyLight.setParam("visible", false);
-        keyLight.commit();
-        lights.push_back(keyLight);
-    }
-    if (_fillLight) {
-        auto fillLight = opp::Light("distant");
-        auto fillHorz = 1.0f / tan(rad(30.0f)) * right_light;
-        auto fillVert = 1.0f / tan(rad(45.0f)) * up_light;
-        auto lightDir = (fillVert + fillHorz);
-        fillLight.setParam("color", vec3f(.6f, .6f, .6f));
-        fillLight.setParam("direction",
-                           vec3f(lightDir[0], lightDir[1], lightDir[2]));
-        fillLight.setParam("intensity", glToPTLightIntensityMultiplier);
-        fillLight.setParam("angularDiameter", angularDiameter);
-        fillLight.setParam("visible", false);
-        fillLight.commit();
-        lights.push_back(fillLight);
-    }
-    if (_backLight) {
-        auto backLight = opp::Light("distant");
-        auto backHorz = 1.0f / tan(rad(60.0f)) * right_light;
-        auto backVert = -1.0f / tan(rad(60.0f)) * up_light;
-        auto lightDir = (backHorz + backVert);
-        backLight.setParam("color", vec3f(.6f, .6f, .6f));
-        backLight.setParam("direction",
-                           vec3f(lightDir[0], lightDir[1], lightDir[2]));
-        backLight.setParam("intensity", glToPTLightIntensityMultiplier);
-        backLight.setParam("angularDiameter", angularDiameter);
-        backLight.setParam("visible", false);
-        backLight.commit();
-        lights.push_back(backLight);
-    }
-    OSPData lightArray
-           = ospNewSharedData1D(lights.data(), OSP_LIGHT, lights.size());
-    ospCommit(lightArray);
-    if (_world) {
-        _world.setParam("light", lightArray);
-        _world.commit();
-    }
-
-    int currentSceneVersion = _sceneVersion->load();
-    if (_lastRenderedVersion != currentSceneVersion) {
-        ResetImage();
-        _lastRenderedVersion = currentSceneVersion;
-    }
-
-    int currentModelVersion = _renderParam->GetModelVersion();
-    if (_lastRenderedModelVersion != currentModelVersion) {
-        ResetImage();
-        _lastRenderedModelVersion = currentModelVersion;
-        _pendingModelUpdate = true;
-    }
 
     if (_pendingModelUpdate) {
         // release resources from last committed scene
@@ -394,12 +342,97 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         } else {
             _world.removeParam("instance");
         }
-        _world.setParam("light", lightArray);
         _world.commit();
         _renderer.commit();
         _pendingModelUpdate = false;
         _renderParam->ClearInstances();
     }
+
+    // add lights
+    //  if (1) {
+        GfVec3f up_light(up[0], up[1], up[2]);
+        GfVec3f dir_light(dir[0], dir[1], dir[2]);
+        if (_staticDirectionalLights) {
+            up_light = { 0.f, 1.f, 0.f };
+            dir_light = { -.1f, -.1f, -.8f };
+        }
+        GfVec3f right_light = GfCross(dir, up);
+        std::vector<opp::Light> lights;
+
+        // push scene lights
+        for (auto sceneLight : _renderParam->GetLights()) {
+            lights.push_back(sceneLight);
+        }
+
+        if (_ambientLight || lights.empty()) {
+            auto ambient = opp::Light("ambient");
+            ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
+            ambient.setParam("intensity", 1.f);
+            ambient.commit();
+            lights.push_back(ambient);
+        }
+
+        if (_eyeLight) {
+            auto eyeLight = opp::Light("distant");
+            eyeLight.setParam("color",
+                              vec3f(1.f, 232.f / 255.f, 166.f / 255.f));
+            eyeLight.setParam("direction",
+                              vec3f(dir_light[0], dir_light[1], dir_light[2]));
+            eyeLight.setParam("intensity", 3.3f);
+            eyeLight.setParam("visible", false);
+            eyeLight.commit();
+            lights.push_back(eyeLight);
+        }
+        const float angularDiameter = 4.5f;
+        const float glToPTLightIntensityMultiplier = 1.5f;
+        if (_keyLight) {
+            auto keyLight = opp::Light("distant");
+            auto keyHorz = -1.0f / tan(rad(45.0f)) * right_light;
+            auto keyVert = 1.0f / tan(rad(70.0f)) * up_light;
+            auto lightDir = -(keyVert + keyHorz);
+            keyLight.setParam("color", vec3f(.8f, .8f, .8f));
+            keyLight.setParam("direction",
+                              vec3f(lightDir[0], lightDir[1], lightDir[2]));
+            keyLight.setParam("intensity", glToPTLightIntensityMultiplier);
+            keyLight.setParam("angularDiameter", angularDiameter);
+            keyLight.setParam("visible", false);
+            keyLight.commit();
+            lights.push_back(keyLight);
+        }
+        if (_fillLight) {
+            auto fillLight = opp::Light("distant");
+            auto fillHorz = 1.0f / tan(rad(30.0f)) * right_light;
+            auto fillVert = 1.0f / tan(rad(45.0f)) * up_light;
+            auto lightDir = (fillVert + fillHorz);
+            fillLight.setParam("color", vec3f(.6f, .6f, .6f));
+            fillLight.setParam("direction",
+                               vec3f(lightDir[0], lightDir[1], lightDir[2]));
+            fillLight.setParam("intensity", glToPTLightIntensityMultiplier);
+            fillLight.setParam("angularDiameter", angularDiameter);
+            fillLight.setParam("visible", false);
+            fillLight.commit();
+            lights.push_back(fillLight);
+        }
+        if (_backLight) {
+            auto backLight = opp::Light("distant");
+            auto backHorz = 1.0f / tan(rad(60.0f)) * right_light;
+            auto backVert = -1.0f / tan(rad(60.0f)) * up_light;
+            auto lightDir = (backHorz + backVert);
+            backLight.setParam("color", vec3f(.6f, .6f, .6f));
+            backLight.setParam("direction",
+                               vec3f(lightDir[0], lightDir[1], lightDir[2]));
+            backLight.setParam("intensity", glToPTLightIntensityMultiplier);
+            backLight.setParam("angularDiameter", angularDiameter);
+            backLight.setParam("visible", false);
+            backLight.commit();
+            lights.push_back(backLight);
+        }
+        if (_world)
+        {
+            _world.setParam("light", opp::CopiedData(lights));
+            _world.commit();
+        }
+    // }
 
     // Reset the sample buffer if it's been requested.
     if (_pendingResetImage) {
@@ -413,31 +446,49 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         }
     }
 
+
+    opp::FrameBuffer frameBuffer = _frameBuffer;
+    if (_interacting)
+      frameBuffer = _interactiveFrameBuffer;
+
     if (!IsConverged()) {
         // Render the frame
-        _frameBuffer.renderFrame(_renderer, _camera, _world);
+        _currentFrame = frameBuffer.renderFrame(_renderer, _camera, _world);
+        // _currentFrame.wait();
         _numSamplesAccumulated += std::max(1, _spp);
     }
 
     // Resolve the image buffer: find the average color per pixel by
     // dividing the summed color by the number of samples;
     // and convert the image into a GL-compatible format.
-    void* rgba = _frameBuffer.map(OSP_FB_COLOR);
-    memcpy((void*)&_colorBuffer[0], rgba, _width * _height * 4 * sizeof(float));
-    _frameBuffer.unmap(rgba);
+    void* rgba = frameBuffer.map(OSP_FB_COLOR);
+    memcpy(_colorBuffer.data(), rgba, _width * _height * 4 * sizeof(float));
+    frameBuffer.unmap(rgba);
 
+    DisplayRenderBuffer();
+
+}
+
+void HdOSPRayRenderPass::DisplayRenderBuffer()
+{
     // Blit!
     // glDrawPixels(_width, _height, GL_RGBA, GL_FLOAT, _colorBuffer.data());
+  // Disable SRGB conversion for UI
+//   glDisable(GL_FRAMEBUFFER_SRGB);
 
-  // Turn on SRGB conversion for OSPRay frame
-  glEnable(GL_FRAMEBUFFER_SRGB);
+  // set initial OpenGL state
+  glEnable(GL_TEXTURE_2D);
+  glDisable(GL_LIGHTING);
+
+//   Turn on SRGB conversion for OSPRay frame
+//   glEnable(GL_FRAMEBUFFER_SRGB);
 
     glBindTexture(GL_TEXTURE_2D, framebufferTexture);
     glTexImage2D(GL_TEXTURE_2D,
         0,
         GL_RGBA32F,
-        _width,
-        _height,
+        (_interacting ? _width / _interactiveFrameBufferScale : _width),
+        (_interacting ? _height / _interactiveFrameBufferScale : _height),
         0,
         GL_RGBA,
         GL_FLOAT,
@@ -462,9 +513,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
   glVertex2f(_width, 0.f);
 
   glEnd();
-
-  // Disable SRGB conversion for UI
-  glDisable(GL_FRAMEBUFFER_SRGB);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
