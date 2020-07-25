@@ -88,7 +88,7 @@ public:
     ///  Whether OSPRay uses denoiser
     ///
     /// Override with *HDOSPRAY_USE_DENOISER*.
-    bool useDenoiser;
+    bool useDenoiser {true};
 
     /// The type of pixel filter used by OSPRay
     ///

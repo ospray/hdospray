@@ -74,8 +74,11 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
            "backgroundColor",
            vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
 
-    _useDenoiser &= ospLoadModule("denoiser") == OSP_NO_ERROR;
-
+#if HDOSPRAY_ENABLE_DENOISER
+    _denoiserLoaded = (ospLoadModule("denoiser") == OSP_NO_ERROR);
+    if (!_denoiserLoaded)
+        std::cout << "HDOSPRAY: WARNING: could not load denoiser module\n";
+#endif
     _renderer.setParam("maxPathLength", 5);
     _renderer.setParam("roulettePathLength", 5);
     _renderer.setParam("aoRadius", 15.0f);
@@ -133,7 +136,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     GfVec4f vp = renderPassState->GetViewport();
     bool frameBufferDirty = (_width != vp[2] || _height != vp[3]);
     bool useDenoiser
-           = _useDenoiser && (_numSamplesAccumulated >= _denoiserSPPThreshold);
+           = _denoiserLoaded && _useDenoiser && (_numSamplesAccumulated >= _denoiserSPPThreshold);
     bool denoiserDirty = (useDenoiser != _denoiserState);
     auto inverseViewMatrix
            = renderPassState->GetWorldToViewMatrix().GetInverse();
@@ -473,8 +476,10 @@ HdOSPRayRenderPass::ProcessSettings()
            HdOSPRayRenderSettingsTokens->aoDistance, 10.f);
     float aoIntensity = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->aoIntensity, 1.f);
-    _useDenoiser = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->useDenoiser, false);
+#if HDOSPRAY_ENABLE_DENOISER
+    _useDenoiser = _denoiserLoaded && renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->useDenoiser, true);
+#endif
     auto pixelFilterType
            = (OSPPixelFilterTypes)renderDelegate->GetRenderSetting<int>(
                   HdOSPRayRenderSettingsTokens->pixelFilterType,

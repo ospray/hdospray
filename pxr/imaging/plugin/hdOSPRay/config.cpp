@@ -37,7 +37,7 @@ TF_INSTANTIATE_SINGLETON(HdOSPRayConfig);
 // The environment variable macro takes the variable name, a default value,
 // and a description...
 // clang-format off
-TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_PER_FRAME, -1,
+TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_PER_FRAME, 1,
         "Raytraced samples per pixel per frame (must be >= 1)");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_TO_CONVERGENCE, 100,
@@ -67,7 +67,7 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_INIT_ARGS, "",
 TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_SIMPLE_MATERIAL, 0,
         "If OSPRay uses a simple diffuse + phong based material instead of the principled material");
 
-TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_DENOISER, 0,
+TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_DENOISER, 1,
         "OSPRay uses denoiser");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_PIXELFILTER_TYPE, OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS,
@@ -92,7 +92,7 @@ HdOSPRayConfig::HdOSPRayConfig()
             TfGetEnvSetting(HDOSPRAY_CAMERA_LIGHT_INTENSITY)) / 100.0f);
     usePathTracing =TfGetEnvSetting(HDOSPRAY_USE_PATH_TRACING);
     initArgs =TfGetEnvSetting(HDOSPRAY_INIT_ARGS);
-    useDenoiser = TfGetEnvSetting(HDOSPRAY_USE_DENOISER);
+    useDenoiser = bool(TfGetEnvSetting(HDOSPRAY_USE_DENOISER) == 1);
     pixelFilterType = (OSPPixelFilterTypes) TfGetEnvSetting(HDOSPRAY_PIXELFILTER_TYPE);
     forceQuadrangulate = TfGetEnvSetting(HDOSPRAY_FORCE_QUADRANGULATE);
     maxDepth = TfGetEnvSetting(HDOSPRAY_MAX_PATH_DEPTH);

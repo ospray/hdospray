@@ -196,9 +196,6 @@ HdOSPRayRenderDelegate::_Initialize()
            { "lightSamples", HdOSPRayRenderSettingsTokens->lightSamples,
              VtValue(int(HdOSPRayConfig::GetInstance().lightSamples)) });
     _settingDescriptors.push_back(
-           { "lightSamples", HdOSPRayRenderSettingsTokens->lightSamples,
-             VtValue(int(HdOSPRayConfig::GetInstance().lightSamples)) });
-    _settingDescriptors.push_back(
            { "ambientLight", HdOSPRayRenderSettingsTokens->ambientLight,
              VtValue(bool(HdOSPRayConfig::GetInstance().ambientLight)) });
     _settingDescriptors.push_back(
