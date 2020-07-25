@@ -80,7 +80,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
         std::cout << "HDOSPRAY: WARNING: could not load denoiser module\n";
 #endif
     _renderer.setParam("maxPathLength", 5);
-    _renderer.setParam("roulettePathLength", 5);
+    _renderer.setParam("roulettePathLength", 2);
     _renderer.setParam("aoRadius", 15.0f);
     _renderer.setParam("aoIntensity", _aoIntensity);
     _renderer.setParam("shadowsEnabled", true);

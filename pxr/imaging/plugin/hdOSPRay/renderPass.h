@@ -166,7 +166,7 @@ private:
         OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS
     };
     int _samplesToConvergence { 100 };
-    int _denoiserSPPThreshold { 3 };
+    int _denoiserSPPThreshold { 6 };
     int _aoSamples { 1 };
     int _lightSamples { -1 };
     bool _staticDirectionalLights { true };
