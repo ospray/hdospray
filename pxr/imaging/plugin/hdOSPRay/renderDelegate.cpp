@@ -228,6 +228,8 @@ HdOSPRayRenderDelegate::~HdOSPRayRenderDelegate()
     }
 
     _renderParam.reset();
+
+    ospShutdown();
 }
 
 HdRenderParam*
