@@ -160,7 +160,7 @@ private:
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
     int _spp { 1 };
     bool _useDenoiser { false };
-    bool _denoiserLoaded { false }; //did the module successfully load?
+    bool _denoiserLoaded { false }; // did the module successfully load?
     bool _denoiserState { false };
     OSPPixelFilterTypes _pixelFilterType {
         OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS

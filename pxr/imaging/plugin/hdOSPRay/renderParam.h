@@ -91,14 +91,14 @@ public:
     }
 
     // thread safe.  Lights added to scene and released by renderPass.
-    void AddLight(const OSPLight light)
+    void AddLight(const opp::Light light)
     {
         std::lock_guard<std::mutex> lock(_ospMutex);
         _ospLights.emplace_back(light);
     }
 
     // thread safe.  Lights added to scene and released by renderPass.
-    void AddLights(const std::vector<OSPLight>& lights)
+    void AddLights(const std::vector<opp::Light>& lights)
     {
         std::lock_guard<std::mutex> lock(_ospMutex);
         _ospLights.insert(_ospLights.end(), lights.begin(), lights.end());

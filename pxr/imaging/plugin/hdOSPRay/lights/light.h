@@ -38,7 +38,9 @@
 
 #include <vector>
 
-#include "ospray/ospray.h"
+#include "ospray/ospray_cpp.h"
+
+namespace opp = ospray::cpp;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -106,7 +108,7 @@ protected:
     bool _visibility { true };
 
     // reference to the equivalent OSPLight
-    OSPLight _ospLight;
+    opp::Light _ospLight;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

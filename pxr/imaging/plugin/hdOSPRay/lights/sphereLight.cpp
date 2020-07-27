@@ -29,9 +29,9 @@
 
 #include "pxr/base/gf/matrix4d.h"
 
-#include "ospray/ospray_util.h"
-
 #include <iostream>
+
+using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -81,12 +81,13 @@ HdOSPRaySphereLight::_PrepareOSPLight()
     // We could also consider scaling but is is not clear what to do
     // if the scaling i non-uniform
 
-    _ospLight = ospNewLight("sphere");
-    ospSetVec3f(_ospLight, "position", position[0], position[1], position[2]);
+    _ospLight = opp::Light("sphere");
+    _ospLight.setParam("position",
+                       vec3f(position[0], position[1], position[2]));
     if (_treatAsPoint) {
-        ospSetFloat(_ospLight, "radius", 0.0f);
+        _ospLight.setParam("radius", 0.0f);
     } else {
-        ospSetFloat(_ospLight, "radius", _radius);
+        _ospLight.setParam("radius", _radius);
         // in case of a disk light intensity represents the emitted raidnace
         // and has to be converted to the equivalent of intensity for a point
         // light
@@ -95,11 +96,12 @@ HdOSPRaySphereLight::_PrepareOSPLight()
     }
 
     // emission
-    ospSetVec3f(_ospLight, "color", _emissionParam.color[0],
-                _emissionParam.color[1], _emissionParam.color[2]);
-    ospSetFloat(_ospLight, "intensity", intensity);
-    ospSetBool(_ospLight, "visible", _visibility);
-    ospCommit(_ospLight);
+    _ospLight.setParam("color",
+                       vec3f(_emissionParam.color[0], _emissionParam.color[1],
+                             _emissionParam.color[2]));
+    _ospLight.setParam("intensity", intensity);
+    _ospLight.setParam("visible", _visibility);
+    _ospLight.commit();
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

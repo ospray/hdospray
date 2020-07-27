@@ -32,9 +32,9 @@
 
 #include "pxr/usd/sdf/assetPath.h"
 
-#include "ospray/ospray_util.h"
-
 #include <iostream>
+
+using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -79,17 +79,18 @@ HdOSPRayDistantLight::_PrepareOSPLight()
         direction.Normalize();
     }
 
-    _ospLight = ospNewLight("distant");
+    _ospLight = opp::Light("distant");
     // placement
-    ospSetVec3f(_ospLight, "direction", direction[0], direction[1],
-                direction[2]);
-    ospSetFloat(_ospLight, "angularDiameter", _angle);
+    _ospLight.setParam("direction",
+                       vec3f(direction[0], direction[1], direction[2]));
+    _ospLight.setParam("angularDiameter", _angle);
     // emission
-    ospSetVec3f(_ospLight, "color", _emissionParam.color[0],
-                _emissionParam.color[1], _emissionParam.color[2]);
-    ospSetFloat(_ospLight, "intensity", intensity);
-    ospSetBool(_ospLight, "visible", _visibility);
-    ospCommit(_ospLight);
+    _ospLight.setParam("color",
+                       vec3f(_emissionParam.color[0], _emissionParam.color[1],
+                             _emissionParam.color[2]));
+    _ospLight.setParam("intensity", intensity);
+    _ospLight.setParam("visible", _visibility);
+    _ospLight.commit();
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

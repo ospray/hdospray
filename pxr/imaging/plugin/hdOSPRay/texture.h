@@ -26,7 +26,8 @@
 
 #include "pxr/pxr.h"
 
-#include "ospray/ospray.h"
+#include "ospray/ospray_cpp.h"
+namespace opp = ospray::cpp;
 
 #include <string>
 
@@ -35,9 +36,9 @@ PXR_NAMESPACE_OPEN_SCOPE
 OSPTextureFormat osprayTextureFormat(int depth, int channels,
                                      bool preferLinear = false);
 
-OSPTexture LoadPtexTexture(std::string file);
+opp::Texture LoadPtexTexture(std::string file);
 
-OSPTexture LoadOIIOTexture2D(std::string file, bool nearestFilter = false);
+opp::Texture LoadOIIOTexture2D(std::string file, bool nearestFilter = false);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 

@@ -135,8 +135,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     GfVec4f vp = renderPassState->GetViewport();
     bool frameBufferDirty = (_width != vp[2] || _height != vp[3]);
-    bool useDenoiser
-           = _denoiserLoaded && _useDenoiser && (_numSamplesAccumulated >= _denoiserSPPThreshold);
+    bool useDenoiser = _denoiserLoaded && _useDenoiser
+           && (_numSamplesAccumulated >= _denoiserSPPThreshold);
     bool denoiserDirty = (useDenoiser != _denoiserState);
     auto inverseViewMatrix
            = renderPassState->GetWorldToViewMatrix().GetInverse();
@@ -477,8 +477,9 @@ HdOSPRayRenderPass::ProcessSettings()
     float aoIntensity = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->aoIntensity, 1.f);
 #if HDOSPRAY_ENABLE_DENOISER
-    _useDenoiser = _denoiserLoaded && renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->useDenoiser, true);
+    _useDenoiser = _denoiserLoaded
+           && renderDelegate->GetRenderSetting<bool>(
+                  HdOSPRayRenderSettingsTokens->useDenoiser, true);
 #endif
     auto pixelFilterType
            = (OSPPixelFilterTypes)renderDelegate->GetRenderSetting<int>(
@@ -554,9 +555,9 @@ HdOSPRayRenderPass::ProcessInstances()
         _oldInstances.push_back(instance);
     }
     if (!_oldInstances.empty()) {
-        auto data = ospNewSharedData1D(_oldInstances.data(), OSP_INSTANCE,
-                                       _oldInstances.size());
-        ospCommit(data);
+        opp::CopiedData data = opp::CopiedData(
+               _oldInstances.data(), OSP_INSTANCE, _oldInstances.size());
+        data.commit();
         _world.setParam("instance", data);
     } else {
         _world.removeParam("instance");

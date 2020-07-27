@@ -44,7 +44,7 @@ protected:
 
 private:
     // the loaded texture
-    OSPTexture _hdriTexture;
+    opp::Texture _hdriTexture;
     // path to the lat/long texture file
     std::string _textureFile;
 };

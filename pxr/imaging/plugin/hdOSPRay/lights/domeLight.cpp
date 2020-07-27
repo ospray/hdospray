@@ -32,10 +32,11 @@
 
 #include "pxr/usd/sdf/assetPath.h"
 
-#include "ospray/ospray_util.h"
 #include "rkcommon/math/vec.h"
 
 #include <iostream>
+
+using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -80,19 +81,21 @@ HdOSPRayDomeLight::_PrepareOSPLight()
 
     _hdriTexture = LoadOIIOTexture2D(_textureFile);
 
-    _ospLight = ospNewLight("hdri");
+    _ospLight = opp::Light("hdri");
     // placement
-    ospSetVec3f(_ospLight, "up", upDirection[0], upDirection[1],
-                upDirection[2]);
-    ospSetVec3f(_ospLight, "direction", centerDirection[0], centerDirection[1],
-                centerDirection[2]);
+    _ospLight.setParam("up",
+                       vec3f(upDirection[0], upDirection[1], upDirection[2]));
+    _ospLight.setParam(
+           "direction",
+           vec3f(centerDirection[0], centerDirection[1], centerDirection[2]));
     // emission
-    ospSetObject(_ospLight, "map", _hdriTexture);
-    ospSetVec3f(_ospLight, "color", _emissionParam.color[0],
-                _emissionParam.color[1], _emissionParam.color[2]);
-    ospSetFloat(_ospLight, "intensity", intensity);
-    ospSetBool(_ospLight, "visible", _visibility);
-    ospCommit(_ospLight);
+    _ospLight.setParam("map", _hdriTexture);
+    _ospLight.setParam("color",
+                       vec3f(_emissionParam.color[0], _emissionParam.color[1],
+                             _emissionParam.color[2]));
+    _ospLight.setParam("intensity", intensity);
+    _ospLight.setParam("visible", _visibility);
+    _ospLight.commit();
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -24,10 +24,11 @@
 
 #include "pxr/imaging/hdOSPRay/texture.h"
 
-#include "ospray/ospray_util.h"
 #include "rkcommon/math/vec.h"
 
 #include <OpenImageIO/imageio.h>
+
+using namespace rkcommon::math;
 
 OIIO_NAMESPACE_USING
 
@@ -58,18 +59,18 @@ osprayTextureFormat(int depth, int channels, bool preferLinear)
 }
 
 /// creates ptex texture and sets to file, does not commit
-OSPTexture
+opp::Texture
 LoadPtexTexture(std::string file)
 {
     if (file == "")
         return nullptr;
-    OSPTexture ospTexture = ospNewTexture("ptex");
-    ospSetString(ospTexture, "filename", file.c_str());
+    opp::Texture ospTexture = opp::Texture("ptex");
+    ospTexture.setParam("filename", file.c_str());
     return ospTexture;
 }
 
 // creates 2d osptexture from file, does not commit
-OSPTexture
+opp::Texture
 LoadOIIOTexture2D(std::string file, bool nearestFilter)
 {
     auto in = ImageInput::open(file.c_str());
@@ -79,7 +80,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter)
     }
 
     const ImageSpec& spec = in->spec();
-    rkcommon::math::vec2i size;
+    vec2i size;
     size.x = spec.width;
     size.y = spec.height;
     int channels = spec.nchannels;
@@ -122,16 +123,16 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter)
         throw std::runtime_error("hdOSPRay::LoadOIIOTexture2D: \
                                          Unknown texture format");
 
-    OSPData ospData = ospNewSharedData2D(data, dataType, size.x, size.y);
-    ospCommit(ospData);
+    opp::SharedData ospData = opp::SharedData(data, dataType, size);
+    ospData.commit();
 
-    OSPTexture ospTexture = ospNewTexture("texture2d");
-    ospSetInt(ospTexture, "format", format);
-    ospSetInt(ospTexture, "filter",
-              nearestFilter ? OSP_TEXTURE_FILTER_NEAREST
-                            : OSP_TEXTURE_FILTER_BILINEAR);
-    ospSetObject(ospTexture, "data", ospData);
-    ospCommit(ospTexture);
+    opp::Texture ospTexture = opp::Texture("texture2d");
+    ospTexture.setParam("format", format);
+    ospTexture.setParam("filter",
+                        nearestFilter ? OSP_TEXTURE_FILTER_NEAREST
+                                      : OSP_TEXTURE_FILTER_BILINEAR);
+    ospTexture.setParam("data", ospData);
+    ospTexture.commit();
 
     // TODO: free data!!!
 

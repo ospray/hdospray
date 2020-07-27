@@ -126,19 +126,18 @@ HdOSPRayRenderDelegate::_Initialize()
     _settingDescriptors.push_back(
            { "maxDepth", HdOSPRayRenderSettingsTokens->maxDepth,
              VtValue(int(HdOSPRayConfig::GetInstance().maxDepth)) });
-    if (!HdOSPRayConfig::GetInstance().usePathTracing)
-    {
+    if (!HdOSPRayConfig::GetInstance().usePathTracing) {
         _settingDescriptors.push_back(
-            { "Ambient occlusion samples",
-                HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
-                VtValue(int(
-                        HdOSPRayConfig::GetInstance().ambientOcclusionSamples)) });
+               { "Ambient occlusion samples",
+                 HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
+                 VtValue(int(HdOSPRayConfig::GetInstance()
+                                    .ambientOcclusionSamples)) });
         _settingDescriptors.push_back(
-            { "aoDistance", HdOSPRayRenderSettingsTokens->aoDistance,
-                VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) });
+               { "aoDistance", HdOSPRayRenderSettingsTokens->aoDistance,
+                 VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) });
         _settingDescriptors.push_back(
-            { "aoIntensity", HdOSPRayRenderSettingsTokens->aoIntensity,
-                VtValue(float(HdOSPRayConfig::GetInstance().aoIntensity)) });
+               { "aoIntensity", HdOSPRayRenderSettingsTokens->aoIntensity,
+                 VtValue(float(HdOSPRayConfig::GetInstance().aoIntensity)) });
     }
     _settingDescriptors.push_back(
            { "minContribution", HdOSPRayRenderSettingsTokens->minContribution,

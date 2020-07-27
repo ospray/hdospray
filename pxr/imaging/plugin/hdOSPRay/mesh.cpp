@@ -43,8 +43,6 @@
 
 #include "rkcommon/math/AffineSpace.h"
 
-#include "ospray/ospray_util.h"
-
 using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
@@ -55,21 +53,6 @@ TF_DEFINE_PRIVATE_TOKENS(
     (st)
 );
 // clang-format on
-
-OSPData
-ospNewCopyData1D(const void* source, OSPDataType dataType, size_t numElements)
-{
-    OSPData data
-           = ospNewData1D(static_cast<OSPDataType>(dataType), numElements);
-    ospCommit(data);
-    OSPData shared = ospNewSharedData1D(
-           source, static_cast<OSPDataType>(dataType), numElements);
-    ospCommit(shared);
-    ospCopyData1D(shared, data, 0);
-    ospCommit(data);
-    ospRelease(shared);
-    return data;
-}
 
 HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
     : HdMesh(id, instancerId)
@@ -479,12 +462,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                 meshUtil.ComputeQuadIndices(&_quadIndices,
                                             &_quadPrimitiveParams);
 
-                auto indices = ospNewSharedData1D(
+                opp::SharedData indices = opp::SharedData(
                        _quadIndices.cdata(), OSP_VEC4UI, _quadIndices.size());
 
-                ospCommit(indices);
+                indices.commit();
                 _ospMesh.setParam("index", indices);
-                ospRelease(indices);
 
                 // Check if texcoords are provides as face varying.
                 // XXX: (This code currently only cares about _texcoords, but
@@ -539,13 +521,12 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                 meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
                                                 &_trianglePrimitiveParams);
 
-                auto indices = ospNewSharedData1D(_triangulatedIndices.cdata(),
-                                                  OSP_VEC3UI,
-                                                  _triangulatedIndices.size());
+                opp::SharedData indices = opp::SharedData(
+                       _triangulatedIndices.cdata(), OSP_VEC3UI,
+                       _triangulatedIndices.size());
 
-                ospCommit(indices);
+                indices.commit();
                 _ospMesh.setParam("index", indices);
-                ospRelease(indices);
 
                 // Check if texcoords are provides as face varying.
                 // XXX: (This code currently only cares about _texcoords, but
@@ -598,35 +579,31 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             }
         }
 
-        auto vertices
-               = ospNewSharedData1D(_points.cdata(), OSP_VEC3F, _points.size());
-        ospCommit(vertices);
+        opp::SharedData vertices
+               = opp::SharedData(_points.cdata(), OSP_VEC3F, _points.size());
+        vertices.commit();
         _ospMesh.setParam("vertex.position", vertices);
-        ospRelease(vertices);
 
         if (_computedNormals.size()) {
-            auto normals
-                   = ospNewSharedData1D(_computedNormals.cdata(), OSP_VEC3F,
-                                        _computedNormals.size());
-            ospCommit(normals);
+            opp::SharedData normals
+                   = opp::SharedData(_computedNormals.cdata(), OSP_VEC3F,
+                                     _computedNormals.size());
+            normals.commit();
             _ospMesh.setParam("vertex.normal", normals);
-            ospRelease(normals);
         }
 
         if (_colors.size() > 1) {
-            auto colors = ospNewSharedData1D(_colors.cdata(), OSP_VEC4F,
-                                             _colors.size());
-            ospCommit(colors);
+            opp::SharedData colors = opp::SharedData(_colors.cdata(), OSP_VEC4F,
+                                                     _colors.size());
+            colors.commit();
             _ospMesh.setParam("vetex.color", colors);
-            ospRelease(colors);
         }
 
         if (_texcoords.size() > 1) {
-            auto texcoords = ospNewSharedData1D(_texcoords.cdata(), OSP_VEC2F,
-                                                _texcoords.size());
-            ospCommit(texcoords);
+            opp::SharedData texcoords = opp::SharedData(
+                   _texcoords.cdata(), OSP_VEC2F, _texcoords.size());
+            texcoords.commit();
             _ospMesh.setParam("vertex.texcoord", texcoords);
-            ospRelease(texcoords);
         }
 
         opp::Material ospMaterial;
@@ -671,7 +648,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         for (size_t i = 0; i < newSize; i++) {
             // Create the new instance.
 
-            // OSPGroup group = ospNewGroup();
             opp::Group group;
             opp::Instance instance(group);
             group.setParam("geometry", opp::CopiedData(*_instanceModel));
@@ -777,21 +753,19 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     int numIndices = _topology.GetFaceVertexIndices().size();
     int numVertices = _points.size();
 
-    auto vertices = ospNewSharedData1D(_points.data(), OSP_VEC3F, numVertices);
-    ospCommit(vertices);
+    opp::CopiedData vertices
+           = opp::CopiedData(_points.data(), OSP_VEC3F, numVertices);
+    vertices.commit();
     mesh.setParam("vertex.position", vertices);
-    ospRelease(vertices);
-    auto faces = ospNewSharedData1D(_topology.GetFaceVertexCounts().data(),
-                                    OSP_UINT, numFaceVertices);
-    ospCommit(faces);
+    opp::CopiedData faces = opp::CopiedData(
+           _topology.GetFaceVertexCounts().data(), OSP_UINT, numFaceVertices);
+    faces.commit();
     mesh.setParam("face", faces);
-    ospRelease(faces);
-    auto indices = ospNewSharedData1D(_topology.GetFaceVertexIndices().data(),
-                                      OSP_UINT, numIndices);
-    ospCommit(indices);
+    opp::CopiedData indices = opp::CopiedData(
+           _topology.GetFaceVertexIndices().data(), OSP_UINT, numIndices);
+    indices.commit();
     // // TODO: need to handle subivion types correctly
     mesh.setParam("index", indices);
-    ospRelease(indices);
     mesh.setParam("mode", OSP_SUBDIVISION_PIN_ALL);
     // TODO: set hole buffer
 
@@ -804,11 +778,10 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
         std::vector<vec4f> colorDummy(_points.size(), white);
         mesh.setParam("vertex.color", opp::CopiedData(colorDummy));
     } else {
-        auto colorsData
-               = ospNewCopyData1D(_colors.cdata(), OSP_VEC4F, _colors.size());
-        ospCommit(colorsData);
+        opp::CopiedData colorsData
+               = opp::CopiedData(_colors.cdata(), OSP_VEC4F, _colors.size());
+        colorsData.commit();
         mesh.setParam("vertex.color", colorsData);
-        ospRelease(colorsData);
     }
     // TODO: ospray subd appears to require color data... this will be fixed in
     // next release
@@ -853,19 +826,17 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     }
 
     if (numVertexCreases > 0) {
-        auto vertex_crease_indices
-               = ospNewCopyData1D(subdivTags.GetCornerIndices().cdata(),
-                                  OSP_UINT, numVertexCreases);
-        ospCommit(vertex_crease_indices);
+        opp::CopiedData vertex_crease_indices
+               = opp::CopiedData(subdivTags.GetCornerIndices().cdata(),
+                                 OSP_UINT, numVertexCreases);
+        vertex_crease_indices.commit();
         mesh.setParam("vertexCrease.index", vertex_crease_indices);
-        ospRelease(vertex_crease_indices);
 
-        auto vertex_crease_weights
-               = ospNewCopyData1D(subdivTags.GetCornerWeights().cdata(),
-                                  OSP_FLOAT, numVertexCreases);
-        ospCommit(vertex_crease_weights);
+        opp::CopiedData vertex_crease_weights
+               = opp::CopiedData(subdivTags.GetCornerWeights().cdata(),
+                                 OSP_FLOAT, numVertexCreases);
+        vertex_crease_weights.commit();
         mesh.setParam("vertexCrease.weight", vertex_crease_weights);
-        ospRelease(vertex_crease_weights);
     }
     mesh.commit();
 

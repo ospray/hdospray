@@ -27,7 +27,9 @@
 #include "pxr/base/tf/singleton.h"
 #include "pxr/pxr.h"
 
-#include "ospray/ospray.h"
+#include "ospray/ospray_cpp.h"
+
+namespace opp = ospray::cpp;
 
 #include <string>
 #include <vector>
@@ -88,7 +90,7 @@ public:
     ///  Whether OSPRay uses denoiser
     ///
     /// Override with *HDOSPRAY_USE_DENOISER*.
-    bool useDenoiser {true};
+    bool useDenoiser { true };
 
     /// The type of pixel filter used by OSPRay
     ///
@@ -170,7 +172,7 @@ public:
 
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.
-    std::vector<OSPGeometry> ospInstances;
+    std::vector<opp::Geometry> ospInstances;
 
 private:
     // The constructor initializes the config variables with their

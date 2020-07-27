@@ -24,8 +24,8 @@
 #include "pxr/imaging/hdOSPRay/rendererPlugin.h"
 
 #include "pxr/imaging/hd/rendererPluginRegistry.h"
-#include "pxr/imaging/hdOSPRay/renderDelegate.h"
 #include "pxr/imaging/hdOSPRay/config.h"
+#include "pxr/imaging/hdOSPRay/renderDelegate.h"
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -38,12 +38,13 @@ TF_REGISTRY_FUNCTION(TfType)
 HdRenderDelegate*
 HdOSPRayRendererPlugin::CreateRenderDelegate()
 {
-        // Check plugin against pxr version
+    // Check plugin against pxr version
 #if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 20
     error This version of HdOSPRay is configured to built against USD v0 .20.x
 #endif
 
-    int ac = 1;
+           int ac
+           = 1;
     std::string initArgs = HdOSPRayConfig::GetInstance().initArgs;
     std::stringstream ss(initArgs);
     std::string arg;

@@ -40,7 +40,6 @@
 #include <OpenImageIO/imageio.h>
 
 #include "ospray/ospray_cpp.h"
-#include "ospray/ospray_util.h"
 #include "rkcommon/math/vec.h"
 
 using namespace rkcommon::math;
@@ -252,13 +251,13 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
     opp::Material ospMaterial;
     if (rendererType == "pathtracer"
         && !HdOSPRayConfig::GetInstance().useSimpleMaterial) {
-        ospMaterial = ospNewMaterial(rendererType.c_str(), "principled");
+        ospMaterial = opp::Material(rendererType.c_str(), "principled");
         ospMaterial.setParam("baseColor", vec3f(color[0], color[1], color[2]));
         ospMaterial.setParam("ior", 1.5f);
         ospMaterial.setParam("metallic", 0.0f);
         ospMaterial.setParam("roughness", 0.25f);
     } else {
-        ospMaterial = ospNewMaterial(rendererType.c_str(), "obj");
+        ospMaterial = opp::Material(rendererType.c_str(), "obj");
         // Carson: apparently colors are actually stored as a single color value
         // for entire object
         ospMaterial.setParam("ns", 10.f);
@@ -275,7 +274,7 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
 {
 
     opp::Material ospMaterial
-           = ospNewMaterial(rendererType.c_str(), "principled");
+           = opp::Material(rendererType.c_str(), "principled");
     ospMaterial.setParam("ior", ior);
     ospMaterial.setParam(
            "baseColor",
@@ -311,7 +310,7 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
 opp::Material
 HdOSPRayMaterial::CreateSimpleMaterial(std::string rendererType)
 {
-    opp::Material ospMaterial = ospNewMaterial(rendererType.c_str(), "obj");
+    opp::Material ospMaterial = opp::Material(rendererType.c_str(), "obj");
     float avgFresnel = EvalAvgFresnel(ior);
 
     if (metallic == 0.f) {
@@ -352,7 +351,7 @@ HdOSPRayMaterial::CreateSimpleMaterial(std::string rendererType)
 opp::Material
 HdOSPRayMaterial::CreateScivisMaterial(std::string rendererType)
 {
-    opp::Material ospMaterial = ospNewMaterial(rendererType.c_str(), "obj");
+    opp::Material ospMaterial = opp::Material(rendererType.c_str(), "obj");
     // Carson: apparently colors are actually stored as a single color value
     // for entire object
     ospMaterial.setParam("ns", 10.f);
