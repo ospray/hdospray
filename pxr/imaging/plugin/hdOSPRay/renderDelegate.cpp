@@ -115,11 +115,6 @@ HdOSPRayRenderDelegate::_Initialize()
     // Initialize the settings and settings descriptors.
     // _settingDescriptors.resize(11);
     _settingDescriptors.push_back(
-           { "Ambient occlusion samples",
-             HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
-             VtValue(int(
-                    HdOSPRayConfig::GetInstance().ambientOcclusionSamples)) });
-    _settingDescriptors.push_back(
            { "Samples per frame", HdOSPRayRenderSettingsTokens->samplesPerFrame,
              VtValue(int(HdOSPRayConfig::GetInstance().samplesPerFrame)) });
     _settingDescriptors.push_back(
@@ -131,12 +126,20 @@ HdOSPRayRenderDelegate::_Initialize()
     _settingDescriptors.push_back(
            { "maxDepth", HdOSPRayRenderSettingsTokens->maxDepth,
              VtValue(int(HdOSPRayConfig::GetInstance().maxDepth)) });
-    _settingDescriptors.push_back(
-           { "aoDistance", HdOSPRayRenderSettingsTokens->aoDistance,
-             VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) });
-    _settingDescriptors.push_back(
-           { "aoIntensity", HdOSPRayRenderSettingsTokens->aoIntensity,
-             VtValue(float(HdOSPRayConfig::GetInstance().aoIntensity)) });
+    if (!HdOSPRayConfig::GetInstance().usePathTracing)
+    {
+        _settingDescriptors.push_back(
+            { "Ambient occlusion samples",
+                HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
+                VtValue(int(
+                        HdOSPRayConfig::GetInstance().ambientOcclusionSamples)) });
+        _settingDescriptors.push_back(
+            { "aoDistance", HdOSPRayRenderSettingsTokens->aoDistance,
+                VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) });
+        _settingDescriptors.push_back(
+            { "aoIntensity", HdOSPRayRenderSettingsTokens->aoIntensity,
+                VtValue(float(HdOSPRayConfig::GetInstance().aoIntensity)) });
+    }
     _settingDescriptors.push_back(
            { "minContribution", HdOSPRayRenderSettingsTokens->minContribution,
              VtValue(float(HdOSPRayConfig::GetInstance().minContribution)) });
