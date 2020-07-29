@@ -392,17 +392,20 @@ HdOSPRayRenderPass::ProcessLights()
     }
     GfVec3f right_light = GfCross(dir, up);
     std::vector<opp::Light> lights;
-    const float glToPTLightIntensityMultiplier = 1.5f;
 
     // push scene lights
     for (auto sceneLight : _renderParam->GetLights()) {
         lights.push_back(sceneLight);
     }
 
+    float glToPTLightIntensityMultiplier = 1.f;
+    if (_eyeLight || _keyLight ||  _fillLight || _backLight)
+        glToPTLightIntensityMultiplier /= 1.8f;
+
     if (_ambientLight || lights.empty()) {
         auto ambient = opp::Light("ambient");
         ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
-        ambient.setParam("intensity", glToPTLightIntensityMultiplier*0.5f);
+        ambient.setParam("intensity", glToPTLightIntensityMultiplier);
         ambient.commit();
         lights.push_back(ambient);
     }
@@ -426,7 +429,7 @@ HdOSPRayRenderPass::ProcessLights()
         keyLight.setParam("color", vec3f(.8f, .8f, .8f));
         keyLight.setParam("direction",
                           vec3f(lightDir[0], lightDir[1], lightDir[2]));
-        keyLight.setParam("intensity", glToPTLightIntensityMultiplier);
+        keyLight.setParam("intensity", glToPTLightIntensityMultiplier*1.3f);
         keyLight.setParam("angularDiameter", angularDiameter);
         keyLight.setParam("visible", false);
         keyLight.commit();
