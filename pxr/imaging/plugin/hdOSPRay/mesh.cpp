@@ -774,17 +774,25 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     if (vertexRule == PxOsdOpenSubdivTokens->none) {
         mesh.setParam("mode", OSP_SUBDIVISION_NO_BOUNDARY);
     } else if (vertexRule == PxOsdOpenSubdivTokens->edgeOnly) {
-        mesh.setParam("mode", OSP_SUBDIVISION_PIN_BOUNDARY);
+        mesh.setParam("mode", OSP_SUBDIVISION_SMOOTH_BOUNDARY);
     } else if (vertexRule == PxOsdOpenSubdivTokens->edgeAndCorner) {
+        mesh.setParam("mode", OSP_SUBDIVISION_PIN_CORNERS);
+    } else if (vertexRule == PxOsdOpenSubdivTokens->all) {
         mesh.setParam("mode", OSP_SUBDIVISION_PIN_ALL);
+    } else if (vertexRule == PxOsdOpenSubdivTokens->cornersOnly) {
+        mesh.setParam("mode", OSP_SUBDIVISION_PIN_CORNERS);
+    } else if (vertexRule == PxOsdOpenSubdivTokens->boundaries) {
+        mesh.setParam("mode", OSP_SUBDIVISION_PIN_BOUNDARY);
+    } else if (vertexRule == PxOsdOpenSubdivTokens->smooth) {
+        mesh.setParam("mode", OSP_SUBDIVISION_SMOOTH_BOUNDARY);
     } else {
         if (!vertexRule.IsEmpty()) {
             TF_WARN("hdOSPRay: Unknown vertex interpolation rule: %s",
                     vertexRule.GetText());
         }
+        mesh.setParam("mode", OSP_SUBDIVISION_PIN_CORNERS);
     }
 
-    mesh.setParam("mode", OSP_SUBDIVISION_PIN_ALL);
     // TODO: set hole buffer
 
     // OSPData colorsData = nullptr;
