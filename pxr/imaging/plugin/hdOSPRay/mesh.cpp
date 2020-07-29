@@ -57,7 +57,7 @@ TF_DEFINE_PRIVATE_TOKENS(
 HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
     : HdMesh(id, instancerId)
     , _ospMesh(nullptr)
-    , _instanceModel(nullptr)
+    , _geometricModel(nullptr)
     , _adjacencyValid(false)
     , _normalsValid(false)
     , _refined(false)
@@ -69,7 +69,7 @@ HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
 
 HdOSPRayMesh::~HdOSPRayMesh()
 {
-    delete _instanceModel;
+    delete _geometricModel;
 }
 
 void
@@ -617,13 +617,13 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         }
 
         // Create new OSP Mesh
-        if (_instanceModel)
-            delete _instanceModel;
-        _instanceModel = new opp::GeometricModel(_ospMesh);
+        if (_geometricModel)
+            delete _geometricModel;
+        _geometricModel = new opp::GeometricModel(_ospMesh);
 
-        _instanceModel->setParam("material", ospMaterial);
+        _geometricModel->setParam("material", ospMaterial);
         _ospMesh.commit();
-        _instanceModel->commit();
+        _geometricModel->commit();
 
         renderParam->UpdateModelVersion();
     }
@@ -635,7 +635,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     // XXX: The current instancer invalidation tracking makes it hard for
     // HdOSPRay to tell whether transforms will be dirty, so this code
     // pulls them every frame.
-    _ospInstances.resize(0);
+    _ospInstances.clear();
     if (!GetInstancerId().IsEmpty()) {
         // Retrieve instance transforms from the instancer.
         HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
@@ -645,15 +645,16 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                         ->ComputeInstanceTransforms(GetId());
 
         size_t newSize = transforms.size();
+
+        opp::Group group;
+        group.setParam("geometry", opp::CopiedData(*_geometricModel));
+        group.commit();
+
         // TODO: CARSON: reform instancer for ospray2
         _ospInstances.reserve(newSize);
         for (size_t i = 0; i < newSize; i++) {
             // Create the new instance.
-
-            opp::Group group;
             opp::Instance instance(group);
-            group.setParam("geometry", opp::CopiedData(*_instanceModel));
-            group.commit();
 
             // Combine the local transform and the instance transform.
             GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
@@ -681,7 +682,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                      vec3f(xfmf[12], xfmf[13], xfmf[14]));
         instance.setParam("xfm", xfm);
         instance.commit();
-        group.setParam("geometry", opp::CopiedData(*_instanceModel));
+        group.setParam("geometry", opp::CopiedData(*_geometricModel));
         group.commit();
         _ospInstances.push_back(instance);
     }
@@ -691,6 +692,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         renderParam->AddInstances(_ospInstances);
     } else {
         // TODO: ospRemove geometry?
+        delete _geometricModel;
+        _geometricModel = nullptr;
     }
 
     // Clean all dirty bits.
@@ -753,15 +756,15 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     int numIndices = _topology.GetFaceVertexIndices().size();
     int numVertices = _points.size();
 
-    opp::CopiedData vertices
-           = opp::CopiedData(_points.data(), OSP_VEC3F, numVertices);
+    opp::SharedData vertices
+           = opp::SharedData(_points.data(), OSP_VEC3F, numVertices);
     vertices.commit();
     mesh.setParam("vertex.position", vertices);
-    opp::CopiedData faces = opp::CopiedData(
+    opp::SharedData faces = opp::SharedData(
            _topology.GetFaceVertexCounts().data(), OSP_UINT, numFaceVertices);
     faces.commit();
     mesh.setParam("face", faces);
-    opp::CopiedData indices = opp::CopiedData(
+    opp::SharedData indices = opp::SharedData(
            _topology.GetFaceVertexIndices().data(), OSP_UINT, numIndices);
     indices.commit();
     // // TODO: need to handle subivion types correctly

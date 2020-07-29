@@ -189,7 +189,7 @@ private:
     // Every HdOSPRayMesh is treated as instanced; if there's no instancer,
     // the prototype has a single identity istance.
     opp::Geometry _ospMesh;
-    opp::GeometricModel* _instanceModel;
+    opp::GeometricModel* _geometricModel;
     // Each instance of the mesh in the top-level scene is stored in
     // _ospInstances.
     std::vector<opp::Instance> _ospInstances;
