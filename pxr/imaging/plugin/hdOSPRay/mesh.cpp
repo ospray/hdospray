@@ -89,9 +89,10 @@ HdOSPRayMesh::GetInitialDirtyBitsMask() const
            | HdChangeTracker::DirtyCullStyle | HdChangeTracker::DirtyDoubleSided
            | HdChangeTracker::DirtyDisplayStyle
            | HdChangeTracker::DirtySubdivTags | HdChangeTracker::DirtyPrimvar
-           | HdChangeTracker::DirtyNormals | HdChangeTracker::DirtyInstanceIndex
-           | HdChangeTracker::AllDirty // this magic bit seems to trigger
-                                       // materials... bah
+           | HdChangeTracker::DirtyNormals | HdChangeTracker::DirtyInstancer
+           | HdChangeTracker::DirtyPrimID
+           | HdChangeTracker::DirtyRepr
+           | HdChangeTracker::DirtyMaterialId
            ;
 
     return (HdDirtyBits)mask;
@@ -634,6 +635,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     // XXX: The current instancer invalidation tracking makes it hard for
     // HdOSPRay to tell whether transforms will be dirty, so this code
     // pulls them every frame.
+    _ospInstances.resize(0);
     if (!GetInstancerId().IsEmpty()) {
         // Retrieve instance transforms from the instancer.
         HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
@@ -668,8 +670,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     // Otherwise, create our single instance (if necessary) and update
     // the transform (if necessary).
     else {
-        _ospInstances.resize(0);
-
         opp::Group group;
         opp::Instance instance(group);
         // TODO: do we need to check for a local transform as well?
