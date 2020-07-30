@@ -1,9 +1,8 @@
 # HdOSPRay
 OSPRay interactive rendering plugin for USD Hydra
 
-<img src="images/hdospray_kitchen_pt.jpg" style="padding: 0px 0px 0px 0px; box-shadow: 0px 0px 24px rgba(0,0,0,0.4);">
+<img src="images/hdospray_staircase.jpg" style="padding: 0px 0px 0px 0px; box-shadow: 0px 0px 24px rgba(0,0,0,0.4);">
 
-Pixar's Kitchen asset rendered with OSPRay's path tracer at interactive rates.
+Staircase model by Wig42 [CC](https://creativecommons.org/licenses/by/3.0/), modified by Bitterli, rendered in usdview.
 
 Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more information.
-
