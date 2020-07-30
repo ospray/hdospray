@@ -48,6 +48,32 @@ us a scene for testing and displaying here\!
 
 Instructions are provided for loading the scenes below.
 
+### Country Kitchen
+
+<center>
+
+<img src="images/hdospray_kitchen2.jpg" alt="Country Kitchen" width=70%>
+<br/> Converted scene by Jay-Artist
+<a href="https://creativecommons.org/licenses/by/3.0/">CC</a>, modified
+by Bitterli. <br/>
+
+</center>
+
+\<br/
+
+### Bathroom
+
+<center>
+
+<img src="images/hdospray_bathroom.jpg" alt="Bathroom" width=70%> <br/>
+Converted scene by Mareck
+<a href="https://creativecommons.org/publicdomain/zero/1.0/">CC</a>,
+modified by Bitterli. <br/>
+
+</center>
+
+\<br/
+
 ### Kitchen Set
 
 <center>
@@ -57,7 +83,7 @@ Instructions are provided for loading the scenes below.
 
 </center>
 
-<br/>
+\<br/
 
   - Download Kitchen Set asset from
     [Pixar](http://graphics.pixar.com/usd/downloads.html)
@@ -276,13 +302,14 @@ Hydra Settings.
     Will progressively render frames until this many samples per pixel,
     then stop rendering
 
--   `HDOSPRAY_LIGTH_SAMPLES`
+  - `HDOSPRAY_LIGTH_SAMPLES`
 
-    Number of light samples at every path intersection. A value of -1 leads to sampling all light
-    sources in the scene. *Does not affect scivis renderer.*
-   
+Number of light samples at every path intersection. A value of -1 leads
+to sampling all light sources in the scene. *Does not affect scivis
+renderer.*
+
   - `HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES`
-
+    
     Number of ambient occlusion samples to compute per pixel. *Does not
     affect path tracer.*
 
