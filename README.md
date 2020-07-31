@@ -10,7 +10,9 @@ Staircase model by Wig42
 usdview.
 
 Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more
-information. \#\# HdOSPRay
+information.
+
+## HdOSPRay
 
 HdOSPRay is an open source plugin for Pixar’s USD to extend USD’s Hydra
 rendering framework with [Intel® OSPRay](https://www.ospray.org).
