@@ -13,7 +13,7 @@ Instructions are provided for loading the scenes below.
 <center>
 <img src="images/hdospray_kitchen2.jpg" alt="Country Kitchen">
 <br/>
-Converted scene by Jay-Artist <a href="https://creativecommons.org/licenses/by/3.0/">CC</a>, modified by Bitterli.
+Converted scene by Jay-Artist <a href="https://creativecommons.org/licenses/by/3.0/">CC</a>, modified by [Bitterli](https://benedikt-bitterli.me/resources/).
 <br/>
 </center>
 <br/>
@@ -23,7 +23,7 @@ Converted scene by Jay-Artist <a href="https://creativecommons.org/licenses/by/3
 <center>
 <img src="images/hdospray_bathroom.jpg" alt="Bathroom">
 <br/>
-Converted scene by Mareck <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC</a>, modified by Bitterli.
+Converted scene by Mareck <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC</a>, modified by [Bitterli](https://benedikt-bitterli.me/resources/).
 <br/>
 </center>
 <br/>

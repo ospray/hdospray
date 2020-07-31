@@ -6,7 +6,8 @@ OSPRay interactive rendering plugin for USD Hydra
 
 Staircase model by Wig42
 [CC](https://creativecommons.org/licenses/by/3.0/), modified by
-Bitterli, rendered in usdview.
+[Bitterli](https://benedikt-bitterli.me/resources/), rendered in
+usdview.
 
 Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more
 information. \#\# HdOSPRay
@@ -54,7 +55,7 @@ Instructions are provided for loading the scenes below.
 <img src="images/hdospray_kitchen2.jpg" alt="Country Kitchen"> <br/>
 Converted scene by Jay-Artist
 <a href="https://creativecommons.org/licenses/by/3.0/">CC</a>, modified
-by Bitterli. <br/>
+by [Bitterli](https://benedikt-bitterli.me/resources/). <br/>
 
 </center>
 
@@ -67,7 +68,7 @@ by Bitterli. <br/>
 <img src="images/hdospray_bathroom.jpg" alt="Bathroom"> <br/> Converted
 scene by Mareck
 <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC</a>,
-modified by Bitterli. <br/>
+modified by [Bitterli](https://benedikt-bitterli.me/resources/). <br/>
 
 </center>
 
