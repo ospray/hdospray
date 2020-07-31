@@ -2,7 +2,11 @@
 
 OSPRay interactive rendering plugin for USD Hydra
 
+<p align="center">
+
 <img src="images/hdospray_staircase.jpg" style="padding: 0px 0px 0px 0px; box-shadow: 0px 0px 24px rgba(0,0,0,0.4); ">
+
+</p>
 
 Staircase model by Wig42
 [CC](https://creativecommons.org/licenses/by/3.0/), modified by
@@ -48,39 +52,42 @@ hope to grow this gallery as more assets become available. Please let us
 know of any great scenes we may be missing, or if you would like to send
 us a scene for testing and displaying here\!
 
-Instructions are provided for loading some of the scenes below.
+Instructions are provided for loading some of the scenes below. <br/>
 
 ### Country Kitchen
 
-<center>
+<p align="center">
 
 <img src="images/hdospray_kitchen2.jpg" alt="Country Kitchen"> <br/>
 Converted scene by Jay-Artist
 <a href="https://creativecommons.org/licenses/by/3.0/">CC</a>, modified
 by [Bitterli](https://benedikt-bitterli.me/resources/). <br/>
 
-</center>
+</p>
 
 <br/>
 
 ### Bathroom
 
-<center>
+<p align="center">
 
 <img src="images/hdospray_bathroom.jpg" alt="Bathroom"> <br/> Converted
 scene by Mareck
 <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC</a>,
-modified by [Bitterli](https://benedikt-bitterli.me/resources/). <br/>
+modified by [Bitterli](https://benedikt-bitterli.me/resources/).
 
-</center>
+</p>
 
-<br/>
+<br/> <br/>
 
 ### Kitchen Set
 
-<center>
+<p align="center">
 
 <img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced with HdOSPRay in usdview">
+
+</p>
+
 <br/> Pixar Kitchen Set path traced with HdOSPRay in usdview <br/>
 
 </center>
@@ -96,53 +103,53 @@ modified by [Bitterli](https://benedikt-bitterli.me/resources/). <br/>
     
     <br/>
 
-<center>
+<p align="center">
 
 <img src="images/usd_gl_thumbnail.jpg" alt="Pixar Kitchen Set GL" width=30%>
 <br/> Pixar Kitchen Set rendered with default GL in usdview <br/>
 
-</center>
+</p>
 
 <br/>
 
-<center>
+<p align="center">
 
 <img src="images/usd_shadows_thumbnail.jpg" alt="Pixar Kitchen Set shadows" width=30%>
 <br/> Pixar Kitchen Set rendered with HdOSPRay and basic shadows in
 usdview <br/>
 
-</center>
+</p>
 
 <br/>
 
-<center>
+<p align="center">
 
 <img src="images/usd_ao_thumbnail.jpg" alt="Pixar Kitchen Set AO" width=30%>
 <br/> Pixar Kitchen Set rendered with HdOSPRay and basic ambient
 occlusion in usdview <br/>
 
-</center>
+</p>
 
 <br/>
 
-<center>
+<p align="center">
 
 <img src="images/usd_pt_thumbnail.jpg" alt="Pixar Kitchen Set path traced" width=30%>
 <br/> Pixar Kitchen Set rendered with HdOSPRay and path tracing in
 usdview <br/>
 
-</center>
+</p>
 
 <br/>
 
 ### Teapot
 
-<center>
+<p align="center">
 
 <img src="images/hdospray_teapot2_thumbnail.jpg" alt="Teapot" width=70%>
 <br/> Apple teapot rendered with HdOSPRay in usdview <br/>
 
-</center>
+</p>
 
 <br/>
 
@@ -162,12 +169,12 @@ usdview <br/>
 
 ### Gramophone
 
-<center>
+<p align="center">
 
 <img src="images/hdospray_gramophone_thumbnail.jpg" alt="Gramophone" width=70%>
 <br/> Apple Gramophone rendered with HdOSPRay in usdview <br/>
 
-</center>
+</p>
 
 <br/>
 
@@ -412,33 +419,35 @@ renderer.*
 
 # News, Updates, and Announcements
 
-## July 31, 2020: Version v0.5 now released on GitHub
+  - July 31, 2020: Version v0.5 now released on GitHub
+    
+      - Update to OSPRay 2.2.0. usdLux light support.  
+        Asynchronous rendering. Dynamic resolution for greater
+        interaction. Pixel Filters. Subdivision surfaces interpolation
+        mode fixes.
 
-Update to OSPRay 2.2.0. usdLux light support.  
-Asynchronous rendering. Dynamic resolution for greater interaction.
-Pixel Filters. Subdivision surfaces interpolation mode fixes.
+  - June 15, 2020: Version v0.4 now released on GitHub
+    
+      - Update to OSPRay 2.1.0. Update to USD 20.05.
 
-## June 15, 2020: Version v0.4 now released on GitHub
+  - September 15, 2019: Version v0.3 now released on GitHub
+    
+      - Subdivision surfaces support. GUI options for usdview. Various
+        bug fixes.
 
-Update to OSPRay 2.1.0. Update to USD 20.05.
+  - April 30, 2019: Version v0.2.2 now released on GitHub
+    
+      - Various bug fixes. OSPRay version updated to 1.8.5. CMake
+        targets. Animation.
 
-## September 15, 2019: Version v0.3 now released on GitHub
+  - Mar 7, 2019: Version v0.2.1 now released on GitHub
+    
+      - Bug fixes, ptex updates, documentation.
 
-Subdivision surfaces support. GUI options for usdview. Various bug
-fixes.
-
-## April 30, 2019: Version v0.2.2 now released on GitHub
-
-Various bug fixes. OSPRay version updated to 1.8.5. CMake targets.
-Animation.
-
-## Mar 7, 2019: Version v0.2.1 now released on GitHub
-
-Bug fixes, ptex updates, documentation.
-
-## Feb 28, 2019: Version v0.2.0 now released on GitHub
-
-Initial Beta release version 0.2.0 is now available on the [HdOSPRay
-GitHub page](https://github.com/ospray/hdospray/releases/v0.2.0). This
-replaces the previous repository and versioning which was on my personal
-github account.
+  - Feb 28, 2019: Version v0.2.0 now released on GitHub
+    
+      - Initial Beta release version 0.2.0 is now available on the
+        [HdOSPRay GitHub
+        page](https://github.com/ospray/hdospray/releases/v0.2.0). This
+        replaces the previous repository and versioning which was on my
+        personal github account.
