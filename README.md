@@ -6,12 +6,10 @@ OSPRay interactive rendering plugin for USD Hydra
 
 Staircase model by Wig42
 [CC](https://creativecommons.org/licenses/by/3.0/), modified by
-[Bitterli](https://benedikt-bitterli.me/resources/), rendered in usdview.
+Bitterli, rendered in usdview.
 
 Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more
-information. 
-
-## HdOSPRay
+information. \#\# HdOSPRay
 
 HdOSPRay is an open source plugin for Pixar’s USD to extend USD’s Hydra
 rendering framework with [Intel® OSPRay](https://www.ospray.org).
@@ -39,7 +37,7 @@ issues for users. Please report any issues you may run into to our
 [issue tracker](https://github.com/ospray/hdospray/issues). We always
 welcome suggestions and especially pull requests\!
 
-## Gallery
+## HdOSPRay Gallery
 
 Our gallery currently contains a limited set of renderings done with
 HdOSPRay inside of usdview using publicly available USD datasets. We
@@ -56,7 +54,7 @@ Instructions are provided for loading the scenes below.
 <img src="images/hdospray_kitchen2.jpg" alt="Country Kitchen"> <br/>
 Converted scene by Jay-Artist
 <a href="https://creativecommons.org/licenses/by/3.0/">CC</a>, modified
-by [Bitterli](https://benedikt-bitterli.me/resources/). <br/>
+by Bitterli. <br/>
 
 </center>
 
@@ -69,7 +67,7 @@ by [Bitterli](https://benedikt-bitterli.me/resources/). <br/>
 <img src="images/hdospray_bathroom.jpg" alt="Bathroom"> <br/> Converted
 scene by Mareck
 <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC</a>,
-modified by [Bitterli](https://benedikt-bitterli.me/resources/). <br/>
+modified by Bitterli. <br/>
 
 </center>
 
@@ -192,14 +190,12 @@ typically the most stable branch and contains tagged releases.
 
 Tags are of the form `hdospray-vx.x.x-usdvx.x.x`, with `vx.x.x` being
 the release of HdOSPRay and `usdv` being the version of USD it is built
-against. This is required due to the often changing internals of hydra
-calls in USD.
+against. This is required due to the frequently changing internals of
+hydra.
 
-Currently HdOSPRay is regularly tested on Linux, which is the primary
-development target of USD itself. MacOS support in USD is experimental,
-but we often test against it. Windows support of USD is also
-experimental, but we have not tested HdOSPRay with it, so use at your
-own risk.
+Currently HdOSPRay is regularly tested on Linux Arch. MacOS support in
+USD is experimental, but we often test against it. Windows support of
+USD is also experimental, but we have not tested HdOSPRay with it.
 
 ## Prerequisites
 
@@ -207,7 +203,7 @@ own risk.
       - USD is primarily tested with Linux, but has experimental support
         for MacOS and Windows. For a full list of USD dependencies, see
         the USD page.
-  - [OSPRay 2.1.0](http://www.ospray.org/)
+  - [OSPRay 2.2.0](http://www.ospray.org/)
       - We recommend using ospray’s superbuild to build dependencies
         such as embree, ospcommon, and openvkl.
   - [OpenImageIO 1.8.9](https://sites.google.com/site/openimageio/home)
@@ -218,10 +214,37 @@ own risk.
   - [OpenImageDenoise](https://github.com/OpenImageDenoise/oidn.git)
       - Open Image Denoise also needs be be enabled in the OSPRay build
   - [Ptex](https://github.com/wdas/ptex)
+      - Ptex support is currently limited to older versions as the
+        OSPRay module needs to be updated for OSPRay 2.x.
       - Ptex will need to be enabled in the USD build
       - Can be downloaded and built by the USD `build_usd.py` script
       - [Ptex module](https://github.com/ospray/module_ptex) also needs
         to be enabled in the OSPRay build
+
+## Compiling USD on Linux/MacOS
+
+To build USD, see the [USD GitHub
+site](https://github.com/PixarAnimationStudios/USD). We recommend
+following the build scripts provided, for which we provide an example
+invocation below.  
+If you wish to use usdview, you must also enable imaging and python.  
+The options and compilers used can vary from our example, but make sure
+that TBB use is consistent across your build of USD, hdOSPRay, and
+OSPRay. The command we use for building USD is:
+
+    python2 <USD_SOURCE>/build_scripts/build_usd.py --python --usd-imaging --openimageio --ptex <USD_BUILD_DIR>
+
+To set TBB explicitly, go to `<USD_BUILD_DIR>`/build/USD and set TBB
+libraries and include directories using cmake.
+
+## Compiling OSPRay on Linux/MacOS
+
+You can use the distributed binaries of OSPRay or build it yourself. We
+recommend using the OSPRay superbuild system according the instructions
+listed on [github](https://github.com/ospray/OSPRay). Make sure that TBB
+is the same used by USD. You can force using system TBB using the
+superbuild by going to `<OSPRAY_BUILD_DIR>`, and setting the cmake
+variable `DOWNLOAD_TBB` to OFF.
 
 ## Compiling HdOSPRay on Linux/MacOS
 
@@ -230,9 +253,6 @@ externally from the USD source directory, but configures CMake as if it
 were inside the USD repository in order to build the plugin using USD
 internals. It must therefore be built against a version of USD that
 matches HdOSPRay, which is specified in the versioning tag of HdOSPRay.
-To build USD, see the [USD GitHub
-site](https://github.com/PixarAnimationStudios/USD). We recommend
-following the build scripts provided.
 
   - Download/clone the git repo for HdOSPRay
     
@@ -245,11 +265,10 @@ following the build scripts provided.
         $ cd build
         $ ccmake ..
 
+  - Set `CMAKE_INSTALL_PREFIX` to the installation directory of USD.
+
   - Set `pxr_DIR` to the install directory of USD which contains
     `pxrConfig.cmake`
-
-  - Set required USD options: `usd-imaging` and `openimageio` are
-    required for both the USD and HdOSPRay builds
 
   - Set `ospray_DIR` to the directory containing your
     `osprayConfig.cmake`
@@ -258,8 +277,20 @@ following the build scripts provided.
         binaries or if you are building and installing from source it
         can be found in `<install>/lib/cmake/ospray-\*/`
 
+  - Set `openvkl_DIR` to install directory of OpenVKL. These will be the
+    same as `ospray_DIR` if you downloaded the OSPRay binaries, or in
+    OSPRay’s superbuild directory under
+    install/openvkl/lib/cmake/openvkl\*.
+
+  - Set `rkcommon_DIR` to install directory of rkCommon. These will be
+    the same as `ospray_DIR` if you downloaded the OSPRay binaries, or
+    in OSPRay’s superbuild directory under
+    install/rkcommon/lib/cmake/rkcommon\*.
+
   - Set `embree_DIR` to install directory of Embree. These will be the
-    same as `ospray_DIR` if you downloaded the OSPRay binaries
+    same as `ospray_DIR` if you downloaded the OSPRay binaries, or in
+    OSPRay’s superbuild directory under
+    install/embree/lib/cmake/embree\*.
 
   - Compile and install HdOSPRay
     
@@ -296,12 +327,12 @@ Hydra Settings.
 
   - `HDOSPRAY_SAMPLES_PER_FRAME`
     
-    Number of samples per pixel
+    Number of samples per pixel.
 
   - `HDOSPRAY_SAMPLES_TO_CONVERGENCE`
     
     Will progressively render frames until this many samples per pixel,
-    then stop rendering
+    then stop rendering.
 
   - `HDOSPRAY_LIGTH_SAMPLES`
 
@@ -316,16 +347,36 @@ renderer.*
 
   - `HDOSPRAY_CAMERA_LIGHT_INTENSITY`
     
-    Globally modify the intensity of all lights
+    Globally modify the intensity of all lights.
 
   - `HDOSPRAY_USE_PATH_TRACING`
     
-    Use Monte Carlo path tracer instead of faster Whitted-style renderer
+    Use Monte Carlo path tracer instead of faster Whitted-style
+    renderer.
+
+  - `HDOSPRAY_MAX_PATH_DEPTH`
+    
+    Maximum ray depth. Will affect the number of diffuse bounces as well
+    as transparency.
+
+  - `HDOSPRAY_USE_SIMPLE_MATERIAL`
+    
+    Use a simple diffuse + phone material instead of principled
+    material.
 
   - `HDOSPRAY_INIT_ARGS`
     
     Specify arguments sent on to OSPRay for initialization. e.g. enable
-    MPI
+    MPI.
+
+  - `HDOSPRAY_PIXELFILTER_TYPE`
+    
+    The type of pixel filter used by OSPRay: 0 (point), 1 (box), 2
+    (gauss), 3 (mitchell), and 4 (blackmanHarris).
+
+  - `HDOSPRAY_FORCE_QUADRANGULATE`
+    
+    Force Quadrangulate meshes for debug.
 
   - `HDOSPRAY_USE_DENOISER`
     
@@ -336,7 +387,8 @@ renderer.*
   - Denoising using [Open Image Denoise](http://openimagedenoise.org)
   - Distributed multi-node rendering over MPI
   - UVTextures
-  - Ptex
+  - Pixel Filters
+  - usdLux lights: disk, distant, dome, quad, sphere.
   - Triangle meshes
   - Quad meshes
   - Subdivision surfaces
@@ -345,17 +397,23 @@ renderer.*
   - Path tracing
   - Physically-based materials
   - Principled shader (similar to Disney BSDF shader)
+  - Ptex in \< v0.3 (Currently awaiting update for OSPRay 2.x)
 
 ## TODOs
 
   - Picking does not work in HdOSPRay. You cannot select objects in the
     viewer yet
-  - Custom lights. We are waiting to get actual USD files that specify
-    these to test
-  - OSL shaders. They are a work in progress in OSPRay
-  - Binary releases. We hope to provide these soon
+  - OSL shaders and MaterialX support. They are a work in progress in
+    OSPRay.
+  - Binary releases.
 
 # News, Updates, and Announcements
+
+## July 31, 2020: Version v0.5 now released on GitHub
+
+Update to OSPRay 2.2.0. usdLux light support.  
+Asynchronous rendering. Dynamic resolution for greater interaction.
+Pixel Filters. Subdivision surfaces interpolation mode fixes.
 
 ## June 15, 2020: Version v0.4 now released on GitHub
 

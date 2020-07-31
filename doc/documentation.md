@@ -24,11 +24,11 @@ Hydra Settings.
 
 - `HDOSPRAY_SAMPLES_PER_FRAME`
 
-   Number of samples per pixel
+   Number of samples per pixel.
 
 - `HDOSPRAY_SAMPLES_TO_CONVERGENCE`
 
-   Will progressively render frames until this many samples per pixel, then stop rendering
+   Will progressively render frames until this many samples per pixel, then stop rendering.
 
 -   `HDOSPRAY_LIGTH_SAMPLES`
 
@@ -41,15 +41,32 @@ Hydra Settings.
 
 - `HDOSPRAY_CAMERA_LIGHT_INTENSITY`
 
-   Globally modify the intensity of all lights
+   Globally modify the intensity of all lights.
 
 - `HDOSPRAY_USE_PATH_TRACING`
 
-   Use Monte Carlo path tracer instead of faster Whitted-style renderer
+   Use Monte Carlo path tracer instead of faster Whitted-style renderer.
+
+- `HDOSPRAY_MAX_PATH_DEPTH`
+
+  Maximum ray depth.  Will affect the number of diffuse bounces
+  as well as transparency.
+
+- `HDOSPRAY_USE_SIMPLE_MATERIAL`
+
+  Use a simple diffuse + phone material instead of principled material.
 
 - `HDOSPRAY_INIT_ARGS`
 
-   Specify arguments sent on to OSPRay for initialization.  e.g. enable MPI
+   Specify arguments sent on to OSPRay for initialization.  e.g. enable MPI.
+
+- `HDOSPRAY_PIXELFILTER_TYPE`
+
+   The type of pixel filter used by OSPRay: 0 (point), 1 (box), 2 (gauss), 3 (mitchell), and 4 (blackmanHarris).
+
+- `HDOSPRAY_FORCE_QUADRANGULATE`
+
+   Force Quadrangulate meshes for debug.
 
 - `HDOSPRAY_USE_DENOISER`
 
@@ -60,7 +77,8 @@ Hydra Settings.
 - Denoising using [Open Image Denoise](http://openimagedenoise.org)
 - Distributed multi-node rendering over MPI
 - UVTextures
-- Ptex 
+- Pixel Filters
+- usdLux lights: disk, distant, dome, quad, sphere.
 - Triangle meshes
 - Quad meshes
 - Subdivision surfaces
@@ -69,10 +87,10 @@ Hydra Settings.
 - Path tracing
 - Physically-based materials
 - Principled shader (similar to Disney BSDF shader)
+- Ptex in < v0.3 (Currently awaiting update for OSPRay 2.x)
 
 ## TODOs
 
 - Picking does not work in HdOSPRay.  You cannot select objects in the viewer yet
-- Custom lights.  We are waiting to get actual USD files that specify these to test
-- OSL shaders.  They are a work in progress in OSPRay
-- Binary releases.  We hope to provide these soon
+- OSL shaders and MaterialX support.  They are a work in progress in OSPRay.
+- Binary releases.

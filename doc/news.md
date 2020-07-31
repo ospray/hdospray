@@ -1,6 +1,14 @@
 News, Updates, and Announcements
 ================================
 
+July 31, 2020: Version v0.5 now released on GitHub
+--------------------------------------------------
+
+Update to OSPRay 2.2.0.  usdLux light support.  
+Asynchronous rendering.  Dynamic resolution 
+for greater interaction.  Pixel Filters.
+Subdivision surfaces interpolation mode fixes.
+
 June 15, 2020: Version v0.4 now released on GitHub
 --------------------------------------------------
 
