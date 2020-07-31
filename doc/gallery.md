@@ -6,7 +6,7 @@ gallery as more assets become available. Please let us know of any great scenes
 we may be missing, or if you would like to send us a scene for testing and
 displaying here!
 
-Instructions are provided for loading the scenes below.
+Instructions are provided for loading some of the scenes below.
 
 ### Country Kitchen
 
