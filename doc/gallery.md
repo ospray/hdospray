@@ -11,32 +11,32 @@ Instructions are provided for loading the scenes below.
 ### Country Kitchen
 
 <center>
-<img src="images/hdospray_kitchen2.jpg" alt="Country Kitchen" width=70%>
+<img src="images/hdospray_kitchen2.jpg" alt="Country Kitchen">
 <br/>
 Converted scene by Jay-Artist <a href="https://creativecommons.org/licenses/by/3.0/">CC</a>, modified by Bitterli.
 <br/>
 </center>
-<br/
+<br/>
 
 ### Bathroom
 
 <center>
-<img src="images/hdospray_bathroom.jpg" alt="Bathroom" width=70%>
+<img src="images/hdospray_bathroom.jpg" alt="Bathroom">
 <br/>
 Converted scene by Mareck <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC</a>, modified by Bitterli.
 <br/>
 </center>
-<br/
+<br/>
 
 ### Kitchen Set
 
 <center>
-<img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced with HdOSPRay in usdview" width=70%>
+<img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced with HdOSPRay in usdview">
 <br/>
 Pixar Kitchen Set path traced with HdOSPRay in usdview
 <br/>
 </center>
-<br/
+<br/>
 
 - Download Kitchen Set asset from [Pixar](http://graphics.pixar.com/usd/downloads.html)
 - Run usdview using HdOSPRay using

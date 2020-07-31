@@ -2,14 +2,16 @@
 
 OSPRay interactive rendering plugin for USD Hydra
 
-<img src="images/hdospray_staircase.jpg" style="padding: 0px 0px 0px 0px; box-shadow: 0px 0px 24px rgba(0,0,0,0.4);">
+<img src="images/hdospray_staircase.jpg" style="padding: 0px 0px 0px 0px; box-shadow: 0px 0px 24px rgba(0,0,0,0.4); ">
 
 Staircase model by Wig42
 [CC](https://creativecommons.org/licenses/by/3.0/), modified by
-Bitterli, rendered in usdview.
+[Bitterli](https://benedikt-bitterli.me/resources/), rendered in usdview.
 
 Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more
-information. \#\# HdOSPRay
+information. 
+
+## HdOSPRay
 
 HdOSPRay is an open source plugin for Pixar’s USD to extend USD’s Hydra
 rendering framework with [Intel® OSPRay](https://www.ospray.org).
@@ -37,7 +39,7 @@ issues for users. Please report any issues you may run into to our
 [issue tracker](https://github.com/ospray/hdospray/issues). We always
 welcome suggestions and especially pull requests\!
 
-## HdOSPRay Gallery
+## Gallery
 
 Our gallery currently contains a limited set of renderings done with
 HdOSPRay inside of usdview using publicly available USD datasets. We
@@ -51,38 +53,38 @@ Instructions are provided for loading the scenes below.
 
 <center>
 
-<img src="images/hdospray_kitchen2.jpg" alt="Country Kitchen" width=70%>
-<br/> Converted scene by Jay-Artist
+<img src="images/hdospray_kitchen2.jpg" alt="Country Kitchen"> <br/>
+Converted scene by Jay-Artist
 <a href="https://creativecommons.org/licenses/by/3.0/">CC</a>, modified
-by Bitterli. <br/>
+by [Bitterli](https://benedikt-bitterli.me/resources/). <br/>
 
 </center>
 
-\<br/
+<br/>
 
 ### Bathroom
 
 <center>
 
-<img src="images/hdospray_bathroom.jpg" alt="Bathroom" width=70%> <br/>
-Converted scene by Mareck
+<img src="images/hdospray_bathroom.jpg" alt="Bathroom"> <br/> Converted
+scene by Mareck
 <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC</a>,
-modified by Bitterli. <br/>
+modified by [Bitterli](https://benedikt-bitterli.me/resources/). <br/>
 
 </center>
 
-\<br/
+<br/>
 
 ### Kitchen Set
 
 <center>
 
-<img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced with HdOSPRay in usdview" width=70%>
+<img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced with HdOSPRay in usdview">
 <br/> Pixar Kitchen Set path traced with HdOSPRay in usdview <br/>
 
 </center>
 
-\<br/
+<br/>
 
   - Download Kitchen Set asset from
     [Pixar](http://graphics.pixar.com/usd/downloads.html)
