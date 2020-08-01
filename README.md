@@ -242,7 +242,7 @@ The options and compilers used can vary from our example, but make sure
 that TBB use is consistent across your build of USD, hdOSPRay, and
 OSPRay. The command we use for building USD is:
 
-    python2 <USD_SOURCE>/build_scripts/build_usd.py --python --usd-imaging --openimageio --ptex <USD_BUILD_DIR>
+    python <USD_SOURCE>/build_scripts/build_usd.py --python --usd-imaging --openimageio --ptex <USD_BUILD_DIR>
 
 To set TBB explicitly, go to `<USD_BUILD_DIR>`/build/USD and set TBB
 libraries and include directories using cmake.
