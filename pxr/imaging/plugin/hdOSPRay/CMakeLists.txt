@@ -18,6 +18,14 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
       renderDelegate
       renderPass
       sampler
+      texture
+      lights/light
+      lights/diskLight
+      lights/distantLight
+      lights/domeLight
+      lights/rectLight
+      lights/sphereLight
+      #lights/simpleLight
 
     PUBLIC_HEADERS
       context.h
@@ -27,7 +35,8 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
       plugInfo.json
     )
 
-  find_package(ospray 2.1.0 CONFIG REQUIRED)
+  find_package(ospray 2.2.0 REQUIRED)
+  find_package(rkcommon 1.4.2 REQUIRED)
 
   target_link_libraries(hdOSPRay PUBLIC
     plug
@@ -39,6 +48,8 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
     hd
     hdx
     ospray::ospray
+    ospray::ospray_sdk
+    rkcommon::rkcommon
     ${OIIO_LIBRARIES}
     )
 
@@ -59,7 +70,7 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
   # add OpenImageDenoise
   option(HDOSPRAY_ENABLE_DENOISER "build OSPRay plugin using OpenImageDenoise" OFF)
   if (HDOSPRAY_ENABLE_DENOISER)
-    find_package(OpenImageDenoise 0.8.1 CONFIG REQUIRED)
+    find_package(OpenImageDenoise 1.2.1 CONFIG)
     if (NOT TARGET OpenImageDenoise)
       message(FATAL_ERROR "hdOSPRayPlugin requires OpenImageDenoise be installed")
     endif()

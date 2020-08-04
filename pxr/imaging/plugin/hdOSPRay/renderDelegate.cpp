@@ -31,6 +31,12 @@
 
 #include "pxr/imaging/hd/resourceRegistry.h"
 
+#include "pxr/imaging/hdOSPRay/lights/diskLight.h"
+#include "pxr/imaging/hdOSPRay/lights/distantLight.h"
+#include "pxr/imaging/hdOSPRay/lights/domeLight.h"
+#include "pxr/imaging/hdOSPRay/lights/rectLight.h"
+#include "pxr/imaging/hdOSPRay/lights/sphereLight.h"
+//#include "pxr/imaging/hdOSPRay/simpleLight.h"
 #include "pxr/imaging/hdOSPRay/material.h"
 #include "pxr/imaging/hdOSPRay/mesh.h"
 // XXX: Add other Rprim types later
@@ -54,11 +60,15 @@ const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_RPRIM_TYPES = {
 };
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES = {
-    HdPrimTypeTokens->camera,
-    HdPrimTypeTokens->material,
+    HdPrimTypeTokens->camera,       HdPrimTypeTokens->material,
+    HdPrimTypeTokens->rectLight,    HdPrimTypeTokens->diskLight,
+    HdPrimTypeTokens->sphereLight,  HdPrimTypeTokens->domeLight,
+    HdPrimTypeTokens->distantLight,
 };
 
-const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {};
+const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {
+    // HdPrimTypeTokens->renderBuffer,
+};
 
 std::mutex HdOSPRayRenderDelegate::_mutexResourceRegistry;
 std::atomic_int HdOSPRayRenderDelegate::_counterResourceRegistry;
@@ -80,59 +90,15 @@ HdOSPRayRenderDelegate::HdOSPRayRenderDelegate(
 void
 HdOSPRayRenderDelegate::_Initialize()
 {
-    // Check plugin against pxr version
-#if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION != 20
-    error This version of HdOSPRay is configured to built against USD v0 .20.x
-#endif
-
-           int ac
-           = 1;
-    std::string initArgs = HdOSPRayConfig::GetInstance().initArgs;
-    std::stringstream ss(initArgs);
-    std::string arg;
-    std::vector<std::string> args;
-    while (ss >> arg) {
-        args.push_back(arg);
-    }
-    ac = static_cast<int>(args.size() + 1);
-    const char** av = new const char*[ac];
-    av[0] = "ospray";
-    for (int i = 1; i < ac; i++) {
-        av[i] = args[i - 1].c_str();
-    }
-    int init_error = ospInit(&ac, av);
-    if (init_error != OSP_NO_ERROR) {
-        std::cerr << "FATAL ERROR DURING INITIALIZATION!" << std::endl;
-    } else {
-        auto device = ospGetCurrentDevice();
-        if (device == nullptr) {
-            std::cerr << "FATAL ERROR DURING GETTING CURRENT DEVICE!"
-                      << std::endl;
-        }
-
-        ospDeviceSetStatusFunc(device,
-                               [](const char* msg) { std::cout << msg; });
-        ospDeviceSetErrorFunc(device, [](OSPError e, const char* msg) {
-            std::cerr << "OSPRAY ERROR [" << e << "]: " << msg << std::endl;
-        });
-
-        ospDeviceCommit(device);
-    }
-    if (ospGetCurrentDevice() == nullptr) {
-        // user most likely specified bad arguments, retry without them
-        ac = 1;
-        ospInit(&ac, av);
-    }
-    delete[] av;
 
 #ifdef HDOSPRAY_PLUGIN_PTEX
     ospLoadModule("ptex");
 #endif
 
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
-        _renderer = ospNewRenderer("pathtracer");
+        _renderer = opp::Renderer("pathtracer");
     else
-        _renderer = ospNewRenderer("scivis");
+        _renderer = opp::Renderer("scivis");
 
     // Store top-level OSPRay objects inside a render param that can be
     // passed to prims during Sync().
@@ -149,27 +115,44 @@ HdOSPRayRenderDelegate::_Initialize()
     // Initialize the settings and settings descriptors.
     // _settingDescriptors.resize(11);
     _settingDescriptors.push_back(
-           { "Ambient occlusion samples",
-             HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
-             VtValue(int(
-                    HdOSPRayConfig::GetInstance().ambientOcclusionSamples)) });
-    _settingDescriptors.push_back(
            { "Samples per frame", HdOSPRayRenderSettingsTokens->samplesPerFrame,
              VtValue(int(HdOSPRayConfig::GetInstance().samplesPerFrame)) });
     _settingDescriptors.push_back(
            { "Toggle denoiser", HdOSPRayRenderSettingsTokens->useDenoiser,
              VtValue(bool(HdOSPRayConfig::GetInstance().useDenoiser)) });
     _settingDescriptors.push_back(
+           { "Pixelfilter type", HdOSPRayRenderSettingsTokens->pixelFilterType,
+             VtValue(int(HdOSPRayConfig::GetInstance().pixelFilterType)) });
+    _settingDescriptors.push_back(
            { "maxDepth", HdOSPRayRenderSettingsTokens->maxDepth,
              VtValue(int(HdOSPRayConfig::GetInstance().maxDepth)) });
+    if (!HdOSPRayConfig::GetInstance().usePathTracing) {
+        _settingDescriptors.push_back(
+               { "Ambient occlusion samples",
+                 HdOSPRayRenderSettingsTokens->ambientOcclusionSamples,
+                 VtValue(int(HdOSPRayConfig::GetInstance()
+                                    .ambientOcclusionSamples)) });
+        _settingDescriptors.push_back(
+               { "aoDistance", HdOSPRayRenderSettingsTokens->aoDistance,
+                 VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) });
+        _settingDescriptors.push_back(
+               { "aoIntensity", HdOSPRayRenderSettingsTokens->aoIntensity,
+                 VtValue(float(HdOSPRayConfig::GetInstance().aoIntensity)) });
+    }
     _settingDescriptors.push_back(
-           { "aoDistance", HdOSPRayRenderSettingsTokens->aoDistance,
-             VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) });
+           { "minContribution", HdOSPRayRenderSettingsTokens->minContribution,
+             VtValue(float(HdOSPRayConfig::GetInstance().minContribution)) });
+    _settingDescriptors.push_back(
+           { "maxContribution", HdOSPRayRenderSettingsTokens->maxContribution,
+             VtValue(float(HdOSPRayConfig::GetInstance().maxContribution)) });
     _settingDescriptors.push_back(
            { "samplesToConvergence",
              HdOSPRayRenderSettingsTokens->samplesToConvergence,
              VtValue(
                     int(HdOSPRayConfig::GetInstance().samplesToConvergence)) });
+    _settingDescriptors.push_back(
+           { "lightSamples", HdOSPRayRenderSettingsTokens->lightSamples,
+             VtValue(int(HdOSPRayConfig::GetInstance().lightSamples)) });
     _settingDescriptors.push_back(
            { "ambientLight", HdOSPRayRenderSettingsTokens->ambientLight,
              VtValue(bool(HdOSPRayConfig::GetInstance().ambientLight)) });
@@ -330,6 +313,16 @@ HdOSPRayRenderDelegate::CreateSprim(TfToken const& typeId,
         return new HdCamera(sprimId);
     } else if (typeId == HdPrimTypeTokens->material) {
         return new HdOSPRayMaterial(sprimId);
+    } else if (typeId == HdPrimTypeTokens->rectLight) {
+        return new HdOSPRayRectLight(sprimId);
+    } else if (typeId == HdPrimTypeTokens->diskLight) {
+        return new HdOSPRayDiskLight(sprimId);
+    } else if (typeId == HdPrimTypeTokens->sphereLight) {
+        return new HdOSPRaySphereLight(sprimId);
+    } else if (typeId == HdPrimTypeTokens->domeLight) {
+        return new HdOSPRayDomeLight(sprimId);
+    } else if (typeId == HdPrimTypeTokens->distantLight) {
+        return new HdOSPRayDistantLight(sprimId);
     } else {
         TF_CODING_ERROR("Unknown Sprim Type %s", typeId.GetText());
     }

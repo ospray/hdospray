@@ -28,12 +28,12 @@
 #include "pxr/imaging/hd/renderPass.h"
 #include "pxr/pxr.h"
 
-#include "ospcommon/math/vec.h"
-#include "ospray/ospray.h"
+#include "ospray/ospray_cpp.h"
+#include "rkcommon/math/vec.h"
 
-#if HDOSPRAY_ENABLE_DENOISER
-#    include <OpenImageDenoise/oidn.hpp>
-#endif
+namespace opp = ospray::cpp;
+
+using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -55,7 +55,7 @@ public:
     ///   \param scene The OSPRay scene to raycast into.
     HdOSPRayRenderPass(HdRenderIndex* index,
                        HdRprimCollection const& collection,
-                       OSPRenderer renderer, std::atomic<int>* sceneVersion,
+                       opp::Renderer renderer, std::atomic<int>* sceneVersion,
                        std::shared_ptr<HdOSPRayRenderParam> renderParam);
 
     /// Renderpass destructor.
@@ -71,6 +71,22 @@ public:
     ///   \return True if the image has enough samples to be considered final.
     virtual bool IsConverged() const override;
 
+    struct RenderFrame {
+        opp::Future osprayFrame;
+        unsigned int width { 0 };
+        unsigned int height { 0 };
+        // The resolved output buffer, in GL_RGBA. This is an intermediate
+        // between _sampleBuffer and the GL framebuffer.
+        std::vector<vec4f> colorBuffer;
+
+        bool isValid()
+        {
+            return osprayFrame;
+        }
+    };
+
+    virtual void DisplayRenderBuffer(RenderFrame& renderFrame);
+
 protected:
     // -----------------------------------------------------------------------
     // HdRenderPass API
@@ -85,6 +101,10 @@ protected:
     /// Update internal tracking to reflect a dirty collection.
     virtual void _MarkCollectionDirty() override;
 
+    virtual void ProcessLights();
+    virtual void ProcessSettings();
+    virtual void ProcessInstances();
+
 private:
     // -----------------------------------------------------------------------
     // Internal API
@@ -98,9 +118,14 @@ private:
     bool _pendingResetImage;
     bool _pendingModelUpdate;
 
-    OSPFrameBuffer _frameBuffer { nullptr };
+    opp::FrameBuffer _frameBuffer;
+    opp::FrameBuffer _interactiveFrameBuffer;
+    int _interactiveFrameBufferScale { 2 };
 
-    OSPRenderer _renderer;
+    opp::Renderer _renderer;
+
+    bool _interacting { true };
+    bool _interactingLastFrame { true };
 
     // A reference to the global scene version.
     std::atomic<int>* _sceneVersion;
@@ -109,16 +134,15 @@ private:
     int _lastRenderedModelVersion { -1 };
     int _lastSettingsVersion { -1 };
 
-    // The resolved output buffer, in GL_RGBA. This is an intermediate between
-    // _sampleBuffer and the GL framebuffer.
-    std::vector<ospcommon::math::vec4f> _colorBuffer;
+    RenderFrame _currentFrame;
+    RenderFrame _previousFrame;
 
     // The width of the viewport we're rendering into.
     unsigned int _width;
     // The height of the viewport we're rendering into.
     unsigned int _height;
 
-    OSPCamera _camera;
+    opp::Camera _camera;
 
     // The inverse view matrix: camera space to world space.
     GfMatrix4d _inverseViewMatrix;
@@ -130,25 +154,21 @@ private:
 
     std::shared_ptr<HdOSPRayRenderParam> _renderParam;
 
-#if HDOSPRAY_ENABLE_DENOISER
-    oidn::DeviceRef _denoiserDevice;
-    oidn::FilterRef _denoiserFilter;
-#endif
-
-    bool _denoiserDirty { true };
-    std::vector<ospcommon::math::vec3f> _normalBuffer;
-    std::vector<ospcommon::math::vec3f> _albedoBuffer;
-    std::vector<ospcommon::math::vec4f> _denoisedBuffer;
-
-    std::vector<OSPInstance> _oldInstances; // instances added to last model
-    OSPWorld _world = nullptr; // the last model created
+    std::vector<opp::Instance> _oldInstances; // instances added to last model
+    opp::World _world = nullptr; // the last model created
 
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
     int _spp { 1 };
     bool _useDenoiser { false };
+    bool _denoiserLoaded { false }; // did the module successfully load?
+    bool _denoiserState { false };
+    OSPPixelFilterTypes _pixelFilterType {
+        OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS
+    };
     int _samplesToConvergence { 100 };
-    int _denoiserSPPThreshold { 3 };
+    int _denoiserSPPThreshold { 6 };
     int _aoSamples { 1 };
+    int _lightSamples { -1 };
     bool _staticDirectionalLights { true };
     bool _ambientLight { true };
     bool _eyeLight { true };
@@ -156,9 +176,13 @@ private:
     bool _fillLight { true };
     bool _backLight { true };
     int _maxDepth { 5 };
+    float _minContribution { 0.1f };
+    float _maxContribution { 3.0f };
     float _aoDistance { 10.f };
+    float _aoIntensity { 1.f };
 
-    void Denoise();
+    // OpenGL framebuffer texture
+    GLuint framebufferTexture = 0;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

@@ -33,8 +33,10 @@
 #include "pxr/imaging/hd/vertexAdjacency.h"
 #include "pxr/pxr.h"
 
-#include "ospray/ospray.h"
+#include "ospray/ospray_cpp.h"
 #include <mutex>
+
+namespace opp = ospray::cpp;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -81,7 +83,7 @@ public:
 
     /// HdOSPRayMesh destructor.
     /// (Note: OSPRay resources are released in Finalize()).
-    virtual ~HdOSPRayMesh() = default;
+    virtual ~HdOSPRayMesh();
 
     /// Inform the scene graph which state needs to be downloaded in the
     /// first Sync() call: in this case, topology and points data to build
@@ -164,8 +166,9 @@ protected:
 
 private:
     // Populate the ospray geometry object based on scene data.
-    void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate, OSPRenderer renderer,
-                          HdDirtyBits* dirtyBits, HdMeshReprDesc const& desc,
+    void _PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
+                          opp::Renderer renderer, HdDirtyBits* dirtyBits,
+                          HdMeshReprDesc const& desc,
                           HdOSPRayRenderParam* renderParam);
 
     // Populate _primvarSourceMap (our local cache of primvar data) based on
@@ -181,15 +184,15 @@ private:
     void _CreatePrimvarSampler(TfToken const& name, VtValue const& data,
                                HdInterpolation interpolation, bool refined);
 
-    OSPGeometry _CreateOSPRaySubdivMesh();
+    opp::Geometry _CreateOSPRaySubdivMesh();
 
     // Every HdOSPRayMesh is treated as instanced; if there's no instancer,
     // the prototype has a single identity istance.
-    OSPGeometry _ospMesh;
-    OSPGeometricModel _instanceModel;
+    opp::Geometry _ospMesh;
+    opp::GeometricModel* _geometricModel;
     // Each instance of the mesh in the top-level scene is stored in
     // _ospInstances.
-    std::vector<OSPInstance> _ospInstances;
+    std::vector<opp::Instance> _ospInstances;
 
     // Cached scene data. VtArrays are reference counted, so as long as we
     // only call const accessors keeping them around doesn't incur a buffer

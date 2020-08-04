@@ -30,16 +30,19 @@
 
 #include "api.h"
 
-#include "ospray/ospray.h"
+#include "ospray/ospray_cpp.h"
 #include <mutex>
+
+namespace opp = ospray::cpp;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
 #define HDOSPRAY_RENDER_SETTINGS_TOKENS                                        \
-    (ambientOcclusionSamples)(samplesPerFrame)(useDenoiser)(maxDepth)(         \
-           aoDistance)(samplesToConvergence)(ambientLight)(eyeLight)(          \
-           keyLight)(fillLight)(backLight)(pathTracer)(                        \
-           staticDirectionalLights)
+    (ambientOcclusionSamples)(samplesPerFrame)(lightSamples)(useDenoiser)(     \
+           pixelFilterType)(maxDepth)(aoDistance)(aoIntensity)(                \
+           samplesToConvergence)(ambientLight)(eyeLight)(keyLight)(fillLight)( \
+           backLight)(pathTracer)(staticDirectionalLights)(minContribution)(   \
+           maxContribution)
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
                          HDOSPRAY_RENDER_SETTINGS_TOKENS);
@@ -231,7 +234,7 @@ private:
     // constructor helper
     void _Initialize();
 
-    OSPRenderer
+    opp::Renderer
            _renderer; // moved from Pass to Delegate due to Material dependancy
 
     // A list of render setting exports.

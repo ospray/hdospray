@@ -27,7 +27,9 @@
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/pxr.h"
 
-#include "ospray/ospray.h"
+#include "ospray/ospray_cpp.h"
+
+namespace opp = ospray::cpp;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -40,14 +42,14 @@ PXR_NAMESPACE_OPEN_SCOPE
 ///
 class HdOSPRayRenderParam final : public HdRenderParam {
 public:
-    HdOSPRayRenderParam(OSPRenderer renderer, std::atomic<int>* sceneVersion)
+    HdOSPRayRenderParam(opp::Renderer renderer, std::atomic<int>* sceneVersion)
         : _renderer(renderer)
         , _sceneVersion(sceneVersion)
     {
     }
     virtual ~HdOSPRayRenderParam() = default;
 
-    OSPRenderer GetOSPRayRenderer()
+    opp::Renderer GetOSPRayRenderer()
     {
         return _renderer;
     }
@@ -63,14 +65,14 @@ public:
     }
 
     // thread safe.  Instances added to scene and released by renderPass.
-    void AddInstance(const OSPInstance instance)
+    void AddInstance(const opp::Instance instance)
     {
         std::lock_guard<std::mutex> lock(_ospMutex);
         _ospInstances.emplace_back(instance);
     }
 
     // thread safe.  Instances added to scene and released by renderPass.
-    void AddInstances(const std::vector<OSPInstance>& instances)
+    void AddInstances(const std::vector<opp::Instance>& instances)
     {
         std::lock_guard<std::mutex> lock(_ospMutex);
         _ospInstances.insert(_ospInstances.end(), instances.begin(),
@@ -83,9 +85,34 @@ public:
     }
 
     // not thread safe
-    std::vector<OSPInstance>& GetInstances()
+    std::vector<opp::Instance>& GetInstances()
     {
         return _ospInstances;
+    }
+
+    // thread safe.  Lights added to scene and released by renderPass.
+    void AddLight(const opp::Light light)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _ospLights.emplace_back(light);
+    }
+
+    // thread safe.  Lights added to scene and released by renderPass.
+    void AddLights(const std::vector<opp::Light>& lights)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _ospLights.insert(_ospLights.end(), lights.begin(), lights.end());
+    }
+
+    void ClearLights()
+    {
+        _ospLights.resize(0);
+    }
+
+    // not thread safe
+    std::vector<opp::Light>& GetLights()
+    {
+        return _ospLights;
     }
 
 private:
@@ -94,8 +121,9 @@ private:
     std::mutex _ospMutex;
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.
-    std::vector<OSPInstance> _ospInstances;
-    OSPRenderer _renderer;
+    std::vector<opp::Instance> _ospInstances;
+    std::vector<opp::Light> _ospLights;
+    opp::Renderer _renderer;
     /// A version counter for edits to _scene.
     std::atomic<int>* _sceneVersion;
     // version of osp model.  Used for tracking image changes

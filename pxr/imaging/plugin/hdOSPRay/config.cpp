@@ -37,7 +37,7 @@ TF_INSTANTIATE_SINGLETON(HdOSPRayConfig);
 // The environment variable macro takes the variable name, a default value,
 // and a description...
 // clang-format off
-TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_PER_FRAME, -1,
+TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_PER_FRAME, 1,
         "Raytraced samples per pixel per frame (must be >= 1)");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_TO_CONVERGENCE, 100,
@@ -45,6 +45,9 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_TO_CONVERGENCE, 100,
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES, 0,
         "Ambient occlusion samples per camera ray (must be >= 0; a value of 0 disables ambient occlusion)");
+
+TF_DEFINE_ENV_SETTING(HDOSPRAY_LIGHT_SAMPLES, 1,
+        "Light samples at every path intersection. A value of -1 means that all light are sampled.");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_CAMERA_LIGHT_INTENSITY, 300,
         "Intensity of the camera light, specified as a percentage of <1,1,1>.");
@@ -55,15 +58,20 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_PRINT_CONFIGURATION, 0,
 TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_PATH_TRACING, 1,
         "Should HdOSPRay use path tracing");
 
-
-TF_DEFINE_ENV_SETTING(HDOSPRAY_MAX_PATH_DEPTH, 8,
+TF_DEFINE_ENV_SETTING(HDOSPRAY_MAX_PATH_DEPTH, 5,
         "Maximum path tracing depth.");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_INIT_ARGS, "",
         "Initialization arguments sent to OSPRay");
 
-TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_DENOISER, 0,
+TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_SIMPLE_MATERIAL, 0,
+        "If OSPRay uses a simple diffuse + phong based material instead of the principled material");
+
+TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_DENOISER, 1,
         "OSPRay uses denoiser");
+
+TF_DEFINE_ENV_SETTING(HDOSPRAY_PIXELFILTER_TYPE, OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS,
+        "The type of pixel filter used by OSPRay: 0 (point), 1 (box), 2 (gauss), 3 (mitchell), and 4 (blackmanHarris)");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_FORCE_QUADRANGULATE, 0,
         "OSPRay force Quadrangulate meshes for debug");
@@ -77,13 +85,18 @@ HdOSPRayConfig::HdOSPRayConfig()
             TfGetEnvSetting(HDOSPRAY_SAMPLES_TO_CONVERGENCE));
     ambientOcclusionSamples = std::max(0,
             TfGetEnvSetting(HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES));
+    lightSamples = std::max(-1,
+            TfGetEnvSetting(HDOSPRAY_LIGHT_SAMPLES));
+
     cameraLightIntensity = (std::max(100,
             TfGetEnvSetting(HDOSPRAY_CAMERA_LIGHT_INTENSITY)) / 100.0f);
     usePathTracing =TfGetEnvSetting(HDOSPRAY_USE_PATH_TRACING);
     initArgs =TfGetEnvSetting(HDOSPRAY_INIT_ARGS);
-    useDenoiser = TfGetEnvSetting(HDOSPRAY_USE_DENOISER);
+    useDenoiser = bool(TfGetEnvSetting(HDOSPRAY_USE_DENOISER) == 1);
+    pixelFilterType = (OSPPixelFilterTypes) TfGetEnvSetting(HDOSPRAY_PIXELFILTER_TYPE);
     forceQuadrangulate = TfGetEnvSetting(HDOSPRAY_FORCE_QUADRANGULATE);
     maxDepth = TfGetEnvSetting(HDOSPRAY_MAX_PATH_DEPTH);
+    useSimpleMaterial = TfGetEnvSetting(HDOSPRAY_USE_SIMPLE_MATERIAL);
 
     if (TfGetEnvSetting(HDOSPRAY_PRINT_CONFIGURATION) > 0) {
         std::cout
@@ -96,6 +109,10 @@ HdOSPRayConfig::HdOSPRayConfig()
             <<    ambientOcclusionSamples << "\n"
             << "  cameraLightIntensity      = "
             <<    cameraLightIntensity   << "\n"
+            << "  minContribution      = "
+            <<    minContribution   << "\n"
+            << "  maxContribution      = "
+            <<    maxContribution   << "\n"
             << "  initArgs                  = "
             <<    initArgs   << "\n"
             ;
