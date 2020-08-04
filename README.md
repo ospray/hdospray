@@ -402,8 +402,7 @@ renderer.*
   - Triangle meshes
   - Quad meshes
   - Subdivision surfaces
-  - Shadows
-  - Ambient occlusion
+  - Ray traced shadows and ambient occlusion.
   - Path tracing
   - Physically-based materials
   - Principled shader (similar to Disney BSDF shader)
@@ -411,11 +410,9 @@ renderer.*
 
 ## TODOs
 
-  - Picking does not work in HdOSPRay. You cannot select objects in the
-    viewer yet
-  - OSL shaders and MaterialX support. They are a work in progress in
-    OSPRay.
-  - Binary releases.
+  - Picking does not work in HdOSPRay.
+  - Volumes are not yet implemented.
+  - Some types of animations do not work correctly.
 
 # News, Updates, and Announcements
 
