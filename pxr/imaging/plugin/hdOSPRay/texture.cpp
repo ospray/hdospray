@@ -117,7 +117,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter)
         dataType = OSP_UCHAR;
     else if ((format == OSP_TEXTURE_RGB8) || (format == OSP_TEXTURE_SRGB))
         dataType = OSP_VEC3UC;
-    else if (format == OSP_TEXTURE_RGBA8)
+    else if (format == OSP_TEXTURE_RGBA8 || format == OSP_TEXTURE_SRGBA)
         dataType = OSP_VEC4UC;
     else
         throw std::runtime_error("hdOSPRay::LoadOIIOTexture2D: \

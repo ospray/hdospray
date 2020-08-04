@@ -398,10 +398,14 @@ HdOSPRayRenderPass::ProcessLights()
         lights.push_back(sceneLight);
     }
 
+    float glToPTLightIntensityMultiplier = 1.f;
+    if (_eyeLight || _keyLight ||  _fillLight || _backLight)
+        glToPTLightIntensityMultiplier /= 1.8f;
+
     if (_ambientLight || lights.empty()) {
         auto ambient = opp::Light("ambient");
         ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
-        ambient.setParam("intensity", 1.f);
+        ambient.setParam("intensity", glToPTLightIntensityMultiplier);
         ambient.commit();
         lights.push_back(ambient);
     }
@@ -411,13 +415,12 @@ HdOSPRayRenderPass::ProcessLights()
         eyeLight.setParam("color", vec3f(1.f, 232.f / 255.f, 166.f / 255.f));
         eyeLight.setParam("direction",
                           vec3f(dir_light[0], dir_light[1], dir_light[2]));
-        eyeLight.setParam("intensity", 3.3f);
+        eyeLight.setParam("intensity", glToPTLightIntensityMultiplier);
         eyeLight.setParam("visible", false);
         eyeLight.commit();
         lights.push_back(eyeLight);
     }
     const float angularDiameter = 4.5f;
-    const float glToPTLightIntensityMultiplier = 1.5f;
     if (_keyLight) {
         auto keyLight = opp::Light("distant");
         auto keyHorz = -1.0f / tan(rad(45.0f)) * right_light;
@@ -426,7 +429,7 @@ HdOSPRayRenderPass::ProcessLights()
         keyLight.setParam("color", vec3f(.8f, .8f, .8f));
         keyLight.setParam("direction",
                           vec3f(lightDir[0], lightDir[1], lightDir[2]));
-        keyLight.setParam("intensity", glToPTLightIntensityMultiplier);
+        keyLight.setParam("intensity", glToPTLightIntensityMultiplier*1.3f);
         keyLight.setParam("angularDiameter", angularDiameter);
         keyLight.setParam("visible", false);
         keyLight.commit();
