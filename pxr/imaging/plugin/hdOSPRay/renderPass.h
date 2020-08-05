@@ -101,6 +101,7 @@ protected:
     /// Update internal tracking to reflect a dirty collection.
     virtual void _MarkCollectionDirty() override;
 
+    virtual void ProcessCamera(HdRenderPassStateSharedPtr const& renderPassState);
     virtual void ProcessLights();
     virtual void ProcessSettings();
     virtual void ProcessInstances();
@@ -117,6 +118,8 @@ private:
     // ResetImage() has been called since the last Execute().
     bool _pendingResetImage;
     bool _pendingModelUpdate;
+    bool _pendingLightUpdate;
+    bool _pendingSettingsUpdate;
 
     opp::FrameBuffer _frameBuffer;
     opp::FrameBuffer _interactiveFrameBuffer;
@@ -125,13 +128,14 @@ private:
     opp::Renderer _renderer;
 
     bool _interacting { true };
-    bool _interactingLastFrame { true };
+    //bool _interactingLastFrame { false };
 
     // A reference to the global scene version.
-    std::atomic<int>* _sceneVersion;
+    // std::atomic<int>* _sceneVersion;
     // The last scene version we rendered with.
-    int _lastRenderedVersion { -1 };
+    // int _lastRenderedSceneVersion { -1 };
     int _lastRenderedModelVersion { -1 };
+    int _lastRenderedLightVersion { -1 };
     int _lastSettingsVersion { -1 };
 
     RenderFrame _currentFrame;
@@ -176,8 +180,8 @@ private:
     bool _fillLight { true };
     bool _backLight { true };
     int _maxDepth { 5 };
-    float _minContribution { 0.1f };
-    float _maxContribution { 3.0f };
+    float _minContribution { 0.01f };
+    float _maxContribution { 15.0f };
     float _aoDistance { 10.f };
     float _aoIntensity { 1.f };
 

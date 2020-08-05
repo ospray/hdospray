@@ -29,6 +29,7 @@
 #include "pxr/imaging/hdOSPRay/config.h"
 #include "pxr/imaging/hdOSPRay/context.h"
 #include "pxr/imaging/hdOSPRay/mesh.h"
+#include "pxr/imaging/hdOSPRay/lights/light.h"
 #include "pxr/imaging/hdOSPRay/renderDelegate.h"
 
 #include "pxr/imaging/hd/perfLog.h"
@@ -59,9 +60,8 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _pendingResetImage(false)
     , _pendingModelUpdate(true)
     , _renderer(renderer)
-    , _sceneVersion(sceneVersion)
-    , _lastRenderedVersion(0)
     , _lastRenderedModelVersion(0)
+    , _lastRenderedLightVersion(0)
     , _width(0)
     , _height(0)
     , _inverseViewMatrix(1.0f) // == identity
@@ -72,7 +72,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _camera = opp::Camera("perspective");
     _renderer.setParam(
            "backgroundColor",
-           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
+           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
 
 #if HDOSPRAY_ENABLE_DENOISER
     _denoiserLoaded = (ospLoadModule("denoiser") == OSP_NO_ERROR);
@@ -83,12 +83,10 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("roulettePathLength", 2);
     _renderer.setParam("aoRadius", 15.0f);
     _renderer.setParam("aoIntensity", _aoIntensity);
-    _renderer.setParam("shadowsEnabled", true);
     _renderer.setParam("minContribution", _minContribution);
     _renderer.setParam("maxContribution", _maxContribution);
     _renderer.setParam("epsilon", 0.001f);
-    _renderer.setParam("useGeometryLights", 0);
-
+    _renderer.setParam("useGeometryLights", true);
     _renderer.commit();
 
     glEnable(GL_TEXTURE_2D);
@@ -142,21 +140,32 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
            = renderPassState->GetWorldToViewMatrix().GetInverse();
     auto inverseProjMatrix
            = renderPassState->GetProjectionMatrix().GetInverse();
+
+    // if the camera has changed
     bool cameraDirty = (inverseViewMatrix != _inverseViewMatrix
                         || inverseProjMatrix != _inverseProjMatrix);
+
+    // if we need to update the settings (rendering or lights)
     int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
-    bool settingsDirty = (_lastSettingsVersion != currentSettingsVersion);
-    int currentSceneVersion = _sceneVersion->load();
-    if (_lastRenderedVersion != currentSceneVersion) {
-        ResetImage();
-    }
+    _pendingSettingsUpdate = (_lastSettingsVersion != currentSettingsVersion);
+
     int currentModelVersion = _renderParam->GetModelVersion();
     if (_lastRenderedModelVersion != currentModelVersion) {
-        ResetImage();
         _pendingModelUpdate = true;
+        _lastRenderedModelVersion = currentModelVersion;
     }
 
-    _pendingResetImage |= (frameBufferDirty || cameraDirty || settingsDirty);
+    int currentLightVersion = _renderParam->GetLightVersion();
+    if (_lastRenderedLightVersion != currentLightVersion) {
+        _pendingLightUpdate = true;
+        _lastRenderedLightVersion = currentLightVersion;
+    }
+
+    // if we need to recommit the world
+    bool worldDirty = _pendingModelUpdate || _pendingLightUpdate;
+
+    _pendingResetImage |= (_pendingModelUpdate || _pendingLightUpdate || _pendingSettingsUpdate);
+    _pendingResetImage |= (frameBufferDirty || cameraDirty);
 
     if (_currentFrame.isValid()) {
         if (frameBufferDirty || (_pendingResetImage && !_interacting)) {
@@ -190,14 +199,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             DisplayRenderBuffer(_currentFrame);
             _previousFrame = _currentFrame;
         }
-    }
-
-    if (_lastRenderedVersion != currentSceneVersion) {
-        _lastRenderedVersion = currentSceneVersion;
-    }
-    if (_lastRenderedModelVersion != currentModelVersion) {
-        _lastRenderedModelVersion = currentModelVersion;
-        _pendingModelUpdate = true;
     }
 
     if (frameBufferDirty) {
@@ -256,21 +257,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (cameraDirty) {
-        ResetImage();
         _inverseViewMatrix = inverseViewMatrix;
         _inverseProjMatrix = inverseProjMatrix;
         _interacting = true;
+        ProcessCamera(renderPassState);
     } else {
         _interacting = false;
     }
-
-    GfVec3f origin = GfVec3f(0, 0, 0);
-    GfVec3f dir = GfVec3f(0, 0, -1);
-    GfVec3f up = GfVec3f(0, 1, 0);
-    dir = _inverseProjMatrix.Transform(dir);
-    origin = _inverseViewMatrix.Transform(origin);
-    dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
-    up = _inverseViewMatrix.TransformDir(up).GetNormalized();
 
     // set render frames size based on interaction mode
     if (_interacting) {
@@ -291,20 +284,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         }
     }
 
-    float aspect = _width / float(_height);
-    _camera.setParam("aspect", aspect);
-
-    double prjMatrix[4][4];
-    renderPassState->GetProjectionMatrix().Get(prjMatrix);
-    float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
-
-    _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));
-    _camera.setParam("direction", vec3f(dir[0], dir[1], dir[2]));
-    _camera.setParam("up", vec3f(up[0], up[1], up[2]));
-    _camera.setParam("fovy", fov);
-    _camera.commit();
-
-    if (settingsDirty) {
+    if (_pendingSettingsUpdate) {
         ProcessSettings();
     }
     // XXX: Add clip planes support.
@@ -314,7 +294,14 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     // add lights
-    ProcessLights();
+    if (_pendingLightUpdate) {
+        ProcessLights();
+    }
+
+    if (_world && worldDirty ) {
+        //std::cout << "World::commit()" << std::endl;
+        _world.commit();
+    }
 
     // Reset the sample buffer if it's been requested.
     if (_pendingResetImage) {
@@ -375,6 +362,32 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
 }
 
 void
+HdOSPRayRenderPass::ProcessCamera(HdRenderPassStateSharedPtr const& renderPassState)
+{
+    GfVec3f origin = GfVec3f(0, 0, 0);
+    GfVec3f dir = GfVec3f(0, 0, -1);
+    GfVec3f up = GfVec3f(0, 1, 0);
+    dir = _inverseProjMatrix.Transform(dir);
+    origin = _inverseViewMatrix.Transform(origin);
+    dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
+    up = _inverseViewMatrix.TransformDir(up).GetNormalized();
+
+    float aspect = _width / float(_height);
+    _camera.setParam("aspect", aspect);
+
+    double prjMatrix[4][4];
+    renderPassState->GetProjectionMatrix().Get(prjMatrix);
+    float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
+
+    _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));
+    _camera.setParam("direction", vec3f(dir[0], dir[1], dir[2]));
+    _camera.setParam("up", vec3f(up[0], up[1], up[2]));
+    _camera.setParam("fovy", fov);
+    _camera.commit();
+}
+
+
+void
 HdOSPRayRenderPass::ProcessLights()
 {
     GfVec3f origin = GfVec3f(0, 0, 0);
@@ -394,8 +407,15 @@ HdOSPRayRenderPass::ProcessLights()
     std::vector<opp::Light> lights;
 
     // push scene lights
-    for (auto sceneLight : _renderParam->GetLights()) {
-        lights.push_back(sceneLight);
+    const auto hdOSPRayLights = _renderParam->GetHdOSPRayLights();
+    auto hdOSPRayLightIterator = hdOSPRayLights.begin();
+    while (hdOSPRayLightIterator != hdOSPRayLights.end()) {
+        auto hdOSPRayLight = hdOSPRayLightIterator->second;
+        if(hdOSPRayLight->IsVisible())
+        {
+            lights.push_back(hdOSPRayLight->GetOSPLight());
+        }
+        hdOSPRayLightIterator++;
     }
 
     float glToPTLightIntensityMultiplier = 1.f;
@@ -465,8 +485,8 @@ HdOSPRayRenderPass::ProcessLights()
     }
     if (_world) {
         _world.setParam("light", opp::CopiedData(lights));
-        _world.commit();
     }
+    _pendingLightUpdate = false;
 }
 
 void
@@ -497,24 +517,10 @@ HdOSPRayRenderPass::ProcessSettings()
     int maxDepth = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->maxDepth, 5);
     int minContribution = renderDelegate->GetRenderSetting<float>(
-           HdOSPRayRenderSettingsTokens->minContribution, 0.1f);
+           HdOSPRayRenderSettingsTokens->minContribution, 0.01f);
     int maxContribution = renderDelegate->GetRenderSetting<float>(
-           HdOSPRayRenderSettingsTokens->maxContribution, 3.f);
-    _ambientLight = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->ambientLight, false);
-    // default static ospray directional lights
-    _staticDirectionalLights = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->staticDirectionalLights, false);
-    // eye, key, fill, and back light are copied from USD GL (Storm)
-    // defaults.
-    _eyeLight = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->eyeLight, false);
-    _keyLight = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->keyLight, false);
-    _fillLight = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->fillLight, false);
-    _backLight = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->backLight, false);
+           HdOSPRayRenderSettingsTokens->maxContribution, 15.f);
+
     if (spp != _spp || aoSamples != _aoSamples || aoDistance != _aoDistance
         || aoIntensity != _aoIntensity || maxDepth != _maxDepth
         || lSamples != _lightSamples || minContribution != _minContribution
@@ -540,6 +546,35 @@ HdOSPRayRenderPass::ProcessSettings()
         _renderer.setParam("pixelFilter", (int)_pixelFilterType);
         _renderer.commit();
     }
+
+    bool ambientLight = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->ambientLight, false);
+    // default static ospray directional lights
+    bool staticDirectionalLights = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->staticDirectionalLights, false);
+    // eye, key, fill, and back light are copied from USD GL (Storm)
+    // defaults.
+    bool eyeLight = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->eyeLight, false);
+    bool keyLight = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->keyLight, false);
+    bool fillLight = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->fillLight, false);
+    bool backLight = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->backLight, false);
+
+    if (ambientLight != _ambientLight || staticDirectionalLights != _staticDirectionalLights || eyeLight != _eyeLight
+        || keyLight != _keyLight || fillLight != _fillLight
+        || backLight != _backLight) {
+         _ambientLight = ambientLight;
+         _staticDirectionalLights = staticDirectionalLights;
+         _eyeLight = eyeLight;
+         _keyLight = keyLight;
+         _fillLight = fillLight;
+         _backLight = backLight;
+         _pendingLightUpdate = true;
+    }
+
     _lastSettingsVersion = renderDelegate->GetRenderSettingsVersion();
     ResetImage();
 }
@@ -550,7 +585,6 @@ HdOSPRayRenderPass::ProcessInstances()
     // release resources from last committed scene
     _oldInstances.resize(0);
     _world = opp::World();
-    _world.commit();
 
     // create new model and populate with mesh instances
     _oldInstances.reserve(_renderParam->GetInstances().size());
@@ -565,7 +599,6 @@ HdOSPRayRenderPass::ProcessInstances()
     } else {
         _world.removeParam("instance");
     }
-    _world.commit();
     _renderer.commit();
     _pendingModelUpdate = false;
     _renderParam->ClearInstances();

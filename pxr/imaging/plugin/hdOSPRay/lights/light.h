@@ -66,6 +66,18 @@ public:
     /// Typically this would be all dirty bits.
     virtual HdDirtyBits GetInitialDirtyBitsMask() const override;
 
+    void Finalize(HdRenderParam *renderParam) override;
+
+    inline bool IsVisible() const 
+    {
+        return _visibility;
+    }
+
+    inline const opp::Light GetOSPLight() const
+    {
+        return _ospLight;
+    }
+
 private:
     void _PopulateOSPLight(HdOSPRayRenderParam* ospRenderParam) const;
 
