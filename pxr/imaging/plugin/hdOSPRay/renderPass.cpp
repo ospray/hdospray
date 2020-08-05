@@ -153,12 +153,14 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (_lastRenderedModelVersion != currentModelVersion) {
         _pendingModelUpdate = true;
         _lastRenderedModelVersion = currentModelVersion;
+        cameraDirty = true;
     }
 
     int currentLightVersion = _renderParam->GetLightVersion();
     if (_lastRenderedLightVersion != currentLightVersion) {
         _pendingLightUpdate = true;
         _lastRenderedLightVersion = currentLightVersion;
+        cameraDirty = true;
     }
 
     // if we need to recommit the world

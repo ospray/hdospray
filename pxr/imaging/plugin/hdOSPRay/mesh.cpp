@@ -692,8 +692,9 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         renderParam->AddInstances(_ospInstances);
     } else {
         // TODO: ospRemove geometry?
-        delete _geometricModel;
-        _geometricModel = nullptr;
+        // deletion causes seg faults when mesh is set visible again
+        // delete _geometricModel;
+        // _geometricModel = nullptr;
     }
 
     // Clean all dirty bits.
