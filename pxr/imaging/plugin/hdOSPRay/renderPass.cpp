@@ -69,6 +69,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _clearColor(0.0f, 0.0f, 0.0f)
     , _renderParam(renderParam)
 {
+    _world = opp::World();
     _camera = opp::Camera("perspective");
     _renderer.setParam(
            "backgroundColor",
@@ -361,6 +362,15 @@ HdOSPRayRenderPass::ProcessCamera(HdRenderPassStateSharedPtr const& renderPassSt
     float aspect = _width / float(_height);
     _camera.setParam("aspect", aspect);
 
+
+    //_camera.setParam("nearClip", 1e-6f);
+
+    //_camera.setParam("shutterOpen", 0.f);
+    //_camera.setParam("shutterClose", 0.f);
+
+    //_camera.setParam("apertureRadius", 0.f);
+    //_camera.setParam("focusDistance", 1.f);
+
     double prjMatrix[4][4];
     renderPassState->GetProjectionMatrix().Get(prjMatrix);
     float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
@@ -581,12 +591,9 @@ HdOSPRayRenderPass::ProcessInstances()
 {
     // release resources from last committed scene
     _oldInstances.resize(0);
-    _world = opp::World();
-
     // create new model and populate with mesh instances
-    _oldInstances.reserve(_renderParam->GetInstances().size());
-    for (auto instance : _renderParam->GetInstances()) {
-        _oldInstances.push_back(instance);
+    for (auto hdOSPRayMesh : _renderParam->GetHdOSPRayMeshes()) {
+        hdOSPRayMesh->AddOSPInstances(_oldInstances);
     }
     if (!_oldInstances.empty()) {
         opp::CopiedData data = opp::CopiedData(
@@ -596,9 +603,7 @@ HdOSPRayRenderPass::ProcessInstances()
     } else {
         _world.removeParam("instance");
     }
-    _renderer.commit();
     _pendingModelUpdate = false;
-    _renderParam->ClearInstances();
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

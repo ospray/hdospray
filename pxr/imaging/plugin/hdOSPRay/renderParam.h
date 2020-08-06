@@ -27,6 +27,7 @@
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/pxr.h"
 
+#include "mesh.h"
 #include "lights/light.h"
 
 #include "ospray/ospray_cpp.h"
@@ -75,32 +76,6 @@ public:
         return _lightVersion.load();
     }
 
-    // thread safe.  Instances added to scene and released by renderPass.
-    void AddInstance(const opp::Instance instance)
-    {
-        std::lock_guard<std::mutex> lock(_ospMutex);
-        _ospInstances.emplace_back(instance);
-    }
-
-    // thread safe.  Instances added to scene and released by renderPass.
-    void AddInstances(const std::vector<opp::Instance>& instances)
-    {
-        std::lock_guard<std::mutex> lock(_ospMutex);
-        _ospInstances.insert(_ospInstances.end(), instances.begin(),
-                             instances.end());
-    }
-
-    void ClearInstances()
-    {
-        _ospInstances.resize(0);
-    }
-
-    // not thread safe
-    std::vector<opp::Instance>& GetInstances()
-    {
-        return _ospInstances;
-    }
-
    // thread safe.  Lights added to scene and released by renderPass.
     void AddHdOSPRayLight(const SdfPath &id, const HdOSPRayLight* hdOsprayLight)
     {
@@ -122,14 +97,30 @@ public:
         return _hdOSPRayLights;
     }
 
+
+   // thread safe.  Lights added to scene and released by renderPass.
+    void AddHdOSPRayMesh(const HdOSPRayMesh* hdOsprayMesh)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _hdOSPRayMeshes.push_back(hdOsprayMesh);
+        UpdateModelVersion();
+    }
+
+    // not thread safe
+    const std::vector<const HdOSPRayMesh*> &GetHdOSPRayMeshes()
+    {
+        return _hdOSPRayMeshes;
+    }
+
 private:
     // mutex over ospray calls to the global model and global instances. OSPRay
     // is not thread safe
     std::mutex _ospMutex;
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.
-    std::vector<opp::Instance> _ospInstances;
     std::unordered_map<SdfPath, const HdOSPRayLight*, SdfPath::Hash> _hdOSPRayLights;
+
+    std::vector<const HdOSPRayMesh*> _hdOSPRayMeshes;
 
     opp::Renderer _renderer;
     /// A version counters for edits to scene (e.g., models or lights).

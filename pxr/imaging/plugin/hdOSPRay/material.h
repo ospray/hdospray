@@ -133,7 +133,7 @@ protected:
         std::string file;
         enum class WrapType { NONE, BLACK, CLAMP, REPEAT, MIRROR };
         WrapType wrapS, wrapT;
-        GfVec4f scale;
+        GfVec4f scale { 1.0f };
         enum class ColorType { NONE, RGBA, RGB, R, G, B, A };
         ColorType type;
         opp::Texture ospTexture;

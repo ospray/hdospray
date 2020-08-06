@@ -63,6 +63,7 @@ HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
     , _refined(false)
     , _smoothNormals(false)
     , _doubleSided(false)
+    , _populated(false)
     , _cullStyle(HdCullStyleDontCare)
 {
 }
@@ -293,6 +294,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
     if (HdChangeTracker::IsVisibilityDirty(*dirtyBits, id)) {
         _UpdateVisibility(sceneDelegate, dirtyBits);
+        renderParam->UpdateModelVersion();
     }
 
     if (HdChangeTracker::IsCullStyleDirty(*dirtyBits, id)) {
@@ -311,6 +313,16 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
         _UpdatePrimvarSources(sceneDelegate, *dirtyBits);
+    }
+
+    if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id))
+    {
+		//std::cout << "IsInstancerDirty: " << GetId() << std::endl;
+    }
+
+    if (HdChangeTracker::IsInstanceIndexDirty(*dirtyBits, id))
+    {
+        //std::cout << "IsInstanceIndexDirty: " << GetId() << std::endl;
     }
 
     ////////////////////////////////////////////////////////////////////////
@@ -402,7 +414,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                    = GetPrimvarDescriptors(sceneDelegate,
                                            HdInterpolationFaceVarying);
             for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
-                if (pv.name == "Texture_uv")
+                if (pv.name == "Texture_uv" || pv.name == "st")
                     faceVaryingTexcoord = true;
             }
 
@@ -477,7 +489,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                        = GetPrimvarDescriptors(sceneDelegate,
                                                HdInterpolationFaceVarying);
                 for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
-                    if (pv.name == "Texture_uv")
+                    if (pv.name == "Texture_uv" || pv.name == "st")
                         faceVaryingTexcoord = true;
                 }
 
@@ -537,7 +549,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                        = GetPrimvarDescriptors(sceneDelegate,
                                                HdInterpolationFaceVarying);
                 for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
-                    if (pv.name == "Texture_uv")
+                    if (pv.name == "Texture_uv" || pv.name == "st")
                         faceVaryingTexcoord = true;
                 }
 
@@ -635,70 +647,81 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     // XXX: The current instancer invalidation tracking makes it hard for
     // HdOSPRay to tell whether transforms will be dirty, so this code
     // pulls them every frame.
-    _ospInstances.clear();
-    if (!GetInstancerId().IsEmpty()) {
-        // Retrieve instance transforms from the instancer.
-        HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
-        HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
-        VtMatrix4dArray transforms
-               = static_cast<HdOSPRayInstancer*>(instancer)
-                        ->ComputeInstanceTransforms(GetId());
 
-        size_t newSize = transforms.size();
+    if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id))
+    {
+        _ospInstances.clear();
+        if (!GetInstancerId().IsEmpty()) {
+            // Retrieve instance transforms from the instancer.
+            HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
+            HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
+            VtMatrix4dArray transforms
+                = static_cast<HdOSPRayInstancer*>(instancer)
+                            ->ComputeInstanceTransforms(GetId());
 
-        opp::Group group;
-        group.setParam("geometry", opp::CopiedData(*_geometricModel));
-        group.commit();
+            size_t newSize = transforms.size();
 
-        // TODO: CARSON: reform instancer for ospray2
-        _ospInstances.reserve(newSize);
-        for (size_t i = 0; i < newSize; i++) {
-            // Create the new instance.
+            opp::Group group;
+            group.setParam("geometry", opp::CopiedData(*_geometricModel));
+            group.commit();
+
+            // TODO: CARSON: reform instancer for ospray2
+            _ospInstances.reserve(newSize);
+            for (size_t i = 0; i < newSize; i++) {
+                // Create the new instance.
+                opp::Instance instance(group);
+
+                // Combine the local transform and the instance transform.
+                GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
+                float* xfmf = matf.GetArray();
+                affine3f xfm(vec3f(xfmf[0], xfmf[1], xfmf[2]),
+                            vec3f(xfmf[4], xfmf[5], xfmf[6]),
+                            vec3f(xfmf[8], xfmf[9], xfmf[10]),
+                            vec3f(xfmf[12], xfmf[13], xfmf[14]));
+                                                                instance.setParam("xfm", xfm);
+                instance.commit();
+                _ospInstances.push_back(instance);
+            }
+        }
+        // Otherwise, create our single instance (if necessary) and update
+        // the transform (if necessary).
+        else {
+            opp::Group group;
             opp::Instance instance(group);
-
-            // Combine the local transform and the instance transform.
-            GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
+            // TODO: do we need to check for a local transform as well?
+            GfMatrix4f matf = _transform;
             float* xfmf = matf.GetArray();
             affine3f xfm(vec3f(xfmf[0], xfmf[1], xfmf[2]),
-                         vec3f(xfmf[4], xfmf[5], xfmf[6]),
-                         vec3f(xfmf[8], xfmf[9], xfmf[10]),
-                         vec3f(xfmf[12], xfmf[13], xfmf[14]));
+                        vec3f(xfmf[4], xfmf[5], xfmf[6]),
+                        vec3f(xfmf[8], xfmf[9], xfmf[10]),
+                        vec3f(xfmf[12], xfmf[13], xfmf[14]));
             instance.setParam("xfm", xfm);
             instance.commit();
+            group.setParam("geometry", opp::CopiedData(*_geometricModel));
+            group.commit();
             _ospInstances.push_back(instance);
-        }
-    }
-    // Otherwise, create our single instance (if necessary) and update
-    // the transform (if necessary).
-    else {
-        opp::Group group;
-        opp::Instance instance(group);
-        // TODO: do we need to check for a local transform as well?
-        GfMatrix4f matf = _transform;
-        float* xfmf = matf.GetArray();
-        affine3f xfm(vec3f(xfmf[0], xfmf[1], xfmf[2]),
-                     vec3f(xfmf[4], xfmf[5], xfmf[6]),
-                     vec3f(xfmf[8], xfmf[9], xfmf[10]),
-                     vec3f(xfmf[12], xfmf[13], xfmf[14]));
-        instance.setParam("xfm", xfm);
-        instance.commit();
-        group.setParam("geometry", opp::CopiedData(*_geometricModel));
-        group.commit();
-        _ospInstances.push_back(instance);
-    }
+        }   
 
-    // Update visibility by pulling the object into/out of the model.
-    if (_sharedData.visible) {
-        renderParam->AddInstances(_ospInstances);
-    } else {
-        // TODO: ospRemove geometry?
-        // deletion causes seg faults when mesh is set visible again
-        // delete _geometricModel;
-        // _geometricModel = nullptr;
+        renderParam->UpdateModelVersion();
+    }
+    if(!_populated)
+    {
+        renderParam->AddHdOSPRayMesh(this);
+        _populated = true;
     }
 
     // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
+}
+
+void
+HdOSPRayMesh::AddOSPInstances(std::vector<opp::Instance> &instanceList) const
+{
+    if (IsVisible())
+    {
+        instanceList.insert(instanceList.end(), _ospInstances.begin(),
+                            _ospInstances.end());
+    }
 }
 
 void
