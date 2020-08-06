@@ -166,7 +166,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     // if we need to recommit the world
     bool worldDirty = _pendingModelUpdate || _pendingLightUpdate;
 
-    _pendingResetImage |= (_pendingModelUpdate || _pendingLightUpdate || _pendingSettingsUpdate);
+    _pendingResetImage |= (_pendingModelUpdate || _pendingLightUpdate );
     _pendingResetImage |= (frameBufferDirty || cameraDirty);
 
     if (_currentFrame.isValid()) {
@@ -235,17 +235,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _frameBuffer.setParam(
                    "imageOperation",
                    opp::CopiedData(opp::ImageOperation("denoiser")));
-
-            // use more pixel samples when denoising.
-            int newSPP
-                   = std::max(
-                            (int)HdOSPRayConfig::GetInstance().samplesPerFrame,
-                            1)
-                   * 4;
-            if (_spp != newSPP) {
-                _renderer.setParam("pixelSamples", _spp);
-                _renderer.commit();
-            }
         } else
             _frameBuffer.removeParam("imageOperation");
 
@@ -310,11 +299,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _frameBuffer.resetAccumulation();
         _pendingResetImage = false;
         _numSamplesAccumulated = 0;
-        if (_useDenoiser) {
-            _spp = HdOSPRayConfig::GetInstance().samplesPerFrame;
-            _renderer.setParam("pixelSamples", _spp);
-            _renderer.commit();
-        }
     }
 
     opp::FrameBuffer frameBuffer = _frameBuffer;
@@ -495,7 +479,7 @@ void
 HdOSPRayRenderPass::ProcessSettings()
 {
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
-    _samplesToConvergence = renderDelegate->GetRenderSetting<int>(
+    int samplesToConvergence = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->samplesToConvergence, 100);
     float aoDistance = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->aoDistance, 10.f);
@@ -523,6 +507,14 @@ HdOSPRayRenderPass::ProcessSettings()
     int maxContribution = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->maxContribution, 15.f);
 
+
+    if (samplesToConvergence != _samplesToConvergence)
+    {
+        _samplesToConvergence = samplesToConvergence;
+        _pendingResetImage = true;
+    }
+
+    // checks if the renderer settings changed
     if (spp != _spp || aoSamples != _aoSamples || aoDistance != _aoDistance
         || aoIntensity != _aoIntensity || maxDepth != _maxDepth
         || lSamples != _lightSamples || minContribution != _minContribution
@@ -547,6 +539,8 @@ HdOSPRayRenderPass::ProcessSettings()
         _renderer.setParam("maxContribution", _maxContribution);
         _renderer.setParam("pixelFilter", (int)_pixelFilterType);
         _renderer.commit();
+
+        _pendingResetImage = true;
     }
 
     bool ambientLight = renderDelegate->GetRenderSetting<bool>(
@@ -565,6 +559,7 @@ HdOSPRayRenderPass::ProcessSettings()
     bool backLight = renderDelegate->GetRenderSetting<bool>(
            HdOSPRayRenderSettingsTokens->backLight, false);
 
+    // checks if the lighting in the scene changed
     if (ambientLight != _ambientLight || staticDirectionalLights != _staticDirectionalLights || eyeLight != _eyeLight
         || keyLight != _keyLight || fillLight != _fillLight
         || backLight != _backLight) {
@@ -575,10 +570,10 @@ HdOSPRayRenderPass::ProcessSettings()
          _fillLight = fillLight;
          _backLight = backLight;
          _pendingLightUpdate = true;
+         _pendingResetImage = true;
     }
 
     _lastSettingsVersion = renderDelegate->GetRenderSettingsVersion();
-    ResetImage();
 }
 
 void
