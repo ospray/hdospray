@@ -40,7 +40,7 @@
 #include <OpenImageIO/imageio.h>
 
 #include "ospray/ospray_cpp.h"
-#include "rkcommon/math/vec.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
 
 using namespace rkcommon::math;
 
@@ -292,9 +292,10 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     }
     if (map_diffuseColor.ospTexture) {
         ospMaterial.setParam("map_baseColor", map_diffuseColor.ospTexture);
-        ospMaterial.setParam(
-           "baseColor",
-           vec3f(map_diffuseColor.scale[0], map_diffuseColor.scale[1], map_diffuseColor.scale[2]));
+        ospMaterial.setParam("baseColor",
+                             vec3f(map_diffuseColor.scale[0],
+                                   map_diffuseColor.scale[1],
+                                   map_diffuseColor.scale[2]));
     }
     if (map_metallic.ospTexture) {
         ospMaterial.setParam("map_metallic", map_metallic.ospTexture);

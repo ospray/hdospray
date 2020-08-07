@@ -27,10 +27,11 @@
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/pxr.h"
 
-#include "mesh.h"
 #include "lights/light.h"
+#include "mesh.h"
 
 #include "ospray/ospray_cpp.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
 
 namespace opp = ospray::cpp;
 
@@ -76,15 +77,15 @@ public:
         return _lightVersion.load();
     }
 
-   // thread safe.  Lights added to scene and released by renderPass.
-    void AddHdOSPRayLight(const SdfPath &id, const HdOSPRayLight* hdOsprayLight)
+    // thread safe.  Lights added to scene and released by renderPass.
+    void AddHdOSPRayLight(const SdfPath& id, const HdOSPRayLight* hdOsprayLight)
     {
         std::lock_guard<std::mutex> lock(_ospMutex);
         _hdOSPRayLights[id] = hdOsprayLight;
         UpdateLightVersion();
     }
 
-    void RemoveHdOSPRayLight(const SdfPath &id)
+    void RemoveHdOSPRayLight(const SdfPath& id)
     {
         std::lock_guard<std::mutex> lock(_ospMutex);
         _hdOSPRayLights.erase(id);
@@ -92,13 +93,13 @@ public:
     }
 
     // not thread safe
-    const std::unordered_map<SdfPath, const HdOSPRayLight*, SdfPath::Hash> &GetHdOSPRayLights()
+    const std::unordered_map<SdfPath, const HdOSPRayLight*, SdfPath::Hash>&
+    GetHdOSPRayLights()
     {
         return _hdOSPRayLights;
     }
 
-
-   // thread safe.  Lights added to scene and released by renderPass.
+    // thread safe.  Lights added to scene and released by renderPass.
     void AddHdOSPRayMesh(const HdOSPRayMesh* hdOsprayMesh)
     {
         std::lock_guard<std::mutex> lock(_ospMutex);
@@ -107,7 +108,7 @@ public:
     }
 
     // not thread safe
-    const std::vector<const HdOSPRayMesh*> &GetHdOSPRayMeshes()
+    const std::vector<const HdOSPRayMesh*>& GetHdOSPRayMeshes()
     {
         return _hdOSPRayMeshes;
     }
@@ -118,7 +119,8 @@ private:
     std::mutex _ospMutex;
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.
-    std::unordered_map<SdfPath, const HdOSPRayLight*, SdfPath::Hash> _hdOSPRayLights;
+    std::unordered_map<SdfPath, const HdOSPRayLight*, SdfPath::Hash>
+           _hdOSPRayLights;
 
     std::vector<const HdOSPRayMesh*> _hdOSPRayMeshes;
 

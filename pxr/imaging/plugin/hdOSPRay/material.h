@@ -29,6 +29,7 @@
 #include "pxr/pxr.h"
 
 #include "ospray/ospray_cpp.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
 
 #include <boost/shared_ptr.hpp>
 

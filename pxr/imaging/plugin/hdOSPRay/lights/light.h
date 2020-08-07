@@ -39,6 +39,7 @@
 #include <vector>
 
 #include "ospray/ospray_cpp.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
 
 namespace opp = ospray::cpp;
 
@@ -66,9 +67,9 @@ public:
     /// Typically this would be all dirty bits.
     virtual HdDirtyBits GetInitialDirtyBitsMask() const override;
 
-    void Finalize(HdRenderParam *renderParam) override;
+    void Finalize(HdRenderParam* renderParam) override;
 
-    inline bool IsVisible() const 
+    inline bool IsVisible() const
     {
         return _visibility;
     }

@@ -28,8 +28,8 @@
 
 #include "pxr/imaging/hdOSPRay/config.h"
 #include "pxr/imaging/hdOSPRay/context.h"
-#include "pxr/imaging/hdOSPRay/mesh.h"
 #include "pxr/imaging/hdOSPRay/lights/light.h"
+#include "pxr/imaging/hdOSPRay/mesh.h"
 #include "pxr/imaging/hdOSPRay/renderDelegate.h"
 
 #include "pxr/imaging/hd/perfLog.h"
@@ -80,14 +80,14 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     if (!_denoiserLoaded)
         std::cout << "HDOSPRAY: WARNING: could not load denoiser module\n";
 #endif
-    _renderer.setParam("maxPathLength", 5);
-    _renderer.setParam("roulettePathLength", 2);
-    _renderer.setParam("aoRadius", 15.0f);
+    _renderer.setParam("maxPathLength", _maxDepth);
+    _renderer.setParam("roulettePathLength", _russianRouletteStartDepth);
+    _renderer.setParam("aoRadius", _aoRadius);
     _renderer.setParam("aoIntensity", _aoIntensity);
     _renderer.setParam("minContribution", _minContribution);
     _renderer.setParam("maxContribution", _maxContribution);
     _renderer.setParam("epsilon", 0.001f);
-    _renderer.setParam("useGeometryLights", true);
+    _renderer.setParam("useGeometryLights", false);
     _renderer.commit();
 
     glEnable(GL_TEXTURE_2D);
@@ -167,7 +167,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     // if we need to recommit the world
     bool worldDirty = _pendingModelUpdate || _pendingLightUpdate;
 
-    _pendingResetImage |= (_pendingModelUpdate || _pendingLightUpdate );
+    _pendingResetImage |= (_pendingModelUpdate || _pendingLightUpdate);
     _pendingResetImage |= (frameBufferDirty || cameraDirty);
 
     if (_currentFrame.isValid()) {
@@ -201,6 +201,9 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             frameBuffer.unmap(rgba);
             DisplayRenderBuffer(_currentFrame);
             _previousFrame = _currentFrame;
+            // std::cout << "Render Time: "  << _currentFrame.Duration() <<
+            // "\t\tFPS: " << 1.0f/_currentFrame.Duration() << "\tsize: "<<
+            // _width << "\t" << _height << std::endl;
         }
     }
 
@@ -290,8 +293,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         ProcessLights();
     }
 
-    if (_world && worldDirty ) {
-        //std::cout << "World::commit()" << std::endl;
+    if (_world && worldDirty) {
+        // std::cout << "World::commit()" << std::endl;
         _world.commit();
     }
 
@@ -349,7 +352,8 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
 }
 
 void
-HdOSPRayRenderPass::ProcessCamera(HdRenderPassStateSharedPtr const& renderPassState)
+HdOSPRayRenderPass::ProcessCamera(
+       HdRenderPassStateSharedPtr const& renderPassState)
 {
     GfVec3f origin = GfVec3f(0, 0, 0);
     GfVec3f dir = GfVec3f(0, 0, -1);
@@ -361,7 +365,6 @@ HdOSPRayRenderPass::ProcessCamera(HdRenderPassStateSharedPtr const& renderPassSt
 
     float aspect = _width / float(_height);
     _camera.setParam("aspect", aspect);
-
 
     //_camera.setParam("nearClip", 1e-6f);
 
@@ -381,7 +384,6 @@ HdOSPRayRenderPass::ProcessCamera(HdRenderPassStateSharedPtr const& renderPassSt
     _camera.setParam("fovy", fov);
     _camera.commit();
 }
-
 
 void
 HdOSPRayRenderPass::ProcessLights()
@@ -407,15 +409,14 @@ HdOSPRayRenderPass::ProcessLights()
     auto hdOSPRayLightIterator = hdOSPRayLights.begin();
     while (hdOSPRayLightIterator != hdOSPRayLights.end()) {
         auto hdOSPRayLight = hdOSPRayLightIterator->second;
-        if(hdOSPRayLight->IsVisible())
-        {
+        if (hdOSPRayLight->IsVisible()) {
             lights.push_back(hdOSPRayLight->GetOSPLight());
         }
         hdOSPRayLightIterator++;
     }
 
     float glToPTLightIntensityMultiplier = 1.f;
-    if (_eyeLight || _keyLight ||  _fillLight || _backLight)
+    if (_eyeLight || _keyLight || _fillLight || _backLight)
         glToPTLightIntensityMultiplier /= 1.8f;
 
     if (_ambientLight || lights.empty()) {
@@ -445,7 +446,7 @@ HdOSPRayRenderPass::ProcessLights()
         keyLight.setParam("color", vec3f(.8f, .8f, .8f));
         keyLight.setParam("direction",
                           vec3f(lightDir[0], lightDir[1], lightDir[2]));
-        keyLight.setParam("intensity", glToPTLightIntensityMultiplier*1.3f);
+        keyLight.setParam("intensity", glToPTLightIntensityMultiplier * 1.3f);
         keyLight.setParam("angularDiameter", angularDiameter);
         keyLight.setParam("visible", false);
         keyLight.commit();
@@ -490,11 +491,12 @@ HdOSPRayRenderPass::ProcessSettings()
 {
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
     int samplesToConvergence = renderDelegate->GetRenderSetting<int>(
-           HdOSPRayRenderSettingsTokens->samplesToConvergence, 100);
-    float aoDistance = renderDelegate->GetRenderSetting<float>(
-           HdOSPRayRenderSettingsTokens->aoDistance, 10.f);
+           HdOSPRayRenderSettingsTokens->samplesToConvergence,
+           _samplesToConvergence);
+    float aoRadius = renderDelegate->GetRenderSetting<float>(
+           HdOSPRayRenderSettingsTokens->aoRadius, _aoRadius);
     float aoIntensity = renderDelegate->GetRenderSetting<float>(
-           HdOSPRayRenderSettingsTokens->aoIntensity, 1.f);
+           HdOSPRayRenderSettingsTokens->aoIntensity, _aoIntensity);
 #if HDOSPRAY_ENABLE_DENOISER
     _useDenoiser = _denoiserLoaded
            && renderDelegate->GetRenderSetting<bool>(
@@ -505,46 +507,50 @@ HdOSPRayRenderPass::ProcessSettings()
                   HdOSPRayRenderSettingsTokens->pixelFilterType,
                   (int)OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS);
     int spp = renderDelegate->GetRenderSetting<int>(
-           HdOSPRayRenderSettingsTokens->samplesPerFrame, 1);
+           HdOSPRayRenderSettingsTokens->samplesPerFrame, _spp);
     int lSamples = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->lightSamples, -1);
     int aoSamples = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
     int maxDepth = renderDelegate->GetRenderSetting<int>(
-           HdOSPRayRenderSettingsTokens->maxDepth, 5);
+           HdOSPRayRenderSettingsTokens->maxDepth, _maxDepth);
+    int russianRouletteStartDepth = renderDelegate->GetRenderSetting<int>(
+           HdOSPRayRenderSettingsTokens->russianRouletteStartDepth,
+           _russianRouletteStartDepth);
     int minContribution = renderDelegate->GetRenderSetting<float>(
-           HdOSPRayRenderSettingsTokens->minContribution, 0.01f);
+           HdOSPRayRenderSettingsTokens->minContribution, _minContribution);
     int maxContribution = renderDelegate->GetRenderSetting<float>(
-           HdOSPRayRenderSettingsTokens->maxContribution, 15.f);
+           HdOSPRayRenderSettingsTokens->maxContribution, _maxContribution);
 
-
-    if (samplesToConvergence != _samplesToConvergence)
-    {
+    if (samplesToConvergence != _samplesToConvergence) {
         _samplesToConvergence = samplesToConvergence;
         _pendingResetImage = true;
     }
 
     // checks if the renderer settings changed
-    if (spp != _spp || aoSamples != _aoSamples || aoDistance != _aoDistance
+    if (spp != _spp || aoSamples != _aoSamples || aoRadius != _aoRadius
         || aoIntensity != _aoIntensity || maxDepth != _maxDepth
         || lSamples != _lightSamples || minContribution != _minContribution
         || _maxContribution != maxContribution
-        || pixelFilterType != _pixelFilterType) {
+        || pixelFilterType != _pixelFilterType
+        || russianRouletteStartDepth != _russianRouletteStartDepth) {
         _spp = spp;
         _aoSamples = aoSamples;
         _maxDepth = maxDepth;
+        _russianRouletteStartDepth = russianRouletteStartDepth;
         _lightSamples = lSamples;
         _minContribution = minContribution;
         _maxContribution = maxContribution;
         _aoIntensity = aoIntensity;
-        _aoDistance = aoDistance;
+        _aoRadius = aoRadius;
         _pixelFilterType = pixelFilterType;
         _renderer.setParam("pixelSamples", _spp);
         _renderer.setParam("lightSamples", _lightSamples);
         _renderer.setParam("aoSamples", _aoSamples);
-        _renderer.setParam("aoRadius", _aoDistance);
+        _renderer.setParam("aoRadius", _aoRadius);
         _renderer.setParam("aoIntensity", _aoIntensity);
         _renderer.setParam("maxPathLength", _maxDepth);
+        _renderer.setParam("roulettePathLength", _russianRouletteStartDepth);
         _renderer.setParam("minContribution", _minContribution);
         _renderer.setParam("maxContribution", _maxContribution);
         _renderer.setParam("pixelFilter", (int)_pixelFilterType);
@@ -570,17 +576,18 @@ HdOSPRayRenderPass::ProcessSettings()
            HdOSPRayRenderSettingsTokens->backLight, false);
 
     // checks if the lighting in the scene changed
-    if (ambientLight != _ambientLight || staticDirectionalLights != _staticDirectionalLights || eyeLight != _eyeLight
-        || keyLight != _keyLight || fillLight != _fillLight
-        || backLight != _backLight) {
-         _ambientLight = ambientLight;
-         _staticDirectionalLights = staticDirectionalLights;
-         _eyeLight = eyeLight;
-         _keyLight = keyLight;
-         _fillLight = fillLight;
-         _backLight = backLight;
-         _pendingLightUpdate = true;
-         _pendingResetImage = true;
+    if (ambientLight != _ambientLight
+        || staticDirectionalLights != _staticDirectionalLights
+        || eyeLight != _eyeLight || keyLight != _keyLight
+        || fillLight != _fillLight || backLight != _backLight) {
+        _ambientLight = ambientLight;
+        _staticDirectionalLights = staticDirectionalLights;
+        _eyeLight = eyeLight;
+        _keyLight = keyLight;
+        _fillLight = fillLight;
+        _backLight = backLight;
+        _pendingLightUpdate = true;
+        _pendingResetImage = true;
     }
 
     _lastSettingsVersion = renderDelegate->GetRenderSettingsVersion();

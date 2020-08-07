@@ -91,10 +91,8 @@ HdOSPRayMesh::GetInitialDirtyBitsMask() const
            | HdChangeTracker::DirtyDisplayStyle
            | HdChangeTracker::DirtySubdivTags | HdChangeTracker::DirtyPrimvar
            | HdChangeTracker::DirtyNormals | HdChangeTracker::DirtyInstancer
-           | HdChangeTracker::DirtyPrimID
-           | HdChangeTracker::DirtyRepr
-           | HdChangeTracker::DirtyMaterialId
-           ;
+           | HdChangeTracker::DirtyPrimID | HdChangeTracker::DirtyRepr
+           | HdChangeTracker::DirtyMaterialId;
 
     return (HdDirtyBits)mask;
 }
@@ -315,14 +313,12 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _UpdatePrimvarSources(sceneDelegate, *dirtyBits);
     }
 
-    if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id))
-    {
-		//std::cout << "IsInstancerDirty: " << GetId() << std::endl;
+    if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id)) {
+        // std::cout << "IsInstancerDirty: " << GetId() << std::endl;
     }
 
-    if (HdChangeTracker::IsInstanceIndexDirty(*dirtyBits, id))
-    {
-        //std::cout << "IsInstanceIndexDirty: " << GetId() << std::endl;
+    if (HdChangeTracker::IsInstanceIndexDirty(*dirtyBits, id)) {
+        // std::cout << "IsInstanceIndexDirty: " << GetId() << std::endl;
     }
 
     ////////////////////////////////////////////////////////////////////////
@@ -648,15 +644,14 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     // HdOSPRay to tell whether transforms will be dirty, so this code
     // pulls them every frame.
 
-    if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id))
-    {
+    if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id)) {
         _ospInstances.clear();
         if (!GetInstancerId().IsEmpty()) {
             // Retrieve instance transforms from the instancer.
             HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
             HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
             VtMatrix4dArray transforms
-                = static_cast<HdOSPRayInstancer*>(instancer)
+                   = static_cast<HdOSPRayInstancer*>(instancer)
                             ->ComputeInstanceTransforms(GetId());
 
             size_t newSize = transforms.size();
@@ -675,10 +670,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                 GfMatrix4f matf = _transform * GfMatrix4f(transforms[i]);
                 float* xfmf = matf.GetArray();
                 affine3f xfm(vec3f(xfmf[0], xfmf[1], xfmf[2]),
-                            vec3f(xfmf[4], xfmf[5], xfmf[6]),
-                            vec3f(xfmf[8], xfmf[9], xfmf[10]),
-                            vec3f(xfmf[12], xfmf[13], xfmf[14]));
-                                                                instance.setParam("xfm", xfm);
+                             vec3f(xfmf[4], xfmf[5], xfmf[6]),
+                             vec3f(xfmf[8], xfmf[9], xfmf[10]),
+                             vec3f(xfmf[12], xfmf[13], xfmf[14]));
+                instance.setParam("xfm", xfm);
                 instance.commit();
                 _ospInstances.push_back(instance);
             }
@@ -692,20 +687,19 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             GfMatrix4f matf = _transform;
             float* xfmf = matf.GetArray();
             affine3f xfm(vec3f(xfmf[0], xfmf[1], xfmf[2]),
-                        vec3f(xfmf[4], xfmf[5], xfmf[6]),
-                        vec3f(xfmf[8], xfmf[9], xfmf[10]),
-                        vec3f(xfmf[12], xfmf[13], xfmf[14]));
+                         vec3f(xfmf[4], xfmf[5], xfmf[6]),
+                         vec3f(xfmf[8], xfmf[9], xfmf[10]),
+                         vec3f(xfmf[12], xfmf[13], xfmf[14]));
             instance.setParam("xfm", xfm);
             instance.commit();
             group.setParam("geometry", opp::CopiedData(*_geometricModel));
             group.commit();
             _ospInstances.push_back(instance);
-        }   
+        }
 
         renderParam->UpdateModelVersion();
     }
-    if(!_populated)
-    {
+    if (!_populated) {
         renderParam->AddHdOSPRayMesh(this);
         _populated = true;
     }
@@ -715,10 +709,9 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 }
 
 void
-HdOSPRayMesh::AddOSPInstances(std::vector<opp::Instance> &instanceList) const
+HdOSPRayMesh::AddOSPInstances(std::vector<opp::Instance>& instanceList) const
 {
-    if (IsVisible())
-    {
+    if (IsVisible()) {
         instanceList.insert(instanceList.end(), _ospInstances.begin(),
                             _ospInstances.end());
     }
@@ -795,8 +788,8 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     mesh.setParam("index", indices);
 
     // subdiv boundary mode
-    TfToken const vertexRule =
-        _topology.GetSubdivTags().GetVertexInterpolationRule();
+    TfToken const vertexRule
+           = _topology.GetSubdivTags().GetVertexInterpolationRule();
 
     if (vertexRule == PxOsdOpenSubdivTokens->none) {
         mesh.setParam("mode", OSP_SUBDIVISION_NO_BOUNDARY);

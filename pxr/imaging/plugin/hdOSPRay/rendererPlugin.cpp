@@ -27,6 +27,8 @@
 #include "pxr/imaging/hdOSPRay/config.h"
 #include "pxr/imaging/hdOSPRay/renderDelegate.h"
 
+#include <iostream>
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 // Register the OSPRay plugin with the renderer plugin system.

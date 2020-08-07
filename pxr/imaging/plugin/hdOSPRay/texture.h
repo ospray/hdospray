@@ -27,6 +27,8 @@
 #include "pxr/pxr.h"
 
 #include "ospray/ospray_cpp.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
+
 namespace opp = ospray::cpp;
 
 #include <string>

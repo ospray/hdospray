@@ -43,7 +43,8 @@ HdOSPRayLight::~HdOSPRayLight()
 {
 }
 
-void HdOSPRayLight::Finalize(HdRenderParam *renderParam)
+void
+HdOSPRayLight::Finalize(HdRenderParam* renderParam)
 {
     HdOSPRayRenderParam* ospRenderParam
            = static_cast<HdOSPRayRenderParam*>(renderParam);
