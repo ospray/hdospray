@@ -119,10 +119,13 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter)
         dataType = OSP_VEC3UC;
     else if (format == OSP_TEXTURE_RGBA8 || format == OSP_TEXTURE_SRGBA)
         dataType = OSP_VEC4UC;
-    else
+    else {
+        std::cout << "Texture: file: " << file << "\tdepth: " << depth
+                  << "\tchannels: " << channels << "\format: " << format
+                  << std::endl;
         throw std::runtime_error("hdOSPRay::LoadOIIOTexture2D: \
                                          Unknown texture format");
-
+    }
     opp::SharedData ospData = opp::SharedData(data, dataType, size);
     ospData.commit();
 

@@ -165,7 +165,9 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     // if we need to recommit the world
-    bool worldDirty = _pendingModelUpdate || _pendingLightUpdate;
+    //bool worldDirty = _pendingModelUpdate || _pendingLightUpdate;
+    bool worldDirty = _pendingModelUpdate;
+    bool lightsDirty = _pendingLightUpdate;
 
     _pendingResetImage |= (_pendingModelUpdate || _pendingLightUpdate);
     _pendingResetImage |= (frameBufferDirty || cameraDirty);
@@ -177,7 +179,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 DisplayRenderBuffer(_previousFrame);
             _currentFrame.osprayFrame.wait();
             _interacting = true;
-            _renderer.setParam("maxPathLength", 2);
+            _renderer.setParam("maxPathLength", 4);
             _renderer.commit();
         } else {
             if (!_currentFrame.osprayFrame.isReady()) {
@@ -201,7 +203,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             frameBuffer.unmap(rgba);
             DisplayRenderBuffer(_currentFrame);
             _previousFrame = _currentFrame;
-            // std::cout << "Render Time: "  << _currentFrame.Duration() <<
+            //std::cout << "Render Time: "  << _currentFrame.Duration() <<
             // "\t\tFPS: " << 1.0f/_currentFrame.Duration() << "\tsize: "<<
             // _width << "\t" << _height << std::endl;
         }
@@ -294,7 +296,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (_world && worldDirty) {
-        // std::cout << "World::commit()" << std::endl;
+        //std::cout << "World::commit()" << std::endl;
+        _world.commit();
+    }
+
+    if (_world && lightsDirty)
+    {
+        //std::cout << "World::commitLightsOnly()" << std::endl;
         _world.commit();
     }
 
