@@ -130,6 +130,10 @@ HdOSPRayRenderDelegate::_Initialize()
            { "rrStartDepth",
              HdOSPRayRenderSettingsTokens->russianRouletteStartDepth,
              VtValue(int(HdOSPRayConfig::GetInstance().rrStartDepth)) });
+    _settingDescriptors.push_back(
+           { "interactiveTargetFPS",
+             HdOSPRayRenderSettingsTokens->interactiveTargetFPS,
+             VtValue(float(HdOSPRayConfig::GetInstance().interactiveTargetFPS)) });
     if (!HdOSPRayConfig::GetInstance().usePathTracing) {
         _settingDescriptors.push_back(
                { "Ambient occlusion samples",

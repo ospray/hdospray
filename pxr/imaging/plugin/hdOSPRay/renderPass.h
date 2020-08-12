@@ -131,7 +131,9 @@ private:
 
     opp::FrameBuffer _frameBuffer;
     opp::FrameBuffer _interactiveFrameBuffer;
-    int _interactiveFrameBufferScale { 2 };
+    float _currentFrameBufferScale { 1.0f };
+    float _interactiveFrameBufferScale { 2.0f };
+    float _interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
 
     opp::Renderer _renderer;
 

@@ -41,6 +41,7 @@ namespace opp = ospray::cpp;
 #define HDOSPRAY_DEFAULT_RR_START_DEPTH 1
 #define HDOSPRAY_DEFAULT_MIN_CONTRIBUTION 0.01f
 #define HDOSPRAY_DEFAULT_MAX_CONTRIBUTION 10.0f
+#define HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS 10.0f
 #define HDOSPRAY_DEFAULT_AO_RADIUS 0.5f
 #define HDOSPRAY_DEFAULT_AO_SAMPLES 1
 #define HDOSPRAY_DEFAULT_AO_INTENSITY 1.0f
@@ -145,6 +146,9 @@ public:
     ///
     /// Override with *HDOSPRAY_MAX_CONTRIBUTION*.
     float maxContribution { HDOSPRAY_DEFAULT_MAX_CONTRIBUTION };
+
+
+    float interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
 
     ///  Ao rays maximum distance
     ///
