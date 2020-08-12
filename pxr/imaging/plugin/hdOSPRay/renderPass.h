@@ -179,7 +179,7 @@ private:
     };
     int _samplesToConvergence { HDOSPRAY_DEFAULT_SPP_TO_CONVERGE };
     int _denoiserSPPThreshold { 6 };
-    int _aoSamples { 1 };
+    int _aoSamples { HDOSPRAY_DEFAULT_AO_SAMPLES };
     int _lightSamples { -1 };
     bool _staticDirectionalLights { true };
     bool _ambientLight { true };

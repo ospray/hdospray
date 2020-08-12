@@ -71,10 +71,18 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
 {
     _world = opp::World();
     _camera = opp::Camera("perspective");
-    _renderer.setParam(
-           "backgroundColor",
-           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
-
+    if (!HdOSPRayConfig::GetInstance().usePathTracing)
+    {
+        _renderer.setParam(
+            "backgroundColor",
+            vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
+    }
+    else
+    {
+        _renderer.setParam(
+            "backgroundColor",
+            vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
+    }
 #if HDOSPRAY_ENABLE_DENOISER
     _denoiserLoaded = (ospLoadModule("denoiser") == OSP_NO_ERROR);
     if (!_denoiserLoaded)
@@ -530,7 +538,7 @@ HdOSPRayRenderPass::ProcessSettings()
     int lSamples = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->lightSamples, -1);
     int aoSamples = renderDelegate->GetRenderSetting<int>(
-           HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, 0);
+           HdOSPRayRenderSettingsTokens->ambientOcclusionSamples, _aoSamples);
     int maxDepth = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->maxDepth, _maxDepth);
     int russianRouletteStartDepth = renderDelegate->GetRenderSetting<int>(
