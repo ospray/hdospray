@@ -132,6 +132,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 {
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
 
+
+    if (!HdOSPRayConfig::GetInstance().usePathTracing)
+    {
+        _interactiveFrameBufferScale = 1.0f;
+    }
+
     GfVec4f vp = renderPassState->GetViewport();
     bool frameBufferDirty = (_width != vp[2] || _height != vp[3]);
     bool useDenoiser = _denoiserLoaded && _useDenoiser
@@ -180,6 +186,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _currentFrame.osprayFrame.wait();
             _interacting = true;
             _renderer.setParam("maxPathLength", 4);
+            _renderer.setParam("aoSamples", 0);
             _renderer.commit();
         } else {
             if (!_currentFrame.osprayFrame.isReady()) {
@@ -212,6 +219,9 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (frameBufferDirty) {
         _width = vp[2];
         _height = vp[3];
+
+
+
         // reset OpenGL viewport and orthographic projection
         glViewport(0, 0, _width, _height);
 
@@ -250,6 +260,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     if (_interacting != cameraDirty) {
         _renderer.setParam("maxPathLength", (cameraDirty ? 2 : _maxDepth));
+        _renderer.setParam("aoSamples", (cameraDirty ? 0 : _aoSamples));
         _renderer.commit();
     }
 
