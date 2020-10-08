@@ -270,15 +270,16 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     HF_MALLOC_TAG_FUNCTION();
 
     SdfPath const& id = GetId();
-
+    bool isTransformDirty = false;
     ////////////////////////////////////////////////////////////////////////
     // 1. Pull scene data.
 
     if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)) {
         VtValue value = sceneDelegate->Get(id, HdTokens->points);
         _points = value.Get<VtVec3fArray>();
-        if (_points.size() > 0)
+        if (_points.size() > 0){
             _normalsValid = false;
+        }
     }
 
     if (HdChangeTracker::IsDisplayStyleDirty(*dirtyBits, id)) {
@@ -288,6 +289,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
     if (HdChangeTracker::IsTransformDirty(*dirtyBits, id)) {
         _transform = GfMatrix4f(sceneDelegate->GetTransform(id));
+        isTransformDirty = true;
     }
 
     if (HdChangeTracker::IsVisibilityDirty(*dirtyBits, id)) {
@@ -314,11 +316,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     }
 
     if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id)) {
-        // std::cout << "IsInstancerDirty: " << GetId() << std::endl;
+        //std::cout << "IsInstancerDirty: " << GetId() << std::endl;
     }
 
     if (HdChangeTracker::IsInstanceIndexDirty(*dirtyBits, id)) {
-        // std::cout << "IsInstanceIndexDirty: " << GetId() << std::endl;
+        //std::cout << "IsInstanceIndexDirty: " << GetId() << std::endl;
     }
 
     ////////////////////////////////////////////////////////////////////////
@@ -644,7 +646,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     // HdOSPRay to tell whether transforms will be dirty, so this code
     // pulls them every frame.
 
-    if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id)) {
+    if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || isTransformDirty) {
         _ospInstances.clear();
         if (!GetInstancerId().IsEmpty()) {
             // Retrieve instance transforms from the instancer.
