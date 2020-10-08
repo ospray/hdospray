@@ -277,7 +277,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)) {
         VtValue value = sceneDelegate->Get(id, HdTokens->points);
         _points = value.Get<VtVec3fArray>();
-        if (_points.size() > 0){
+        if (_points.size() > 0) {
             _normalsValid = false;
         }
     }
@@ -316,11 +316,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     }
 
     if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id)) {
-        //std::cout << "IsInstancerDirty: " << GetId() << std::endl;
+        // std::cout << "IsInstancerDirty: " << GetId() << std::endl;
     }
 
     if (HdChangeTracker::IsInstanceIndexDirty(*dirtyBits, id)) {
-        //std::cout << "IsInstanceIndexDirty: " << GetId() << std::endl;
+        // std::cout << "IsInstanceIndexDirty: " << GetId() << std::endl;
     }
 
     ////////////////////////////////////////////////////////////////////////

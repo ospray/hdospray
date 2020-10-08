@@ -147,7 +147,6 @@ public:
     /// Override with *HDOSPRAY_MAX_CONTRIBUTION*.
     float maxContribution { HDOSPRAY_DEFAULT_MAX_CONTRIBUTION };
 
-
     float interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
 
     ///  Ao rays maximum distance

@@ -71,17 +71,14 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
 {
     _world = opp::World();
     _camera = opp::Camera("perspective");
-    if (!HdOSPRayConfig::GetInstance().usePathTracing)
-    {
+    if (!HdOSPRayConfig::GetInstance().usePathTracing) {
         _renderer.setParam(
-            "backgroundColor",
-            vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
-    }
-    else
-    {
+               "backgroundColor",
+               vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
+    } else {
         _renderer.setParam(
-            "backgroundColor",
-            vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
+               "backgroundColor",
+               vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
     }
 #if HDOSPRAY_ENABLE_DENOISER
     _denoiserLoaded = (ospLoadModule("denoiser") == OSP_NO_ERROR);
@@ -140,15 +137,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 {
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
 
-
-    if (!HdOSPRayConfig::GetInstance().usePathTracing)
-    {
+    if (!HdOSPRayConfig::GetInstance().usePathTracing) {
         _interactiveFrameBufferScale = 1.0f;
     }
 
     float updateInteractiveFrameBufferScale = _interactiveFrameBufferScale;
     bool interactiveFramebufferDirty = false;
-
 
     GfVec4f vp = renderPassState->GetViewport();
     bool frameBufferDirty = (_width != vp[2] || _height != vp[3]);
@@ -183,7 +177,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     // if we need to recommit the world
-    //bool worldDirty = _pendingModelUpdate || _pendingLightUpdate;
+    // bool worldDirty = _pendingModelUpdate || _pendingLightUpdate;
     bool worldDirty = _pendingModelUpdate;
     bool lightsDirty = _pendingLightUpdate;
 
@@ -228,18 +222,25 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             // estimating scaling factor for interactive rendering based on
             // the current FPS and a given targetFPS
             float frameDuration = _currentFrame.Duration();
-            float currentFPS = 1.0f/frameDuration;
+            float currentFPS = 1.0f / frameDuration;
             float scaleChange = std::sqrt(_interactiveTargetFPS / currentFPS);
-            updateInteractiveFrameBufferScale = std::max(1.0f, _currentFrameBufferScale*scaleChange);
-            updateInteractiveFrameBufferScale = std::min(updateInteractiveFrameBufferScale, 5.0f);
-            updateInteractiveFrameBufferScale = 0.125f*std::ceil( updateInteractiveFrameBufferScale / 0.125f);
-            if (_interacting && updateInteractiveFrameBufferScale != _currentFrameBufferScale)
-            {
+            updateInteractiveFrameBufferScale
+                   = std::max(1.0f, _currentFrameBufferScale * scaleChange);
+            updateInteractiveFrameBufferScale
+                   = std::min(updateInteractiveFrameBufferScale, 5.0f);
+            updateInteractiveFrameBufferScale = 0.125f
+                   * std::ceil(updateInteractiveFrameBufferScale / 0.125f);
+            if (_interacting
+                && updateInteractiveFrameBufferScale
+                       != _currentFrameBufferScale) {
                 interactiveFramebufferDirty = true;
-                _interactiveFrameBufferScale = updateInteractiveFrameBufferScale;
+                _interactiveFrameBufferScale
+                       = updateInteractiveFrameBufferScale;
             }
-            //std::cout << "Target FPS: "<< _interactiveTargetFPS << "\tCurrent FPS: " << currentFPS <<"\t Scale Change: " << scaleChange << std::endl;
-           std::cout << "InteractiveBufferScale: "<< _interactiveFrameBufferScale << std::endl;
+            // std::cout << "Target FPS: "<< _interactiveTargetFPS << "\tCurrent
+            // FPS: " << currentFPS <<"\t Scale Change: " << scaleChange <<
+            // std::endl; std::cout << "InteractiveBufferScale: "<<
+            // _interactiveFrameBufferScale << std::endl;
         }
     }
 
@@ -268,12 +269,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _pendingResetImage = true;
     }
 
-    if (interactiveFramebufferDirty)
-    {
-        _interactiveFrameBuffer
-        = opp::FrameBuffer((int)(float(_width) / _interactiveFrameBufferScale),
-                            (int)(float(_height) / _interactiveFrameBufferScale),
-                            OSP_FB_RGBA32F, OSP_FB_COLOR);
+    if (interactiveFramebufferDirty) {
+        _interactiveFrameBuffer = opp::FrameBuffer(
+               (int)(float(_width) / _interactiveFrameBufferScale),
+               (int)(float(_height) / _interactiveFrameBufferScale),
+               OSP_FB_RGBA32F, OSP_FB_COLOR);
         _interactiveFrameBuffer.commit();
         interactiveFramebufferDirty = false;
         _pendingResetImage = true;
@@ -293,8 +293,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     if (_interacting != cameraDirty) {
         _renderer.setParam("maxPathLength", (cameraDirty ? 4 : _maxDepth));
-        _renderer.setParam("minContribution", (cameraDirty ? 0.1f : _minContribution));
-        _renderer.setParam("maxContribution", (cameraDirty ? 3.0f : _maxContribution));
+        _renderer.setParam("minContribution",
+                           (cameraDirty ? 0.1f : _minContribution));
+        _renderer.setParam("maxContribution",
+                           (cameraDirty ? 3.0f : _maxContribution));
         _renderer.setParam("aoSamples", (cameraDirty ? 0 : _aoSamples));
         _renderer.commit();
     }
@@ -310,9 +312,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     // set render frames size based on interaction mode
     if (_interacting) {
-        if (_currentFrame.width != int(float(_width) / _interactiveFrameBufferScale)) {
-            _currentFrame.width = int(float(_width) / _interactiveFrameBufferScale);
-            _currentFrame.height = int(float(_height) / _interactiveFrameBufferScale);
+        if (_currentFrame.width
+            != int(float(_width) / _interactiveFrameBufferScale)) {
+            _currentFrame.width
+                   = int(float(_width) / _interactiveFrameBufferScale);
+            _currentFrame.height
+                   = int(float(_height) / _interactiveFrameBufferScale);
             _currentFrame.colorBuffer.resize(_currentFrame.width
                                                     * _currentFrame.height,
                                              vec4f({ 0.f, 0.f, 0.f, 0.f }));
@@ -344,13 +349,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (_world && worldDirty) {
-        //std::cout << "World::commit()" << std::endl;
+        // std::cout << "World::commit()" << std::endl;
         _world.commit();
     }
 
-    if (_world && lightsDirty)
-    {
-        //std::cout << "World::commitLightsOnly()" << std::endl;
+    if (_world && lightsDirty) {
         _world.commit();
     }
 
@@ -380,6 +383,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
     // set initial OpenGL state
     glEnable(GL_TEXTURE_2D);
     glDisable(GL_LIGHTING);
+    glDisable(GL_DEPTH_TEST);
 
     glBindTexture(GL_TEXTURE_2D, framebufferTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, renderBuffer.width,
@@ -579,7 +583,8 @@ HdOSPRayRenderPass::ProcessSettings()
            HdOSPRayRenderSettingsTokens->maxContribution, _maxContribution);
 
     _interactiveTargetFPS = renderDelegate->GetRenderSetting<float>(
-           HdOSPRayRenderSettingsTokens->interactiveTargetFPS, _interactiveTargetFPS);
+           HdOSPRayRenderSettingsTokens->interactiveTargetFPS,
+           _interactiveTargetFPS);
 
     if (samplesToConvergence != _samplesToConvergence) {
         _samplesToConvergence = samplesToConvergence;

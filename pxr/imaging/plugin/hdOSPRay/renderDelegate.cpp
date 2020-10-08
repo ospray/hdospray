@@ -133,7 +133,8 @@ HdOSPRayRenderDelegate::_Initialize()
     _settingDescriptors.push_back(
            { "interactiveTargetFPS",
              HdOSPRayRenderSettingsTokens->interactiveTargetFPS,
-             VtValue(float(HdOSPRayConfig::GetInstance().interactiveTargetFPS)) });
+             VtValue(float(
+                    HdOSPRayConfig::GetInstance().interactiveTargetFPS)) });
     if (!HdOSPRayConfig::GetInstance().usePathTracing) {
         _settingDescriptors.push_back(
                { "Ambient occlusion samples",
