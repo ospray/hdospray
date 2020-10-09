@@ -138,12 +138,7 @@ private:
     opp::Renderer _renderer;
 
     bool _interacting { true };
-    // bool _interactingLastFrame { false };
 
-    // A reference to the global scene version.
-    // std::atomic<int>* _sceneVersion;
-    // The last scene version we rendered with.
-    // int _lastRenderedSceneVersion { -1 };
     int _lastRenderedModelVersion { -1 };
     int _lastRenderedLightVersion { -1 };
     int _lastSettingsVersion { -1 };

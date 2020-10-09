@@ -315,14 +315,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _UpdatePrimvarSources(sceneDelegate, *dirtyBits);
     }
 
-    if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id)) {
-        // std::cout << "IsInstancerDirty: " << GetId() << std::endl;
-    }
-
-    if (HdChangeTracker::IsInstanceIndexDirty(*dirtyBits, id)) {
-        // std::cout << "IsInstanceIndexDirty: " << GetId() << std::endl;
-    }
-
     ////////////////////////////////////////////////////////////////////////
     // 2. Resolve drawstyles
 
