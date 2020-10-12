@@ -50,6 +50,7 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
     ospray::ospray
     ospray::ospray_sdk
     rkcommon::rkcommon
+    ${OPENEXR_LIBRARIES}
     ${OIIO_LIBRARIES}
     )
 

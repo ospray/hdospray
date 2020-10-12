@@ -29,7 +29,9 @@
 #include "pxr/pxr.h"
 
 #include "ospray/ospray_cpp.h"
-#include "rkcommon/math/vec.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
+
+#include "config.h"
 
 namespace opp = ospray::cpp;
 
@@ -83,6 +85,11 @@ public:
         {
             return osprayFrame;
         }
+
+        inline float Duration()
+        {
+            return osprayFrame.duration();
+        }
     };
 
     virtual void DisplayRenderBuffer(RenderFrame& renderFrame);
@@ -101,6 +108,8 @@ protected:
     /// Update internal tracking to reflect a dirty collection.
     virtual void _MarkCollectionDirty() override;
 
+    virtual void
+    ProcessCamera(HdRenderPassStateSharedPtr const& renderPassState);
     virtual void ProcessLights();
     virtual void ProcessSettings();
     virtual void ProcessInstances();
@@ -117,21 +126,21 @@ private:
     // ResetImage() has been called since the last Execute().
     bool _pendingResetImage;
     bool _pendingModelUpdate;
+    bool _pendingLightUpdate;
+    bool _pendingSettingsUpdate;
 
     opp::FrameBuffer _frameBuffer;
     opp::FrameBuffer _interactiveFrameBuffer;
-    int _interactiveFrameBufferScale { 2 };
+    float _currentFrameBufferScale { 1.0f };
+    float _interactiveFrameBufferScale { 2.0f };
+    float _interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
 
     opp::Renderer _renderer;
 
     bool _interacting { true };
-    bool _interactingLastFrame { true };
 
-    // A reference to the global scene version.
-    std::atomic<int>* _sceneVersion;
-    // The last scene version we rendered with.
-    int _lastRenderedVersion { -1 };
     int _lastRenderedModelVersion { -1 };
+    int _lastRenderedLightVersion { -1 };
     int _lastSettingsVersion { -1 };
 
     RenderFrame _currentFrame;
@@ -158,16 +167,16 @@ private:
     opp::World _world = nullptr; // the last model created
 
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
-    int _spp { 1 };
+    int _spp { HDOSPRAY_DEFAULT_SPP };
     bool _useDenoiser { false };
     bool _denoiserLoaded { false }; // did the module successfully load?
     bool _denoiserState { false };
     OSPPixelFilterTypes _pixelFilterType {
         OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS
     };
-    int _samplesToConvergence { 100 };
+    int _samplesToConvergence { HDOSPRAY_DEFAULT_SPP_TO_CONVERGE };
     int _denoiserSPPThreshold { 6 };
-    int _aoSamples { 1 };
+    int _aoSamples { HDOSPRAY_DEFAULT_AO_SAMPLES };
     int _lightSamples { -1 };
     bool _staticDirectionalLights { true };
     bool _ambientLight { true };
@@ -175,11 +184,14 @@ private:
     bool _keyLight { true };
     bool _fillLight { true };
     bool _backLight { true };
-    int _maxDepth { 5 };
-    float _minContribution { 0.1f };
-    float _maxContribution { 3.0f };
-    float _aoDistance { 10.f };
-    float _aoIntensity { 1.f };
+
+    int _maxDepth { HDOSPRAY_DEFAULT_MAX_DEPTH };
+    int _russianRouletteStartDepth { HDOSPRAY_DEFAULT_RR_START_DEPTH };
+    float _minContribution { HDOSPRAY_DEFAULT_MIN_CONTRIBUTION };
+    float _maxContribution { HDOSPRAY_DEFAULT_MAX_CONTRIBUTION };
+
+    float _aoRadius { HDOSPRAY_DEFAULT_AO_RADIUS };
+    float _aoIntensity { HDOSPRAY_DEFAULT_AO_INTENSITY };
 
     // OpenGL framebuffer texture
     GLuint framebufferTexture = 0;

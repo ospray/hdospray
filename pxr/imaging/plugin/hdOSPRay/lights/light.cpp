@@ -43,6 +43,15 @@ HdOSPRayLight::~HdOSPRayLight()
 {
 }
 
+void
+HdOSPRayLight::Finalize(HdRenderParam* renderParam)
+{
+    HdOSPRayRenderParam* ospRenderParam
+           = static_cast<HdOSPRayRenderParam*>(renderParam);
+
+    ospRenderParam->RemoveHdOSPRayLight(GetId());
+}
+
 /* virtual */
 void
 HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
@@ -134,7 +143,7 @@ void
 HdOSPRayLight::_PopulateOSPLight(HdOSPRayRenderParam* ospRenderParam) const
 {
     // add the light source to the light list of the renderer
-    ospRenderParam->AddLight(_ospLight);
+    ospRenderParam->AddHdOSPRayLight(GetId(), this);
 }
 
 /* virtual */

@@ -34,6 +34,8 @@
 #include "pxr/pxr.h"
 
 #include "ospray/ospray_cpp.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
+
 #include <mutex>
 
 namespace opp = ospray::cpp;
@@ -127,6 +129,8 @@ public:
                       HdRenderParam* renderParam, HdDirtyBits* dirtyBits,
                       TfToken const& reprToken) override;
 
+    void AddOSPInstances(std::vector<opp::Instance>& instanceList) const;
+
 protected:
     bool _UseQuadIndices(const HdRenderIndex& renderIndex,
                          HdMeshTopology const& topology) const;
@@ -185,6 +189,9 @@ private:
                                HdInterpolation interpolation, bool refined);
 
     opp::Geometry _CreateOSPRaySubdivMesh();
+
+    // bool _isVisible { true };
+    bool _populated { false };
 
     // Every HdOSPRayMesh is treated as instanced; if there's no instancer,
     // the prototype has a single identity istance.

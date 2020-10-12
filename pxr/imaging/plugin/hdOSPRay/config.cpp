@@ -37,13 +37,13 @@ TF_INSTANTIATE_SINGLETON(HdOSPRayConfig);
 // The environment variable macro takes the variable name, a default value,
 // and a description...
 // clang-format off
-TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_PER_FRAME, 1,
+TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_PER_FRAME, HDOSPRAY_DEFAULT_SPP,
         "Raytraced samples per pixel per frame (must be >= 1)");
 
-TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_TO_CONVERGENCE, 100,
+TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_TO_CONVERGENCE, HDOSPRAY_DEFAULT_SPP_TO_CONVERGE,
         "Samples per pixel before we stop rendering (must be >= 1)");
 
-TF_DEFINE_ENV_SETTING(HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES, 0,
+TF_DEFINE_ENV_SETTING(HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES, HDOSPRAY_DEFAULT_AO_SAMPLES,
         "Ambient occlusion samples per camera ray (must be >= 0; a value of 0 disables ambient occlusion)");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_LIGHT_SAMPLES, 1,
@@ -58,8 +58,11 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_PRINT_CONFIGURATION, 0,
 TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_PATH_TRACING, 1,
         "Should HdOSPRay use path tracing");
 
-TF_DEFINE_ENV_SETTING(HDOSPRAY_MAX_PATH_DEPTH, 5,
+TF_DEFINE_ENV_SETTING(HDOSPRAY_MAX_PATH_DEPTH, HDOSPRAY_DEFAULT_MAX_DEPTH,
         "Maximum path tracing depth.");
+
+TF_DEFINE_ENV_SETTING(HDOSPRAY_RR_START_DEPTH, HDOSPRAY_DEFAULT_RR_START_DEPTH,
+        "Path depth Russian roulette starts.");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_INIT_ARGS, "",
         "Initialization arguments sent to OSPRay");

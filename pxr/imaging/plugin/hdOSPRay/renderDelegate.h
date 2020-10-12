@@ -31,6 +31,8 @@
 #include "api.h"
 
 #include "ospray/ospray_cpp.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
+
 #include <mutex>
 
 namespace opp = ospray::cpp;
@@ -39,10 +41,11 @@ PXR_NAMESPACE_OPEN_SCOPE
 
 #define HDOSPRAY_RENDER_SETTINGS_TOKENS                                        \
     (ambientOcclusionSamples)(samplesPerFrame)(lightSamples)(useDenoiser)(     \
-           pixelFilterType)(maxDepth)(aoDistance)(aoIntensity)(                \
-           samplesToConvergence)(ambientLight)(eyeLight)(keyLight)(fillLight)( \
-           backLight)(pathTracer)(staticDirectionalLights)(minContribution)(   \
-           maxContribution)
+           pixelFilterType)(maxDepth)(russianRouletteStartDepth)(aoRadius)(    \
+           aoIntensity)(samplesToConvergence)(ambientLight)(eyeLight)(         \
+           keyLight)(fillLight)(backLight)(pathTracer)(                        \
+           staticDirectionalLights)(minContribution)(maxContribution)(         \
+           interactiveTargetFPS)
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
                          HDOSPRAY_RENDER_SETTINGS_TOKENS);

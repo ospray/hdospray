@@ -126,6 +126,15 @@ HdOSPRayRenderDelegate::_Initialize()
     _settingDescriptors.push_back(
            { "maxDepth", HdOSPRayRenderSettingsTokens->maxDepth,
              VtValue(int(HdOSPRayConfig::GetInstance().maxDepth)) });
+    _settingDescriptors.push_back(
+           { "rrStartDepth",
+             HdOSPRayRenderSettingsTokens->russianRouletteStartDepth,
+             VtValue(int(HdOSPRayConfig::GetInstance().rrStartDepth)) });
+    _settingDescriptors.push_back(
+           { "interactiveTargetFPS",
+             HdOSPRayRenderSettingsTokens->interactiveTargetFPS,
+             VtValue(float(
+                    HdOSPRayConfig::GetInstance().interactiveTargetFPS)) });
     if (!HdOSPRayConfig::GetInstance().usePathTracing) {
         _settingDescriptors.push_back(
                { "Ambient occlusion samples",
@@ -133,8 +142,8 @@ HdOSPRayRenderDelegate::_Initialize()
                  VtValue(int(HdOSPRayConfig::GetInstance()
                                     .ambientOcclusionSamples)) });
         _settingDescriptors.push_back(
-               { "aoDistance", HdOSPRayRenderSettingsTokens->aoDistance,
-                 VtValue(float(HdOSPRayConfig::GetInstance().aoDistance)) });
+               { "aoRadius", HdOSPRayRenderSettingsTokens->aoRadius,
+                 VtValue(float(HdOSPRayConfig::GetInstance().aoRadius)) });
         _settingDescriptors.push_back(
                { "aoIntensity", HdOSPRayRenderSettingsTokens->aoIntensity,
                  VtValue(float(HdOSPRayConfig::GetInstance().aoIntensity)) });

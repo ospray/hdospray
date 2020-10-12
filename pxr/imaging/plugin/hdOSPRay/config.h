@@ -28,11 +28,23 @@
 #include "pxr/pxr.h"
 
 #include "ospray/ospray_cpp.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
 
 namespace opp = ospray::cpp;
 
 #include <string>
 #include <vector>
+
+#define HDOSPRAY_DEFAULT_SPP_TO_CONVERGE 1024
+#define HDOSPRAY_DEFAULT_SPP 1
+#define HDOSPRAY_DEFAULT_MAX_DEPTH 16
+#define HDOSPRAY_DEFAULT_RR_START_DEPTH 1
+#define HDOSPRAY_DEFAULT_MIN_CONTRIBUTION 0.01f
+#define HDOSPRAY_DEFAULT_MAX_CONTRIBUTION 10.0f
+#define HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS 10.0f
+#define HDOSPRAY_DEFAULT_AO_RADIUS 0.5f
+#define HDOSPRAY_DEFAULT_AO_SAMPLES 1
+#define HDOSPRAY_DEFAULT_AO_INTENSITY 1.0f
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -57,13 +69,13 @@ public:
     /// How many samples does each pixel get per frame?
     ///
     /// Override with *HDOSPRAY_SAMPLES_PER_FRAME*.
-    unsigned int samplesPerFrame;
+    unsigned int samplesPerFrame { HDOSPRAY_DEFAULT_SPP };
 
     /// How many samples do we need before a pixel is considered
     /// converged?
     ///
     /// Override with *HDOSPRAY_SAMPLES_TO_CONVERGENCE*.
-    unsigned int samplesToConvergence;
+    unsigned int samplesToConvergence { HDOSPRAY_DEFAULT_SPP_TO_CONVERGE };
 
     /// How many light samples are performed at a path vertex?
     /// A value of -1 means that all light are sampled.
@@ -118,27 +130,36 @@ public:
     ///  Maximum ray depth
     ///
     /// Override with *HDOSPRAY_MAX_DEPTH*.
-    int maxDepth { 5 };
+    int maxDepth { HDOSPRAY_DEFAULT_MAX_DEPTH };
+
+    ///  Path depth at which Russian roulette is started being used
+    ///
+    /// Override with *HDOSPRAY_RR_START_DEPTH*.
+    int rrStartDepth { HDOSPRAY_DEFAULT_RR_START_DEPTH };
 
     ///  Minimum intensity contribution
     ///
     /// Override with *HDOSPRAY_MIN_CONTRIBUTION*.
-    float minContribution { 0.1f };
+    float minContribution { HDOSPRAY_DEFAULT_MIN_CONTRIBUTION };
 
     ///  Maximum intensity contribution
     ///
     /// Override with *HDOSPRAY_MAX_CONTRIBUTION*.
-    float maxContribution { 3.f };
+    float maxContribution { HDOSPRAY_DEFAULT_MAX_CONTRIBUTION };
+
+    float interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
 
     ///  Ao rays maximum distance
     ///
     /// Override with *HDOSPRAY_AO_DISTANCE*.
-    float aoDistance { 15.0f };
+    float aoRadius { HDOSPRAY_DEFAULT_AO_RADIUS };
 
     ///  The strength of the Ao effect.
     ///
     /// Override with *HDOSPRAY_AO_INTENSITY*.
-    float aoIntensity { 1.0f };
+    float aoIntensity { HDOSPRAY_DEFAULT_AO_INTENSITY };
+
+    float aoSamples { HDOSPRAY_DEFAULT_AO_SAMPLES };
 
     ///  Use an ambient light
     ///

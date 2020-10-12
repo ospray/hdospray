@@ -27,7 +27,11 @@
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/pxr.h"
 
+#include "lights/light.h"
+#include "mesh.h"
+
 #include "ospray/ospray_cpp.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
 
 namespace opp = ospray::cpp;
 
@@ -44,7 +48,6 @@ class HdOSPRayRenderParam final : public HdRenderParam {
 public:
     HdOSPRayRenderParam(opp::Renderer renderer, std::atomic<int>* sceneVersion)
         : _renderer(renderer)
-        , _sceneVersion(sceneVersion)
     {
     }
     virtual ~HdOSPRayRenderParam() = default;
@@ -64,55 +67,50 @@ public:
         return _modelVersion.load();
     }
 
-    // thread safe.  Instances added to scene and released by renderPass.
-    void AddInstance(const opp::Instance instance)
+    void UpdateLightVersion()
     {
-        std::lock_guard<std::mutex> lock(_ospMutex);
-        _ospInstances.emplace_back(instance);
+        _lightVersion++;
     }
 
-    // thread safe.  Instances added to scene and released by renderPass.
-    void AddInstances(const std::vector<opp::Instance>& instances)
+    int GetLightVersion()
     {
-        std::lock_guard<std::mutex> lock(_ospMutex);
-        _ospInstances.insert(_ospInstances.end(), instances.begin(),
-                             instances.end());
-    }
-
-    void ClearInstances()
-    {
-        _ospInstances.resize(0);
-    }
-
-    // not thread safe
-    std::vector<opp::Instance>& GetInstances()
-    {
-        return _ospInstances;
+        return _lightVersion.load();
     }
 
     // thread safe.  Lights added to scene and released by renderPass.
-    void AddLight(const opp::Light light)
+    void AddHdOSPRayLight(const SdfPath& id, const HdOSPRayLight* hdOsprayLight)
     {
         std::lock_guard<std::mutex> lock(_ospMutex);
-        _ospLights.emplace_back(light);
+        _hdOSPRayLights[id] = hdOsprayLight;
+        UpdateLightVersion();
     }
 
-    // thread safe.  Lights added to scene and released by renderPass.
-    void AddLights(const std::vector<opp::Light>& lights)
+    void RemoveHdOSPRayLight(const SdfPath& id)
     {
         std::lock_guard<std::mutex> lock(_ospMutex);
-        _ospLights.insert(_ospLights.end(), lights.begin(), lights.end());
-    }
-
-    void ClearLights()
-    {
-        _ospLights.resize(0);
+        _hdOSPRayLights.erase(id);
+        UpdateLightVersion();
     }
 
     // not thread safe
-    std::vector<opp::Light>& GetLights()
+    const std::unordered_map<SdfPath, const HdOSPRayLight*, SdfPath::Hash>&
+    GetHdOSPRayLights()
     {
-        return _ospLights;
+        return _hdOSPRayLights;
+    }
+
+    // thread safe.  Lights added to scene and released by renderPass.
+    void AddHdOSPRayMesh(const HdOSPRayMesh* hdOsprayMesh)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _hdOSPRayMeshes.push_back(hdOsprayMesh);
+        UpdateModelVersion();
+    }
+
+    // not thread safe
+    const std::vector<const HdOSPRayMesh*>& GetHdOSPRayMeshes()
+    {
+        return _hdOSPRayMeshes;
     }
 
 private:
@@ -121,13 +119,16 @@ private:
     std::mutex _ospMutex;
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.
-    std::vector<opp::Instance> _ospInstances;
-    std::vector<opp::Light> _ospLights;
+    std::unordered_map<SdfPath, const HdOSPRayLight*, SdfPath::Hash>
+           _hdOSPRayLights;
+
+    std::vector<const HdOSPRayMesh*> _hdOSPRayMeshes;
+
     opp::Renderer _renderer;
-    /// A version counter for edits to _scene.
-    std::atomic<int>* _sceneVersion;
-    // version of osp model.  Used for tracking image changes
+    /// A version counters for edits to scene (e.g., models or lights).
     std::atomic<int> _modelVersion { 1 };
+
+    std::atomic<int> _lightVersion { 1 };
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

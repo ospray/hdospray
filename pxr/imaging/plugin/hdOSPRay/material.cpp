@@ -40,7 +40,7 @@
 #include <OpenImageIO/imageio.h>
 
 #include "ospray/ospray_cpp.h"
-#include "rkcommon/math/vec.h"
+#include "ospray/ospray_cpp/ext/rkcommon.h"
 
 using namespace rkcommon::math;
 
@@ -237,6 +237,8 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
         map_roughness = texture;
     } else if (textureName == HdOSPRayTokens->normal) {
         map_normal = texture;
+    } else if (textureName == HdOSPRayTokens->opacity) {
+        map_opacity = texture;
     } else
         std::cout << "unhandled texToken: " << textureName.GetString()
                   << std::endl;
@@ -290,6 +292,10 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     }
     if (map_diffuseColor.ospTexture) {
         ospMaterial.setParam("map_baseColor", map_diffuseColor.ospTexture);
+        ospMaterial.setParam("baseColor",
+                             vec3f(map_diffuseColor.scale[0],
+                                   map_diffuseColor.scale[1],
+                                   map_diffuseColor.scale[2]));
     }
     if (map_metallic.ospTexture) {
         ospMaterial.setParam("map_metallic", map_metallic.ospTexture);
@@ -302,6 +308,10 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     if (map_normal.ospTexture) {
         ospMaterial.setParam("map_normal", map_normal.ospTexture);
         normal = 1.f;
+    }
+    if (map_opacity.ospTexture) {
+        ospMaterial.setParam("map_opacity", map_opacity.ospTexture);
+        opacity = 1.f;
     }
     ospMaterial.commit();
     return ospMaterial;
