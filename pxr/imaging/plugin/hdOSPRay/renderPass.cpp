@@ -71,15 +71,9 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
 {
     _world = opp::World();
     _camera = opp::Camera("perspective");
-    if (!HdOSPRayConfig::GetInstance().usePathTracing) {
-        _renderer.setParam(
-               "backgroundColor",
-               vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
-    } else {
-        _renderer.setParam(
-               "backgroundColor",
-               vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
-    }
+    _renderer.setParam(
+            "backgroundColor",
+            vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
 #if HDOSPRAY_ENABLE_DENOISER
     _denoiserLoaded = (ospLoadModule("denoiser") == OSP_NO_ERROR);
     if (!_denoiserLoaded)
@@ -347,14 +341,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     // add lights
     if (_pendingLightUpdate) {
         ProcessLights();
+        lightsDirty = true;
     }
 
-    if (_world && worldDirty) {
-        // std::cout << "World::commit()" << std::endl;
-        _world.commit();
-    }
-
-    if (_world && lightsDirty) {
+    if (_world && (worldDirty || lightsDirty)) {
         _world.commit();
     }
 
@@ -474,14 +464,6 @@ HdOSPRayRenderPass::ProcessLights()
     if (_eyeLight || _keyLight || _fillLight || _backLight)
         glToPTLightIntensityMultiplier /= 1.8f;
 
-    if (_ambientLight || lights.empty()) {
-        auto ambient = opp::Light("ambient");
-        ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
-        ambient.setParam("intensity", glToPTLightIntensityMultiplier);
-        ambient.commit();
-        lights.push_back(ambient);
-    }
-
     if (_eyeLight) {
         auto eyeLight = opp::Light("distant");
         eyeLight.setParam("color", vec3f(1.f, 232.f / 255.f, 166.f / 255.f));
@@ -534,6 +516,13 @@ HdOSPRayRenderPass::ProcessLights()
         backLight.setParam("visible", false);
         backLight.commit();
         lights.push_back(backLight);
+    }
+    if (_ambientLight || lights.empty()) {
+        auto ambient = opp::Light("ambient");
+        ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
+        ambient.setParam("intensity", glToPTLightIntensityMultiplier);
+        ambient.commit();
+        lights.push_back(ambient);
     }
     if (_world) {
         _world.setParam("light", opp::CopiedData(lights));
