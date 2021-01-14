@@ -115,6 +115,11 @@ protected:
         {
             return intensity * pow(2.0f, exposure);
         }
+        // defines the meaning of the intensity * color value has in radiative
+        // quantities (e.g., radiative intensity, radiance, power, ...)
+        OSPIntensityQuantiy intensityQuantity {
+            OSPIntensityQuantiy::OSP_INTENSITY_QUANTITY_UNKNOWN
+        };
     };
 
     // USDLuxLight parameters to set up the emission of the light source

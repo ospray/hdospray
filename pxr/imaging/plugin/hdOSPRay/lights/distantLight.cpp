@@ -78,6 +78,11 @@ HdOSPRayDistantLight::_PrepareOSPLight()
                        vec3f(direction[0], direction[1], direction[2]));
     _ospLight.setParam("angularDiameter", _angle);
     // emission
+    if (_emissionParam.intensityQuantity
+        != OSPIntensityQuantiy::OSP_INTENSITY_QUANTITY_UNKNOWN) {
+        _ospLight.setParam("intensityQuantity",
+                           _emissionParam.intensityQuantity);
+    }
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));

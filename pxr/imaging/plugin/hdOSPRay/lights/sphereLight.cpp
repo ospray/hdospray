@@ -91,6 +91,11 @@ HdOSPRaySphereLight::_PrepareOSPLight()
     }
 
     // emission
+    if (_emissionParam.intensityQuantity
+        != OSPIntensityQuantiy::OSP_INTENSITY_QUANTITY_UNKNOWN) {
+        _ospLight.setParam("intensityQuantity",
+                           _emissionParam.intensityQuantity);
+    }
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));

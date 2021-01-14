@@ -72,8 +72,8 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _world = opp::World();
     _camera = opp::Camera("perspective");
     _renderer.setParam(
-            "backgroundColor",
-            vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
+           "backgroundColor",
+           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
 #if HDOSPRAY_ENABLE_DENOISER
     _denoiserLoaded = (ospLoadModule("denoiser") == OSP_NO_ERROR);
     if (!_denoiserLoaded)
