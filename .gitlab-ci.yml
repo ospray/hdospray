@@ -1,5 +1,10 @@
-stages: 
+## Copyright 2020-2021 Intel Corporation
+## SPDX-License-Identifier: Apache-2.0
+
+stages:
  - build
+ - pre-scan
+ - scan
 
 .job_template: &build_job_docker
   stage: build
@@ -21,26 +26,34 @@ build-arch-gcc:
    <<: *build_job_docker
    image: hdospray/docker-images:arch
 
-   #build-centos7-gcc:
-   #<<: *build_job_docker
+build-kw-scan:
+  stage: pre-scan
+  tags: [docker]
+  image: hdospray/docker-images:arch
+  script:
+    - scripts/build_gitlab/linux-kw.sh
+  artifacts:
+    paths:
+      - ./klocwork/*
+  needs: []
 
-#build-osx-clang:
-#  <<: *build_job_shell
-#  script:
-#    - scripts/build_gitlab/osx.sh
-#  tags:
-#    - osx
-#    - clang
+check-kw-issues:
+  stage: scan
+  image: $DOCKER_REGISTRY/ospray/docker-images:centos7
+  needs: [build-kw-scan]
+  tags: [docker]
+  script:
+    - scripts/scan_gitlab/kw-check-issues.sh
 
-#build-windows-msvc15:
-#  <<: *build_job_shell
-#  script:
-#    - scripts\build_gitlab\win.bat "Visual Studio 15 2017 Win64" "v141" "OFF"
-#  tags:
-#    - msvc15
-#    - win7
-#  artifacts:
-#    paths:
-#      - build/Release
-#      - build/regression_tests
-#    expire_in: 3 day
+gen-kw-report:
+  stage: scan
+  image: $DOCKER_REGISTRY/ospray/docker-images:centos7
+  needs: [build-kw-scan]
+  tags: [docker]
+  script:
+    - scripts/scan_gitlab/kw-gen-report.sh
+    - scripts/scan_gitlab/store-files.sh $CI_PROJECT_NAME $CI_PIPELINE_ID klocwork "klocwork/report.log"
+  artifacts:
+    paths:
+      - ./klocwork/*
+
