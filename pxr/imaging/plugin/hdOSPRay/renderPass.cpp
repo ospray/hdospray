@@ -211,10 +211,9 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             // Resolve the image buffer: find the average color per pixel by
             // dividing the summed color by the number of samples;
             // and convert the image into a GL-compatible format.
-            void* rgba = frameBuffer.map(OSP_FB_COLOR);
-            memcpy(_currentFrame.colorBuffer.data(), rgba,
-                   _currentFrame.width * _currentFrame.height * 4
-                          * sizeof(float));
+            vec4f* rgba = static_cast<vec4f*>(frameBuffer.map(OSP_FB_COLOR));
+            std::copy(rgba, rgba + _currentFrame.width * _currentFrame.height,
+              _currentFrame.colorBuffer.data());
             frameBuffer.unmap(rgba);
             DisplayRenderBuffer(_currentFrame);
             _previousFrame = _currentFrame;
