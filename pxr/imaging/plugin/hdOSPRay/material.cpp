@@ -206,7 +206,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
             texture.file = path.GetResolvedPath();
             texture.ospTexture = LoadOIIOTexture2D(texture.file);
-        } else if (name == HdOSPRayTokens->filename) {
+        } else if (name == HdOSPRayTokens->filename || name.GetString() == "info:filename") {
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
             texture.file = path.GetResolvedPath();
             if (isPtex) {

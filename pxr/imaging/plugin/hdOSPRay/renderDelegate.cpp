@@ -57,6 +57,7 @@ TF_DEFINE_PUBLIC_TOKENS(HdOSPRayTokens, HDOSPRAY_TOKENS);
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_RPRIM_TYPES = {
     HdPrimTypeTokens->mesh,
+    HdPrimTypeTokens->basisCurves,
 };
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES = {
@@ -92,7 +93,12 @@ HdOSPRayRenderDelegate::_Initialize()
 {
 
 #ifdef HDOSPRAY_PLUGIN_PTEX
-    ospLoadModule("ptex");
+    std::cout << "loading ptex" << std::endl;
+    OSPError err = ospLoadModule("ptex");
+    if (err == OSP_NO_ERROR)
+      std::cout << "loaded ptex" << std::endl;
+    else
+      std::cout << "error loading ptex" << std::endl;
 #endif
 
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
@@ -301,6 +307,8 @@ HdOSPRayRenderDelegate::CreateRprim(TfToken const& typeId,
 {
     if (typeId == HdPrimTypeTokens->mesh) {
         return new HdOSPRayMesh(rprimId, instancerId);
+    if (typeId == HdPrimTypeTokens->basisCurves) {
+        return new HdOSPRayBasicCurves(rprimId, instancerId)hon(Intel)5
     } else {
         TF_CODING_ERROR("Unknown Rprim Type %s", typeId.GetText());
     }
