@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -663,7 +663,10 @@ HdOSPRayRenderPass::ProcessInstances()
     _oldInstances.resize(0);
     // create new model and populate with mesh instances
     for (auto hdOSPRayMesh : _renderParam->GetHdOSPRayMeshes()) {
-        hdOSPRayMesh->AddOSPInstances(_oldInstances);
+        //hdOSPRayMesh->AddOSPInstances(_oldInstances);
+    }
+    for (auto hdOSPRayBasisCurves : _renderParam->GetHdOSPRayBasisCurves()) {
+        hdOSPRayBasisCurves->AddOSPInstances(_oldInstances);
     }
     if (!_oldInstances.empty()) {
         opp::CopiedData data = opp::CopiedData(

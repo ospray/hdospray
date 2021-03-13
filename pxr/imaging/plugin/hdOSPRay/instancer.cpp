@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -35,6 +35,8 @@
 #include "pxr/base/gf/vec4f.h"
 #include "pxr/base/tf/staticTokens.h"
 
+#include <iostream>
+
 PXR_NAMESPACE_OPEN_SCOPE
 
 // Define local tokens for the names of the primvars the instancer
@@ -67,6 +69,7 @@ HdOSPRayInstancer::~HdOSPRayInstancer()
 void
 HdOSPRayInstancer::_SyncPrimvars()
 {
+    std::cout << "Instancer::Sync" << std::endl;
     HD_TRACE_FUNCTION();
     HF_MALLOC_TAG_FUNCTION();
 

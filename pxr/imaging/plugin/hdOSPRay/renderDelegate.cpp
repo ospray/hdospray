@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -39,6 +39,7 @@
 //#include "pxr/imaging/hdOSPRay/simpleLight.h"
 #include "pxr/imaging/hdOSPRay/material.h"
 #include "pxr/imaging/hdOSPRay/mesh.h"
+#include "pxr/imaging/hdOSPRay/basisCurves.h"
 // XXX: Add other Rprim types later
 #include "pxr/imaging/hd/camera.h"
 // XXX: Add other Sprim types later
@@ -307,8 +308,14 @@ HdOSPRayRenderDelegate::CreateRprim(TfToken const& typeId,
 {
     if (typeId == HdPrimTypeTokens->mesh) {
         return new HdOSPRayMesh(rprimId, instancerId);
-    if (typeId == HdPrimTypeTokens->basisCurves) {
-        return new HdOSPRayBasicCurves(rprimId, instancerId)hon(Intel)5
+    } else if (typeId == HdPrimTypeTokens->basisCurves) {
+        auto curves = new HdOSPRayBasisCurves(rprimId, instancerId);
+        std::cout << "created curves" << std::endl;
+        // static int count = 0;
+        // if (count++ < 1) {
+            // std::cout << "returning curves" << std::endl;
+            return curves;
+        // }
     } else {
         TF_CODING_ERROR("Unknown Rprim Type %s", typeId.GetText());
     }

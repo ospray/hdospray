@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -190,7 +190,6 @@ private:
 
     opp::Geometry _CreateOSPRaySubdivMesh();
 
-    // bool _isVisible { true };
     bool _populated { false };
 
     // Every HdOSPRayMesh is treated as instanced; if there's no instancer,
