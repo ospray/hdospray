@@ -663,7 +663,7 @@ HdOSPRayRenderPass::ProcessInstances()
     _oldInstances.resize(0);
     // create new model and populate with mesh instances
     for (auto hdOSPRayMesh : _renderParam->GetHdOSPRayMeshes()) {
-        //hdOSPRayMesh->AddOSPInstances(_oldInstances);
+        hdOSPRayMesh->AddOSPInstances(_oldInstances);
     }
     for (auto hdOSPRayBasisCurves : _renderParam->GetHdOSPRayBasisCurves()) {
         hdOSPRayBasisCurves->AddOSPInstances(_oldInstances);

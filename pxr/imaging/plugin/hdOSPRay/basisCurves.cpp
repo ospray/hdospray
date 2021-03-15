@@ -189,7 +189,7 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
                          vec3f(xfmf[4], xfmf[5], xfmf[6]),
                          vec3f(xfmf[8], xfmf[9], xfmf[10]),
                          vec3f(xfmf[12], xfmf[13], xfmf[14]));
-            //instance.setParam("xfm", xfm);
+            // instance.setParam("xfm", xfm);
             instance.commit();
             _ospInstances.push_back(instance);
         }
