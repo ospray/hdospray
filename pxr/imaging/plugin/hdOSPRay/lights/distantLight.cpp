@@ -79,7 +79,7 @@ HdOSPRayDistantLight::_PrepareOSPLight()
     _ospLight.setParam("angularDiameter", _angle);
     // emission
     if (_emissionParam.intensityQuantity
-        != OSPIntensityQuantiy::OSP_INTENSITY_QUANTITY_UNKNOWN) {
+        != OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN) {
         _ospLight.setParam("intensityQuantity",
                            _emissionParam.intensityQuantity);
     }

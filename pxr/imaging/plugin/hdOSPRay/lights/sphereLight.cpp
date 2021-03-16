@@ -83,19 +83,20 @@ HdOSPRaySphereLight::_PrepareOSPLight()
         _ospLight.setParam("radius", 0.0f);
     } else {
         _ospLight.setParam("radius", _radius);
-        // in case of a disk light intensity represents the emitted raidnace
-        // and has to be converted to the equivalent of intensity for a point
-        // light
-        float power = (4.0f * M_PI * _radius * _radius) * intensity * M_PI;
-        intensity = power / (4.0f * M_PI);
     }
 
     // emission
     if (_emissionParam.intensityQuantity
-        != OSPIntensityQuantiy::OSP_INTENSITY_QUANTITY_UNKNOWN) {
+        != OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN) {
         _ospLight.setParam("intensityQuantity",
                            _emissionParam.intensityQuantity);
     }
+    else
+    {
+        _ospLight.setParam("intensityQuantity",
+                           OSP_INTENSITY_QUANTITY_RADIANCE);
+    }
+
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));

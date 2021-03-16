@@ -117,8 +117,8 @@ protected:
         }
         // defines the meaning of the intensity * color value has in radiative
         // quantities (e.g., radiative intensity, radiance, power, ...)
-        OSPIntensityQuantiy intensityQuantity {
-            OSPIntensityQuantiy::OSP_INTENSITY_QUANTITY_UNKNOWN
+        OSPIntensityQuantity intensityQuantity {
+            OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN
         };
     };
 

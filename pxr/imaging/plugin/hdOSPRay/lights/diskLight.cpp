@@ -37,6 +37,12 @@ using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+// clang-format off
+TF_DEFINE_PRIVATE_TOKENS(
+    HdOSPRaySpotLightTokens,
+    (openingAngle)
+);
+
 HdOSPRayDiskLight::HdOSPRayDiskLight(SdfPath const& id)
     : HdOSPRayLight(id)
 {
@@ -54,6 +60,11 @@ HdOSPRayDiskLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
     if (bits & DirtyParams) {
         _radius = sceneDelegate->GetLightParamValue(id, HdLightTokens->radius)
                          .Get<float>();
+        auto vtOpeningAngle = sceneDelegate->GetLightParamValue(id, HdOSPRaySpotLightTokens->openingAngle);
+        if (vtOpeningAngle.IsHolding<float>())
+        {
+            _openingAngle = vtOpeningAngle.Get<float>();
+        }
     }
 }
 
@@ -82,16 +93,6 @@ HdOSPRayDiskLight::_PrepareOSPLight()
     direction.Normalize();
 
     float radius = _radius * radiusScale;
-    // checks if we are dealing with a disk or spot light
-    if (radius > 0.0) {
-        // in case of a disk light intensity represents the emitted raidnace
-        // and has to be converted to the equivalent of intensity for a spot
-        // light
-        float power = (M_PI * radius * radius) * intensity * M_PI;
-        intensity = power / (2.0f * M_PI);
-        // scaling factor to correct for a legacy factor on OSPRay
-        intensity *= 2.0;
-    }
 
     // in OSPRay a disk light is represented by a spot light
     // having a radius > 0.0
@@ -102,14 +103,20 @@ HdOSPRayDiskLight::_PrepareOSPLight()
     _ospLight.setParam("direction",
                        vec3f(direction[0], direction[1], direction[2]));
     _ospLight.setParam("radius", radius);
-    _ospLight.setParam("openingAngle", 180.0f);
+
+    _ospLight.setParam("openingAngle", _openingAngle);
     _ospLight.setParam("penumbraAngle", 0.0f);
 
     // emission
     if (_emissionParam.intensityQuantity
-        != OSPIntensityQuantiy::OSP_INTENSITY_QUANTITY_UNKNOWN) {
+        != OSP_INTENSITY_QUANTITY_UNKNOWN) {
         _ospLight.setParam("intensityQuantity",
                            _emissionParam.intensityQuantity);
+    }
+    else
+    {
+        _ospLight.setParam("intensityQuantity",
+                           OSP_INTENSITY_QUANTITY_RADIANCE);
     }
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],

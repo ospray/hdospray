@@ -134,7 +134,7 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         auto vtLightQuantity = sceneDelegate->GetLightParamValue(id, HdOSPRayLightTokens->intensityQuantity);
         if (vtLightQuantity.IsHolding<int>())
         {
-            _emissionParam.intensityQuantity = (OSPIntensityQuantiy)vtLightQuantity.Get<int>();
+            _emissionParam.intensityQuantity = (OSPIntensityQuantity)vtLightQuantity.Get<int>();
         }
     }
 
