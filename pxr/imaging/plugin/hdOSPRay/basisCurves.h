@@ -95,6 +95,7 @@ private:
     VtIntArray _indices;
     VtFloatArray _widths;
     VtVec3fArray _points;
+    VtVec3fArray _normals;
     GfMatrix4f _xfm;
     VtVec2fArray _texcoords;
     VtVec4fArray _colors;

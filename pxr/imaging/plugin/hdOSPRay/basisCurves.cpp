@@ -192,7 +192,7 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
                          vec3f(xfmf[4], xfmf[5], xfmf[6]),
                          vec3f(xfmf[8], xfmf[9], xfmf[10]),
                          vec3f(xfmf[12], xfmf[13], xfmf[14]));
-            // instance.setParam("xfm", xfm);
+            instance.setParam("xfm", xfm);
             instance.commit();
             _ospInstances.push_back(instance);
         }
@@ -231,6 +231,13 @@ HdOSPRayBasisCurves::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
             if (pv.name == HdTokens->points) {
                 if ((dirtyBits & HdChangeTracker::DirtyPoints) && value.IsHolding<VtVec3fArray>()) {
                     _points = value.Get<VtVec3fArray>();
+                }
+                continue;
+            }
+            if (pv.name == HdTokens->normals) {
+                if ((dirtyBits & HdChangeTracker::DirtyPoints) && value.IsHolding<VtVec3fArray>()) {
+                    std::cout << "normals\n";
+                    _normals = value.Get<VtVec3fArray>();
                 }
                 continue;
             }
@@ -309,8 +316,8 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
                                  HdDirtyBits* dirtyBitsState,
                                HdOSPRayRenderParam* renderParam)
 {
-    bool valid = false;
     bool hasWidths = (_widths.size() == _points.size());
+    bool hasNormals = (_normals.size() == _points.size());
     if (_points.empty()) {
         std::cout << "points empty\n";
         TF_RUNTIME_ERROR("_UpdateOSPRayRepr: points empty");
@@ -321,7 +328,7 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
     _position_radii.clear();
 
     for (size_t i = 0; i < _points.size(); i++) {
-        const float width = hasWidths ? _widths[i] : 1.0f;
+        const float width = hasWidths ? _widths[i] / 2.f : 1.0f;
         _position_radii.emplace_back(vec4f({_points[i][0], _points[i][1], _points[i][2],
             width}));
     }
@@ -330,6 +337,14 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
         _position_radii.size());
     vertices.commit();
     _ospCurves.setParam("vertex.position_radius", vertices);
+
+    opp::SharedData normals;
+    if (hasNormals) {
+        normals = opp::SharedData(_normals.data(), OSP_VEC3F,
+            _normals.size());
+        normals.commit();
+        _ospCurves.setParam("vertex.normal", normals);
+    }
 
     auto type = _topology.GetCurveType();
     auto basis = _topology.GetCurveBasis();
@@ -358,8 +373,14 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
               texcoords.commit();
               geometry.setParam("vertex.texcoord", texcoords);
           }
+
+          if (hasNormals) 
+              geometry.setParam("vertex.normal", normals);
+
           geometry.setParam("index", opp::CopiedData(indices));
-          geometry.setParam("type", OSP_FLAT);
+          geometry.setParam("type", OSP_ROUND);
+          if (hasNormals)
+            geometry.setParam("type", OSP_RIBBON);
           if (basis == HdTokens->bSpline)
               geometry.setParam("basis", OSP_BSPLINE);
           else if (basis == HdTokens->catmullRom)
