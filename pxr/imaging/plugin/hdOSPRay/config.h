@@ -191,6 +191,11 @@ public:
     /// Override with *HDOSPRAY_BACK_LIGHT*.
     bool backLight { false };
 
+    ///  Camera rays show light source geometry
+    ///
+    /// Override with *HDOSPRAY_LIGHTS_VISIBLE*.
+    bool lightsVisible { true };
+
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.
     std::vector<opp::Geometry> ospInstances;

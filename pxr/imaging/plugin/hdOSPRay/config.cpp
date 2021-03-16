@@ -79,6 +79,9 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_PIXELFILTER_TYPE, OSPPixelFilterTypes::OSP_PIXELF
 TF_DEFINE_ENV_SETTING(HDOSPRAY_FORCE_QUADRANGULATE, 0,
         "OSPRay force Quadrangulate meshes for debug");
 
+TF_DEFINE_ENV_SETTING(HDOSPRAY_LIGHTS_VISIBLE, 1,
+        "OSPRay camera rays show light geometry by default");
+
 HdOSPRayConfig::HdOSPRayConfig()
 {
     // Read in values from the environment, clamping them to valid ranges.
@@ -100,6 +103,7 @@ HdOSPRayConfig::HdOSPRayConfig()
     forceQuadrangulate = TfGetEnvSetting(HDOSPRAY_FORCE_QUADRANGULATE);
     maxDepth = TfGetEnvSetting(HDOSPRAY_MAX_PATH_DEPTH);
     useSimpleMaterial = TfGetEnvSetting(HDOSPRAY_USE_SIMPLE_MATERIAL);
+    lightsVisible = TfGetEnvSetting(HDOSPRAY_LIGHTS_VISIBLE);
 
     if (TfGetEnvSetting(HDOSPRAY_PRINT_CONFIGURATION) > 0) {
         std::cout
@@ -116,6 +120,8 @@ HdOSPRayConfig::HdOSPRayConfig()
             <<    minContribution   << "\n"
             << "  maxContribution      = "
             <<    maxContribution   << "\n"
+            << "  lightsVisible      = "
+            <<    lightsVisible   << "\n"
             << "  initArgs                  = "
             <<    initArgs   << "\n"
             ;
