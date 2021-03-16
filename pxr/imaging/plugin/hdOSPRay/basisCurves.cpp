@@ -43,18 +43,20 @@ using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+// clang-format off
+TF_DEFINE_PRIVATE_TOKENS(
+    HdOSPRayTokens,
+    (st)
+);
+// clang-format on
+
 HdOSPRayBasisCurves::HdOSPRayBasisCurves(SdfPath const& id,
                                          SdfPath const& instancerId)
-    : HdBasisCurves(id, instancerId) {
-    std::cout << "hdospBC::()\n";
-                                         }
-
-HdOSPRayBasisCurves::~HdOSPRayBasisCurves() {}
+    : HdBasisCurves(id, instancerId) {}
 
 HdDirtyBits
 HdOSPRayBasisCurves::GetInitialDirtyBitsMask() const
 {
-    std::cout << "hdospBC::GetInitialDirtyBitsMask()\n";
     HdDirtyBits mask = HdChangeTracker::Clean
         | HdChangeTracker::InitRepr
         | HdChangeTracker::DirtyExtent
@@ -83,7 +85,6 @@ void
 HdOSPRayBasisCurves::_InitRepr(TfToken const& reprToken,
                                HdDirtyBits* dirtyBits)
 {
-    std::cout << "hdospBC::Init()\n";
     TF_UNUSED(reprToken);
     TF_UNUSED(dirtyBits);
 }
@@ -91,7 +92,6 @@ HdOSPRayBasisCurves::_InitRepr(TfToken const& reprToken,
 HdDirtyBits
 HdOSPRayBasisCurves::_PropagateDirtyBits(HdDirtyBits bits) const
 {
-    std::cout << "hdospBC::propagateDirtyBits\n";
     return bits;
 }
 
@@ -100,7 +100,6 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
                           HdDirtyBits* dirtyBits,
                           TfToken const& reprToken)
 {
-    std::cout << "hdospBC::Sync" << std::endl;
 
     // Pull top-level OSPRay state out of the render param.
     HdOSPRayRenderParam* ospRenderParam
@@ -110,29 +109,35 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
     SdfPath const& id = GetId();
     bool updateGeometry = false;
     bool isTransformDirty = false;
-    if (*dirtyBits & HdChangeTracker::DirtyPoints) {
-        _points = delegate->Get(id, HdTokens->points).Get<VtVec3fArray>();
-        updateGeometry = true;
-    }
     if (*dirtyBits & HdChangeTracker::DirtyTopology) {
         _topology = delegate->GetBasisCurvesTopology(id);
         if (_topology.HasIndices()) {
-            std::cout << "hasIndices\n";
             _indices = _topology.GetCurveIndices();
         }
         updateGeometry = true;
     }
-    if (*dirtyBits & HdChangeTracker::DirtyWidths) {
-        _widths = delegate->Get(id, HdTokens->widths).Get<VtFloatArray>();
-    }        
     if (*dirtyBits & HdChangeTracker::DirtyMaterialId) {
     }
     if (*dirtyBits & HdChangeTracker::DirtyPrimvar) {
     }
     if (*dirtyBits & HdChangeTracker::DirtyTransform) {
+        _xfm = GfMatrix4f(delegate->GetTransform(id));
         isTransformDirty = true;
     }
     if (*dirtyBits & HdChangeTracker::DirtyVisibility) {
+    }
+    if (HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->normals)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->widths)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->primvar)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
+                                           HdTokens->displayColor)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
+                                           HdTokens->displayOpacity)
+        || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
+                                           HdOSPRayTokens->st)) {
+        _UpdatePrimvarSources(delegate, *dirtyBits);
+        updateGeometry = true;
     }
 
     if (updateGeometry) {
@@ -142,7 +147,6 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
     if ((HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || isTransformDirty) && !_geometricModels.empty()) {
         _ospInstances.clear();
         if (!GetInstancerId().IsEmpty()) {
-            std::cout << "hdosp::adding instancer\n";
             // Retrieve instance transforms from the instancer.
             HdRenderIndex& renderIndex = delegate->GetRenderIndex();
             HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
@@ -153,7 +157,7 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
             size_t newSize = transforms.size();
 
             opp::Group group;
-            group.setParam("geometry", opp::CopiedData(*_geometricModel));
+            group.setParam("geometry", opp::CopiedData(_geometricModels));
             group.commit();
 
             // TODO: CARSON: reform instancer for ospray2
@@ -177,7 +181,6 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
         // Otherwise, create our single instance (if necessary) and update
         // the transform (if necessary).
         else {
-            std::cout << "hdosp::adding single instance\n";
             opp::Group group;
             group.setParam("geometry", opp::CopiedData(_geometricModels));
             group.commit();
@@ -202,43 +205,125 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
 }
 
 void
+HdOSPRayBasisCurves::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
+                                    HdDirtyBits dirtyBits)
+{
+    HD_TRACE_FUNCTION();
+    SdfPath const& id = GetId();
+
+    // Update _primvarSourceMap, our local cache of raw primvar data.
+    // This function pulls data from the scene delegate, but defers processing.
+    //
+    // While iterating primvars, we skip "points" (vertex positions) because
+    // the points primvar is processed by _PopulateMesh. We only call
+    // GetPrimvar on primvars that have been marked dirty.
+    //
+    // Currently, hydra doesn't have a good way of communicating changes in
+    // the set of primvars, so we only ever add and update to the primvar set.
+
+    HdPrimvarDescriptorVector primvars;
+    for (size_t i = 0; i < HdInterpolationCount; ++i) {
+        HdInterpolation interp = static_cast<HdInterpolation>(i);
+        primvars = GetPrimvarDescriptors(sceneDelegate, interp);
+        for (HdPrimvarDescriptor const& pv : primvars) {
+            const auto value = sceneDelegate->Get(id, pv.name);
+            // Points are handled outside _UpdatePrimvarSources
+            if (pv.name == HdTokens->points) {
+                if ((dirtyBits & HdChangeTracker::DirtyPoints) && value.IsHolding<VtVec3fArray>()) {
+                    _points = value.Get<VtVec3fArray>();
+                }
+                continue;
+            }
+
+            if (pv.name == "widths") {
+                if (dirtyBits & HdChangeTracker::DirtyWidths) {
+                    // auto value = sceneDelegate->Get(id, HdTokens->widths);
+                    if (value.IsHolding<VtFloatArray>())
+                        _widths = value.Get<VtFloatArray>();
+                }
+                continue;
+            }
+
+            // TODO: need to find a better way to identify the primvar for
+            // the texture coordinates
+            // texcoords
+            if ((pv.name == "Texture_uv" || pv.name == "st")
+                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                   HdOSPRayTokens->st)) {
+                if (value.IsHolding<VtVec2fArray>()) {
+                    _texcoords = value.Get<VtVec2fArray>();
+                }
+                continue;
+            }
+
+            if (pv.name == "displayColor"
+                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                   HdTokens->displayColor)) {
+                // Create 4 component displayColor/opacity array for OSPRay
+                // XXX OSPRay currently expects 4 component color array.
+                // XXX Extend OSPRay to support separate RGB/Opacity arrays
+                if (value.IsHolding<VtVec3fArray>()) {
+                    const VtVec3fArray& colors = value.Get<VtVec3fArray>();
+                    _colors.resize(colors.size());
+                    for (size_t i = 0; i < colors.size(); i++) {
+                        _colors[i] = { colors[i].data()[0], colors[i].data()[1],
+                                       colors[i].data()[2], 1.f };
+                    }
+                    if (!_colors.empty()) {
+                        if (_colors.size() > 1) {
+                            _singleColor = { 1.f, 1.f, 1.f, 1.f };
+                        } else {
+                            _singleColor = { _colors[0][0], _colors[0][1],
+                                             _colors[0][2], 1.f };
+                        }
+                    }
+                }
+                continue;
+            }
+
+            if (pv.name == "displayOpacity"
+                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+                                                   HdTokens->displayOpacity)) {
+                    std::cout << "hdospBC: has displayOpacity\n";
+                // XXX assuming displayOpacity can't exist without
+                // displayColor and/or have a different size
+                if (value.IsHolding<VtFloatArray>()) {
+                    const VtFloatArray& opacities = value.Get<VtFloatArray>();
+                    if (_colors.size() < opacities.size())
+                        _colors.resize(opacities.size());
+                    for (size_t i = 0; i < opacities.size(); i++)
+                        _colors[i].data()[3] = opacities[i];
+                    if (!_colors.empty())
+                        _singleColor[3] = _colors[0][3];
+                }
+                continue;
+            }
+
+        }
+    }
+}
+
+void
 HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
                                  TfToken const& reprToken,
                                  HdDirtyBits* dirtyBitsState,
                                HdOSPRayRenderParam* renderParam)
 {
-    std::cout << "hdosprayBC::updateosprep" << std::endl;
     bool valid = false;
+    bool hasWidths = (_widths.size() == _points.size());
     if (_points.empty()) {
         std::cout << "points empty\n";
-        TF_CODING_ERROR("_UpdateOSPRayRepr: points empty");
-    } else if (_widths.empty()) {
-        std::cout << "widths empty\n";
-        TF_CODING_ERROR("_UpdateOSPRayRepr: widths empty");
-    } //else if (_indices.empty()) TF_RUNTIME_ERROR("_UpdateOSPRayRepr: indices empty");
-    else if (_points.size() != _widths.size()) {
-        std::cout << "points != widths\n";
-        TF_CODING_ERROR("_UpdateOSPRayRepr: points != widths");
-    } else
-        valid = true;
-
-    if (!valid) {
-      std::cout << "invalid\n";
-      return;
+        TF_RUNTIME_ERROR("_UpdateOSPRayRepr: points empty");
+        return;
     }
-
-    
-
-    std::cout << "curves points and witdths sizes: " << 
-        _points.size() << " " << _widths.size() << std::endl;
-
 
     _ospCurves = opp::Geometry("curve");
     _position_radii.clear();
 
     for (size_t i = 0; i < _points.size(); i++) {
+        const float width = hasWidths ? _widths[i] : 1.0f;
         _position_radii.emplace_back(vec4f({_points[i][0], _points[i][1], _points[i][2],
-            _widths[i]}));
+            width}));
     }
 
     opp::SharedData vertices = opp::SharedData(_position_radii.data(), OSP_VEC4F,
@@ -254,13 +339,25 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
         size_t index = 0;
         for(auto vci : vertexCounts) {
           std::vector<unsigned int> indices;
-          std::cout << "vertexCount: " << vci << std::endl;
-          for (size_t i = 0; i < vci - 3; i++) {
+          for (size_t i = 0; i < vci - size_t(3); i++) {
               indices.push_back(index++);
           }
           index += 3;
           auto geometry = opp::Geometry("curve");
           geometry.setParam("vertex.position_radius", vertices);
+          if (_colors.size() > 1) {
+              opp::SharedData colors = opp::SharedData(
+                     _colors.cdata(), OSP_VEC4F, _colors.size());
+              colors.commit();
+              geometry.setParam("vertex.color", colors);
+          }
+
+          if (_texcoords.size() > 1) {
+              opp::SharedData texcoords = opp::SharedData(
+                     _texcoords.cdata(), OSP_VEC2F, _texcoords.size());
+              texcoords.commit();
+              geometry.setParam("vertex.texcoord", texcoords);
+          }
           geometry.setParam("index", opp::CopiedData(indices));
           geometry.setParam("type", OSP_FLAT);
           if (basis == HdTokens->bSpline)
@@ -270,8 +367,18 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
           else
               TF_RUNTIME_ERROR("hdospBS::sync: unsupported curve basis");
           geometry.commit();
-          auto ospMaterial
-                 = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
+          const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
+          const HdOSPRayMaterial* material
+               = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
+                      HdPrimTypeTokens->material, GetMaterialId()));
+          opp::Material ospMaterial;
+          if (material && material->GetOSPRayMaterial()) {
+              ospMaterial = material->GetOSPRayMaterial();
+          } else {
+              // Create new ospMaterial
+              ospMaterial
+                     = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
+          }
 
           // Create new OSP Mesh
           auto gm = opp::GeometricModel(geometry);
@@ -280,41 +387,7 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
           gm.commit();
           _geometricModels.push_back(gm);
         }
-        // for(size_t i = 0 ; i < vertexCounts[0]-3; i++) {
-        //     _indices.push_back(i);
-        // }
-        // for(size_t i = 0; i < _topology.GetNumCurves(); i++) {
-        //     _indices.push_back(i);
-        //     // _indices.push_back(i+1);
-        //     // _indices.push_back(i+2);
-        //     // _indices.push_back(i+3);
-        // }
     }
-    // opp::SharedData indices = opp::SharedData(
-    //     _indices.data(), OSP_UINT, _indices.size());
-    // indices.commit();
-    // std::cout << "curves topology type: " << _topology.GetCurveType().GetString() << std::endl;
-    // std::cout << "curves topology basis: " << _topology.GetCurveBasis().GetString() << std::endl;
-    // std::cout << "curves wrap: " << _topology.GetCurveWrap().GetString() << std::endl;
-    // _ospCurves.setParam("index", indices);
-    // _ospCurves.setParam("type", OSP_FLAT);
-    // if (basis == HdTokens->bSpline)
-    //     _ospCurves.setParam("basis", OSP_BSPLINE);
-    // else if (basis == HdTokens->catmullRom)
-    //     _ospCurves.setParam("basis", OSP_CATMULL_ROM);
-    // else
-    //     TF_RUNTIME_ERROR("hdospBS::sync: unsupported curve basis");
-    // _ospCurves.commit();
-
-    // auto ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
-
-    // // Create new OSP Mesh
-    // if (_geometricModel)
-    //     delete _geometricModel;
-    // _geometricModel = new opp::GeometricModel(_ospCurves);
-
-    // _geometricModel->setParam("material", ospMaterial);
-    // _geometricModel->commit();
 
     renderParam->UpdateModelVersion();
 
@@ -328,7 +401,6 @@ void
 HdOSPRayBasisCurves::AddOSPInstances(std::vector<opp::Instance>& instanceList) const
 {
     if (IsVisible()) {
-    std::cout << "hdospbc::addospinstances: " << _ospInstances.size() << std::endl;
         instanceList.insert(instanceList.end(), _ospInstances.begin(),
                             _ospInstances.end());
     }

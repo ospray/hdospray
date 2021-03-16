@@ -309,13 +309,7 @@ HdOSPRayRenderDelegate::CreateRprim(TfToken const& typeId,
     if (typeId == HdPrimTypeTokens->mesh) {
         return new HdOSPRayMesh(rprimId, instancerId);
     } else if (typeId == HdPrimTypeTokens->basisCurves) {
-        auto curves = new HdOSPRayBasisCurves(rprimId, instancerId);
-        std::cout << "created curves" << std::endl;
-        // static int count = 0;
-        // if (count++ < 1) {
-            // std::cout << "returning curves" << std::endl;
-            return curves;
-        // }
+        return new HdOSPRayBasisCurves(rprimId, instancerId);
     } else {
         TF_CODING_ERROR("Unknown Rprim Type %s", typeId.GetText());
     }

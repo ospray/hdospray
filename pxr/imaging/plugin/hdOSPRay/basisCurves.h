@@ -51,7 +51,7 @@ public:
 
     HdOSPRayBasisCurves(SdfPath const& id,
                     SdfPath const& instancerId = SdfPath());
-    virtual ~HdOSPRayBasisCurves();
+    virtual ~HdOSPRayBasisCurves() = default;
 
     virtual void Sync(HdSceneDelegate *delegate,
                       HdRenderParam   *renderParam,
@@ -74,6 +74,12 @@ protected:
 
     virtual HdDirtyBits _PropagateDirtyBits(HdDirtyBits bits) const override;
 
+    // Populate _primvarSourceMap (our local cache of primvar data) based on
+    // scene data. Primvars will be turned into samplers in _PopulateRtMesh,
+    // through the help of the _CreatePrimvarSampler() method.
+    void _UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
+                               HdDirtyBits dirtyBits);
+
     void _UpdateOSPRayRepr(HdSceneDelegate *sceneDelegate,
                      TfToken const &reprToken,
                      HdDirtyBits *dirtyBitsState,
@@ -81,7 +87,6 @@ protected:
 
 private:
     opp::Geometry _ospCurves;
-    opp::GeometricModel* _geometricModel {nullptr};
     std::vector<opp::GeometricModel> _geometricModels;
     std::vector<opp::Instance> _ospInstances;
 
@@ -91,6 +96,8 @@ private:
     VtFloatArray _widths;
     VtVec3fArray _points;
     GfMatrix4f _xfm;
+    VtVec2fArray _texcoords;
+    VtVec4fArray _colors;
     GfVec4f _singleColor { .5f, .5f, .5f, 1.f };
     bool _populated { false };
 };

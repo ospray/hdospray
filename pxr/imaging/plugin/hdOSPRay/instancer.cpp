@@ -69,7 +69,6 @@ HdOSPRayInstancer::~HdOSPRayInstancer()
 void
 HdOSPRayInstancer::_SyncPrimvars()
 {
-    std::cout << "Instancer::Sync" << std::endl;
     HD_TRACE_FUNCTION();
     HF_MALLOC_TAG_FUNCTION();
 
