@@ -61,9 +61,6 @@ HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
     , _adjacencyValid(false)
     , _normalsValid(false)
     , _refined(false)
-    , _smoothNormals(false)
-    , _doubleSided(false)
-    , _populated(false)
     , _cullStyle(HdCullStyleDontCare)
 {
 }

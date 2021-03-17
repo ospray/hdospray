@@ -61,6 +61,7 @@ HdOSPRayDomeLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
                         .Get<SdfAssetPath>();
         _textureFile = textureFilePath.GetResolvedPath();
     }
+    _visibility = true; // override light visibility for dome lights
 }
 
 void

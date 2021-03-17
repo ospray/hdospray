@@ -312,11 +312,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     // set render frames size based on interaction mode
     if (_interacting) {
         if (_currentFrame.width
-            != int(float(_width) / _interactiveFrameBufferScale)) {
+            != (unsigned int)(float(_width) / _interactiveFrameBufferScale)) {
             _currentFrame.width
-                   = int(float(_width) / _interactiveFrameBufferScale);
+                   = (unsigned int)(float(_width) / _interactiveFrameBufferScale);
             _currentFrame.height
-                   = int(float(_height) / _interactiveFrameBufferScale);
+                   = (unsigned int)(float(_height) / _interactiveFrameBufferScale);
             _currentFrame.colorBuffer.resize(_currentFrame.width
                                                     * _currentFrame.height,
                                              vec4f({ 0.f, 0.f, 0.f, 0.f }));
@@ -468,9 +468,7 @@ HdOSPRayRenderPass::ProcessLights()
     auto hdOSPRayLightIterator = hdOSPRayLights.begin();
     while (hdOSPRayLightIterator != hdOSPRayLights.end()) {
         auto hdOSPRayLight = hdOSPRayLightIterator->second;
-        if (hdOSPRayLight->IsVisible()) {
-            lights.push_back(hdOSPRayLight->GetOSPLight());
-        }
+        lights.push_back(hdOSPRayLight->GetOSPLight());
         hdOSPRayLightIterator++;
     }
 

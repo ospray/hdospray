@@ -117,7 +117,7 @@ protected:
     // The transformation of the light source in the scene.
     GfMatrix4d _transform;
 
-    // if the light source should be directly visible or not.
+    // if the light source should be directly visible or not.  domelight overrides to true
     bool _visibility { true };
 
     // reference to the equivalent OSPLight

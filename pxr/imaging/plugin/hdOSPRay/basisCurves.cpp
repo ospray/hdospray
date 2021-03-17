@@ -236,7 +236,6 @@ HdOSPRayBasisCurves::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
             }
             if (pv.name == HdTokens->normals) {
                 if ((dirtyBits & HdChangeTracker::DirtyPoints) && value.IsHolding<VtVec3fArray>()) {
-                    std::cout << "normals\n";
                     _normals = value.Get<VtVec3fArray>();
                 }
                 continue;
