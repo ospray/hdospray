@@ -99,6 +99,8 @@ protected:
         GfVec3f color { 1.0f, 1.0f, 1.0f };
         bool enableColorTemperature { false };
         float colorTemperature { 6500.0f };
+        // gamma correction on color and intensity
+        GfVec3f gamma { 1.0f, 1.0f, 1.0f };
         // multiplier on diffuse interactions
         float diffuse { 1.0f };
         // multiplier on specular interactions
@@ -118,6 +120,8 @@ protected:
     GfMatrix4d _transform;
 
     // if the light source should be directly visible or not.  domelight overrides to true
+    bool _cameraVisibility { true };
+    // if light source is enabled and contributes to scene
     bool _visibility { true };
 
     // reference to the equivalent OSPLight

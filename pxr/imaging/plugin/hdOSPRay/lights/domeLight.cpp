@@ -61,7 +61,7 @@ HdOSPRayDomeLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
                         .Get<SdfAssetPath>();
         _textureFile = textureFilePath.GetResolvedPath();
     }
-    _visibility = true; // override light visibility for dome lights
+    _cameraVisibility = true; // override light visibility for dome lights
 }
 
 void
@@ -73,12 +73,10 @@ HdOSPRayDomeLight::_PrepareOSPLight()
     upDirection = _transform.Transform(upDirection);
     centerDirection = _transform.Transform(centerDirection);
 
-    float intensity = 1.0f;
-    if (_emissionParam.exposure != 0.0f) {
-        intensity = pow(2.0f, _emissionParam.exposure);
-    } else {
-        intensity = _emissionParam.intensity;
-    }
+    float intensity = _emissionParam.intensity;
+    if (_emissionParam.exposure != 0.0f)
+        intensity *= pow(2.0f, _emissionParam.exposure);
+    //intensity = pow(intensity, 1.f/2.2f);
 
     _hdriTexture = LoadOIIOTexture2D(_textureFile);
 
@@ -95,7 +93,7 @@ HdOSPRayDomeLight::_PrepareOSPLight()
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));
     _ospLight.setParam("intensity", intensity);
-    _ospLight.setParam("visible", _visibility);
+    _ospLight.setParam("visible", _cameraVisibility);
     _ospLight.commit();
 }
 

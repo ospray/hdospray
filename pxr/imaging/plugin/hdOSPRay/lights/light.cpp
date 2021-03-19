@@ -93,13 +93,23 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         }
     }
 
-    _visibility = HdOSPRayConfig::GetInstance().lightsVisible;
+    _cameraVisibility = HdOSPRayConfig::GetInstance().lightsVisible;
+    _visibility = sceneDelegate->GetVisible(id);
 
     // Extract common Lighting Params
     if (bits & DirtyParams) {
+        auto gamma = sceneDelegate->GetLightParamValue(id, HdLightTokens->color);
+        if (gamma.IsHolding<GfVec3f>()) {
+            _emissionParam.gamma = gamma.Get<GfVec3f>();
+            std::cout << "gamma: " << _emissionParam.gamma << std::endl;
+        }
         _emissionParam.color
                = sceneDelegate->GetLightParamValue(id, HdLightTokens->color)
                         .Get<GfVec3f>();
+        //gamma correction
+        _emissionParam.color[0] = pow(_emissionParam.color[0], 2.2f);
+        _emissionParam.color[1] = pow(_emissionParam.color[1], 2.2f);
+        _emissionParam.color[2] = pow(_emissionParam.color[2], 2.2f);
         _emissionParam.enableColorTemperature
                = sceneDelegate
                         ->GetLightParamValue(
@@ -113,6 +123,7 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         _emissionParam.diffuse
                = sceneDelegate->GetLightParamValue(id, HdLightTokens->diffuse)
                         .Get<float>();
+        _emissionParam.diffuse = pow(_emissionParam.diffuse, 2.2f);
         _emissionParam.specular
                = sceneDelegate->GetLightParamValue(id, HdLightTokens->specular)
                         .Get<float>();

@@ -60,12 +60,9 @@ HdOSPRayDiskLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
 void
 HdOSPRayDiskLight::_PrepareOSPLight()
 {
-    float intensity = 1.0f;
-    if (_emissionParam.exposure != 0.0f) {
-        intensity = pow(2.0f, _emissionParam.exposure);
-    } else {
-        intensity = _emissionParam.intensity;
-    }
+    float intensity = _emissionParam.intensity;
+    if (_emissionParam.exposure != 0.0f)
+        intensity *= pow(2.0f, _emissionParam.exposure);
 
     // the initial center of the disk
     GfVec3f position(0, 0, 0);
@@ -115,7 +112,7 @@ HdOSPRayDiskLight::_PrepareOSPLight()
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));
     _ospLight.setParam("intensity", intensity);
-    _ospLight.setParam("visible", _visibility);
+    _ospLight.setParam("visible", _cameraVisibility);
     _ospLight.commit();
 }
 

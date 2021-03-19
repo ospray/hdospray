@@ -468,7 +468,8 @@ HdOSPRayRenderPass::ProcessLights()
     auto hdOSPRayLightIterator = hdOSPRayLights.begin();
     while (hdOSPRayLightIterator != hdOSPRayLights.end()) {
         auto hdOSPRayLight = hdOSPRayLightIterator->second;
-        lights.push_back(hdOSPRayLight->GetOSPLight());
+        if (hdOSPRayLight->IsVisible())
+            lights.push_back(hdOSPRayLight->GetOSPLight());
         hdOSPRayLightIterator++;
     }
 
