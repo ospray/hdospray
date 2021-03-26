@@ -236,8 +236,8 @@ private:
 
     // Draw styles.
     bool _refined;
-    bool _smoothNormals {false};
-    bool _doubleSided {false};
+    bool _smoothNormals { false };
+    bool _doubleSided { false };
     HdCullStyle _cullStyle;
     int _tessellationRate { 32 };
 

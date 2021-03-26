@@ -27,9 +27,9 @@
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/pxr.h"
 
+#include "basisCurves.h"
 #include "lights/light.h"
 #include "mesh.h"
-#include "basisCurves.h"
 
 #include "ospray/ospray_cpp.h"
 #include "ospray/ospray_cpp/ext/rkcommon.h"

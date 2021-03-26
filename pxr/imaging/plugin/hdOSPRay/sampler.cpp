@@ -45,8 +45,9 @@ HdOSPRayBufferSampler::Sample(int index, void* value,
     // *static_cast<ElementType*>(value) =
     //     static_cast<ElementType*>(_buffer.GetData())[index];
     std::copy(static_cast<const uint8_t*>(_buffer.GetData()) + offset,
-      static_cast<const uint8_t*>(_buffer.GetData()) + offset + elemSize,
-      reinterpret_cast<uint8_t*>(value));
+              static_cast<const uint8_t*>(_buffer.GetData()) + offset
+                     + elemSize,
+              reinterpret_cast<uint8_t*>(value));
 
     return true;
 }

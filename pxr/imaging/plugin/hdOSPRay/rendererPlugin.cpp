@@ -70,9 +70,13 @@ HdOSPRayRendererPlugin::CreateRenderDelegate()
 
         ospDeviceSetStatusFunc(device,
                                [](const char* msg) { std::cout << msg; });
-        ospDeviceSetErrorCallback(device, [](void*, OSPError e, const char* msg) {
-            std::cerr << "OSPRAY ERROR [" << e << "]: " << msg << std::endl;
-        }, nullptr);
+        ospDeviceSetErrorCallback(
+               device,
+               [](void*, OSPError e, const char* msg) {
+                   std::cerr << "OSPRAY ERROR [" << e << "]: " << msg
+                             << std::endl;
+               },
+               nullptr);
 
         ospDeviceCommit(device);
     }

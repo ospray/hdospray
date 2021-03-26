@@ -98,7 +98,8 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
 
     // Extract common Lighting Params
     if (bits & DirtyParams) {
-        auto gamma = sceneDelegate->GetLightParamValue(id, HdLightTokens->color);
+        auto gamma
+               = sceneDelegate->GetLightParamValue(id, HdLightTokens->color);
         if (gamma.IsHolding<GfVec3f>()) {
             _emissionParam.gamma = gamma.Get<GfVec3f>();
         }

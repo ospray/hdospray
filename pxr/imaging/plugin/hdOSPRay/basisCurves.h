@@ -24,14 +24,13 @@
 #ifndef HDOSPRAY_BASISCURVES_H
 #define HDOSPRAY_BASISCURVES_H
 
-
-#include "pxr/pxr.h"
-#include "pxr/imaging/hd/basisCurves.h"
-#include "pxr/imaging/hd/enums.h"
-#include "pxr/usd/sdf/path.h"
-#include "pxr/base/vt/array.h"
 #include "pxr/base/gf/matrix4f.h"
 #include "pxr/base/gf/vec2f.h"
+#include "pxr/base/vt/array.h"
+#include "pxr/imaging/hd/basisCurves.h"
+#include "pxr/imaging/hd/enums.h"
+#include "pxr/pxr.h"
+#include "pxr/usd/sdf/path.h"
 
 #include "ospray/ospray_cpp.h"
 #include "ospray/ospray_cpp/ext/rkcommon.h"
@@ -50,13 +49,12 @@ public:
     HF_MALLOC_TAG_NEW("new HdOSPRayBasisCurves");
 
     HdOSPRayBasisCurves(SdfPath const& id,
-                    SdfPath const& instancerId = SdfPath());
+                        SdfPath const& instancerId = SdfPath());
     virtual ~HdOSPRayBasisCurves() = default;
 
-    virtual void Sync(HdSceneDelegate *delegate,
-                      HdRenderParam   *renderParam,
-                      HdDirtyBits     *dirtyBits,
-                      TfToken const   &reprToken) override;
+    virtual void Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
+                      HdDirtyBits* dirtyBits,
+                      TfToken const& reprToken) override;
 
     virtual HdDirtyBits GetInitialDirtyBitsMask() const override;
 
@@ -64,13 +62,15 @@ public:
     /// destroy the geometry object in the ospray scene graph.
     ///   \param renderParam An HdOSPRayRenderParam object containing top-level
     ///                      ospray state.
-    virtual void Finalize(HdRenderParam* renderParam) override {}
+    virtual void Finalize(HdRenderParam* renderParam) override
+    {
+    }
 
     void AddOSPInstances(std::vector<opp::Instance>& instanceList) const;
 
 protected:
-    virtual void _InitRepr(TfToken const &reprToken,
-                           HdDirtyBits *dirtyBits) override;
+    virtual void _InitRepr(TfToken const& reprToken,
+                           HdDirtyBits* dirtyBits) override;
 
     virtual HdDirtyBits _PropagateDirtyBits(HdDirtyBits bits) const override;
 
@@ -80,10 +80,10 @@ protected:
     void _UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                                HdDirtyBits dirtyBits);
 
-    void _UpdateOSPRayRepr(HdSceneDelegate *sceneDelegate,
-                     TfToken const &reprToken,
-                     HdDirtyBits *dirtyBitsState,
-                     HdOSPRayRenderParam* renderParam);
+    void _UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
+                           TfToken const& reprToken,
+                           HdDirtyBits* dirtyBitsState,
+                           HdOSPRayRenderParam* renderParam);
 
 private:
     opp::Geometry _ospCurves;

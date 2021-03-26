@@ -124,10 +124,10 @@ private:
 
     // The sample buffer is cleared in Execute(), so this flag records whether
     // ResetImage() has been called since the last Execute().
-    bool _pendingResetImage {true};
-    bool _pendingModelUpdate {true};
-    bool _pendingLightUpdate {true};
-    bool _pendingSettingsUpdate {true};
+    bool _pendingResetImage { true };
+    bool _pendingModelUpdate { true };
+    bool _pendingLightUpdate { true };
+    bool _pendingSettingsUpdate { true };
 
     opp::FrameBuffer _frameBuffer;
     opp::FrameBuffer _interactiveFrameBuffer;
@@ -147,9 +147,9 @@ private:
     RenderFrame _previousFrame;
 
     // The width of the viewport we're rendering into.
-    unsigned int _width {0};
+    unsigned int _width { 0 };
     // The height of the viewport we're rendering into.
-    unsigned int _height {0};
+    unsigned int _height { 0 };
 
     opp::Camera _camera;
 

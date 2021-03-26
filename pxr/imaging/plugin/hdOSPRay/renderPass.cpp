@@ -213,7 +213,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             // and convert the image into a GL-compatible format.
             vec4f* rgba = static_cast<vec4f*>(frameBuffer.map(OSP_FB_COLOR));
             std::copy(rgba, rgba + _currentFrame.width * _currentFrame.height,
-              _currentFrame.colorBuffer.data());
+                      _currentFrame.colorBuffer.data());
             frameBuffer.unmap(rgba);
             DisplayRenderBuffer(_currentFrame);
             _previousFrame = _currentFrame;
@@ -257,8 +257,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                = opp::FrameBuffer((int)_width, (int)_height, OSP_FB_RGBA32F,
                                   OSP_FB_COLOR | OSP_FB_ACCUM |
 #if HDOSPRAY_ENABLE_DENOISER
-                                        OSP_FB_NORMAL | OSP_FB_ALBEDO
-                                        | OSP_FB_VARIANCE | OSP_FB_DEPTH |
+                                         OSP_FB_NORMAL | OSP_FB_ALBEDO
+                                         | OSP_FB_VARIANCE | OSP_FB_DEPTH |
 #endif
                                          0);
         _frameBuffer.commit();
@@ -314,9 +314,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         if (_currentFrame.width
             != (unsigned int)(float(_width) / _interactiveFrameBufferScale)) {
             _currentFrame.width
-                   = (unsigned int)(float(_width) / _interactiveFrameBufferScale);
+                   = (unsigned int)(float(_width)
+                                    / _interactiveFrameBufferScale);
             _currentFrame.height
-                   = (unsigned int)(float(_height) / _interactiveFrameBufferScale);
+                   = (unsigned int)(float(_height)
+                                    / _interactiveFrameBufferScale);
             _currentFrame.colorBuffer.resize(_currentFrame.width
                                                     * _currentFrame.height,
                                              vec4f({ 0.f, 0.f, 0.f, 0.f }));

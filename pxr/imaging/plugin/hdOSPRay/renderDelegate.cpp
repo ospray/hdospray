@@ -37,9 +37,9 @@
 #include "pxr/imaging/hdOSPRay/lights/rectLight.h"
 #include "pxr/imaging/hdOSPRay/lights/sphereLight.h"
 //#include "pxr/imaging/hdOSPRay/simpleLight.h"
+#include "pxr/imaging/hdOSPRay/basisCurves.h"
 #include "pxr/imaging/hdOSPRay/material.h"
 #include "pxr/imaging/hdOSPRay/mesh.h"
-#include "pxr/imaging/hdOSPRay/basisCurves.h"
 // XXX: Add other Rprim types later
 #include "pxr/imaging/hd/camera.h"
 // XXX: Add other Sprim types later
@@ -97,9 +97,9 @@ HdOSPRayRenderDelegate::_Initialize()
     std::cout << "loading ptex" << std::endl;
     OSPError err = ospLoadModule("ptex");
     if (err == OSP_NO_ERROR)
-      std::cout << "loaded ptex" << std::endl;
+        std::cout << "loaded ptex" << std::endl;
     else
-      std::cout << "error loading ptex" << std::endl;
+        std::cout << "error loading ptex" << std::endl;
 #endif
 
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
