@@ -257,8 +257,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                = opp::FrameBuffer((int)_width, (int)_height, OSP_FB_RGBA32F,
                                   OSP_FB_COLOR | OSP_FB_ACCUM |
 #if HDOSPRAY_ENABLE_DENOISER
-                                         OSP_FB_NORMAL | OSP_FB_ALBEDO
-                                         | OSP_FB_VARIANCE | OSP_FB_DEPTH |
+                                        OSP_FB_NORMAL | OSP_FB_ALBEDO
+                                        | OSP_FB_VARIANCE | OSP_FB_DEPTH |
 #endif
                                          0);
         _frameBuffer.commit();
