@@ -23,6 +23,7 @@
 //
 
 #include "pxr/imaging/hdOSPRay/texture.h"
+#include "pxr/imaging/hdOSPRay/config.h"
 
 #include "rkcommon/math/vec.h"
 
@@ -66,7 +67,8 @@ LoadPtexTexture(std::string file)
         return nullptr;
     opp::Texture ospTexture = opp::Texture("ptex");
     ospTexture.setParam("filename", file);
-    ospTexture.setParam("gamma", 2.2f);
+    if (HdOSPRayConfig::GetInstance().useTextureGammaCorrection)
+        ospTexture.setParam("gamma", 2.2f);
     return ospTexture;
 }
 
