@@ -93,7 +93,6 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         }
     }
 
-    _cameraVisibility = HdOSPRayConfig::GetInstance().lightsVisible;
     _visibility = sceneDelegate->GetVisible(id);
 
     // Extract common Lighting Params

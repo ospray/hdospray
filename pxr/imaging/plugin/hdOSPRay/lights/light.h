@@ -119,10 +119,7 @@ protected:
     // The transformation of the light source in the scene.
     GfMatrix4d _transform;
 
-    // if the light source should be directly visible or not.  domelight
-    // overrides to true
-    bool _cameraVisibility { true };
-    // if light source is enabled and contributes to scene
+    // if light source is visible to the camera
     bool _visibility { true };
 
     // reference to the equivalent OSPLight

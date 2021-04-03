@@ -112,7 +112,7 @@ HdOSPRayDiskLight::_PrepareOSPLight()
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));
     _ospLight.setParam("intensity", intensity);
-    _ospLight.setParam("visible", _cameraVisibility);
+    _ospLight.setParam("visible", _visibility);
     _ospLight.commit();
 }
 

@@ -67,8 +67,7 @@ LoadPtexTexture(std::string file)
         return nullptr;
     opp::Texture ospTexture = opp::Texture("ptex");
     ospTexture.setParam("filename", file);
-    if (HdOSPRayConfig::GetInstance().useTextureGammaCorrection)
-        ospTexture.setParam("gamma", 2.2f);
+    ospTexture.setParam("linear", false);
     return ospTexture;
 }
 

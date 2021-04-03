@@ -467,13 +467,9 @@ HdOSPRayRenderPass::ProcessLights()
 
     // push scene lights
     const auto hdOSPRayLights = _renderParam->GetHdOSPRayLights();
-    auto hdOSPRayLightIterator = hdOSPRayLights.begin();
-    while (hdOSPRayLightIterator != hdOSPRayLights.end()) {
-        auto hdOSPRayLight = hdOSPRayLightIterator->second;
-        if (hdOSPRayLight->IsVisible())
-            lights.push_back(hdOSPRayLight->GetOSPLight());
-        hdOSPRayLightIterator++;
-    }
+    std::for_each(hdOSPRayLights.begin(), hdOSPRayLights.end(), [&](auto l){
+        lights.push_back(l.second->GetOSPLight());
+    });
 
     float glToPTLightIntensityMultiplier = 1.f;
     if (_eyeLight || _keyLight || _fillLight || _backLight)

@@ -191,11 +191,6 @@ public:
     /// Override with *HDOSPRAY_BACK_LIGHT*.
     bool backLight { false };
 
-    ///  Camera rays show light source geometry
-    ///
-    /// Override with *HDOSPRAY_LIGHTS_VISIBLE*.
-    bool lightsVisible { true };
-
     /// ptex texture lookups are calculated at pow(c, 2.2)
     ///
     ///  Override with *HDOSPRAY_USE_TEXTURE_GAMMA_CORRECTION*
