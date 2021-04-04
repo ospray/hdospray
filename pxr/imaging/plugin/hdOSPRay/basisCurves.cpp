@@ -339,67 +339,71 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
     }
 
     auto type = _topology.GetCurveType();
+    if (type != HdTokens->cubic) //TODO: support hdTokens->linear
+        TF_RUNTIME_ERROR("hdosp::basisCurves - Curve type not supported");
     auto basis = _topology.GetCurveBasis();
-    if (_indices.empty()) {
-        _indices.reserve(_topology.GetNumCurves());
-        auto vertexCounts = _topology.GetCurveVertexCounts();
-        size_t index = 0;
-        for (auto vci : vertexCounts) {
-            std::vector<unsigned int> indices;
-            for (size_t i = 0; i < vci - size_t(3); i++) {
-                indices.push_back(index++);
-            }
-            index += 3;
-            auto geometry = opp::Geometry("curve");
-            geometry.setParam("vertex.position_radius", vertices);
-            if (_colors.size() > 1) {
-                opp::SharedData colors = opp::SharedData(
-                       _colors.cdata(), OSP_VEC4F, _colors.size());
-                colors.commit();
-                geometry.setParam("vertex.color", colors);
-            }
-
-            if (_texcoords.size() > 1) {
-                opp::SharedData texcoords = opp::SharedData(
-                       _texcoords.cdata(), OSP_VEC2F, _texcoords.size());
-                texcoords.commit();
-                geometry.setParam("vertex.texcoord", texcoords);
-            }
-
-            if (hasNormals)
-                geometry.setParam("vertex.normal", normals);
-
-            geometry.setParam("index", opp::CopiedData(indices));
-            geometry.setParam("type", OSP_ROUND);
-            if (hasNormals)
-                geometry.setParam("type", OSP_RIBBON);
-            if (basis == HdTokens->bSpline)
-                geometry.setParam("basis", OSP_BSPLINE);
-            else if (basis == HdTokens->catmullRom)
-                geometry.setParam("basis", OSP_CATMULL_ROM);
+    const bool hasIndices = !_indices.empty();
+    auto vertexCounts = _topology.GetCurveVertexCounts();
+    size_t index = 0;
+    for (auto vci : vertexCounts) {
+        std::vector<unsigned int> indices;
+        for (size_t i = 0; i < vci - size_t(3); i++) {
+            if (hasIndices)
+                indices.push_back(_indices[index]);
             else
-                TF_RUNTIME_ERROR("hdospBS::sync: unsupported curve basis");
-            geometry.commit();
-            const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
-            const HdOSPRayMaterial* material
-                   = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
-                          HdPrimTypeTokens->material, GetMaterialId()));
-            opp::Material ospMaterial;
-            if (material && material->GetOSPRayMaterial()) {
-                ospMaterial = material->GetOSPRayMaterial();
-            } else {
-                // Create new ospMaterial
-                ospMaterial
-                       = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
-            }
-
-            // Create new OSP Mesh
-            auto gm = opp::GeometricModel(geometry);
-
-            gm.setParam("material", ospMaterial);
-            gm.commit();
-            _geometricModels.push_back(gm);
+                indices.push_back(index);
+            index++;
         }
+        index += 3;
+        auto geometry = opp::Geometry("curve");
+        geometry.setParam("vertex.position_radius", vertices);
+        if (_colors.size() > 1) {
+            opp::SharedData colors = opp::SharedData(
+                    _colors.cdata(), OSP_VEC4F, _colors.size());
+            colors.commit();
+            geometry.setParam("vertex.color", colors);
+        }
+
+        if (_texcoords.size() > 1) {
+            opp::SharedData texcoords = opp::SharedData(
+                    _texcoords.cdata(), OSP_VEC2F, _texcoords.size());
+            texcoords.commit();
+            geometry.setParam("vertex.texcoord", texcoords);
+        }
+
+        if (hasNormals)
+            geometry.setParam("vertex.normal", normals);
+
+        geometry.setParam("index", opp::CopiedData(indices));
+        geometry.setParam("type", OSP_ROUND);
+        if (hasNormals)
+            geometry.setParam("type", OSP_RIBBON);
+        if (basis == HdTokens->bSpline)
+            geometry.setParam("basis", OSP_BSPLINE);
+        else if (basis == HdTokens->catmullRom)
+            geometry.setParam("basis", OSP_CATMULL_ROM);
+        else
+            TF_RUNTIME_ERROR("hdospBS::sync: unsupported curve basis");
+        geometry.commit();
+        const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
+        const HdOSPRayMaterial* material
+                = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
+                        HdPrimTypeTokens->material, GetMaterialId()));
+        opp::Material ospMaterial;
+        if (material && material->GetOSPRayMaterial()) {
+            ospMaterial = material->GetOSPRayMaterial();
+        } else {
+            // Create new ospMaterial
+            ospMaterial
+                    = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
+        }
+
+        // Create new OSP Mesh
+        auto gm = opp::GeometricModel(geometry);
+
+        gm.setParam("material", ospMaterial);
+        gm.commit();
+        _geometricModels.push_back(gm);
     }
 
     renderParam->UpdateModelVersion();
