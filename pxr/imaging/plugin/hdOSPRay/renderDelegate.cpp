@@ -94,12 +94,9 @@ HdOSPRayRenderDelegate::_Initialize()
 {
 
 #ifdef HDOSPRAY_PLUGIN_PTEX
-    std::cout << "loading ptex" << std::endl;
     OSPError err = ospLoadModule("ptex");
-    if (err == OSP_NO_ERROR)
-        std::cout << "loaded ptex" << std::endl;
-    else
-        std::cout << "error loading ptex" << std::endl;
+    if (err != OSP_NO_ERROR)
+        TF_RUNTIME_ERROR("hdosp::renderDelegate - error loading ptex");
 #endif
 
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
@@ -128,8 +125,10 @@ HdOSPRayRenderDelegate::_Initialize()
            { "Toggle denoiser", HdOSPRayRenderSettingsTokens->useDenoiser,
              VtValue(bool(HdOSPRayConfig::GetInstance().useDenoiser)) });
     _settingDescriptors.push_back(
-           { "Toggle texture gamma", HdOSPRayRenderSettingsTokens->useTextureGammaCorrection,
-             VtValue(bool(HdOSPRayConfig::GetInstance().useTextureGammaCorrection)) });
+           { "Toggle texture gamma",
+             HdOSPRayRenderSettingsTokens->useTextureGammaCorrection,
+             VtValue(bool(HdOSPRayConfig::GetInstance()
+                                 .useTextureGammaCorrection)) });
     _settingDescriptors.push_back(
            { "Pixelfilter type", HdOSPRayRenderSettingsTokens->pixelFilterType,
              VtValue(int(HdOSPRayConfig::GetInstance().pixelFilterType)) });

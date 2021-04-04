@@ -339,7 +339,7 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
     }
 
     auto type = _topology.GetCurveType();
-    if (type != HdTokens->cubic) //TODO: support hdTokens->linear
+    if (type != HdTokens->cubic) // TODO: support hdTokens->linear
         TF_RUNTIME_ERROR("hdosp::basisCurves - Curve type not supported");
     auto basis = _topology.GetCurveBasis();
     const bool hasIndices = !_indices.empty();
@@ -358,15 +358,15 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
         auto geometry = opp::Geometry("curve");
         geometry.setParam("vertex.position_radius", vertices);
         if (_colors.size() > 1) {
-            opp::SharedData colors = opp::SharedData(
-                    _colors.cdata(), OSP_VEC4F, _colors.size());
+            opp::SharedData colors = opp::SharedData(_colors.cdata(), OSP_VEC4F,
+                                                     _colors.size());
             colors.commit();
             geometry.setParam("vertex.color", colors);
         }
 
         if (_texcoords.size() > 1) {
             opp::SharedData texcoords = opp::SharedData(
-                    _texcoords.cdata(), OSP_VEC2F, _texcoords.size());
+                   _texcoords.cdata(), OSP_VEC2F, _texcoords.size());
             texcoords.commit();
             geometry.setParam("vertex.texcoord", texcoords);
         }
@@ -387,15 +387,14 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
         geometry.commit();
         const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
         const HdOSPRayMaterial* material
-                = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
-                        HdPrimTypeTokens->material, GetMaterialId()));
+               = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
+                      HdPrimTypeTokens->material, GetMaterialId()));
         opp::Material ospMaterial;
         if (material && material->GetOSPRayMaterial()) {
             ospMaterial = material->GetOSPRayMaterial();
         } else {
             // Create new ospMaterial
-            ospMaterial
-                    = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
+            ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
         }
 
         // Create new OSP Mesh
