@@ -86,10 +86,4 @@ Hydra Settings.
 - Path tracing
 - Physically-based materials
 - Principled shader (similar to Disney BSDF shader)
-- Ptex in < v0.3 (Currently awaiting update for OSPRay 2.x)
-
-## TODOs
-
-- Picking does not work in HdOSPRay.
-- Volumes are not yet implemented.
-- Some types of animations do not work correctly.
+- Ptex support
