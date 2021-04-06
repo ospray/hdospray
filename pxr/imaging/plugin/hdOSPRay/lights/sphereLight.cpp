@@ -68,9 +68,7 @@ void
 HdOSPRaySphereLight::_PrepareOSPLight()
 {
 
-    float intensity = _emissionParam.intensity;
-    if (_emissionParam.exposure != 0.0f)
-        intensity *= pow(2.0f, _emissionParam.exposure);
+    float intensity = _emissionParam.ExposedIntensity();
 
     GfVec3f position(0, 0, 0);
     position = _transform.Transform(position);

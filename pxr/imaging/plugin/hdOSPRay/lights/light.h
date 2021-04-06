@@ -112,6 +112,11 @@ protected:
         // if the total emission (i.e., power) should not scale with the surface
         // area
         bool normalize { false };
+        //  returns intensity multiplied by 2^exposure
+        inline float ExposedIntensity()
+        {
+            return intensity * pow(2.0f, exposure);
+        }
     };
 
     // USDLuxLight parameters to set up the emission of the light source
