@@ -67,7 +67,7 @@ LoadPtexTexture(std::string file)
         return nullptr;
     opp::Texture ospTexture = opp::Texture("ptex");
     ospTexture.setParam("filename", file);
-    ospTexture.setParam("linear", false);
+    ospTexture.setParam("sRGB", true);
     return ospTexture;
 }
 

@@ -125,11 +125,6 @@ HdOSPRayRenderDelegate::_Initialize()
            { "Toggle denoiser", HdOSPRayRenderSettingsTokens->useDenoiser,
              VtValue(bool(HdOSPRayConfig::GetInstance().useDenoiser)) });
     _settingDescriptors.push_back(
-           { "Toggle texture gamma",
-             HdOSPRayRenderSettingsTokens->useTextureGammaCorrection,
-             VtValue(bool(HdOSPRayConfig::GetInstance()
-                                 .useTextureGammaCorrection)) });
-    _settingDescriptors.push_back(
            { "Pixelfilter type", HdOSPRayRenderSettingsTokens->pixelFilterType,
              VtValue(int(HdOSPRayConfig::GetInstance().pixelFilterType)) });
     _settingDescriptors.push_back(

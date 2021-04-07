@@ -79,9 +79,6 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_PIXELFILTER_TYPE, OSPPixelFilterTypes::OSP_PIXELF
 TF_DEFINE_ENV_SETTING(HDOSPRAY_FORCE_QUADRANGULATE, 0,
         "OSPRay force Quadrangulate meshes for debug");
 
-TF_DEFINE_ENV_SETTING(HDOSPRAY_USE_TEXTURE_GAMMA_CORRECTION, 1,
-        "OSPRay gamma correct ptex textures with pow(c, 2.2)");
-
 HdOSPRayConfig::HdOSPRayConfig()
 {
     // Read in values from the environment, clamping them to valid ranges.
@@ -103,7 +100,6 @@ HdOSPRayConfig::HdOSPRayConfig()
     forceQuadrangulate = TfGetEnvSetting(HDOSPRAY_FORCE_QUADRANGULATE);
     maxDepth = TfGetEnvSetting(HDOSPRAY_MAX_PATH_DEPTH);
     useSimpleMaterial = TfGetEnvSetting(HDOSPRAY_USE_SIMPLE_MATERIAL);
-    useTextureGammaCorrection = TfGetEnvSetting(HDOSPRAY_USE_TEXTURE_GAMMA_CORRECTION);
 
     if (TfGetEnvSetting(HDOSPRAY_PRINT_CONFIGURATION) > 0) {
         std::cout

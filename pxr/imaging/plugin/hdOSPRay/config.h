@@ -191,11 +191,6 @@ public:
     /// Override with *HDOSPRAY_BACK_LIGHT*.
     bool backLight { false };
 
-    /// ptex texture lookups are calculated at pow(c, 2.2)
-    ///
-    ///  Override with *HDOSPRAY_USE_TEXTURE_GAMMA_CORRECTION*
-    bool useTextureGammaCorrection { true };
-
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.
     std::vector<opp::Geometry> ospInstances;
