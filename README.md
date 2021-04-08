@@ -213,23 +213,21 @@ USD is also experimental, but we have not tested HdOSPRay with it.
       - USD is primarily tested with Linux, but has experimental support
         for MacOS and Windows. For a full list of USD dependencies, see
         the USD page.
-  - [OSPRay 2.2.0](http://www.ospray.org/)
-      - We recommend using ospray’s superbuild to build dependencies
-        such as embree, ospcommon, and openvkl.
-  - [OpenImageIO 1.8.9](https://sites.google.com/site/openimageio/home)
-  - CMake 3.1.1+
+      - [OSPRay 2.5.0](http://www.ospray.org/)
+          - We recommend using ospray’s superbuild to build dependencies
+            such as embree, ospcommon, and openvkl. OpenImageDenoise can
+            also be enabled through superbuild.
+      - [OpenImageIO 1.8.9](https://sites.google.com/site/openimageio/home)
+      - CMake 3.1.1+
 
 ## Optional Dependencies
 
   - [OpenImageDenoise](https://github.com/OpenImageDenoise/oidn.git)
-      - Open Image Denoise also needs be be enabled in the OSPRay build
+      - Open Image Denoise needs be be enabled in the OSPRay build.
   - [Ptex](https://github.com/wdas/ptex)
-      - Ptex support is currently limited to older versions as the
-        OSPRay module needs to be updated for OSPRay 2.x.
-      - Ptex will need to be enabled in the USD build
-      - Can be downloaded and built by the USD `build_usd.py` script
-      - [Ptex module](https://github.com/ospray/module_ptex) also needs
-        to be enabled in the OSPRay build
+      - [Ptex module](https://github.com/ospray/module_ptex) needs to be
+        enabled in the OSPRay build and the library accessible on
+        library paths
 
 ## Compiling USD on Linux/MacOS
 
@@ -406,29 +404,23 @@ renderer.*
   - Path tracing
   - Physically-based materials
   - Principled shader (similar to Disney BSDF shader)
-  - Ptex in \< v0.3 (Currently awaiting update for OSPRay 2.x)
-
-## TODOs
-
-  - Picking does not work in HdOSPRay.
-  - Volumes are not yet implemented.
-  - Some types of animations do not work correctly.
+  - Ptex support
 
 # News, Updates, and Announcements
 
   - October 12, 2020: Version v0.6 now released on GitHub
     
-      - Update to OSPRay 2.4.0
-      - Added support for opacity textures.
-      - Added adaptive view port scaling. The viewport is
-        now scaled to reach a given interactive framerate (e.g., 10fps).
-      - Fixed some bigs with animated shapes (e.g., ARKit data sets).
-      - Added support to toggle the visibility of light sources and shapes.
+        - Update to OSPRay 2.4.0
+        - Added support for opacity textures.
+        - Added adaptive view port scaling. The viewport is
+          now scaled to reach a given interactive framerate (e.g., 10fps).
+        - Fixed some bigs with animated shapes (e.g., ARKit data sets).
+        - Added support to toggle the visibility of light sources and shapes.
 
   - July 31, 2020: Version v0.5 now released on GitHub
     
       - Update to OSPRay 2.2.0.
-      - Added USDLux light support.
+      - Added UsdLux light support.
       - Asynchronous rendering.
       - Dynamic resolution for greater interaction.
       - Pixel Filters.
@@ -447,10 +439,10 @@ renderer.*
 
   - April 30, 2019: Version v0.2.2 now released on GitHub
     
-      - OSPRay version updated to 1.8.5.
-      - Added animation support.
-      - CMake targets.
       - Various bug fixes.
+      - OSPRay version updated to 1.8.5.
+      - CMake targets.
+      - Added animation support.
 
   - Mar 7, 2019: Version v0.2.1 now released on GitHub
     

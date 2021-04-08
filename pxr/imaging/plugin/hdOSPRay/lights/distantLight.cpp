@@ -62,13 +62,6 @@ HdOSPRayDistantLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
 void
 HdOSPRayDistantLight::_PrepareOSPLight()
 {
-    float intensity = 1.0f;
-    if (_emissionParam.exposure != 0.0f) {
-        intensity = pow(2.0f, _emissionParam.exposure);
-    } else {
-        intensity = _emissionParam.intensity;
-    }
-
     GfVec3f direction(0, 0, -1);
 
     // only apply the rotational part of the transformation
@@ -88,7 +81,7 @@ HdOSPRayDistantLight::_PrepareOSPLight()
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));
-    _ospLight.setParam("intensity", intensity);
+    _ospLight.setParam("intensity", _emissionParam.ExposedIntensity());
     _ospLight.setParam("visible", _visibility);
     _ospLight.commit();
 }

@@ -110,6 +110,11 @@ protected:
         // if the total emission (i.e., power) should not scale with the surface
         // area
         bool normalize { false };
+        //  returns intensity multiplied by 2^exposure
+        inline float ExposedIntensity()
+        {
+            return intensity * pow(2.0f, exposure);
+        }
     };
 
     // USDLuxLight parameters to set up the emission of the light source
@@ -117,7 +122,7 @@ protected:
     // The transformation of the light source in the scene.
     GfMatrix4d _transform;
 
-    // if the light source should be directly visible or not.
+    // if light source is visible to the camera
     bool _visibility { true };
 
     // reference to the equivalent OSPLight

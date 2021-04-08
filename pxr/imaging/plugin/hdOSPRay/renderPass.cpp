@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -92,7 +92,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("minContribution", _minContribution);
     _renderer.setParam("maxContribution", _maxContribution);
     _renderer.setParam("epsilon", 0.001f);
-    _renderer.setParam("useGeometryLights", false);
+    _renderer.setParam("geometryLights", false);
     _renderer.commit();
 
     glEnable(GL_TEXTURE_2D);
@@ -213,7 +213,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             // and convert the image into a GL-compatible format.
             vec4f* rgba = static_cast<vec4f*>(frameBuffer.map(OSP_FB_COLOR));
             std::copy(rgba, rgba + _currentFrame.width * _currentFrame.height,
-              _currentFrame.colorBuffer.data());
+                      _currentFrame.colorBuffer.data());
             frameBuffer.unmap(rgba);
             DisplayRenderBuffer(_currentFrame);
             _previousFrame = _currentFrame;
@@ -312,11 +312,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     // set render frames size based on interaction mode
     if (_interacting) {
         if (_currentFrame.width
-            != int(float(_width) / _interactiveFrameBufferScale)) {
+            != (unsigned int)(float(_width) / _interactiveFrameBufferScale)) {
             _currentFrame.width
-                   = int(float(_width) / _interactiveFrameBufferScale);
+                   = (unsigned int)(float(_width)
+                                    / _interactiveFrameBufferScale);
             _currentFrame.height
-                   = int(float(_height) / _interactiveFrameBufferScale);
+                   = (unsigned int)(float(_height)
+                                    / _interactiveFrameBufferScale);
             _currentFrame.colorBuffer.resize(_currentFrame.width
                                                     * _currentFrame.height,
                                              vec4f({ 0.f, 0.f, 0.f, 0.f }));
@@ -465,14 +467,8 @@ HdOSPRayRenderPass::ProcessLights()
 
     // push scene lights
     const auto hdOSPRayLights = _renderParam->GetHdOSPRayLights();
-    auto hdOSPRayLightIterator = hdOSPRayLights.begin();
-    while (hdOSPRayLightIterator != hdOSPRayLights.end()) {
-        auto hdOSPRayLight = hdOSPRayLightIterator->second;
-        if (hdOSPRayLight->IsVisible()) {
-            lights.push_back(hdOSPRayLight->GetOSPLight());
-        }
-        hdOSPRayLightIterator++;
-    }
+    std::for_each(hdOSPRayLights.begin(), hdOSPRayLights.end(),
+                  [&](auto l) { lights.push_back(l.second->GetOSPLight()); });
 
     float glToPTLightIntensityMultiplier = 1.f;
     if (_eyeLight || _keyLight || _fillLight || _backLight)
@@ -664,6 +660,9 @@ HdOSPRayRenderPass::ProcessInstances()
     // create new model and populate with mesh instances
     for (auto hdOSPRayMesh : _renderParam->GetHdOSPRayMeshes()) {
         hdOSPRayMesh->AddOSPInstances(_oldInstances);
+    }
+    for (auto hdOSPRayBasisCurves : _renderParam->GetHdOSPRayBasisCurves()) {
+        hdOSPRayBasisCurves->AddOSPInstances(_oldInstances);
     }
     if (!_oldInstances.empty()) {
         opp::CopiedData data = opp::CopiedData(
