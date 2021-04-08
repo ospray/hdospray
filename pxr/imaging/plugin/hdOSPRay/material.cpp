@@ -286,7 +286,6 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     ospMaterial.setParam("roughness", roughness);
     ospMaterial.setParam("normal", normal);
     ospMaterial.setParam("transmission", 1.0f - opacity);
-    ospMaterial.setParam("transmissionDepth", 400.f);
     if (opacity < 1.0f) {
         ospMaterial.setParam(
                "transmissionColor",
