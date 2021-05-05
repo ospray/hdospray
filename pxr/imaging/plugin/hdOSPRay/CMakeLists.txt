@@ -42,6 +42,7 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
       rendererPlugin
       renderDelegate
       renderPass
+      renderBuffer
       sampler
       texture
       lights/light

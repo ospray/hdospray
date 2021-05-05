@@ -28,6 +28,7 @@
 #include "pxr/imaging/hdOSPRay/instancer.h"
 #include "pxr/imaging/hdOSPRay/renderParam.h"
 #include "pxr/imaging/hdOSPRay/renderPass.h"
+#include "pxr/imaging/hdOSPRay/renderBuffer.h"
 
 #include "pxr/imaging/hd/resourceRegistry.h"
 
@@ -69,7 +70,7 @@ const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES = {
 };
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {
-    // HdPrimTypeTokens->renderBuffer,
+    HdPrimTypeTokens->renderBuffer,
 };
 
 std::mutex HdOSPRayRenderDelegate::_mutexResourceRegistry;
@@ -363,6 +364,11 @@ HdBprim*
 HdOSPRayRenderDelegate::CreateBprim(TfToken const& typeId,
                                     SdfPath const& bprimId)
 {
+    if (typeId == HdPrimTypeTokens->renderBuffer) {
+        return new HdOSPRayRenderBuffer(bprimId);
+    } else {
+        TF_CODING_ERROR("Unknown Bprim Type %s", typeId.GetText());
+    }
     return nullptr;
 }
 

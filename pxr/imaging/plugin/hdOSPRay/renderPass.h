@@ -27,6 +27,9 @@
 #include "pxr/base/gf/matrix4d.h"
 #include "pxr/imaging/hd/renderPass.h"
 #include "pxr/pxr.h"
+#include "pxr/base/tf/debug.h"
+
+#include "pxr/imaging/hdOSPRay/renderBuffer.h"
 
 #include "ospray/ospray_cpp.h"
 #include "ospray/ospray_cpp/ext/rkcommon.h"
@@ -38,6 +41,7 @@ namespace opp = ospray::cpp;
 using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
+TF_DEBUG_CODES(OSP_RP);
 
 class HdOSPRayRenderParam;
 
@@ -94,6 +98,16 @@ public:
 
     virtual void DisplayRenderBuffer(RenderFrame& renderFrame);
 
+    /// Set the aov bindings to use for rendering.
+    ///   \param aovBindings A list of aov bindings.
+    void SetAovBindings(HdRenderPassAovBindingVector const &aovBindings);
+
+    /// Get the aov bindings being used for rendering.
+    ///   \return the current aov bindings.
+    HdRenderPassAovBindingVector const& GetAovBindings() const {
+        return _aovBindings;
+    }
+
 protected:
     // -----------------------------------------------------------------------
     // HdRenderPass API
@@ -131,6 +145,9 @@ private:
 
     opp::FrameBuffer _frameBuffer;
     opp::FrameBuffer _interactiveFrameBuffer;
+    HdRenderPassAovBindingVector _aovBindings;
+    HdParsedAovTokenVector _aovNames;
+    HdOSPRayRenderBuffer _colorBuffer;
     float _currentFrameBufferScale { 1.0f };
     float _interactiveFrameBufferScale { 2.0f };
     float _interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };

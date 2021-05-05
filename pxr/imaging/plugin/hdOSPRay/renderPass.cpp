@@ -68,6 +68,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _inverseProjMatrix(1.0f) // == identity
     , _clearColor(0.0f, 0.0f, 0.0f)
     , _renderParam(renderParam)
+    , _colorBuffer(SdfPath::EmptyPath())
 {
     _world = opp::World();
     _camera = opp::Camera("perspective");
@@ -129,6 +130,7 @@ void
 HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                              TfTokenVector const& renderTags)
 {
+    TF_DEBUG_MSG(OSP_RP, "ospRP::Execute\n");
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
 
     if (!HdOSPRayConfig::GetInstance().usePathTracing) {
@@ -258,8 +260,47 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _frameBuffer.commit();
         _currentFrame.colorBuffer.resize(_width * _height,
                                          vec4f({ 0.f, 0.f, 0.f, 0.f }));
+        _colorBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32,
+                              /*multiSampled=*/false);
         interactiveFramebufferDirty = true;
         _pendingResetImage = true;
+
+        // Determine whether we need to update the renderer AOV bindings.
+        //
+        // It's possible for the passed in bindings to be empty, but that's
+        // never a legal state for the renderer, so if that's the case we add
+        // a color and depth aov.
+        //
+        // If the renderer AOV bindings are empty, force a bindings update so
+        // that we always get a chance to add color/depth on the first time
+        // through.
+        HdRenderPassAovBindingVector aovBindings
+               = renderPassState->GetAovBindings();
+        if (_aovBindings != aovBindings || _aovBindings.empty()) {
+            // _aovBindings = aovBindings;
+
+            // _renderThread->StopRender();
+            TF_DEBUG_MSG(OSP_RP, "updating aov\n");
+            if (aovBindings.size() == 0) {
+                TF_DEBUG_MSG(OSP_RP, "creating color aov\n");
+                HdRenderPassAovBinding colorAov;
+                colorAov.aovName = HdAovTokens->color;
+                colorAov.renderBuffer = &_colorBuffer;
+                colorAov.clearValue
+                       = VtValue(GfVec4f(0.0707f, 0.0707f, 0.0707f, 0.0f));
+                aovBindings.push_back(colorAov);
+                // HdRenderPassAovBinding depthAov;
+                // depthAov.aovName = HdAovTokens->depth;
+                // depthAov.renderBuffer = &_depthBuffer;
+                // depthAov.clearValue = VtValue(1.0f);
+                // aovBindings.push_back(depthAov);
+            }
+            SetAovBindings(aovBindings);
+            // In general, the render thread clears aov bindings, but make sure
+            // they are cleared initially on this thread.
+            // _renderer->Clear();
+            // needStartRender = true;
+        }
     }
 
     if (interactiveFramebufferDirty) {
@@ -365,41 +406,69 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                = frameBuffer.renderFrame(_renderer, _camera, _world);
         _numSamplesAccumulated += std::max(1, _spp);
     }
+    TF_DEBUG_MSG(OSP_RP, "ospRP::Execute done\n");
 }
 
 void
 HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
 {
+    // _colorBuffer.Map();
+    TF_DEBUG_MSG(OSP_RP, "displayRB %d\n", _aovBindings.size());
+    for (int aovIndex = 0; aovIndex < _aovBindings.size(); aovIndex++) {
+        auto aovRenderBuffer = static_cast<HdOSPRayRenderBuffer*>(
+               _aovBindings[aovIndex].renderBuffer);
+        if (_aovNames[aovIndex].name == HdAovTokens->color) {
+            TF_DEBUG_MSG(OSP_RP, "found aov color\n");
+            aovRenderBuffer->Map();
+            GfVec4f clearColor = {1.f, 1.f, 0.f, 0.f};
+            aovRenderBuffer->Clear(4, clearColor.data());
+            for (int i = 0; i < renderBuffer.width; i++) {
+                for (int j = 0; j < renderBuffer.height; j++) {
+                    // GfVec4f sample = { 1.f, 0.f, 0.f, 1.f };
+                    // &(_currentFrame.colorBuffer[j*renderBuffer.width + i].x)
+                    aovRenderBuffer->Write(GfVec3i(i, j, 1), 4,
+                        &(_currentFrame.colorBuffer[j*renderBuffer.width + i].x));
+                }
+            }
+            aovRenderBuffer->Unmap();
+            // _colorBuffer.Unmap();
+            aovRenderBuffer->Resolve();
+        }
+    }
 
-    // set initial OpenGL state
-    glEnable(GL_TEXTURE_2D);
-    glDisable(GL_LIGHTING);
-    glDisable(GL_DEPTH_TEST);
+    // // set initial OpenGL state
+    // glEnable(GL_TEXTURE_2D);
+    // glDisable(GL_LIGHTING);
+    // glDisable(GL_DEPTH_TEST);
 
-    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, renderBuffer.width,
-                 renderBuffer.height, 0, GL_RGBA, GL_FLOAT,
-                 renderBuffer.colorBuffer.data());
+    // glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+    // _currentFrame.colorBuffer.resize(0);
+    // _currentFrame.colorBuffer.resize(_width * _height,
+    //                                      vec4f({ 1.f, 0.f, 0.f, 1.f }));
+    // TF_DEBUG_MSG(OSP_RP, "ospRP::DRB %f\n", _currentFrame.colorBuffer[0][0]);
+    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, renderBuffer.width,
+    //              renderBuffer.height, 0, GL_RGBA, GL_FLOAT,
+    //              renderBuffer.colorBuffer.data());
 
-    // clear current OpenGL color buffer
-    glClear(GL_COLOR_BUFFER_BIT);
+    // // clear current OpenGL color buffer
+    // glClear(GL_COLOR_BUFFER_BIT);
 
-    // render textured quad with OSPRay frame buffer contents
-    glBegin(GL_QUADS);
+    // // render textured quad with OSPRay frame buffer contents
+    // glBegin(GL_QUADS);
 
-    glTexCoord2f(0.f, 0.f);
-    glVertex2f(0.f, 0.f);
+    // glTexCoord2f(0.f, 0.f);
+    // glVertex2f(0.f, 0.f);
 
-    glTexCoord2f(0.f, 1.f);
-    glVertex2f(0.f, _height);
+    // glTexCoord2f(0.f, 1.f);
+    // glVertex2f(0.f, _height);
 
-    glTexCoord2f(1.f, 1.f);
-    glVertex2f(_width, _height);
+    // glTexCoord2f(1.f, 1.f);
+    // glVertex2f(_width, _height);
 
-    glTexCoord2f(1.f, 0.f);
-    glVertex2f(_width, 0.f);
+    // glTexCoord2f(1.f, 0.f);
+    // glVertex2f(_width, 0.f);
 
-    glEnd();
+    // glEnd();
 }
 
 void
@@ -653,6 +722,7 @@ HdOSPRayRenderPass::ProcessInstances()
     for (auto hdOSPRayBasisCurves : _renderParam->GetHdOSPRayBasisCurves()) {
         hdOSPRayBasisCurves->AddOSPInstances(_oldInstances);
     }
+    TF_DEBUG_MSG(OSP_RP, "ospRP::process instances %d\n", _oldInstances.size());
     if (!_oldInstances.empty()) {
         opp::CopiedData data = opp::CopiedData(
                _oldInstances.data(), OSP_INSTANCE, _oldInstances.size());
@@ -662,6 +732,20 @@ HdOSPRayRenderPass::ProcessInstances()
         _world.removeParam("instance");
     }
     _pendingModelUpdate = false;
+}
+
+void
+HdOSPRayRenderPass::SetAovBindings(
+    HdRenderPassAovBindingVector const &aovBindings)
+{
+    _aovBindings = aovBindings;
+    _aovNames.resize(_aovBindings.size());
+    for (size_t i = 0; i < _aovBindings.size(); ++i) {
+        _aovNames[i] = HdParsedAovToken(_aovBindings[i].aovName);
+    }
+
+    // Re-validate the attachments.
+    // _aovBindingsNeedValidation = true;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
