@@ -47,6 +47,8 @@ private:
     // radius of the disk light
     float _radius { 1.0f };
 
+    float _openingAngle {180.0f};
+
     // the texture file to model the emission
     // Note: not supported by OSPRay yet
     std::string _textureFile;

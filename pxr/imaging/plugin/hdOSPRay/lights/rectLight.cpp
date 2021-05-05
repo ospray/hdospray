@@ -126,6 +126,11 @@ HdOSPRayRectLight::_PrepareOSPLight()
     _ospLight.setParam("edge2",
                        vec3f(osp_edge2[0], osp_edge2[1], osp_edge2[2]));
     // emission
+    if (_emissionParam.intensityQuantity
+        != OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN) {
+        _ospLight.setParam("intensityQuantity",
+                           _emissionParam.intensityQuantity);
+    }
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));

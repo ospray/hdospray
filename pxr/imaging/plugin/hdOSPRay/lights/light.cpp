@@ -35,6 +35,12 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+// clang-format off
+TF_DEFINE_PRIVATE_TOKENS(
+    HdOSPRayLightTokens,
+    (intensityQuantity)
+);
+
 HdOSPRayLight::HdOSPRayLight(SdfPath const& id)
     : HdLight(id)
 {
@@ -125,6 +131,11 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         _emissionParam.normalize
                = sceneDelegate->GetLightParamValue(id, HdLightTokens->normalize)
                         .Get<bool>();
+        auto vtLightQuantity = sceneDelegate->GetLightParamValue(id, HdOSPRayLightTokens->intensityQuantity);
+        if (vtLightQuantity.IsHolding<int>())
+        {
+            _emissionParam.intensityQuantity = (OSPIntensityQuantity)vtLightQuantity.Get<int>();
+        }
     }
 
     // query light type specific parameters
