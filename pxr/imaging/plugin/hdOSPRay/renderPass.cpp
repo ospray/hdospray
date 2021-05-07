@@ -86,7 +86,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("minContribution", _minContribution);
     _renderer.setParam("maxContribution", _maxContribution);
     _renderer.setParam("epsilon", 0.001f);
-    _renderer.setParam("geometryLights", false);
+    _renderer.setParam("geometryLights", true);
     _renderer.commit();
 
     glEnable(GL_TEXTURE_2D);
