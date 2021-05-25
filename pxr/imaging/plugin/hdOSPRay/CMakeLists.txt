@@ -22,88 +22,98 @@
 # language governing permissions and limitations under the Apache License.
 #
 
-set(PXR_PREFIX pxr/imaging)
-set(PXR_PACKAGE hdOSPRay)
-add_custom_target(shared_libs)
+add_library(hdOSPRay SHARED
+    config.cpp
+    instancer.cpp
+    mesh.cpp
+    basisCurves.cpp
+    material.cpp
+    rendererPlugin.cpp
+    renderDelegate.cpp
+    renderPass.cpp
+    renderBuffer.cpp
+    sampler.cpp
+    texture.cpp
+    lights/light.cpp
+    lights/diskLight.cpp
+    lights/distantLight.cpp
+    lights/domeLight.cpp
+    lights/rectLight.cpp
+    lights/sphereLight.cpp
+    #lights/simpleLight
+    context.h
+    renderParam.h
+    plugInfo.json
+  )
 
-option(PXR_BUILD_OSPRAY_PLUGIN "build Intel hdOSPRay rendering backend" ON)
+find_package(ospray 2.5.0 REQUIRED)
+find_package(rkcommon 1.6.0 REQUIRED)
 
-if (PXR_BUILD_OSPRAY_PLUGIN)
 
-  find_package(OpenImageIO 1.8.9 REQUIRED)
-
-  pxr_plugin(hdOSPRay
-    PUBLIC_CLASSES
-      config
-      instancer
-      mesh
-      basisCurves
-      material
-      rendererPlugin
-      renderDelegate
-      renderPass
-      renderBuffer
-      sampler
-      texture
-      lights/light
-      lights/diskLight
-      lights/distantLight
-      lights/domeLight
-      lights/rectLight
-      lights/sphereLight
-      #lights/simpleLight
-
-    PUBLIC_HEADERS
-      context.h
-      renderParam.h
-
-    RESOURCE_FILES
-      plugInfo.json
-    )
-
-  find_package(ospray 2.5.0 REQUIRED)
-  find_package(rkcommon 1.6.0 REQUIRED)
-
+if(USE_HOUDINI_USD)
   target_link_libraries(hdOSPRay PUBLIC
-    plug
-    tf
-    vt
-    gf
-    work
-    hf
-    hd
-    hdx
     ospray::ospray
     ospray::ospray_sdk
     rkcommon::rkcommon
-    ${OPENEXR_LIBRARIES}
-    ${OIIO_LIBRARIES}
+    Houdini
+    #${OPENEXR_LIBRARIES}
+    #${OIIO_LIBRARIES}
     )
+else()
+  target_include_directories(hdOSPRay PUBLIC ${PXR_INCLUDE_DIRS})
+  target_link_libraries(hdOSPRay PUBLIC
+    ospray::ospray
+    ospray::ospray_sdk
+    rkcommon::rkcommon
+    ${PXR_LIBRARIES}
+    #Houdini
+    #${OPENEXR_LIBRARIES}
+    #${OIIO_LIBRARIES}
+    )
+endif()
 
-  target_include_directories(hdOSPRay PUBLIC ${OIIO_INCLUDE_DIRS})
+target_compile_definitions(hdOSPRay
+  PRIVATE
+  MFB_PACKAGE_NAME=hdOSPRay
+  MFB_ALT_PACKAGE_NAME=hdOSPRay
+  )
 
-  # add ptex module to ospray libraries
-  option(HDOSPRAY_PLUGIN_PTEX "build hdOSPRay with Ptex support" OFF)
-  if (HDOSPRAY_PLUGIN_PTEX)
-    if (NOT TARGET ospray::ospray_module_ptex)
-      message(FATAL_ERROR "hdOSPRayPlugin requires building OSPRay with ptex module")
-    endif()
+set_target_properties(hdOSPRay PROPERTIES
+  PREFIX ""
+  INSTALL_RPATH "$ORIGIN"
+  )
+install(TARGETS hdOSPRay DESTINATION plugin/usd)
 
-    find_package(ptex CONFIG REQUIRED)
-    target_link_libraries(hdOSPRay PUBLIC ospray::ospray_module_ptex)
-    target_compile_definitions(hdOSPRay PUBLIC -DHDOSPRAY_PLUGIN_PTEX)
+
+# plugInfo.json
+set(PLUG_INFO_LIBRARY_PATH "../hdOSPRay${CMAKE_SHARED_LIBRARY_SUFFIX}")
+set(PLUG_INFO_RESOURCE_PATH "resources")
+set(PLUG_INFO_ROOT "..")
+configure_file(plugInfo.json plugInfo.json @ONLY)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/plugInfo.json" DESTINATION plugin/usd/hdOSPRay/resources)
+
+target_include_directories(hdOSPRay PUBLIC ${OIIO_INCLUDE_DIRS})
+
+# add ptex module to ospray libraries
+option(HDOSPRAY_PLUGIN_PTEX "build hdOSPRay with Ptex support" OFF)
+if (HDOSPRAY_PLUGIN_PTEX)
+  if (NOT TARGET ospray::ospray_module_ptex)
+    message(FATAL_ERROR "hdOSPRayPlugin requires building OSPRay with ptex module")
   endif()
 
-  # add OpenImageDenoise
-  option(HDOSPRAY_ENABLE_DENOISER "build OSPRay plugin using OpenImageDenoise" OFF)
-  if (HDOSPRAY_ENABLE_DENOISER)
-    find_package(OpenImageDenoise 1.2.1 CONFIG)
-    if (NOT TARGET OpenImageDenoise)
-      message(FATAL_ERROR "hdOSPRayPlugin requires OpenImageDenoise be installed")
-    endif()
+  find_package(ptex CONFIG REQUIRED)
+  target_link_libraries(hdOSPRay PUBLIC ospray::ospray_module_ptex)
+  target_compile_definitions(hdOSPRay PUBLIC -DHDOSPRAY_PLUGIN_PTEX)
+endif()
 
-    target_link_libraries(hdOSPRay PUBLIC OpenImageDenoise)
-    target_compile_definitions(hdOSPRay PUBLIC -DHDOSPRAY_ENABLE_DENOISER)
+# add OpenImageDenoise
+option(HDOSPRAY_ENABLE_DENOISER "build OSPRay plugin using OpenImageDenoise" OFF)
+if (HDOSPRAY_ENABLE_DENOISER)
+  find_package(OpenImageDenoise 1.2.1 CONFIG)
+  if (NOT TARGET OpenImageDenoise)
+    message(FATAL_ERROR "hdOSPRayPlugin requires OpenImageDenoise be installed")
   endif()
 
+  target_link_libraries(hdOSPRay PUBLIC OpenImageDenoise)
+  target_compile_definitions(hdOSPRay PUBLIC -DHDOSPRAY_ENABLE_DENOISER)
 endif()

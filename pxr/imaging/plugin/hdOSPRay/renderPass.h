@@ -26,7 +26,7 @@
 
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/imaging/hd/renderPass.h>
-#include <pxr/pxr.h"
+#include <pxr/pxr.h>
 #include <pxr/base/tf/debug.h>
 
 #include "renderBuffer.h"
@@ -211,7 +211,7 @@ private:
     float _aoIntensity { HDOSPRAY_DEFAULT_AO_INTENSITY };
 
     // OpenGL framebuffer texture
-    GLuint framebufferTexture = 0;
+    //GLuint framebufferTexture = 0;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
