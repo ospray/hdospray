@@ -22,25 +22,25 @@
 // language governing permissions and limitations under the Apache License.
 //
 
-#include "pxr/imaging/hdOSPRay/material.h"
-#include "pxr/imaging/hdOSPRay/texture.h"
+#include "material.h"
+#include "texture.h"
 
-#include "pxr/base/gf/vec3f.h"
-#include "pxr/imaging/hd/material.h"
-#include "pxr/imaging/hd/tokens.h"
-#include "pxr/usd/sdf/assetPath.h"
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/imaging/hd/material.h>
+#include <pxr/imaging/hd/tokens.h>
+#include <pxr/usd/sdf/assetPath.h>
 
-#include "pxr/imaging/hdOSPRay/config.h"
-#include "pxr/imaging/hdOSPRay/context.h"
+#include "config.h"
+#include "context.h"
 
-#include "pxr/imaging/hdSt/material.h"
-#include "pxr/imaging/hdSt/resourceRegistry.h"
-#include "pxr/imaging/hdSt/shaderCode.h"
-#include "pxr/imaging/hdSt/surfaceShader.h"
+#include <pxr/imaging/hdSt/material.h>
+#include <pxr/imaging/hdSt/resourceRegistry.h>
+#include <pxr/imaging/hdSt/shaderCode.h>
+#include <pxr/imaging/hdSt/surfaceShader.h>
 #include <OpenImageIO/imageio.h>
 
-#include "ospray/ospray_cpp.h"
-#include "ospray/ospray_cpp/ext/rkcommon.h"
+#include <ospray/ospray_cpp.h>
+#include <ospray/ospray_cpp/ext/rkcommon.h>
 
 using namespace rkcommon::math;
 

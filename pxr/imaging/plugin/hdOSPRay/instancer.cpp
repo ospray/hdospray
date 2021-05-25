@@ -21,19 +21,19 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/imaging/glf/glew.h"
+#include <pxr/imaging/glf/glew.h>
 
-#include "pxr/imaging/hdOSPRay/instancer.h"
+#include "instancer.h"
 
-#include "pxr/imaging/hd/sceneDelegate.h"
-#include "pxr/imaging/hdOSPRay/sampler.h"
+#include <pxr/imaging/hd/sceneDelegate.h>
+#include "sampler.h"
 
-#include "pxr/base/gf/matrix4d.h"
-#include "pxr/base/gf/quaternion.h"
-#include "pxr/base/gf/rotation.h"
-#include "pxr/base/gf/vec3f.h"
-#include "pxr/base/gf/vec4f.h"
-#include "pxr/base/tf/staticTokens.h"
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/quaternion.h>
+#include <pxr/base/gf/rotation.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4f.h>
+#include <pxr/base/tf/staticTokens.h>
 
 #include <iostream>
 

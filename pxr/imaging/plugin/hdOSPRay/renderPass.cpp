@@ -21,24 +21,24 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/imaging/glf/glew.h"
+#include <pxr/imaging/glf/glew.h>
 
-#include "pxr/imaging/hdOSPRay/renderParam.h"
-#include "pxr/imaging/hdOSPRay/renderPass.h"
+#include "renderParam.h"
+#include "renderPass.h"
 
-#include "pxr/imaging/hdOSPRay/config.h"
-#include "pxr/imaging/hdOSPRay/context.h"
-#include "pxr/imaging/hdOSPRay/lights/light.h"
-#include "pxr/imaging/hdOSPRay/mesh.h"
-#include "pxr/imaging/hdOSPRay/renderDelegate.h"
+#include "config.h"
+#include "context.h"
+#include "lights/light.h"
+#include "mesh.h"
+#include "renderDelegate.h"
 
-#include "pxr/imaging/hd/perfLog.h"
-#include "pxr/imaging/hd/renderPassState.h"
+#include <pxr/imaging/hd/perfLog.h>
+#include <pxr/imaging/hd/renderPassState.h>
 
-#include "pxr/base/gf/vec2f.h"
-#include "pxr/base/work/loops.h"
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/work/loops.h>
 
-#include "ospray/ospray_util.h"
+#include <ospray/ospray_util.h>
 
 #include <iostream>
 

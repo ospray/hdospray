@@ -24,17 +24,17 @@
 #ifndef HDOSPRAY_MESH_H
 #define HDOSPRAY_MESH_H
 
-#include "pxr/base/gf/matrix4f.h"
-#include "pxr/base/gf/vec2f.h"
-#include "pxr/base/gf/vec3f.h"
-#include "pxr/base/gf/vec4f.h"
-#include "pxr/imaging/hd/enums.h"
-#include "pxr/imaging/hd/mesh.h"
-#include "pxr/imaging/hd/vertexAdjacency.h"
-#include "pxr/pxr.h"
+#include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4f.h>
+#include <pxr/imaging/hd/enums.h>
+#include <pxr/imaging/hd/mesh.h>
+#include <pxr/imaging/hd/vertexAdjacency.h>
+#include <pxr/pxr.h>
 
-#include "ospray/ospray_cpp.h"
-#include "ospray/ospray_cpp/ext/rkcommon.h"
+#include <ospray/ospray_cpp.h>
+#include <ospray/ospray_cpp/ext/rkcommon.h>
 
 #include <mutex>
 

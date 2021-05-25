@@ -24,15 +24,15 @@
 #ifndef HDOSPRAY_RENDER_PASS_H
 #define HDOSPRAY_RENDER_PASS_H
 
-#include "pxr/base/gf/matrix4d.h"
-#include "pxr/imaging/hd/renderPass.h"
-#include "pxr/pxr.h"
-#include "pxr/base/tf/debug.h"
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/imaging/hd/renderPass.h>
+#include <pxr/pxr.h"
+#include <pxr/base/tf/debug.h>
 
-#include "pxr/imaging/hdOSPRay/renderBuffer.h"
+#include "renderBuffer.h"
 
-#include "ospray/ospray_cpp.h"
-#include "ospray/ospray_cpp/ext/rkcommon.h"
+#include <ospray/ospray_cpp.h>
+#include <ospray/ospray_cpp/ext/rkcommon.h>
 
 #include "config.h"
 

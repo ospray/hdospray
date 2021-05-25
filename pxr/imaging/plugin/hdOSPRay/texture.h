@@ -24,10 +24,10 @@
 #ifndef HDOSPRAY_TEXTURE_H
 #define HDOSPRAY_TEXTURE_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
-#include "ospray/ospray_cpp.h"
-#include "ospray/ospray_cpp/ext/rkcommon.h"
+#include <ospray/ospray_cpp.h>
+#include <ospray/ospray_cpp/ext/rkcommon.h>
 
 namespace opp = ospray::cpp;
 

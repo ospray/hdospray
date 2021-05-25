@@ -24,11 +24,11 @@
 #ifndef HDOSPRAY_CONFIG_H
 #define HDOSPRAY_CONFIG_H
 
-#include "pxr/base/tf/singleton.h"
-#include "pxr/pxr.h"
+#include <pxr/base/tf/singleton.h>
+#include <pxr/pxr.h>
 
-#include "ospray/ospray_cpp.h"
-#include "ospray/ospray_cpp/ext/rkcommon.h"
+#include <ospray/ospray_cpp.h>
+#include <ospray/ospray_cpp/ext/rkcommon.h>
 
 namespace opp = ospray::cpp;
 

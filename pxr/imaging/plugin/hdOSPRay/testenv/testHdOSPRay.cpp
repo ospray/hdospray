@@ -21,26 +21,26 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/pxr.h"
+#include <pxr/pxr.h"
 
-#include "pxr/imaging/glf/drawTarget.h"
-#include "pxr/imaging/glf/glew.h"
-#include "pxr/imaging/glf/image.h"
+#include <pxr/imaging/glf/drawTarget.h"
+#include <pxr/imaging/glf/glew.h"
+#include <pxr/imaging/glf/image.h"
 
-#include "pxr/imaging/hd/engine.h"
-#include "pxr/imaging/hd/unitTestDelegate.h"
-#include "pxr/imaging/hdSt/glConversions.h"
-#include "pxr/imaging/hdSt/unitTestGLDrawing.h"
+#include <pxr/imaging/hd/engine.h"
+#include <pxr/imaging/hd/unitTestDelegate.h"
+#include <pxr/imaging/hdSt/glConversions.h"
+#include <pxr/imaging/hdSt/unitTestGLDrawing.h"
 
-#include "pxr/imaging/hd/renderTask.h"
+#include <pxr/imaging/hd/renderTask.h"
 
-#include "pxr/imaging/hd/camera.h"
-#include "pxr/imaging/hd/renderBuffer.h"
+#include <pxr/imaging/hd/camera.h"
+#include <pxr/imaging/hd/renderBuffer.h"
 
-#include "pxr/imaging/hdOSPRay/renderDelegate.h"
-#include "pxr/imaging/hdOSPRay/rendererPlugin.h"
+#include "renderDelegate.h"
+#include "rendererPlugin.h"
 
-#include "pxr/base/tf/errorMark.h"
+#include <pxr/base/tf/errorMark.h"
 
 #include <iostream>
 

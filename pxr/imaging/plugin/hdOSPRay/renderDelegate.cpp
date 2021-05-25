@@ -21,32 +21,33 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/imaging/hdOSPRay/renderDelegate.h"
-#include "pxr/imaging/glf/glew.h"
+#include "renderDelegate.h"
+#include <pxr/imaging/glf/glew.h>
 
-#include "pxr/imaging/hdOSPRay/config.h"
-#include "pxr/imaging/hdOSPRay/instancer.h"
-#include "pxr/imaging/hdOSPRay/renderParam.h"
-#include "pxr/imaging/hdOSPRay/renderPass.h"
-#include "pxr/imaging/hdOSPRay/renderBuffer.h"
+#include "config.h"
+#include "instancer.h"
+#include "renderParam.h"
+#include "renderPass.h"
+#include "renderBuffer.h"
 
-#include "pxr/imaging/hd/resourceRegistry.h"
+#include <pxr/imaging/hd/resourceRegistry.h>
 
-#include "pxr/imaging/hdOSPRay/lights/diskLight.h"
-#include "pxr/imaging/hdOSPRay/lights/distantLight.h"
-#include "pxr/imaging/hdOSPRay/lights/domeLight.h"
-#include "pxr/imaging/hdOSPRay/lights/rectLight.h"
-#include "pxr/imaging/hdOSPRay/lights/sphereLight.h"
-//#include "pxr/imaging/hdOSPRay/simpleLight.h"
-#include "pxr/imaging/hdOSPRay/basisCurves.h"
-#include "pxr/imaging/hdOSPRay/material.h"
-#include "pxr/imaging/hdOSPRay/mesh.h"
+#include "lights/diskLight.h"
+#include "lights/distantLight.h"
+#include "lights/domeLight.h"
+#include "lights/rectLight.h"
+#include "lights/sphereLight.h"
+//#include "lights/simpleLight.h"
+#include "basisCurves.h"
+#include "material.h"
+#include "mesh.h"
+
 // XXX: Add other Rprim types later
-#include "pxr/imaging/hd/camera.h"
+#include <pxr/imaging/hd/camera.h>
 // XXX: Add other Sprim types later
-#include "pxr/imaging/hd/bprim.h"
+#include <pxr/imaging/hd/bprim.h>
 // XXX: Add bprim types
-#include "pxr/imaging/hdSt/material.h"
+#include <pxr/imaging/hdSt/material.h>
 
 #include <iostream>
 
