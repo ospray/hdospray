@@ -22,7 +22,6 @@
 // language governing permissions and limitations under the Apache License.
 //
 #include "renderDelegate.h"
-#include <pxr/imaging/glf/glew.h>
 
 #include "config.h"
 #include "instancer.h"
@@ -258,7 +257,7 @@ HdAovDescriptor
 HdOSPRayRenderDelegate::GetDefaultAovDescriptor(TfToken const& name) const
 {
     if (name == HdAovTokens->color) {
-        return HdAovDescriptor(HdFormatUNorm8Vec4, true,
+        return HdAovDescriptor(HdFormatFloat32Vec4, true,
                                VtValue(GfVec4f(0.0f)));
     } else if (name == HdAovTokens->normal || name == HdAovTokens->Neye) {
         return HdAovDescriptor(HdFormatFloat32Vec3, false,

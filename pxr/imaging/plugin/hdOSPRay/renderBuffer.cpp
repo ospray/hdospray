@@ -267,7 +267,7 @@ HdOSPRayRenderBuffer::Resolve()
     // Resolve the image buffer: find the average value per pixel by
     // dividing the summed value by the number of samples.
 
-    if (!_multiSampled) {
+    if (!_multiSampled || _sampleCount.size() != _width * _height) {
         return;
     }
 

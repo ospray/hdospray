@@ -22,7 +22,6 @@
 // language governing permissions and limitations under the Apache License.
 //
 #include "mesh.h"
-#include <pxr/imaging/glf/glew.h>
 #include "config.h"
 #include "context.h"
 #include "instancer.h"

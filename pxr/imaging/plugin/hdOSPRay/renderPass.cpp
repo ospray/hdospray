@@ -21,7 +21,6 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include <pxr/imaging/glf/glew.h>
 
 #include "renderParam.h"
 #include "renderPass.h"
@@ -90,14 +89,6 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("geometryLights", true);
     _renderer.commit();
 
-    glEnable(GL_TEXTURE_2D);
-    glDisable(GL_LIGHTING);
-
-    // create OpenGL frame buffer texture
-    glGenTextures(1, &framebufferTexture);
-    glBindTexture(GL_TEXTURE_2D, framebufferTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 }
 
 HdOSPRayRenderPass::~HdOSPRayRenderPass()
@@ -243,12 +234,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _width = vp[2];
         _height = vp[3];
 
-        // reset OpenGL viewport and orthographic projection
-        glViewport(0, 0, _width, _height);
-
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0.0, _width, 0.0, _height, -1.0, 1.0);
         _frameBuffer
                = opp::FrameBuffer((int)_width, (int)_height, OSP_FB_RGBA32F,
                                   OSP_FB_COLOR | OSP_FB_ACCUM |
