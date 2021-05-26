@@ -56,8 +56,6 @@ if(USE_HOUDINI_USD)
     ospray::ospray_sdk
     rkcommon::rkcommon
     Houdini
-    #${OPENEXR_LIBRARIES}
-    #${OIIO_LIBRARIES}
     )
 else()
   target_include_directories(hdOSPRay PUBLIC ${PXR_INCLUDE_DIRS})
@@ -66,9 +64,6 @@ else()
     ospray::ospray_sdk
     rkcommon::rkcommon
     ${PXR_LIBRARIES}
-    #Houdini
-    #${OPENEXR_LIBRARIES}
-    #${OIIO_LIBRARIES}
     )
 endif()
 
@@ -83,7 +78,6 @@ set_target_properties(hdOSPRay PROPERTIES
   INSTALL_RPATH "$ORIGIN"
   )
 install(TARGETS hdOSPRay DESTINATION plugin/usd)
-
 
 # plugInfo.json
 set(PLUG_INFO_LIBRARY_PATH "../hdOSPRay${CMAKE_SHARED_LIBRARY_SUFFIX}")

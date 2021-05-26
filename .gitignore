@@ -8,4 +8,4 @@
 doc/www
 
 # ignore build folder
-build
+build*

@@ -392,6 +392,17 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _numSamplesAccumulated += std::max(1, _spp);
     }
     TF_DEBUG_MSG(OSP_RP, "ospRP::Execute done\n");
+
+    if(_currentFrame.width !=  _colorBuffer.GetWidth() || _currentFrame.height != _colorBuffer.GetHeight())
+    {
+        //std::cout << "Renderbuffer size: " <<  renderBuffer.width << "\t" << renderBuffer.height << std::endl;
+        // IS NOT TRIGGERED ????????
+        std::cout << "ARGHHHHHHHHHHHHHHHHHHHH" << std::endl;
+        std::cout << "AOVbuffer size: " <<  _colorBuffer.GetWidth() << "\t" << _colorBuffer.GetHeight() << std::endl;
+        std::cout << "Framebuffer size: " <<  _currentFrame.width << "\t" << _currentFrame.height << std::endl;
+        std::cout << std::endl;
+    }
+
 }
 
 void

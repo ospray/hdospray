@@ -24,11 +24,11 @@
 #ifndef PXR_IMAGING_PLUGIN_HD_OSPRAY_RENDER_BUFFER_H
 #define PXR_IMAGING_PLUGIN_HD_OSPRAY_RENDER_BUFFER_H
 
-#include "pxr/pxr.h"
-#include "pxr/imaging/hd/renderBuffer.h"
-#include "pxr/base/gf/vec2f.h"
-#include "pxr/base/gf/vec3f.h"
-#include "pxr/base/gf/vec4f.h"
+#include <pxr/pxr.h>
+#include <pxr/imaging/hd/renderBuffer.h>
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4f.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
