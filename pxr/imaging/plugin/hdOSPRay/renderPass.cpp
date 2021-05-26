@@ -397,7 +397,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 void
 HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
 {
-    // _colorBuffer.Map();
     TF_DEBUG_MSG(OSP_RP, "displayRB %d\n", _aovBindings.size());
     for (int aovIndex = 0; aovIndex < _aovBindings.size(); aovIndex++) {
         auto aovRenderBuffer = static_cast<HdOSPRayRenderBuffer*>(
@@ -407,53 +406,23 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
             aovRenderBuffer->Map();
             GfVec4f clearColor = {1.f, 1.f, 0.f, 0.f};
             aovRenderBuffer->Clear(4, clearColor.data());
-            for (int i = 0; i < renderBuffer.width; i++) {
-                for (int j = 0; j < renderBuffer.height; j++) {
-                    // GfVec4f sample = { 1.f, 0.f, 0.f, 1.f };
-                    // &(_currentFrame.colorBuffer[j*renderBuffer.width + i].x)
+
+            tbb::parallel_for( tbb::blocked_range<int>(0,renderBuffer.width*renderBuffer.height),
+                       [&](tbb::blocked_range<int> r)
+            {
+                for (int pIdx=r.begin(); pIdx<r.end(); ++pIdx)
+                {
+                    int j = pIdx%renderBuffer.width;
+                    int i = pIdx - j*renderBuffer.width;
                     aovRenderBuffer->Write(GfVec3i(i, j, 1), 4,
                         &(_currentFrame.colorBuffer[j*renderBuffer.width + i].x));
                 }
-            }
+            });
+
             aovRenderBuffer->Unmap();
-            // _colorBuffer.Unmap();
             aovRenderBuffer->Resolve();
         }
     }
-
-    // // set initial OpenGL state
-    // glEnable(GL_TEXTURE_2D);
-    // glDisable(GL_LIGHTING);
-    // glDisable(GL_DEPTH_TEST);
-
-    // glBindTexture(GL_TEXTURE_2D, framebufferTexture);
-    // _currentFrame.colorBuffer.resize(0);
-    // _currentFrame.colorBuffer.resize(_width * _height,
-    //                                      vec4f({ 1.f, 0.f, 0.f, 1.f }));
-    // TF_DEBUG_MSG(OSP_RP, "ospRP::DRB %f\n", _currentFrame.colorBuffer[0][0]);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, renderBuffer.width,
-    //              renderBuffer.height, 0, GL_RGBA, GL_FLOAT,
-    //              renderBuffer.colorBuffer.data());
-
-    // // clear current OpenGL color buffer
-    // glClear(GL_COLOR_BUFFER_BIT);
-
-    // // render textured quad with OSPRay frame buffer contents
-    // glBegin(GL_QUADS);
-
-    // glTexCoord2f(0.f, 0.f);
-    // glVertex2f(0.f, 0.f);
-
-    // glTexCoord2f(0.f, 1.f);
-    // glVertex2f(0.f, _height);
-
-    // glTexCoord2f(1.f, 1.f);
-    // glVertex2f(_width, _height);
-
-    // glTexCoord2f(1.f, 0.f);
-    // glVertex2f(_width, 0.f);
-
-    // glEnd();
 }
 
 void
@@ -470,14 +439,6 @@ HdOSPRayRenderPass::ProcessCamera(
 
     float aspect = _width / float(_height);
     _camera.setParam("aspect", aspect);
-
-    //_camera.setParam("nearClip", 1e-6f);
-
-    //_camera.setParam("shutterOpen", 0.f);
-    //_camera.setParam("shutterClose", 0.f);
-
-    //_camera.setParam("apertureRadius", 0.f);
-    //_camera.setParam("focusDistance", 1.f);
 
     double prjMatrix[4][4];
     renderPassState->GetProjectionMatrix().Get(prjMatrix);

@@ -23,7 +23,9 @@
 //
 #include "renderBuffer.h"
 // #include "pxr/imaging/plugin/hdOSPRay/renderParam.h"
-#include "pxr/base/gf/half.h"
+#include <pxr/base/gf/half.h>
+
+#include <tbb/parallel_for.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -234,10 +236,16 @@ void
 HdOSPRayRenderBuffer::Clear(size_t numComponents, float const* value)
 {
     size_t formatSize = HdDataSizeOfFormat(_format);
-    for (size_t i = 0; i < _width*_height; ++i) {
-        uint8_t *dst = &_buffer[i*formatSize];
-        _WriteOutput(_format, dst, numComponents, value);
-    }
+
+    tbb::parallel_for( tbb::blocked_range<int>(0,_width*_height),
+                       [&](tbb::blocked_range<int> r)
+    {
+        for (int i=r.begin(); i<r.end(); ++i)
+        {
+            uint8_t *dst = &_buffer[i*formatSize];
+            _WriteOutput(_format, dst, numComponents, value);
+        }
+    });
 
     if (_multiSampled) {
         std::fill(_sampleCount.begin(), _sampleCount.end(), 0);
@@ -249,10 +257,16 @@ void
 HdOSPRayRenderBuffer::Clear(size_t numComponents, int const* value)
 {
     size_t formatSize = HdDataSizeOfFormat(_format);
-    for (size_t i = 0; i < _width*_height; ++i) {
-        uint8_t *dst = &_buffer[i*formatSize];
-        _WriteOutput(_format, dst, numComponents, value);
-    }
+    tbb::parallel_for( tbb::blocked_range<int>(0,_width*_height),
+                       [&](tbb::blocked_range<int> r)
+    {
+        for (int i=r.begin(); i<r.end(); ++i)
+        {
+            uint8_t *dst = &_buffer[i*formatSize];
+            _WriteOutput(_format, dst, numComponents, value);
+        }
+    });
+
 
     if (_multiSampled) {
         std::fill(_sampleCount.begin(), _sampleCount.end(), 0);
