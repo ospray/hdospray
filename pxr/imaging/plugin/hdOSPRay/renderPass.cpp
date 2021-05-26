@@ -407,18 +407,30 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
             GfVec4f clearColor = {1.f, 1.f, 0.f, 0.f};
             aovRenderBuffer->Clear(4, clearColor.data());
 
-            tbb::parallel_for( tbb::blocked_range<int>(0,renderBuffer.width*renderBuffer.height),
-                       [&](tbb::blocked_range<int> r)
+            // For debugging: THIS SHOULD NEVER HAPPEN !!!!!!!!!!!!!!!!
+            if(renderBuffer.width != _currentFrame.width || _currentFrame.width !=  aovRenderBuffer->GetWidth() || renderBuffer.height != _currentFrame.height || _currentFrame.height !=  aovRenderBuffer->GetHeight())
             {
-                for (int pIdx=r.begin(); pIdx<r.end(); ++pIdx)
-                {
-                    int j = pIdx%renderBuffer.width;
-                    int i = pIdx - j*renderBuffer.width;
-                    aovRenderBuffer->Write(GfVec3i(i, j, 1), 4,
-                        &(_currentFrame.colorBuffer[j*renderBuffer.width + i].x));
-                }
-            });
+                std::cout << "Renderbuffer size: " <<  renderBuffer.width << "\t" << renderBuffer.height << std::endl;
+                std::cout << "AOVbuffer size: " <<  aovRenderBuffer->GetWidth() << "\t" << aovRenderBuffer->GetHeight() << std::endl;
+                std::cout << "Framebuffer size: " <<  _currentFrame.width << "\t" << _currentFrame.height << std::endl;
+                std::cout << std::endl;
+            }
 
+            if(renderBuffer.width == _currentFrame.width && renderBuffer.height == _currentFrame.height)
+            {
+
+                tbb::parallel_for( tbb::blocked_range<int>(0,renderBuffer.width*renderBuffer.height),
+                        [&](tbb::blocked_range<int> r)
+                {
+                    for (int pIdx=r.begin(); pIdx<r.end(); ++pIdx)
+                    {
+                        int j = pIdx%renderBuffer.width;
+                        int i = pIdx - j*renderBuffer.width;
+                        aovRenderBuffer->Write(GfVec3i(i, j, 1), 4,
+                            &(_currentFrame.colorBuffer[j*renderBuffer.width + i].x));
+                    }
+                });
+            }
             aovRenderBuffer->Unmap();
             aovRenderBuffer->Resolve();
         }
