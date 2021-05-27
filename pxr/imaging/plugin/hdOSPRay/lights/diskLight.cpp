@@ -60,7 +60,7 @@ HdOSPRayDiskLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
     if (bits & DirtyParams) {
         _radius = sceneDelegate->GetLightParamValue(id, HdLightTokens->radius)
                          .Get<float>();
-        auto vtOpeningAngle = sceneDelegate->GetLightParamValue(id, HdOSPRaySpotLightTokens->openingAngle);
+        auto vtOpeningAngle = sceneDelegate->GetLightParamValue(id, HdLightTokens->shapingConeAngle);
         if (vtOpeningAngle.IsHolding<float>())
         {
             _openingAngle = vtOpeningAngle.Get<float>();

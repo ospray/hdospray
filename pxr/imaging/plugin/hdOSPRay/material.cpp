@@ -291,6 +291,7 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
         ospMaterial.setParam(
                "transmissionColor",
                vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
+        ospMaterial.setParam("thin", true);
     }
     if (map_diffuseColor.ospTexture) {
         ospMaterial.setParam("map_baseColor", map_diffuseColor.ospTexture);
