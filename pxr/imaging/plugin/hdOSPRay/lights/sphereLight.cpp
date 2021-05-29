@@ -90,9 +90,7 @@ HdOSPRaySphereLight::_PrepareOSPLight()
         != OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN) {
         _ospLight.setParam("intensityQuantity",
                            _emissionParam.intensityQuantity);
-    }
-    else
-    {
+    } else {
         _ospLight.setParam("intensityQuantity",
                            OSP_INTENSITY_QUANTITY_RADIANCE);
     }

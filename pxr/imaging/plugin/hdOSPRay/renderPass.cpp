@@ -28,8 +28,8 @@
 
 #include "pxr/imaging/hdOSPRay/config.h"
 #include "pxr/imaging/hdOSPRay/context.h"
-#include "pxr/imaging/hdOSPRay/lights/light.h"
 #include "pxr/imaging/hdOSPRay/lights/domeLight.h"
+#include "pxr/imaging/hdOSPRay/lights/light.h"
 #include "pxr/imaging/hdOSPRay/mesh.h"
 #include "pxr/imaging/hdOSPRay/renderDelegate.h"
 
@@ -446,17 +446,18 @@ HdOSPRayRenderPass::ProcessLights()
 
     // push scene lights
     const auto hdOSPRayLights = _renderParam->GetHdOSPRayLights();
-    //if have image background, overide background color with image
+    // if have image background, overide background color with image
     bool hasHDRI = false;
-    std::for_each(hdOSPRayLights.begin(), hdOSPRayLights.end(),
-                  [&](auto l) { lights.push_back(l.second->GetOSPLight()); 
-                  if (dynamic_cast<const HdOSPRayDomeLight*>(l.second) && l.second->IsVisible())
-                    hasHDRI = true;
-                   });
+    std::for_each(hdOSPRayLights.begin(), hdOSPRayLights.end(), [&](auto l) {
+        lights.push_back(l.second->GetOSPLight());
+        if (dynamic_cast<const HdOSPRayDomeLight*>(l.second)
+            && l.second->IsVisible())
+            hasHDRI = true;
+    });
     if (hasHDRI && HdOSPRayConfig::GetInstance().usePathTracing) {
         _renderer.setParam(
-           "backgroundColor",
-           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
+               "backgroundColor",
+               vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
     }
 
     float glToPTLightIntensityMultiplier = 1.f;

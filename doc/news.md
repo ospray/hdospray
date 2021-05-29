@@ -1,7 +1,7 @@
 News, Updates, and Announcements
 ================================
 
-- May 29, 2021: Version v0.7 now released on GitHub
+- May 28, 2021: Version v0.7 now released on GitHub
     
       - Update to OSPRay 2.6.0
       - Ptex support re-enabled.
