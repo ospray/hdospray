@@ -28,6 +28,7 @@
 
 #include "pxr/imaging/hdOSPRay/config.h"
 #include "pxr/imaging/hdOSPRay/context.h"
+#include "pxr/imaging/hdOSPRay/lights/domeLight.h"
 #include "pxr/imaging/hdOSPRay/lights/light.h"
 #include "pxr/imaging/hdOSPRay/mesh.h"
 #include "pxr/imaging/hdOSPRay/renderDelegate.h"
@@ -72,8 +73,8 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _world = opp::World();
     _camera = opp::Camera("perspective");
     _renderer.setParam(
-           "backgroundColor",
-           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
+            "backgroundColor",
+            vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
 #if HDOSPRAY_ENABLE_DENOISER
     _denoiserLoaded = (ospLoadModule("denoiser") == OSP_NO_ERROR);
     if (!_denoiserLoaded)
@@ -86,7 +87,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("minContribution", _minContribution);
     _renderer.setParam("maxContribution", _maxContribution);
     _renderer.setParam("epsilon", 0.001f);
-    _renderer.setParam("geometryLights", false);
+    _renderer.setParam("geometryLights", true);
     _renderer.commit();
 
     glEnable(GL_TEXTURE_2D);
@@ -230,10 +231,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 _interactiveFrameBufferScale
                        = updateInteractiveFrameBufferScale;
             }
-            // std::cout << "Target FPS: "<< _interactiveTargetFPS << "\tCurrent
-            // FPS: " << currentFPS <<"\t Scale Change: " << scaleChange <<
-            // std::endl; std::cout << "InteractiveBufferScale: "<<
-            // _interactiveFrameBufferScale << std::endl;
         }
     }
 
@@ -417,14 +414,6 @@ HdOSPRayRenderPass::ProcessCamera(
     float aspect = _width / float(_height);
     _camera.setParam("aspect", aspect);
 
-    //_camera.setParam("nearClip", 1e-6f);
-
-    //_camera.setParam("shutterOpen", 0.f);
-    //_camera.setParam("shutterClose", 0.f);
-
-    //_camera.setParam("apertureRadius", 0.f);
-    //_camera.setParam("focusDistance", 1.f);
-
     double prjMatrix[4][4];
     renderPassState->GetProjectionMatrix().Get(prjMatrix);
     float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
@@ -457,8 +446,19 @@ HdOSPRayRenderPass::ProcessLights()
 
     // push scene lights
     const auto hdOSPRayLights = _renderParam->GetHdOSPRayLights();
-    std::for_each(hdOSPRayLights.begin(), hdOSPRayLights.end(),
-                  [&](auto l) { lights.push_back(l.second->GetOSPLight()); });
+    // if have image background, overide background color with image
+    bool hasHDRI = false;
+    std::for_each(hdOSPRayLights.begin(), hdOSPRayLights.end(), [&](auto l) {
+        lights.push_back(l.second->GetOSPLight());
+        if (dynamic_cast<const HdOSPRayDomeLight*>(l.second)
+            && l.second->IsVisible())
+            hasHDRI = true;
+    });
+    if (hasHDRI && HdOSPRayConfig::GetInstance().usePathTracing) {
+        _renderer.setParam(
+               "backgroundColor",
+               vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
+    }
 
     float glToPTLightIntensityMultiplier = 1.f;
     if (_eyeLight || _keyLight || _fillLight || _backLight)

@@ -60,8 +60,8 @@ if (PXR_BUILD_OSPRAY_PLUGIN)
       plugInfo.json
     )
 
-  find_package(ospray 2.5.0 REQUIRED)
-  find_package(rkcommon 1.6.0 REQUIRED)
+  find_package(ospray 2.6.0 REQUIRED)
+  find_package(rkcommon 1.6.1 REQUIRED)
 
   target_link_libraries(hdOSPRay PUBLIC
     plug
