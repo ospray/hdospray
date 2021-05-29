@@ -408,6 +408,15 @@ renderer.*
 
 # News, Updates, and Announcements
 
+  - May 29, 2021: Version v0.7 now released on GitHub
+    
+        - Update to OSPRay 2.6.0
+        - Ptex support re-enabled.
+        - Numerous light and material updates. Added disk lights.
+        - Toggle for light enabled vs visible.
+        - Animation update fixes.
+        - Support for curves.
+
   - October 12, 2020: Version v0.6 now released on GitHub
     
         - Update to OSPRay 2.4.0
