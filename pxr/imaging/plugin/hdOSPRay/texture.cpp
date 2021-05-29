@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -23,6 +23,7 @@
 //
 
 #include "pxr/imaging/hdOSPRay/texture.h"
+#include "pxr/imaging/hdOSPRay/config.h"
 
 #include "rkcommon/math/vec.h"
 
@@ -65,7 +66,8 @@ LoadPtexTexture(std::string file)
     if (file == "")
         return nullptr;
     opp::Texture ospTexture = opp::Texture("ptex");
-    ospTexture.setParam("filename", file.c_str());
+    ospTexture.setParam("filename", file);
+    ospTexture.setParam("sRGB", true);
     return ospTexture;
 }
 

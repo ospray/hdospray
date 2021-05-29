@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -206,7 +206,8 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
             texture.file = path.GetResolvedPath();
             texture.ospTexture = LoadOIIOTexture2D(texture.file);
-        } else if (name == HdOSPRayTokens->filename) {
+        } else if (name == HdOSPRayTokens->filename
+                   || name.GetString() == "info:filename") {
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
             texture.file = path.GetResolvedPath();
             if (isPtex) {
@@ -285,10 +286,12 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     ospMaterial.setParam("roughness", roughness);
     ospMaterial.setParam("normal", normal);
     ospMaterial.setParam("transmission", 1.0f - opacity);
+    ospMaterial.setParam("thin", true);
     if (opacity < 1.0f) {
         ospMaterial.setParam(
                "transmissionColor",
                vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
+        ospMaterial.setParam("thin", true);
     }
     if (map_diffuseColor.ospTexture) {
         ospMaterial.setParam("map_baseColor", map_diffuseColor.ospTexture);

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -61,9 +61,6 @@ HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
     , _adjacencyValid(false)
     , _normalsValid(false)
     , _refined(false)
-    , _smoothNormals(false)
-    , _doubleSided(false)
-    , _populated(false)
     , _cullStyle(HdCullStyleDontCare)
 {
 }

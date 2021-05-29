@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -45,7 +45,7 @@ PXR_NAMESPACE_OPEN_SCOPE
            aoIntensity)(samplesToConvergence)(ambientLight)(eyeLight)(         \
            keyLight)(fillLight)(backLight)(pathTracer)(                        \
            staticDirectionalLights)(minContribution)(maxContribution)(         \
-           interactiveTargetFPS)
+           interactiveTargetFPS)(useTextureGammaCorrection)
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
                          HDOSPRAY_RENDER_SETTINGS_TOKENS);

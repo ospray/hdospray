@@ -68,13 +68,6 @@ HdOSPRayRectLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
 void
 HdOSPRayRectLight::_PrepareOSPLight()
 {
-    float intensity = 1.0f;
-    if (_emissionParam.exposure != 0.0f) {
-        intensity = pow(2.0f, _emissionParam.exposure);
-    } else {
-        intensity = _emissionParam.intensity;
-    }
-
     // USD RectLight: we need to evaluate the orientation
     // of the RectLight after the transformation
     // Note: USD defines the rect light on the XY-plane and its emitts light
@@ -133,10 +126,15 @@ HdOSPRayRectLight::_PrepareOSPLight()
     _ospLight.setParam("edge2",
                        vec3f(osp_edge2[0], osp_edge2[1], osp_edge2[2]));
     // emission
+    if (_emissionParam.intensityQuantity
+        != OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN) {
+        _ospLight.setParam("intensityQuantity",
+                           _emissionParam.intensityQuantity);
+    }
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));
-    _ospLight.setParam("intensity", intensity);
+    _ospLight.setParam("intensity", _emissionParam.ExposedIntensity());
     _ospLight.setParam("visible", _visibility);
     _ospLight.commit();
 }

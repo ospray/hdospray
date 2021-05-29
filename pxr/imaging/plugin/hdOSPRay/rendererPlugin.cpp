@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -70,9 +70,13 @@ HdOSPRayRendererPlugin::CreateRenderDelegate()
 
         ospDeviceSetStatusFunc(device,
                                [](const char* msg) { std::cout << msg; });
-        ospDeviceSetErrorFunc(device, [](OSPError e, const char* msg) {
-            std::cerr << "OSPRAY ERROR [" << e << "]: " << msg << std::endl;
-        });
+        ospDeviceSetErrorCallback(
+               device,
+               [](void*, OSPError e, const char* msg) {
+                   std::cerr << "OSPRAY ERROR [" << e << "]: " << msg
+                             << std::endl;
+               },
+               nullptr);
 
         ospDeviceCommit(device);
     }

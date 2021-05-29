@@ -1,6 +1,5 @@
 //
-
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -45,8 +44,10 @@ HdOSPRayBufferSampler::Sample(int index, void* value,
     // Equivalent to:
     // *static_cast<ElementType*>(value) =
     //     static_cast<ElementType*>(_buffer.GetData())[index];
-    memcpy(value, static_cast<const uint8_t*>(_buffer.GetData()) + offset,
-           elemSize);
+    std::copy(static_cast<const uint8_t*>(_buffer.GetData()) + offset,
+              static_cast<const uint8_t*>(_buffer.GetData()) + offset
+                     + elemSize,
+              reinterpret_cast<uint8_t*>(value));
 
     return true;
 }

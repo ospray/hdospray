@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -27,6 +27,7 @@
 #include "pxr/imaging/hd/renderDelegate.h"
 #include "pxr/pxr.h"
 
+#include "basisCurves.h"
 #include "lights/light.h"
 #include "mesh.h"
 
@@ -107,10 +108,24 @@ public:
         UpdateModelVersion();
     }
 
+    // thread safe.  Lights added to scene and released by renderPass.
+    void AddHdOSPRayBasisCurves(const HdOSPRayBasisCurves* hdOsprayBasisCurves)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _hdOSPRayBasisCurves.push_back(hdOsprayBasisCurves);
+        UpdateModelVersion();
+    }
+
     // not thread safe
     const std::vector<const HdOSPRayMesh*>& GetHdOSPRayMeshes()
     {
         return _hdOSPRayMeshes;
+    }
+
+    // not thread safe
+    const std::vector<const HdOSPRayBasisCurves*>& GetHdOSPRayBasisCurves()
+    {
+        return _hdOSPRayBasisCurves;
     }
 
 private:
@@ -123,6 +138,7 @@ private:
            _hdOSPRayLights;
 
     std::vector<const HdOSPRayMesh*> _hdOSPRayMeshes;
+    std::vector<const HdOSPRayBasisCurves*> _hdOSPRayBasisCurves;
 
     opp::Renderer _renderer;
     /// A version counters for edits to scene (e.g., models or lights).

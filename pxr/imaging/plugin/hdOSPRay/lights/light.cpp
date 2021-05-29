@@ -22,6 +22,7 @@
 // language governing permissions and limitations under the Apache License.
 //
 #include "pxr/imaging/hdOSPRay/lights/light.h"
+#include "pxr/imaging/hdOSPRay/config.h"
 
 #include "pxr/imaging/hd/perfLog.h"
 #include "pxr/imaging/hd/rprimCollection.h"
@@ -33,6 +34,12 @@
 #include <iostream>
 
 PXR_NAMESPACE_OPEN_SCOPE
+
+// clang-format off
+TF_DEFINE_PRIVATE_TOKENS(
+    HdOSPRayLightTokens,
+    ((intensityQuantity,"inputs:ospray:intensityQuantity"))
+);
 
 HdOSPRayLight::HdOSPRayLight(SdfPath const& id)
     : HdLight(id)
@@ -92,6 +99,8 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         }
     }
 
+    _visibility = sceneDelegate->GetVisible(id);
+
     // Extract common Lighting Params
     if (bits & DirtyParams) {
         _emissionParam.color
@@ -122,7 +131,11 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         _emissionParam.normalize
                = sceneDelegate->GetLightParamValue(id, HdLightTokens->normalize)
                         .Get<bool>();
-        _visibility = sceneDelegate->GetVisible(id);
+        auto vtLightQuantity = sceneDelegate->GetLightParamValue(id, HdOSPRayLightTokens->intensityQuantity);
+        if (vtLightQuantity.IsHolding<int>())
+        {
+            _emissionParam.intensityQuantity = (OSPIntensityQuantity)vtLightQuantity.Get<int>();
+        }
     }
 
     // query light type specific parameters

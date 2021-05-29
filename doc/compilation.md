@@ -17,22 +17,21 @@ also experimental, but we have not tested HdOSPRay with it.
 - [USD v20.05](https://graphics.pixar.com/usd/docs/index.html)
   - USD is primarily tested with Linux, but has experimental support for MacOS and Windows.
     For a full list of USD dependencies, see the USD page.
-- [OSPRay 2.2.0](http://www.ospray.org/)
-  - We recommend using ospray's superbuild to build dependencies such as embree,
-   ospcommon, and openvkl.
-- [OpenImageIO 1.8.9](https://sites.google.com/site/openimageio/home)
-- CMake 3.1.1+
+  - [OSPRay 2.5.0](http://www.ospray.org/)
+      - We recommend using ospray’s superbuild to build dependencies
+        such as embree, ospcommon, and openvkl.  OpenImageDenoise can
+        also be enabled through superbuild.
+  - [OpenImageIO 1.8.9](https://sites.google.com/site/openimageio/home)
+  - CMake 3.1.1+
 
 ## Optional Dependencies
-- [OpenImageDenoise](https://github.com/OpenImageDenoise/oidn.git)
-    - Open Image Denoise also needs be be enabled in the OSPRay build
-- [Ptex](https://github.com/wdas/ptex)
-    - Ptex support is currently limited to older versions as the OSPRay
-    module needs to be updated for OSPRay 2.x.
-    - Ptex will need to be enabled in the USD build
-    - Can be downloaded and built by the USD `build_usd.py` script
-    - [Ptex module](https://github.com/ospray/module_ptex) also needs to be
-      enabled in the OSPRay build
+
+  - [OpenImageDenoise](https://github.com/OpenImageDenoise/oidn.git)
+      - Open Image Denoise needs be be enabled in the OSPRay build.
+  - [Ptex](https://github.com/wdas/ptex)
+      - [Ptex module](https://github.com/ospray/module_ptex) needs
+        to be enabled in the OSPRay build and the library accessible 
+        on library paths
 
 ## Compiling USD on Linux/MacOS
 

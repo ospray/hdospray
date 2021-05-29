@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Intel
+// Copyright 2021 Intel
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -37,6 +37,7 @@
 #include "pxr/imaging/hdOSPRay/lights/rectLight.h"
 #include "pxr/imaging/hdOSPRay/lights/sphereLight.h"
 //#include "pxr/imaging/hdOSPRay/simpleLight.h"
+#include "pxr/imaging/hdOSPRay/basisCurves.h"
 #include "pxr/imaging/hdOSPRay/material.h"
 #include "pxr/imaging/hdOSPRay/mesh.h"
 // XXX: Add other Rprim types later
@@ -57,6 +58,7 @@ TF_DEFINE_PUBLIC_TOKENS(HdOSPRayTokens, HDOSPRAY_TOKENS);
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_RPRIM_TYPES = {
     HdPrimTypeTokens->mesh,
+    HdPrimTypeTokens->basisCurves,
 };
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES = {
@@ -92,7 +94,9 @@ HdOSPRayRenderDelegate::_Initialize()
 {
 
 #ifdef HDOSPRAY_PLUGIN_PTEX
-    ospLoadModule("ptex");
+    OSPError err = ospLoadModule("ptex");
+    if (err != OSP_NO_ERROR)
+        TF_RUNTIME_ERROR("hdosp::renderDelegate - error loading ptex");
 #endif
 
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
@@ -301,6 +305,8 @@ HdOSPRayRenderDelegate::CreateRprim(TfToken const& typeId,
 {
     if (typeId == HdPrimTypeTokens->mesh) {
         return new HdOSPRayMesh(rprimId, instancerId);
+    } else if (typeId == HdPrimTypeTokens->basisCurves) {
+        return new HdOSPRayBasisCurves(rprimId, instancerId);
     } else {
         TF_CODING_ERROR("Unknown Rprim Type %s", typeId.GetText());
     }
