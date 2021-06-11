@@ -108,7 +108,7 @@ HdOSPRayRenderDelegate::_Initialize()
     // Store top-level OSPRay objects inside a render param that can be
     // passed to prims during Sync().
     _renderParam
-           = std::make_shared<HdOSPRayRenderParam>(_renderer, &_sceneVersion);
+           = std::make_shared<HdOSPRayRenderParam>(_renderer);
 
     // Initialize one resource registry for all OSPRay plugins
     std::lock_guard<std::mutex> guard(_mutexResourceRegistry);
@@ -282,7 +282,7 @@ HdOSPRayRenderDelegate::CreateRenderPass(HdRenderIndex* index,
                                          HdRprimCollection const& collection)
 {
     return HdRenderPassSharedPtr(new HdOSPRayRenderPass(
-           index, collection, _renderer, &_sceneVersion, _renderParam));
+           index, collection, _renderer, _renderParam));
 }
 
 HdInstancer*

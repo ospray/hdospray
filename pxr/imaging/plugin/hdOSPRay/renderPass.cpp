@@ -53,7 +53,7 @@ rad(float deg)
 
 HdOSPRayRenderPass::HdOSPRayRenderPass(
        HdRenderIndex* index, HdRprimCollection const& collection,
-       opp::Renderer renderer, std::atomic<int>* sceneVersion,
+       opp::Renderer renderer,
        std::shared_ptr<HdOSPRayRenderParam> renderParam)
     : HdRenderPass(index, collection)
     , _pendingResetImage(false)
@@ -435,7 +435,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                 {
                     for (int pIdx=r.begin(); pIdx<r.end(); ++pIdx)
                     {
-                        int j = pIdx%renderBuffer.width;
+                        int j = pIdx / renderBuffer.width;
                         int i = pIdx - j*renderBuffer.width;
                         aovRenderBuffer->Write(GfVec3i(i, j, 1), 4,
                             &(_currentFrame.colorBuffer[j*renderBuffer.width + i].x));

@@ -47,7 +47,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 ///
 class HdOSPRayRenderParam final : public HdRenderParam {
 public:
-    HdOSPRayRenderParam(opp::Renderer renderer, std::atomic<int>* sceneVersion)
+    HdOSPRayRenderParam(opp::Renderer renderer)
         : _renderer(renderer)
     {
     }

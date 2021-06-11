@@ -243,9 +243,6 @@ private:
     // A list of render setting exports.
     HdRenderSettingDescriptorList _settingDescriptors;
 
-    // A version counter for edits to _scene.
-    std::atomic<int> _sceneVersion;
-
     int _lastCommittedModelVersion { -1 };
 
     // A shared HdOSPRayRenderParam object that stores top-level OSPRay state;

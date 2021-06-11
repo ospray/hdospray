@@ -64,7 +64,7 @@ public:
     }
 
     /// Causes the shader to be reloaded.
-    virtual void Reload() override
+    virtual void Reload() 
     {
     }
 

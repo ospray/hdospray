@@ -185,8 +185,8 @@ private:
     // context. Overwrites the current mapping for the name, if necessary.
     // This function's main purpose is to resolve the (interpolation, refined)
     // tuple into the concrete primvar sampler type.
-    void _CreatePrimvarSampler(TfToken const& name, VtValue const& data,
-                               HdInterpolation interpolation, bool refined);
+    //void _CreatePrimvarSampler(TfToken const& name, VtValue const& data,
+    //                           HdInterpolation interpolation, bool refined);
 
     opp::Geometry _CreateOSPRaySubdivMesh();
 

@@ -61,7 +61,7 @@ public:
     ///   \param scene The OSPRay scene to raycast into.
     HdOSPRayRenderPass(HdRenderIndex* index,
                        HdRprimCollection const& collection,
-                       opp::Renderer renderer, std::atomic<int>* sceneVersion,
+                       opp::Renderer renderer,
                        std::shared_ptr<HdOSPRayRenderParam> renderParam);
 
     /// Renderpass destructor.
