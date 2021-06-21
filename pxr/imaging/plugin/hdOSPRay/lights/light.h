@@ -34,8 +34,6 @@
 #include <pxr/base/vt/dictionary.h>
 #include <pxr/base/vt/value.h>
 
-#include <boost/shared_ptr.hpp>
-
 #include <vector>
 
 #include <ospray/ospray_cpp.h>

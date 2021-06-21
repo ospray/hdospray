@@ -31,8 +31,6 @@
 #include <ospray/ospray_cpp.h>
 #include <ospray/ospray_cpp/ext/rkcommon.h>
 
-#include <boost/shared_ptr.hpp>
-
 namespace opp = ospray::cpp;
 
 PXR_NAMESPACE_OPEN_SCOPE
