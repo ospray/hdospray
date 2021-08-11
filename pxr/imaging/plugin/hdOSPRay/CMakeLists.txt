@@ -49,7 +49,6 @@ add_library(hdOSPRay SHARED
 find_package(ospray 2.5.0 REQUIRED)
 find_package(rkcommon 1.6.0 REQUIRED)
 
-
 if(USE_HOUDINI_USD)
   target_link_libraries(hdOSPRay PUBLIC
     ospray::ospray
@@ -58,14 +57,18 @@ if(USE_HOUDINI_USD)
     Houdini
     )
 else()
+  find_package(OpenImageIO REQUIRED)
   target_include_directories(hdOSPRay PUBLIC ${PXR_INCLUDE_DIRS})
   target_link_libraries(hdOSPRay PUBLIC
     ospray::ospray
     ospray::ospray_sdk
     rkcommon::rkcommon
+    ${OIIO_LIBRARIES}
     ${PXR_LIBRARIES}
     )
 endif()
+
+message(STATUS "PXR_LIBRARIES: " ${PXR_LIBRARIES})
 
 target_compile_definitions(hdOSPRay
   PRIVATE

@@ -47,32 +47,6 @@ HdOSPRayRenderBuffer::~HdOSPRayRenderBuffer()
 {
 }
 
-// /*virtual*/
-// void
-// HdOSPRayRenderBuffer::Sync(HdSceneDelegate *sceneDelegate,
-//                            HdRenderParam *renderParam,
-//                            HdDirtyBits *dirtyBits)
-// {
-//     if (*dirtyBits & DirtyDescription) {
-//         // OSPRay has the background thread write directly into render buffers,
-//         // so we need to stop the render thread before reallocating them.
-//         static_cast<HdOSPRayRenderParam*>(renderParam)->AcquireSceneForEdit();
-//     }
-
-//     HdRenderBuffer::Sync(sceneDelegate, renderParam, dirtyBits);
-// }
-
-// /*virtual*/
-// void
-// HdOSPRayRenderBuffer::Finalize(HdRenderParam *renderParam)
-// {
-//     // OSPRay has the background thread write directly into render buffers,
-//     // so we need to stop the render thread before removing them.
-//     static_cast<HdOSPRayRenderParam*>(renderParam)->AcquireSceneForEdit();
-
-//     HdRenderBuffer::Finalize(renderParam);
-// }
-
 /*virtual*/
 void
 HdOSPRayRenderBuffer::_Deallocate()
@@ -128,6 +102,8 @@ HdOSPRayRenderBuffer::Allocate(GfVec3i const& dimensions,
                                HdFormat format,
                                bool multiSampled)
 {
+    // force single sampled for OSPRay buffers
+    multiSampled = false;
     _Deallocate();
 
     if (dimensions[2] != 1) {
