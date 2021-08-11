@@ -36,6 +36,7 @@
 
 #include <pxr/base/gf/vec2f.h>
 #include <pxr/base/work/loops.h>
+#include <pxr/base/tf/stopwatch.h>
 
 #include <ospray/ospray_util.h>
 
@@ -132,6 +133,18 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     bool interactiveFramebufferDirty = false;
 
     GfVec4f vp = renderPassState->GetViewport();
+
+    GfVec2i aovSize({0,0,});
+    for (int aovIndex = 0; aovIndex < _aovBindings.size(); aovIndex++) {
+        auto aovRenderBuffer = static_cast<HdOSPRayRenderBuffer*>(
+               _aovBindings[aovIndex].renderBuffer);
+        if (_aovNames[aovIndex].name == HdAovTokens->color)
+            aovSize = {(int)aovRenderBuffer->GetWidth(), (int)aovRenderBuffer->GetHeight()};
+    }
+    if (aovSize[0] != 0 && aovSize[0] != vp[2] || aovSize[1] != vp[3]) {
+        std::cout << "WARNING: mismatch in Framebuffer to aovSize: " << aovSize[0] << " " << aovSize[1]
+            << "\nvp: " << vp[2] << " " << vp[3] << std::endl;
+    }
     bool frameBufferDirty = (_width != vp[2] || _height != vp[3]);
     bool useDenoiser = _denoiserLoaded && _useDenoiser
            && (_numSamplesAccumulated >= _denoiserSPPThreshold);
@@ -223,10 +236,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 _interactiveFrameBufferScale
                        = updateInteractiveFrameBufferScale;
             }
-            // std::cout << "Target FPS: "<< _interactiveTargetFPS << "\tCurrent
-            // FPS: " << currentFPS <<"\t Scale Change: " << scaleChange <<
-            // std::endl; std::cout << "InteractiveBufferScale: "<<
-            // _interactiveFrameBufferScale << std::endl;
         }
     }
 
@@ -249,6 +258,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                               /*multiSampled=*/false);
         interactiveFramebufferDirty = true;
         _pendingResetImage = true;
+        _previousFrame = _currentFrame;
 
         // Determine whether we need to update the renderer AOV bindings.
         //
@@ -262,9 +272,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         HdRenderPassAovBindingVector aovBindings
                = renderPassState->GetAovBindings();
         if (_aovBindings != aovBindings || _aovBindings.empty()) {
-            // _aovBindings = aovBindings;
-
-            // _renderThread->StopRender();
             TF_DEBUG_MSG(OSP_RP, "updating aov\n");
             if (aovBindings.size() == 0) {
                 TF_DEBUG_MSG(OSP_RP, "creating color aov\n");
@@ -274,17 +281,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 colorAov.clearValue
                        = VtValue(GfVec4f(0.0707f, 0.0707f, 0.0707f, 0.0f));
                 aovBindings.push_back(colorAov);
-                // HdRenderPassAovBinding depthAov;
-                // depthAov.aovName = HdAovTokens->depth;
-                // depthAov.renderBuffer = &_depthBuffer;
-                // depthAov.clearValue = VtValue(1.0f);
-                // aovBindings.push_back(depthAov);
             }
             SetAovBindings(aovBindings);
-            // In general, the render thread clears aov bindings, but make sure
-            // they are cleared initially on this thread.
-            // _renderer->Clear();
-            // needStartRender = true;
         }
     }
 
@@ -332,7 +330,9 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     // set render frames size based on interaction mode
     if (_interacting) {
         if (_currentFrame.width
-            != (unsigned int)(float(_width) / _interactiveFrameBufferScale)) {
+            != (unsigned int)(float(_width) / _interactiveFrameBufferScale)
+            || _currentFrame.height
+            != (unsigned int)(float(_height) / _interactiveFrameBufferScale)) {
             _currentFrame.width
                    = (unsigned int)(float(_width)
                                     / _interactiveFrameBufferScale);
@@ -345,7 +345,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         }
         _currentFrameBufferScale = _interactiveFrameBufferScale;
     } else {
-        if (_currentFrame.width != _width) {
+        if (_currentFrame.width != _width || _currentFrame.height != _height) {
             _currentFrame.width = _width;
             _currentFrame.height = _height;
             _currentFrame.colorBuffer.resize(_currentFrame.width
@@ -392,60 +392,56 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _numSamplesAccumulated += std::max(1, _spp);
     }
     TF_DEBUG_MSG(OSP_RP, "ospRP::Execute done\n");
-
-    if(_currentFrame.width !=  _colorBuffer.GetWidth() || _currentFrame.height != _colorBuffer.GetHeight())
-    {
-        //std::cout << "Renderbuffer size: " <<  renderBuffer.width << "\t" << renderBuffer.height << std::endl;
-        // IS NOT TRIGGERED ????????
-        std::cout << "ARGHHHHHHHHHHHHHHHHHHHH" << std::endl;
-        std::cout << "AOVbuffer size: " <<  _colorBuffer.GetWidth() << "\t" << _colorBuffer.GetHeight() << std::endl;
-        std::cout << "Framebuffer size: " <<  _currentFrame.width << "\t" << _currentFrame.height << std::endl;
-        std::cout << std::endl;
-    }
-
 }
 
 void
 HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
 {
-    TF_DEBUG_MSG(OSP_RP, "displayRB %d\n", _aovBindings.size());
+    TF_DEBUG_MSG(OSP_RP, "ospray render time: %f\n", renderBuffer.osprayFrame.duration());
+    static TfStopwatch timer;
+    timer.Stop();
+    double time = timer.GetSeconds();
+    timer.Reset();
+    timer.Start();
+    TF_DEBUG_MSG(OSP_RP, "display timer: %f\n", time);
+
+    TF_DEBUG_MSG(OSP_RP, "displayRB %zu\n", _aovBindings.size());
     for (int aovIndex = 0; aovIndex < _aovBindings.size(); aovIndex++) {
         auto aovRenderBuffer = static_cast<HdOSPRayRenderBuffer*>(
                _aovBindings[aovIndex].renderBuffer);
+        int aovWidth = aovRenderBuffer->GetWidth();
+        int aovHeight = aovRenderBuffer->GetHeight();
         if (_aovNames[aovIndex].name == HdAovTokens->color) {
-            TF_DEBUG_MSG(OSP_RP, "found aov color\n");
-            aovRenderBuffer->Map();
-            GfVec4f clearColor = {1.f, 1.f, 0.f, 0.f};
-            aovRenderBuffer->Clear(4, clearColor.data());
-
-            // For debugging: THIS SHOULD NEVER HAPPEN !!!!!!!!!!!!!!!!
-            if(renderBuffer.width != _currentFrame.width || _currentFrame.width !=  aovRenderBuffer->GetWidth() || renderBuffer.height != _currentFrame.height || _currentFrame.height !=  aovRenderBuffer->GetHeight())
-            {
-                std::cout << "Renderbuffer size: " <<  renderBuffer.width << "\t" << renderBuffer.height << std::endl;
-                std::cout << "AOVbuffer size: " <<  aovRenderBuffer->GetWidth() << "\t" << aovRenderBuffer->GetHeight() << std::endl;
-                std::cout << "Framebuffer size: " <<  _currentFrame.width << "\t" << _currentFrame.height << std::endl;
-                std::cout << std::endl;
-            }
-
-            if(renderBuffer.width == _currentFrame.width && renderBuffer.height == _currentFrame.height)
-            {
-
-                tbb::parallel_for( tbb::blocked_range<int>(0,renderBuffer.width*renderBuffer.height),
-                        [&](tbb::blocked_range<int> r)
-                {
-                    for (int pIdx=r.begin(); pIdx<r.end(); ++pIdx)
-                    {
-                        int j = pIdx / renderBuffer.width;
-                        int i = pIdx - j*renderBuffer.width;
-                        aovRenderBuffer->Write(GfVec3i(i, j, 1), 4,
-                            &(_currentFrame.colorBuffer[j*renderBuffer.width + i].x));
-                    }
-                });
-            }
-            aovRenderBuffer->Unmap();
-            aovRenderBuffer->Resolve();
+            if (aovWidth >= renderBuffer.width && aovHeight >= renderBuffer.height) {
+                TF_DEBUG_MSG(OSP_RP, "found aov color\n");
+                aovRenderBuffer->Map();
+                float xscale = float(renderBuffer.width) / float(aovWidth);
+                float yscale = float(renderBuffer.height) / float(aovHeight);
+                tbb::parallel_for(
+                    tbb::blocked_range<int>(0, aovWidth * aovHeight),
+                    [&](tbb::blocked_range<int> r) {
+                        for (int pIdx = r.begin(); pIdx < r.end(); ++pIdx) {
+                            int j = pIdx / aovWidth;
+                            int i = pIdx - j * aovWidth;
+                            int js = j * xscale;
+                            int is = i * yscale;
+                            aovRenderBuffer->Write(
+                                    GfVec3i(i, j, 1), 4,
+                                    &(renderBuffer
+                                            .colorBuffer[js * renderBuffer.width
+                                                            + is]
+                                            .x));
+                        }
+                    });
+                aovRenderBuffer->Unmap();
+            } else
+                std::cout << "ERROR: displayrenderbuffer size out of sync\n";
         }
     }
+    timer.Stop();
+    time = timer.GetSeconds();
+    timer.Start();
+    TF_DEBUG_MSG(OSP_RP, "display duration: %f\n", time);
 }
 
 void
@@ -675,8 +671,6 @@ HdOSPRayRenderPass::ProcessSettings()
         _pendingLightUpdate = true;
         _pendingResetImage = true;
     }
-
-    //_lastSettingsVersion = renderDelegate->GetRenderSettingsVersion();
 }
 
 void
@@ -691,7 +685,7 @@ HdOSPRayRenderPass::ProcessInstances()
     for (auto hdOSPRayBasisCurves : _renderParam->GetHdOSPRayBasisCurves()) {
         hdOSPRayBasisCurves->AddOSPInstances(_oldInstances);
     }
-    TF_DEBUG_MSG(OSP_RP, "ospRP::process instances %d\n", _oldInstances.size());
+    TF_DEBUG_MSG(OSP_RP, "ospRP::process instances %zu\n", _oldInstances.size());
     if (!_oldInstances.empty()) {
         opp::CopiedData data = opp::CopiedData(
                _oldInstances.data(), OSP_INSTANCE, _oldInstances.size());
@@ -712,9 +706,6 @@ HdOSPRayRenderPass::SetAovBindings(
     for (size_t i = 0; i < _aovBindings.size(); ++i) {
         _aovNames[i] = HdParsedAovToken(_aovBindings[i].aovName);
     }
-
-    // Re-validate the attachments.
-    // _aovBindingsNeedValidation = true;
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

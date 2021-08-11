@@ -59,12 +59,12 @@ public:
     ///                       (Only depth==1 is supported).
     ///   \param format       The format of the desired buffer, taken from the
     ///                       HdFormat enum.
-    ///   \param multisampled Whether the buffer is multisampled.
+    ///   \param multisampled Whether the buffer is multisampled.  Overrides to false.
     ///   \return             True if the buffer was successfully allocated,
     ///                       false with a warning otherwise.
     virtual bool Allocate(GfVec3i const& dimensions,
                           HdFormat format,
-                          bool multiSampled) override;
+                          bool multiSampled /*always false with OSPRay*/) override;
 
     /// Accessor for buffer width.
     ///   \return The width of the currently allocated buffer.
