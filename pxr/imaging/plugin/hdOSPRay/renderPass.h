@@ -25,9 +25,9 @@
 #define HDOSPRAY_RENDER_PASS_H
 
 #include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/tf/debug.h>
 #include <pxr/imaging/hd/renderPass.h>
 #include <pxr/pxr.h>
-#include <pxr/base/tf/debug.h>
 
 #include "renderBuffer.h"
 
@@ -100,11 +100,12 @@ public:
 
     /// Set the aov bindings to use for rendering.
     ///   \param aovBindings A list of aov bindings.
-    void SetAovBindings(HdRenderPassAovBindingVector const &aovBindings);
+    void SetAovBindings(HdRenderPassAovBindingVector const& aovBindings);
 
     /// Get the aov bindings being used for rendering.
     ///   \return the current aov bindings.
-    HdRenderPassAovBindingVector const& GetAovBindings() const {
+    HdRenderPassAovBindingVector const& GetAovBindings() const
+    {
         return _aovBindings;
     }
 
@@ -209,9 +210,6 @@ private:
 
     float _aoRadius { HDOSPRAY_DEFAULT_AO_RADIUS };
     float _aoIntensity { HDOSPRAY_DEFAULT_AO_INTENSITY };
-
-    // OpenGL framebuffer texture
-    //GLuint framebufferTexture = 0;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

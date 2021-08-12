@@ -33,11 +33,11 @@
 #include "config.h"
 #include "context.h"
 
+#include <OpenImageIO/imageio.h>
 #include <pxr/imaging/hdSt/material.h>
 #include <pxr/imaging/hdSt/resourceRegistry.h>
 #include <pxr/imaging/hdSt/shaderCode.h>
 #include <pxr/imaging/hdSt/surfaceShader.h>
-#include <OpenImageIO/imageio.h>
 
 #include <ospray/ospray_cpp.h>
 #include <ospray/ospray_cpp/ext/rkcommon.h>

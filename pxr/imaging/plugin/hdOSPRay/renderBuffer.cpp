@@ -22,7 +22,6 @@
 // language governing permissions and limitations under the Apache License.
 //
 #include "renderBuffer.h"
-// #include "pxr/imaging/plugin/hdOSPRay/renderParam.h"
 #include <pxr/base/gf/half.h>
 
 #include <tbb/parallel_for.h>
@@ -69,7 +68,7 @@ HdOSPRayRenderBuffer::_Deallocate()
 
 /*static*/
 size_t
-HdOSPRayRenderBuffer::_GetBufferSize(GfVec2i const &dims, HdFormat format)
+HdOSPRayRenderBuffer::_GetBufferSize(GfVec2i const& dims, HdFormat format)
 {
     return dims[0] * dims[1] * HdDataSizeOfFormat(format);
 }
@@ -81,25 +80,34 @@ HdOSPRayRenderBuffer::_GetSampleFormat(HdFormat format)
     HdFormat component = HdGetComponentFormat(format);
     size_t arity = HdGetComponentCount(format);
 
-    if (component == HdFormatUNorm8 || component == HdFormatSNorm8 ||
-        component == HdFormatFloat16 || component == HdFormatFloat32) {
-        if (arity == 1) { return HdFormatFloat32; }
-        else if (arity == 2) { return HdFormatFloat32Vec2; }
-        else if (arity == 3) { return HdFormatFloat32Vec3; }
-        else if (arity == 4) { return HdFormatFloat32Vec4; }
+    if (component == HdFormatUNorm8 || component == HdFormatSNorm8
+        || component == HdFormatFloat16 || component == HdFormatFloat32) {
+        if (arity == 1) {
+            return HdFormatFloat32;
+        } else if (arity == 2) {
+            return HdFormatFloat32Vec2;
+        } else if (arity == 3) {
+            return HdFormatFloat32Vec3;
+        } else if (arity == 4) {
+            return HdFormatFloat32Vec4;
+        }
     } else if (component == HdFormatInt32) {
-        if (arity == 1) { return HdFormatInt32; }
-        else if (arity == 2) { return HdFormatInt32Vec2; }
-        else if (arity == 3) { return HdFormatInt32Vec3; }
-        else if (arity == 4) { return HdFormatInt32Vec4; }
+        if (arity == 1) {
+            return HdFormatInt32;
+        } else if (arity == 2) {
+            return HdFormatInt32Vec2;
+        } else if (arity == 3) {
+            return HdFormatInt32Vec3;
+        } else if (arity == 4) {
+            return HdFormatInt32Vec4;
+        }
     }
     return HdFormatInvalid;
 }
 
 /*virtual*/
 bool
-HdOSPRayRenderBuffer::Allocate(GfVec3i const& dimensions,
-                               HdFormat format,
+HdOSPRayRenderBuffer::Allocate(GfVec3i const& dimensions, HdFormat format,
                                bool multiSampled)
 {
     // force single sampled for OSPRay buffers
@@ -118,92 +126,94 @@ HdOSPRayRenderBuffer::Allocate(GfVec3i const& dimensions,
     _height = dimensions[1];
     _format = format;
     _buffer.resize(_GetBufferSize(GfVec2i(_width, _height), format));
-    
+
     _multiSampled = multiSampled;
     if (_multiSampled) {
         _sampleBuffer.resize(_GetBufferSize(GfVec2i(_width, _height),
-            _GetSampleFormat(format)));
-        _sampleCount.resize(_width*_height);
+                                            _GetSampleFormat(format)));
+        _sampleCount.resize(_width * _height);
     }
 
     return true;
 }
 
-template<typename T>
-static void _WriteSample(HdFormat format, uint8_t *dst,
-                         size_t valueComponents, T const* value)
+template <typename T>
+static void
+_WriteSample(HdFormat format, uint8_t* dst, size_t valueComponents,
+             T const* value)
 {
     HdFormat componentFormat = HdGetComponentFormat(format);
     size_t componentCount = HdGetComponentCount(format);
 
     for (size_t c = 0; c < componentCount; ++c) {
         if (componentFormat == HdFormatInt32) {
-            ((int32_t*)dst)[c] +=
-                (c < valueComponents) ? (int32_t)(value[c]) : 0;
+            ((int32_t*)dst)[c]
+                   += (c < valueComponents) ? (int32_t)(value[c]) : 0;
         } else {
-            ((float*)dst)[c] +=
-                (c < valueComponents) ? (float)(value[c]) : 0.0f;
+            ((float*)dst)[c]
+                   += (c < valueComponents) ? (float)(value[c]) : 0.0f;
         }
     }
 }
 
-template<typename T>
-static void _WriteOutput(HdFormat format, uint8_t *dst,
-                         size_t valueComponents, T const* value)
+template <typename T>
+static void
+_WriteOutput(HdFormat format, uint8_t* dst, size_t valueComponents,
+             T const* value)
 {
     HdFormat componentFormat = HdGetComponentFormat(format);
     size_t componentCount = HdGetComponentCount(format);
 
     for (size_t c = 0; c < componentCount; ++c) {
         if (componentFormat == HdFormatInt32) {
-            ((int32_t*)dst)[c] =
-                (c < valueComponents) ? (int32_t)(value[c]) : 0;
+            ((int32_t*)dst)[c]
+                   = (c < valueComponents) ? (int32_t)(value[c]) : 0;
         } else if (componentFormat == HdFormatFloat16) {
-            ((uint16_t*)dst)[c] =
-                (c < valueComponents) ? GfHalf(value[c]).bits() : 0;
+            ((uint16_t*)dst)[c]
+                   = (c < valueComponents) ? GfHalf(value[c]).bits() : 0;
         } else if (componentFormat == HdFormatFloat32) {
-            ((float*)dst)[c] =
-                (c < valueComponents) ? (float)(value[c]) : 0.0f;
+            ((float*)dst)[c] = (c < valueComponents) ? (float)(value[c]) : 0.0f;
         } else if (componentFormat == HdFormatUNorm8) {
-            ((uint8_t*)dst)[c] =
-                (c < valueComponents) ? (uint8_t)(value[c] * 255.0f) : 0.0f;
+            ((uint8_t*)dst)[c] = (c < valueComponents)
+                   ? (uint8_t)(value[c] * 255.0f)
+                   : 0.0f;
         } else if (componentFormat == HdFormatSNorm8) {
-            ((int8_t*)dst)[c] =
-                (c < valueComponents) ? (int8_t)(value[c] * 127.0f) : 0.0f;
+            ((int8_t*)dst)[c]
+                   = (c < valueComponents) ? (int8_t)(value[c] * 127.0f) : 0.0f;
         }
     }
 }
 
 void
-HdOSPRayRenderBuffer::Write(
-    GfVec3i const& pixel, size_t numComponents, float const* value)
+HdOSPRayRenderBuffer::Write(GfVec3i const& pixel, size_t numComponents,
+                            float const* value)
 {
-    size_t idx = pixel[1]*_width+pixel[0];
+    size_t idx = pixel[1] * _width + pixel[0];
     if (_multiSampled) {
         size_t formatSize = HdDataSizeOfFormat(_GetSampleFormat(_format));
-        uint8_t *dst = &_sampleBuffer[idx*formatSize];
+        uint8_t* dst = &_sampleBuffer[idx * formatSize];
         _WriteSample(_format, dst, numComponents, value);
         _sampleCount[idx]++;
     } else {
         size_t formatSize = HdDataSizeOfFormat(_format);
-        uint8_t *dst = &_buffer[idx*formatSize];
+        uint8_t* dst = &_buffer[idx * formatSize];
         _WriteOutput(_format, dst, numComponents, value);
     }
 }
 
 void
-HdOSPRayRenderBuffer::Write(
-    GfVec3i const& pixel, size_t numComponents, int const* value)
+HdOSPRayRenderBuffer::Write(GfVec3i const& pixel, size_t numComponents,
+                            int const* value)
 {
-    size_t idx = pixel[1]*_width+pixel[0];
+    size_t idx = pixel[1] * _width + pixel[0];
     if (_multiSampled) {
         size_t formatSize = HdDataSizeOfFormat(_GetSampleFormat(_format));
-        uint8_t *dst = &_sampleBuffer[idx*formatSize];
+        uint8_t* dst = &_sampleBuffer[idx * formatSize];
         _WriteSample(_format, dst, numComponents, value);
         _sampleCount[idx]++;
     } else {
         size_t formatSize = HdDataSizeOfFormat(_format);
-        uint8_t *dst = &_buffer[idx*formatSize];
+        uint8_t* dst = &_buffer[idx * formatSize];
         _WriteOutput(_format, dst, numComponents, value);
     }
 }
@@ -213,15 +223,13 @@ HdOSPRayRenderBuffer::Clear(size_t numComponents, float const* value)
 {
     size_t formatSize = HdDataSizeOfFormat(_format);
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,_width*_height),
-                       [&](tbb::blocked_range<int> r)
-    {
-        for (int i=r.begin(); i<r.end(); ++i)
-        {
-            uint8_t *dst = &_buffer[i*formatSize];
-            _WriteOutput(_format, dst, numComponents, value);
-        }
-    });
+    tbb::parallel_for(tbb::blocked_range<int>(0, _width * _height),
+                      [&](tbb::blocked_range<int> r) {
+                          for (int i = r.begin(); i < r.end(); ++i) {
+                              uint8_t* dst = &_buffer[i * formatSize];
+                              _WriteOutput(_format, dst, numComponents, value);
+                          }
+                      });
 
     if (_multiSampled) {
         std::fill(_sampleCount.begin(), _sampleCount.end(), 0);
@@ -233,16 +241,13 @@ void
 HdOSPRayRenderBuffer::Clear(size_t numComponents, int const* value)
 {
     size_t formatSize = HdDataSizeOfFormat(_format);
-    tbb::parallel_for( tbb::blocked_range<int>(0,_width*_height),
-                       [&](tbb::blocked_range<int> r)
-    {
-        for (int i=r.begin(); i<r.end(); ++i)
-        {
-            uint8_t *dst = &_buffer[i*formatSize];
-            _WriteOutput(_format, dst, numComponents, value);
-        }
-    });
-
+    tbb::parallel_for(tbb::blocked_range<int>(0, _width * _height),
+                      [&](tbb::blocked_range<int> r) {
+                          for (int i = r.begin(); i < r.end(); ++i) {
+                              uint8_t* dst = &_buffer[i * formatSize];
+                              _WriteOutput(_format, dst, numComponents, value);
+                          }
+                      });
 
     if (_multiSampled) {
         std::fill(_sampleCount.begin(), _sampleCount.end(), 0);
@@ -274,22 +279,22 @@ HdOSPRayRenderBuffer::Resolve()
             continue;
         }
 
-        uint8_t *dst = &_buffer[i*formatSize];
-        uint8_t *src = &_sampleBuffer[i*sampleSize];
+        uint8_t* dst = &_buffer[i * formatSize];
+        uint8_t* src = &_sampleBuffer[i * sampleSize];
         for (size_t c = 0; c < componentCount; ++c) {
             if (componentFormat == HdFormatInt32) {
                 ((int32_t*)dst)[c] = ((int32_t*)src)[c] / sampleCount;
             } else if (componentFormat == HdFormatFloat16) {
-                ((uint16_t*)dst)[c] = GfHalf(
-                    ((float*)src)[c] / sampleCount).bits();
+                ((uint16_t*)dst)[c]
+                       = GfHalf(((float*)src)[c] / sampleCount).bits();
             } else if (componentFormat == HdFormatFloat32) {
                 ((float*)dst)[c] = ((float*)src)[c] / sampleCount;
             } else if (componentFormat == HdFormatUNorm8) {
-                ((uint8_t*)dst)[c] = (uint8_t)
-                    (((float*)src)[c] * 255.0f / sampleCount);
+                ((uint8_t*)dst)[c]
+                       = (uint8_t)(((float*)src)[c] * 255.0f / sampleCount);
             } else if (componentFormat == HdFormatSNorm8) {
-                ((int8_t*)dst)[c] = (int8_t)
-                    (((float*)src)[c] * 127.0f / sampleCount);
+                ((int8_t*)dst)[c]
+                       = (int8_t)(((float*)src)[c] * 127.0f / sampleCount);
             }
         }
     }

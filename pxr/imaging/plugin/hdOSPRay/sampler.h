@@ -24,8 +24,8 @@
 #ifndef HDOSPRAY_SAMPLER_H
 #define HDOSPRAY_SAMPLER_H
 
-#include <pxr/pxr.h>
 #include <cstddef>
+#include <pxr/pxr.h>
 
 #include <pxr/imaging/hd/enums.h>
 #include <pxr/imaging/hd/vtBufferSource.h>

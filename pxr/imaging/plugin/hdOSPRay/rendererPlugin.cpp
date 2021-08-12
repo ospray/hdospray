@@ -23,9 +23,9 @@
 //
 #include "rendererPlugin.h"
 
-#include <pxr/imaging/hd/rendererPluginRegistry.h>
 #include "config.h"
 #include "renderDelegate.h"
+#include <pxr/imaging/hd/rendererPluginRegistry.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

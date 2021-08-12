@@ -24,10 +24,10 @@
 #include "light.h"
 #include "../config.h"
 
+#include "../renderParam.h"
 #include <pxr/imaging/hd/perfLog.h>
 #include <pxr/imaging/hd/rprimCollection.h>
 #include <pxr/imaging/hd/sceneDelegate.h>
-#include "../renderParam.h"
 
 #include <pxr/base/gf/matrix4d.h>
 

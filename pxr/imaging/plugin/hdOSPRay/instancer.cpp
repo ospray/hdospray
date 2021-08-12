@@ -24,8 +24,8 @@
 
 #include "instancer.h"
 
-#include <pxr/imaging/hd/sceneDelegate.h>
 #include "sampler.h"
+#include <pxr/imaging/hd/sceneDelegate.h>
 
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/quaternion.h>

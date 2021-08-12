@@ -25,19 +25,18 @@
 
 #include "config.h"
 #include "instancer.h"
+#include "renderBuffer.h"
 #include "renderParam.h"
 #include "renderPass.h"
-#include "renderBuffer.h"
 
 #include <pxr/imaging/hd/resourceRegistry.h>
 
+#include "basisCurves.h"
 #include "lights/diskLight.h"
 #include "lights/distantLight.h"
 #include "lights/domeLight.h"
 #include "lights/rectLight.h"
 #include "lights/sphereLight.h"
-//#include "lights/simpleLight.h"
-#include "basisCurves.h"
 #include "material.h"
 #include "mesh.h"
 
@@ -107,8 +106,7 @@ HdOSPRayRenderDelegate::_Initialize()
 
     // Store top-level OSPRay objects inside a render param that can be
     // passed to prims during Sync().
-    _renderParam
-           = std::make_shared<HdOSPRayRenderParam>(_renderer);
+    _renderParam = std::make_shared<HdOSPRayRenderParam>(_renderer);
 
     // Initialize one resource registry for all OSPRay plugins
     std::lock_guard<std::mutex> guard(_mutexResourceRegistry);
@@ -281,8 +279,8 @@ HdRenderPassSharedPtr
 HdOSPRayRenderDelegate::CreateRenderPass(HdRenderIndex* index,
                                          HdRprimCollection const& collection)
 {
-    return HdRenderPassSharedPtr(new HdOSPRayRenderPass(
-           index, collection, _renderer, _renderParam));
+    return HdRenderPassSharedPtr(
+           new HdOSPRayRenderPass(index, collection, _renderer, _renderParam));
 }
 
 HdInstancer*
