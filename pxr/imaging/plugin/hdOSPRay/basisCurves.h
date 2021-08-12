@@ -24,16 +24,16 @@
 #ifndef HDOSPRAY_BASISCURVES_H
 #define HDOSPRAY_BASISCURVES_H
 
-#include "pxr/base/gf/matrix4f.h"
-#include "pxr/base/gf/vec2f.h"
-#include "pxr/base/vt/array.h"
-#include "pxr/imaging/hd/basisCurves.h"
-#include "pxr/imaging/hd/enums.h"
-#include "pxr/pxr.h"
-#include "pxr/usd/sdf/path.h"
+#include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/vt/array.h>
+#include <pxr/imaging/hd/basisCurves.h>
+#include <pxr/imaging/hd/enums.h>
+#include <pxr/pxr.h>
+#include <pxr/usd/sdf/path.h>
 
-#include "ospray/ospray_cpp.h"
-#include "ospray/ospray_cpp/ext/rkcommon.h"
+#include <ospray/ospray_cpp.h>
+#include <ospray/ospray_cpp/ext/rkcommon.h>
 
 #include <mutex>
 

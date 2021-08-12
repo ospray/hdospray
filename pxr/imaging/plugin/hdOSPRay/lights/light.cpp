@@ -21,15 +21,15 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/imaging/hdOSPRay/lights/light.h"
-#include "pxr/imaging/hdOSPRay/config.h"
+#include "light.h"
+#include "../config.h"
 
-#include "pxr/imaging/hd/perfLog.h"
-#include "pxr/imaging/hd/rprimCollection.h"
-#include "pxr/imaging/hd/sceneDelegate.h"
-#include "pxr/imaging/hdOSPRay/renderParam.h"
+#include "../renderParam.h"
+#include <pxr/imaging/hd/perfLog.h>
+#include <pxr/imaging/hd/rprimCollection.h>
+#include <pxr/imaging/hd/sceneDelegate.h>
 
-#include "pxr/base/gf/matrix4d.h"
+#include <pxr/base/gf/matrix4d.h>
 
 #include <iostream>
 
@@ -91,7 +91,7 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
     // Extrating the transformation/positioning of the light source in the scene
     if (bits & DirtyTransform) {
         VtValue transform = sceneDelegate->GetLightParamValue(
-               id, HdLightTokens->transform);
+               id, HdTokens->transform);
         if (transform.IsHolding<GfMatrix4d>()) {
             _transform = transform.Get<GfMatrix4d>();
         } else {

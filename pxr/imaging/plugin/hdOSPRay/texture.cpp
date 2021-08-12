@@ -22,10 +22,10 @@
 // language governing permissions and limitations under the Apache License.
 //
 
-#include "pxr/imaging/hdOSPRay/texture.h"
-#include "pxr/imaging/hdOSPRay/config.h"
+#include "texture.h"
+#include "config.h"
 
-#include "rkcommon/math/vec.h"
+#include <rkcommon/math/vec.h>
 
 #include <OpenImageIO/imageio.h>
 

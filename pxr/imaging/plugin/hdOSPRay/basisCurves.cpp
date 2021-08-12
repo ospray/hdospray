@@ -22,22 +22,22 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/imaging/hdOSPRay/basisCurves.h"
-#include "pxr/imaging/hdOSPRay/config.h"
-#include "pxr/imaging/hdOSPRay/context.h"
-#include "pxr/imaging/hdOSPRay/instancer.h"
-#include "pxr/imaging/hdOSPRay/material.h"
-#include "pxr/imaging/hdOSPRay/renderParam.h"
-#include "pxr/imaging/hdOSPRay/renderPass.h"
+#include "basisCurves.h"
+#include "config.h"
+#include "context.h"
+#include "instancer.h"
+#include "material.h"
+#include "renderParam.h"
+#include "renderPass.h"
 
-#include "pxr/base/gf/matrix4d.h"
-#include "pxr/base/gf/matrix4f.h"
-#include "pxr/base/gf/vec3f.h"
-#include "pxr/imaging/hd/meshUtil.h"
-#include "pxr/imaging/hd/smoothNormals.h"
-#include "pxr/imaging/pxOsd/tokens.h"
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/matrix4f.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/imaging/hd/meshUtil.h>
+#include <pxr/imaging/hd/smoothNormals.h>
+#include <pxr/imaging/pxOsd/tokens.h>
 
-#include "rkcommon/math/AffineSpace.h"
+#include <rkcommon/math/AffineSpace.h>
 
 using namespace rkcommon::math;
 

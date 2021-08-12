@@ -24,15 +24,15 @@
 #ifndef HDOSPRAY_RENDER_PARAM_H
 #define HDOSPRAY_RENDER_PARAM_H
 
-#include "pxr/imaging/hd/renderDelegate.h"
-#include "pxr/pxr.h"
+#include <pxr/imaging/hd/renderDelegate.h>
+#include <pxr/pxr.h>
 
 #include "basisCurves.h"
 #include "lights/light.h"
 #include "mesh.h"
 
-#include "ospray/ospray_cpp.h"
-#include "ospray/ospray_cpp/ext/rkcommon.h"
+#include <ospray/ospray_cpp.h>
+#include <ospray/ospray_cpp/ext/rkcommon.h>
 
 namespace opp = ospray::cpp;
 
@@ -47,7 +47,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 ///
 class HdOSPRayRenderParam final : public HdRenderParam {
 public:
-    HdOSPRayRenderParam(opp::Renderer renderer, std::atomic<int>* sceneVersion)
+    HdOSPRayRenderParam(opp::Renderer renderer)
         : _renderer(renderer)
     {
     }

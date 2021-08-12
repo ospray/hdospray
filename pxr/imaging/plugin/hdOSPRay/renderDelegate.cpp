@@ -21,31 +21,31 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/imaging/hdOSPRay/renderDelegate.h"
-#include "pxr/imaging/glf/glew.h"
+#include "renderDelegate.h"
 
-#include "pxr/imaging/hdOSPRay/config.h"
-#include "pxr/imaging/hdOSPRay/instancer.h"
-#include "pxr/imaging/hdOSPRay/renderParam.h"
-#include "pxr/imaging/hdOSPRay/renderPass.h"
+#include "config.h"
+#include "instancer.h"
+#include "renderBuffer.h"
+#include "renderParam.h"
+#include "renderPass.h"
 
-#include "pxr/imaging/hd/resourceRegistry.h"
+#include <pxr/imaging/hd/resourceRegistry.h>
 
-#include "pxr/imaging/hdOSPRay/lights/diskLight.h"
-#include "pxr/imaging/hdOSPRay/lights/distantLight.h"
-#include "pxr/imaging/hdOSPRay/lights/domeLight.h"
-#include "pxr/imaging/hdOSPRay/lights/rectLight.h"
-#include "pxr/imaging/hdOSPRay/lights/sphereLight.h"
-//#include "pxr/imaging/hdOSPRay/simpleLight.h"
-#include "pxr/imaging/hdOSPRay/basisCurves.h"
-#include "pxr/imaging/hdOSPRay/material.h"
-#include "pxr/imaging/hdOSPRay/mesh.h"
+#include "basisCurves.h"
+#include "lights/diskLight.h"
+#include "lights/distantLight.h"
+#include "lights/domeLight.h"
+#include "lights/rectLight.h"
+#include "lights/sphereLight.h"
+#include "material.h"
+#include "mesh.h"
+
 // XXX: Add other Rprim types later
-#include "pxr/imaging/hd/camera.h"
+#include <pxr/imaging/hd/camera.h>
 // XXX: Add other Sprim types later
-#include "pxr/imaging/hd/bprim.h"
+#include <pxr/imaging/hd/bprim.h>
 // XXX: Add bprim types
-#include "pxr/imaging/hdSt/material.h"
+#include <pxr/imaging/hdSt/material.h>
 
 #include <iostream>
 
@@ -69,7 +69,7 @@ const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES = {
 };
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {
-    // HdPrimTypeTokens->renderBuffer,
+    HdPrimTypeTokens->renderBuffer,
 };
 
 std::mutex HdOSPRayRenderDelegate::_mutexResourceRegistry;
@@ -106,8 +106,7 @@ HdOSPRayRenderDelegate::_Initialize()
 
     // Store top-level OSPRay objects inside a render param that can be
     // passed to prims during Sync().
-    _renderParam
-           = std::make_shared<HdOSPRayRenderParam>(_renderer, &_sceneVersion);
+    _renderParam = std::make_shared<HdOSPRayRenderParam>(_renderer);
 
     // Initialize one resource registry for all OSPRay plugins
     std::lock_guard<std::mutex> guard(_mutexResourceRegistry);
@@ -256,7 +255,7 @@ HdAovDescriptor
 HdOSPRayRenderDelegate::GetDefaultAovDescriptor(TfToken const& name) const
 {
     if (name == HdAovTokens->color) {
-        return HdAovDescriptor(HdFormatUNorm8Vec4, true,
+        return HdAovDescriptor(HdFormatFloat32Vec4, true,
                                VtValue(GfVec4f(0.0f)));
     } else if (name == HdAovTokens->normal || name == HdAovTokens->Neye) {
         return HdAovDescriptor(HdFormatFloat32Vec3, false,
@@ -280,8 +279,8 @@ HdRenderPassSharedPtr
 HdOSPRayRenderDelegate::CreateRenderPass(HdRenderIndex* index,
                                          HdRprimCollection const& collection)
 {
-    return HdRenderPassSharedPtr(new HdOSPRayRenderPass(
-           index, collection, _renderer, &_sceneVersion, _renderParam));
+    return HdRenderPassSharedPtr(
+           new HdOSPRayRenderPass(index, collection, _renderer, _renderParam));
 }
 
 HdInstancer*
@@ -363,6 +362,11 @@ HdBprim*
 HdOSPRayRenderDelegate::CreateBprim(TfToken const& typeId,
                                     SdfPath const& bprimId)
 {
+    if (typeId == HdPrimTypeTokens->renderBuffer) {
+        return new HdOSPRayRenderBuffer(bprimId);
+    } else {
+        TF_CODING_ERROR("Unknown Bprim Type %s", typeId.GetText());
+    }
     return nullptr;
 }
 

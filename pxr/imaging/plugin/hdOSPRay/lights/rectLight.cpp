@@ -21,15 +21,15 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "pxr/imaging/hdOSPRay/lights/rectLight.h"
+#include "rectLight.h"
 
-#include "pxr/imaging/hd/perfLog.h"
-#include "pxr/imaging/hd/rprimCollection.h"
-#include "pxr/imaging/hd/sceneDelegate.h"
+#include <pxr/imaging/hd/perfLog.h>
+#include <pxr/imaging/hd/rprimCollection.h>
+#include <pxr/imaging/hd/sceneDelegate.h>
 
-#include "pxr/base/gf/matrix4d.h"
+#include <pxr/base/gf/matrix4d.h>
 
-#include "pxr/usd/sdf/assetPath.h"
+#include <pxr/usd/sdf/assetPath.h>
 
 #include <iostream>
 

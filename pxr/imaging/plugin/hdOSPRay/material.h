@@ -25,13 +25,11 @@
 #ifndef HDOSPRAY_MATERIAL_H
 #define HDOSPRAY_MATERIAL_H
 
-#include "pxr/imaging/hd/material.h"
-#include "pxr/pxr.h"
+#include <pxr/imaging/hd/material.h>
+#include <pxr/pxr.h>
 
-#include "ospray/ospray_cpp.h"
-#include "ospray/ospray_cpp/ext/rkcommon.h"
-
-#include <boost/shared_ptr.hpp>
+#include <ospray/ospray_cpp.h>
+#include <ospray/ospray_cpp/ext/rkcommon.h>
 
 namespace opp = ospray::cpp;
 
@@ -64,7 +62,7 @@ public:
     }
 
     /// Causes the shader to be reloaded.
-    virtual void Reload() override
+    virtual void Reload()
     {
     }
 

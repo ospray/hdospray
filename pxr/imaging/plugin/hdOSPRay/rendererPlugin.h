@@ -24,8 +24,8 @@
 #ifndef HDOSPRAY_RENDERER_PLUGIN_H
 #define HDOSPRAY_RENDERER_PLUGIN_H
 
-#include "pxr/imaging/hd/rendererPlugin.h"
-#include "pxr/pxr.h"
+#include <pxr/imaging/hd/rendererPlugin.h>
+#include <pxr/pxr.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

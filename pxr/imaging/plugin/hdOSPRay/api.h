@@ -24,7 +24,7 @@
 #ifndef HDOSPRAY_API_H
 #define HDOSPRAY_API_H
 
-#include "pxr/base/arch/export.h"
+#include <pxr/base/arch/export.h>
 
 #if defined(PXR_STATIC)
 #    define HDOSPRAY_API

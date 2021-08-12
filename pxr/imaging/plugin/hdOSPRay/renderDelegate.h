@@ -24,9 +24,9 @@
 #ifndef HDOSPRAY_RENDER_DELEGATE_H
 #define HDOSPRAY_RENDER_DELEGATE_H
 
-#include "pxr/base/tf/staticTokens.h"
-#include "pxr/imaging/hd/renderDelegate.h"
-#include "pxr/pxr.h"
+#include <pxr/base/tf/staticTokens.h>
+#include <pxr/imaging/hd/renderDelegate.h>
+#include <pxr/pxr.h>
 
 #include "api.h"
 
@@ -242,9 +242,6 @@ private:
 
     // A list of render setting exports.
     HdRenderSettingDescriptorList _settingDescriptors;
-
-    // A version counter for edits to _scene.
-    std::atomic<int> _sceneVersion;
 
     int _lastCommittedModelVersion { -1 };
 

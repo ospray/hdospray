@@ -24,12 +24,15 @@
 #ifndef HDOSPRAY_RENDER_PASS_H
 #define HDOSPRAY_RENDER_PASS_H
 
-#include "pxr/base/gf/matrix4d.h"
-#include "pxr/imaging/hd/renderPass.h"
-#include "pxr/pxr.h"
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/tf/debug.h>
+#include <pxr/imaging/hd/renderPass.h>
+#include <pxr/pxr.h>
 
-#include "ospray/ospray_cpp.h"
-#include "ospray/ospray_cpp/ext/rkcommon.h"
+#include "renderBuffer.h"
+
+#include <ospray/ospray_cpp.h>
+#include <ospray/ospray_cpp/ext/rkcommon.h>
 
 #include "config.h"
 
@@ -38,6 +41,7 @@ namespace opp = ospray::cpp;
 using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
+TF_DEBUG_CODES(OSP_RP);
 
 class HdOSPRayRenderParam;
 
@@ -57,7 +61,7 @@ public:
     ///   \param scene The OSPRay scene to raycast into.
     HdOSPRayRenderPass(HdRenderIndex* index,
                        HdRprimCollection const& collection,
-                       opp::Renderer renderer, std::atomic<int>* sceneVersion,
+                       opp::Renderer renderer,
                        std::shared_ptr<HdOSPRayRenderParam> renderParam);
 
     /// Renderpass destructor.
@@ -93,6 +97,17 @@ public:
     };
 
     virtual void DisplayRenderBuffer(RenderFrame& renderFrame);
+
+    /// Set the aov bindings to use for rendering.
+    ///   \param aovBindings A list of aov bindings.
+    void SetAovBindings(HdRenderPassAovBindingVector const& aovBindings);
+
+    /// Get the aov bindings being used for rendering.
+    ///   \return the current aov bindings.
+    HdRenderPassAovBindingVector const& GetAovBindings() const
+    {
+        return _aovBindings;
+    }
 
 protected:
     // -----------------------------------------------------------------------
@@ -131,6 +146,9 @@ private:
 
     opp::FrameBuffer _frameBuffer;
     opp::FrameBuffer _interactiveFrameBuffer;
+    HdRenderPassAovBindingVector _aovBindings;
+    HdParsedAovTokenVector _aovNames;
+    HdOSPRayRenderBuffer _colorBuffer;
     float _currentFrameBufferScale { 1.0f };
     float _interactiveFrameBufferScale { 2.0f };
     float _interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
@@ -192,9 +210,6 @@ private:
 
     float _aoRadius { HDOSPRAY_DEFAULT_AO_RADIUS };
     float _aoIntensity { HDOSPRAY_DEFAULT_AO_INTENSITY };
-
-    // OpenGL framebuffer texture
-    GLuint framebufferTexture = 0;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

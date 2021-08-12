@@ -24,11 +24,11 @@
 #ifndef HDOSPRAY_CONTEXT_H
 #define HDOSPRAY_CONTEXT_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
-#include "pxr/imaging/hdOSPRay/sampler.h"
+#include "sampler.h"
 
-#include "pxr/base/gf/matrix4f.h"
+#include <pxr/base/gf/matrix4f.h>
 
 PXR_NAMESPACE_OPEN_SCOPE
 

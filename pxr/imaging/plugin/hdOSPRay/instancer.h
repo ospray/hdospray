@@ -24,13 +24,13 @@
 #ifndef HDOSPRAY_INSTANCER_H
 #define HDOSPRAY_INSTANCER_H
 
-#include "pxr/pxr.h"
+#include <pxr/pxr.h>
 
-#include "pxr/imaging/hd/instancer.h"
-#include "pxr/imaging/hd/vtBufferSource.h"
+#include <pxr/imaging/hd/instancer.h>
+#include <pxr/imaging/hd/vtBufferSource.h>
 
-#include "pxr/base/tf/hashmap.h"
-#include "pxr/base/tf/token.h"
+#include <pxr/base/tf/hashmap.h>
+#include <pxr/base/tf/token.h>
 
 #include <mutex>
 

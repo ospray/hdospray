@@ -24,22 +24,20 @@
 #ifndef HDOSPRAY_LIGHT_H
 #define HDOSPRAY_LIGHT_H
 
-#include "pxr/imaging/hd/light.h"
-#include "pxr/imaging/hd/version.h"
-#include "pxr/pxr.h"
+#include <pxr/imaging/hd/light.h>
+#include <pxr/imaging/hd/version.h>
+#include <pxr/pxr.h>
 
-#include "pxr/base/gf/matrix4d.h"
-#include "pxr/base/gf/vec3f.h"
-#include "pxr/base/tf/staticTokens.h"
-#include "pxr/base/vt/dictionary.h"
-#include "pxr/base/vt/value.h"
-
-#include <boost/shared_ptr.hpp>
+#include <pxr/base/gf/matrix4d.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/base/tf/staticTokens.h>
+#include <pxr/base/vt/dictionary.h>
+#include <pxr/base/vt/value.h>
 
 #include <vector>
 
-#include "ospray/ospray_cpp.h"
-#include "ospray/ospray_cpp/ext/rkcommon.h"
+#include <ospray/ospray_cpp.h>
+#include <ospray/ospray_cpp/ext/rkcommon.h>
 
 namespace opp = ospray::cpp;
 
