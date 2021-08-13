@@ -25,20 +25,12 @@
 #include "renderPass.h"
 #include "renderParam.h"
 
-<<<<<<< HEAD
-#include "pxr/imaging/hdOSPRay/config.h"
-#include "pxr/imaging/hdOSPRay/context.h"
-#include "pxr/imaging/hdOSPRay/lights/domeLight.h"
-#include "pxr/imaging/hdOSPRay/lights/light.h"
-#include "pxr/imaging/hdOSPRay/mesh.h"
-#include "pxr/imaging/hdOSPRay/renderDelegate.h"
-=======
 #include "config.h"
 #include "context.h"
 #include "lights/light.h"
+#include "lights/domeLight.h"
 #include "mesh.h"
 #include "renderDelegate.h"
->>>>>>> sh/houdini-usd+aov
 
 #include <pxr/imaging/hd/perfLog.h>
 #include <pxr/imaging/hd/renderPassState.h>
@@ -152,7 +144,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             aovSize = { (int)aovRenderBuffer->GetWidth(),
                         (int)aovRenderBuffer->GetHeight() };
     }
-    if (aovSize[0] != 0 && aovSize[0] != vp[2] || aovSize[1] != vp[3]) {
+    if (aovSize[0] != 0 && (aovSize[0] != vp[2] || aovSize[1] != vp[3])) {
         std::cout << "WARNING: mismatch in Framebuffer to aovSize: "
                   << aovSize[0] << " " << aovSize[1] << "\nvp: " << vp[2] << " "
                   << vp[3] << std::endl;

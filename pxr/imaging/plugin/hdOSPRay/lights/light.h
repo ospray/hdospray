@@ -72,6 +72,11 @@ public:
         return _visibility;
     }
 
+    inline bool IsVisibleToCamera() const
+    {
+        return _cameraVisibility;
+    }
+
     inline const opp::Light GetOSPLight() const
     {
         return _ospLight;
@@ -125,8 +130,10 @@ protected:
     // The transformation of the light source in the scene.
     GfMatrix4d _transform;
 
-    // if light source is visible to the camera
+    // if light source is on (not to be confused with camera visible)
     bool _visibility { true };
+    // if light source is visible to the camera
+    bool _cameraVisibility { true };
 
     // reference to the equivalent OSPLight
     opp::Light _ospLight;
