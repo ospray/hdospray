@@ -22,6 +22,21 @@
 # language governing permissions and limitations under the Apache License.
 #
 
+# Add a relative target path to the HDOSPRAY_RPATH.
+function(_add_target_to_rpath CURRENT_RPATH target)  
+get_target_property(LIBRARY_FILE ospray::ospray IMPORTED_LOCATION_RELEASE)
+
+  get_filename_component(LIBRARY_PATH ${LIBRARY_FILE} DIRECTORY)
+
+  file(RELATIVE_PATH
+      LIBRARY_PATH_REL
+      "${CMAKE_INSTALL_PREFIX}/plugin/usd"
+      ${LIBRARY_PATH}   
+  )
+  set (HDOSPRAY_RPATH "${CURRENT_RPATH}:$ORIGIN/${LIBRARY_PATH_REL}" PARENT_SCOPE)
+endfunction()
+
+
 add_library(hdOSPRay SHARED
     config.cpp
     instancer.cpp
@@ -50,6 +65,8 @@ find_package(ospray 2.5.0 REQUIRED)
 find_package(rkcommon 1.6.0 REQUIRED)
 
 if(USE_HOUDINI_USD)
+  # we build hdOSPRAy against the USD libraries shipped
+  # with Houdini 
   target_link_libraries(hdOSPRay PUBLIC
     ospray::ospray
     ospray::ospray_sdk
@@ -57,18 +74,24 @@ if(USE_HOUDINI_USD)
     Houdini
     )
 else()
-  find_package(OpenImageIO REQUIRED)
+  
   target_include_directories(hdOSPRay PUBLIC ${PXR_INCLUDE_DIRS})
   target_link_libraries(hdOSPRay PUBLIC
     ospray::ospray
     ospray::ospray_sdk
     rkcommon::rkcommon
-    ${OIIO_LIBRARIES}
     ${PXR_LIBRARIES}
     )
-endif()
 
-message(STATUS "PXR_LIBRARIES: " ${PXR_LIBRARIES})
+    # we need to find a way to figure out if OIIO is part of the USD package or not
+    if (TRUE)
+    find_package(OpenImageIO REQUIRED)
+    target_include_directories(hdOSPRay PUBLIC ${OIIO_INCLUDE_DIRS})
+    target_link_libraries(hdOSPRay PUBLIC
+      ${OIIO_LIBRARIES}
+      )
+    endif()
+endif()
 
 target_compile_definitions(hdOSPRay
   PRIVATE
@@ -76,10 +99,6 @@ target_compile_definitions(hdOSPRay
   MFB_ALT_PACKAGE_NAME=hdOSPRay
   )
 
-set_target_properties(hdOSPRay PROPERTIES
-  PREFIX ""
-  INSTALL_RPATH "$ORIGIN"
-  )
 install(TARGETS hdOSPRay DESTINATION plugin/usd)
 
 # plugInfo.json
@@ -114,3 +133,26 @@ if (HDOSPRAY_ENABLE_DENOISER)
   target_link_libraries(hdOSPRay PUBLIC OpenImageDenoise)
   target_compile_definitions(hdOSPRay PUBLIC -DHDOSPRAY_ENABLE_DENOISER)
 endif()
+
+########################################################################
+# RPATH
+########################################################################
+
+option(HDOSPRAY_SET_REL_RPATH "Adds the relative paths of OSPray and rkcommon to the rpath" ON)
+
+set (HDOSPRAY_RPATH "$ORIGIN")
+set (HDOSPRAY_RPATH "${HDOSPRAY_RPATH}:/../../lib")
+if(USE_HOUDINI_USD)
+else()
+  set (HDOSPRAY_RPATH "${HDOSPRAY_RPATH}:${pxr_DIR}/lib")
+endif()
+
+if(HDOSPRAY_SET_REL_RPATH)
+  _add_target_to_rpath(${HDOSPRAY_RPATH} ospray::ospray)
+  _add_target_to_rpath(${HDOSPRAY_RPATH} rkcommon::rkcommon)
+endif()
+
+set_target_properties(hdOSPRay PROPERTIES
+  PREFIX ""
+  INSTALL_RPATH ${HDOSPRAY_RPATH}
+  )
