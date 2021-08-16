@@ -27,8 +27,8 @@
 
 #include "config.h"
 #include "context.h"
-#include "lights/light.h"
 #include "lights/domeLight.h"
+#include "lights/light.h"
 #include "mesh.h"
 #include "renderDelegate.h"
 
@@ -73,8 +73,8 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _world = opp::World();
     _camera = opp::Camera("perspective");
     _renderer.setParam(
-            "backgroundColor",
-            vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
+           "backgroundColor",
+           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
 #if HDOSPRAY_ENABLE_DENOISER
     _denoiserLoaded = (ospLoadModule("denoiser") == OSP_NO_ERROR);
     if (!_denoiserLoaded)
@@ -502,12 +502,14 @@ HdOSPRayRenderPass::ProcessLights()
     const auto hdOSPRayLights = _renderParam->GetHdOSPRayLights();
     // if have image background, overide background color with image
     bool hasHDRI = false;
-    std::for_each(hdOSPRayLights.begin(), hdOSPRayLights.end(), [&](auto l) {
-        lights.push_back(l.second->GetOSPLight());
-        if (dynamic_cast<const HdOSPRayDomeLight*>(l.second)
-            && l.second->IsVisible())
-            hasHDRI = true;
-    });
+    for (auto l : hdOSPRayLights) {
+        if (l.second->IsVisible()) {
+            lights.push_back(l.second->GetOSPLight());
+            if (dynamic_cast<const HdOSPRayDomeLight*>(l.second)
+                && l.second->IsVisibleToCamera())
+                hasHDRI = true;
+        }
+    }
     if (hasHDRI && HdOSPRayConfig::GetInstance().usePathTracing) {
         _renderer.setParam(
                "backgroundColor",
