@@ -74,21 +74,33 @@ HdOSPRayDomeLight::_PrepareOSPLight()
 
     _hdriTexture = LoadOIIOTexture2D(_textureFile);
 
-    _ospLight = opp::Light("hdri");
-    // placement
-    _ospLight.setParam("up",
-                       vec3f(upDirection[0], upDirection[1], upDirection[2]));
-    _ospLight.setParam(
-           "direction",
-           vec3f(centerDirection[0], centerDirection[1], centerDirection[2]));
-    // emission
-    _ospLight.setParam("map", _hdriTexture);
-    _ospLight.setParam("color",
-                       vec3f(_emissionParam.color[0], _emissionParam.color[1],
-                             _emissionParam.color[2]));
-    _ospLight.setParam("intensity", _emissionParam.ExposedIntensity());
-    _ospLight.setParam("visible", _cameraVisibility);
-    _ospLight.commit();
+    if (_hdriTexture)
+    {
+        _ospLight = opp::Light("hdri");
+        // placement
+        _ospLight.setParam("up",
+                        vec3f(upDirection[0], upDirection[1], upDirection[2]));
+        _ospLight.setParam(
+            "direction",
+            vec3f(centerDirection[0], centerDirection[1], centerDirection[2]));
+        // emission
+        _ospLight.setParam("map", _hdriTexture);
+        _ospLight.setParam("color",
+                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
+                                _emissionParam.color[2]));
+        _ospLight.setParam("intensity", _emissionParam.ExposedIntensity());
+        _ospLight.setParam("visible", _cameraVisibility);
+        _ospLight.commit();
+    }
+    else
+    {
+        _ospLight = opp::Light("ambient");
+        _ospLight.setParam("color",
+                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
+                                _emissionParam.color[2]));
+        _ospLight.setParam("intensity", _emissionParam.ExposedIntensity());
+        _ospLight.commit();
+    }
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
