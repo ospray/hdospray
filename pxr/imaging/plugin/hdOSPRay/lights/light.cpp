@@ -30,6 +30,7 @@
 #include <pxr/imaging/hd/sceneDelegate.h>
 
 #include <pxr/base/gf/matrix4d.h>
+#include <pxr/usd/usdLux/blackbody.h>
 
 #include <iostream>
 
@@ -177,6 +178,19 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
             _cameraVisibility = vtCameraVisibility.Get<int>();
         }
     }
+
+    if  (_emissionParam.enableColorTemperature)
+    {
+         GfVec3f oldColor = _emissionParam.color;
+         _emissionParam.color = UsdLuxBlackbodyTemperatureAsRgb(_emissionParam.colorTemperature);
+
+         // we apply a gama correction to match Houdini's Karama
+         // TODO: doublecheck conversion algorithm to see if the output is SRGB or lin_SRGB
+         _emissionParam.color[0] = pow(_emissionParam.color[0], 1.0f/2.2f);
+         _emissionParam.color[1] = pow(_emissionParam.color[1], 1.0f/2.2f);
+         _emissionParam.color[2] = pow(_emissionParam.color[2], 1.0f/2.2f);
+    }
+
 
     // query light type specific parameters
     _LightSpecificSync(sceneDelegate, id, dirtyBits);
