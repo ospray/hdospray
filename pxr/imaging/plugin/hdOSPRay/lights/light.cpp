@@ -39,9 +39,9 @@ PXR_NAMESPACE_OPEN_SCOPE
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayLightTokens,
     ((intensityQuantity,"inputs:ospray:intensityQuantity"))
-    ((visibleToCamera, "ospray:visibleToCamera"))
-    ((karmaVisibleToCamera, "karma:light:renderlightgeo"))
-    ((prmanVisibleToCamera, "primvars:ri:attributes:visibility:camera"))
+    ((visibleToCamera,"ospray:visibleToCamera"))
+    ((karmaVisibleToCamera,"karma:light:renderlightgeo"))
+    ((prmanVisibleToCamera,"primvars:ri:attributes:visibility:camera"))
 );
 
 HdOSPRayLight::HdOSPRayLight(SdfPath const& id)
@@ -131,30 +131,48 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         _emissionParam.intensity
                = sceneDelegate->GetLightParamValue(id, HdLightTokens->intensity)
                         .Get<float>();
-        _emissionParam.normalize
-               = sceneDelegate->GetLightParamValue(id, HdLightTokens->normalize)
-                        .Get<bool>();
+
+        VtValue normalize = sceneDelegate->GetLightParamValue(id, HdLightTokens->normalize);
+        if(normalize.IsHolding<int>())
+        {
+            _emissionParam.normalize = normalize.Get<int>() == 1;
+        }
+        else if (normalize.IsHolding<bool>()){
+            _emissionParam.normalize = normalize.Get<bool>();
+        }
         auto vtLightQuantity = sceneDelegate->GetLightParamValue(id, HdOSPRayLightTokens->intensityQuantity);
         if (vtLightQuantity.IsHolding<int>())
         {
             _emissionParam.intensityQuantity = (OSPIntensityQuantity)vtLightQuantity.Get<int>();
         }
+
+        // checking if the light should be visible to the camera
+        // since there is no USD arrtibute for this feature we are checking
+        // the special primvars from Karma, Praman and OSPRay
         auto vtCameraVisibility = sceneDelegate->GetLightParamValue(id, HdOSPRayLightTokens->visibleToCamera);
         if (vtCameraVisibility.IsHolding<bool>())
         {
             _cameraVisibility = vtCameraVisibility.Get<bool>();
+        }
+        else if (vtCameraVisibility.IsHolding<int>())
+        {
+            _cameraVisibility = vtCameraVisibility.Get<int>();
         }
         vtCameraVisibility = sceneDelegate->GetLightParamValue(id, HdOSPRayLightTokens->karmaVisibleToCamera);
         if (vtCameraVisibility.IsHolding<bool>())
         {
             _cameraVisibility = vtCameraVisibility.Get<bool>();
         }
+        else if (vtCameraVisibility.IsHolding<int>())
+        {
+            _cameraVisibility = vtCameraVisibility.Get<int>();
+        }       
         vtCameraVisibility = sceneDelegate->GetLightParamValue(id, HdOSPRayLightTokens->prmanVisibleToCamera);
         if (vtCameraVisibility.IsHolding<bool>())
         {
             _cameraVisibility = vtCameraVisibility.Get<bool>();
         }
-        if (vtCameraVisibility.IsHolding<int>())
+        else if (vtCameraVisibility.IsHolding<int>())
         {
             _cameraVisibility = vtCameraVisibility.Get<int>();
         }

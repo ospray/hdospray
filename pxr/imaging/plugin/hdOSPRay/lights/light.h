@@ -133,7 +133,7 @@ protected:
     // if light source is on (not to be confused with camera visible)
     bool _visibility { true };
     // if light source is visible to the camera
-    bool _cameraVisibility { true };
+    bool _cameraVisibility { false };
 
     // reference to the equivalent OSPLight
     opp::Light _ospLight;

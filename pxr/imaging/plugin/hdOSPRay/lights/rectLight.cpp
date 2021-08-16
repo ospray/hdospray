@@ -116,6 +116,14 @@ HdOSPRayRectLight::_PrepareOSPLight()
         osp_edge1 = osp_edge1 * -1.0f;
     }
 
+    OSPIntensityQuantity intensityQuantity = _emissionParam.intensityQuantity;
+    if (intensityQuantity
+        == OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN) {
+        intensityQuantity = _emissionParam.normalize
+               ? OSP_INTENSITY_QUANTITY_POWER
+               : OSP_INTENSITY_QUANTITY_RADIANCE;
+    }
+
     _ospLight = opp::Light("quad");
     // placement
     _ospLight.setParam(
@@ -126,11 +134,7 @@ HdOSPRayRectLight::_PrepareOSPLight()
     _ospLight.setParam("edge2",
                        vec3f(osp_edge2[0], osp_edge2[1], osp_edge2[2]));
     // emission
-    if (_emissionParam.intensityQuantity
-        != OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN) {
-        _ospLight.setParam("intensityQuantity",
-                           _emissionParam.intensityQuantity);
-    }
+    _ospLight.setParam("intensityQuantity", intensityQuantity);
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));

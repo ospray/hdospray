@@ -70,6 +70,14 @@ HdOSPRaySphereLight::_PrepareOSPLight()
 
     float intensity = _emissionParam.ExposedIntensity();
 
+    OSPIntensityQuantity intensityQuantity = _emissionParam.intensityQuantity;
+    if (intensityQuantity
+        == OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN) {
+        intensityQuantity = _emissionParam.normalize
+               ? OSP_INTENSITY_QUANTITY_POWER
+               : OSP_INTENSITY_QUANTITY_RADIANCE;
+    }
+
     GfVec3f position(0, 0, 0);
     position = _transform.Transform(position);
     // Note: we are currently only considering translations
@@ -86,14 +94,7 @@ HdOSPRaySphereLight::_PrepareOSPLight()
     }
 
     // emission
-    if (_emissionParam.intensityQuantity
-        != OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN) {
-        _ospLight.setParam("intensityQuantity",
-                           _emissionParam.intensityQuantity);
-    } else {
-        _ospLight.setParam("intensityQuantity",
-                           OSP_INTENSITY_QUANTITY_RADIANCE);
-    }
+    _ospLight.setParam("intensityQuantity", intensityQuantity);
 
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],

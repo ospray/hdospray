@@ -73,6 +73,12 @@ HdOSPRayDiskLight::_PrepareOSPLight()
 {
     float intensity = _emissionParam.ExposedIntensity();
 
+    OSPIntensityQuantity intensityQuantity = _emissionParam.intensityQuantity;
+    if(intensityQuantity == OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN)
+    {
+        intensityQuantity = _emissionParam.normalize ? OSP_INTENSITY_QUANTITY_POWER : OSP_INTENSITY_QUANTITY_RADIANCE;
+    }
+
     // the initial center of the disk
     GfVec3f position(0, 0, 0);
     // positing to determine the direction of the spotlight
@@ -108,16 +114,8 @@ HdOSPRayDiskLight::_PrepareOSPLight()
     _ospLight.setParam("penumbraAngle", 0.0f);
 
     // emission
-    if (_emissionParam.intensityQuantity
-        != OSP_INTENSITY_QUANTITY_UNKNOWN) {
-        _ospLight.setParam("intensityQuantity",
-                           _emissionParam.intensityQuantity);
-    }
-    else
-    {
-        _ospLight.setParam("intensityQuantity",
-                           OSP_INTENSITY_QUANTITY_RADIANCE);
-    }
+    _ospLight.setParam("intensityQuantity",intensityQuantity);
+
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));
