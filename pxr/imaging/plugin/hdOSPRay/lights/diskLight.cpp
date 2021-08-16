@@ -37,12 +37,6 @@ using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-// clang-format off
-TF_DEFINE_PRIVATE_TOKENS(
-    HdOSPRaySpotLightTokens,
-    (openingAngle)
-);
-
 HdOSPRayDiskLight::HdOSPRayDiskLight(SdfPath const& id)
     : HdOSPRayLight(id)
 {
