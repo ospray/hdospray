@@ -24,7 +24,7 @@
 
 # Add a relative target path to the HDOSPRAY_RPATH.
 function(_add_target_to_rpath CURRENT_RPATH target)  
-get_target_property(LIBRARY_FILE ospray::ospray IMPORTED_LOCATION_RELEASE)
+  get_target_property(LIBRARY_FILE ${target} LOCATION)
 
   get_filename_component(LIBRARY_PATH ${LIBRARY_FILE} DIRECTORY)
 
