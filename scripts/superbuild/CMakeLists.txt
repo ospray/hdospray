@@ -55,16 +55,23 @@ set(SUPERBUILD_OSPRAY_VERSION "v2.6.0" CACHE STRING "git tag of ospray")
 set(SUPERBUILD_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.6.0.zip"
   CACHE STRING "url of ospray git")
 
-
-
 ###############################################################################
 #########          Dependency Build Switches                   ################
 ###############################################################################
 
-option(BUILD_USD "Build USD" ON)
+set(BUILD_USD ON CACHE BOOL "Build USD" )
 option(BUILD_OSPRAY "Build OSPRay" ON)
 option(BUILD_HDOSPRAY "Build HDOSPRAY" ON)
+set(DOWNLOAD_TBB ON CACHE BOOL "download and build tbb")
+set(TBB_PATH ${CMAKE_INSTALL_PREFIX} CACHE PATH "tbb root")
 
+option(SUPERBUILD_USE_HOUDINI "build against existing houdini USD")
+if (SUPERBUILD_USE_HOUDINI)
+  set(SUPERBUILD_HOUDINI_DIR "/opt/hfs18.5/toolkit/cmake" CACHE PATH "path to houdini dir with HoudiniConfig.cmake")
+  set(BUILD_USD OFF CACHE BOOL "Build USD" FORCE)
+  set(TBB_PATH "${SUPERBUILD_HOUDINI_DIR}/../../dsolib/" CACHE PATH "tbb root" FORCE)
+  set(DOWNLOAD_TBB OFF CACHE BOOL "download and build tbb" FORCE)
+endif()
 set(INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 
@@ -112,6 +119,8 @@ if (BUILD_HDOSPRAY)
       -Dospray_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/ospray-2.6.0
       -Drkcommon_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/rkcommon-1.6.1
       -DOIIO_BASE_DIR=${CMAKE_INSTALL_PREFIX}
+      -DUSE_HOUDINI_USD=${SUPERBUILD_USE_HOUDINI}
+      -DHoudini_DIR=${SUPERBUILD_HOUDINI_DIR}
   )
   ExternalProject_Add_StepDependencies(${EP_HDOSPRAY}
         configure ${EP_USD} ${EP_OSPRAY}
