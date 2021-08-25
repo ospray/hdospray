@@ -1,4 +1,4 @@
-# HdOSPRay
+# OSPRay for Hydra (HdOSPRay)
 OSPRay interactive rendering plugin for USD Hydra
 
 <p align="center">

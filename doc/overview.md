@@ -1,11 +1,10 @@
 
-## HdOSPRay
+## OSPRay for Hydra
 
-HdOSPRay is an open source plugin for Pixar's USD to extend USD's Hydra
+OSPRay for Hydra (hdOSPRay) is an open source plugin for Pixar's USD to extend the Hydra
 rendering framework with [Intel&reg; OSPRay](https://www.ospray.org). HdOSPRay
-enables interactive scene preview by utilizing OSPRay's high quality renderers
-and [Intel&reg; Open Image Denoise](http://openimagedenoise.org), and is
-released under the permissive Apache 2.0 license.
+enables interactive, path traced rendering by utilizing OSPRay's renderers
+and [Intel&reg; Open Image Denoise](http://openimagedenoise.org).  OSPRay for Hydra and OSPRay are released under the permissive Apache 2.0 license.
 
 As part of the [Intel oneAPI Rendering
 Toolkit](https://software.intel.com/en-us/rendering-framework), OSPRay is

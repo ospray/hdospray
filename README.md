@@ -1,4 +1,4 @@
-# HdOSPRay
+# OSPRay for Hydra (HdOSPRay)
 
 OSPRay interactive rendering plugin for USD Hydra
 
@@ -16,14 +16,14 @@ usdview.
 Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more
 information.
 
-## HdOSPRay
+## OSPRay for Hydra
 
-HdOSPRay is an open source plugin for Pixar’s USD to extend USD’s Hydra
-rendering framework with [Intel® OSPRay](https://www.ospray.org).
-HdOSPRay enables interactive scene preview by utilizing OSPRay’s high
-quality renderers and [Intel® Open Image
-Denoise](http://openimagedenoise.org), and is released under the
-permissive Apache 2.0 license.
+OSPRay for Hydra (hdOSPRay) is an open source plugin for Pixar’s USD to
+extend the Hydra rendering framework with [Intel®
+OSPRay](https://www.ospray.org). HdOSPRay enables interactive, path
+traced rendering by utilizing OSPRay’s renderers and [Intel® Open Image
+Denoise](http://openimagedenoise.org). OSPRay for Hydra and OSPRay are
+released under the permissive Apache 2.0 license.
 
 As part of the [Intel oneAPI Rendering
 Toolkit](https://software.intel.com/en-us/rendering-framework), OSPRay
@@ -192,9 +192,9 @@ usdview <br/>
     
     <br/>
 
-# Building HdOSPRay
+# Building OSPRay for Hydra
 
-HdOSPRay source is available on GitHub at
+OSPRay for Hydra source is available on GitHub at
 [HdOSPRay](http://github.com/ospray/hdospray). The master branch is
 typically the most stable branch and contains tagged releases.
 
@@ -209,15 +209,17 @@ USD is also experimental, but we have not tested HdOSPRay with it.
 
 ## Prerequisites
 
-  - [USD v20.05](https://graphics.pixar.com/usd/docs/index.html)
+If using the superbuild, all listed dependencies are downloaded for you.
+
+  - [USD v20.08](https://graphics.pixar.com/usd/docs/index.html)
       - USD is primarily tested with Linux, but has experimental support
         for MacOS and Windows. For a full list of USD dependencies, see
         the USD page.
-      - [OSPRay 2.5.0](http://www.ospray.org/)
+      - [OSPRay 2.6.0](http://www.ospray.org/)
           - We recommend using ospray’s superbuild to build dependencies
             such as embree, ospcommon, and openvkl. OpenImageDenoise can
             also be enabled through superbuild.
-      - [OpenImageIO 1.8.9](https://sites.google.com/site/openimageio/home)
+      - [OpenImageIO 1.8.17](https://sites.google.com/site/openimageio/home)
       - CMake 3.1.1+
 
 ## Optional Dependencies
@@ -229,7 +231,24 @@ USD is also experimental, but we have not tested HdOSPRay with it.
         enabled in the OSPRay build and the library accessible on
         library paths
 
-## Compiling USD on Linux/MacOS
+## Superbuild on Linux/MacOS
+
+HdOSPRay contains a cmake superbuild script that builds external
+dependencies for you and is the recommended way of building hdospray. By
+default, this will also build usdview.
+
+    mkdir build
+    cd build
+    cmake ../scripts/superbuild/ (or use ccmake to specify option through gui)
+    cmake --build . -j <numthreads>
+
+By default, all install files will be installed into
+<build dir>/install. A setup script can then be called to set paths:
+
+    source <build dir>/install/bin/setup_hdospray.sh
+    usdview <usdfile> --renderer OSPRay
+
+## Manual Compiling USD on Linux/MacOS
 
 To build USD, see the [USD GitHub
 site](https://github.com/PixarAnimationStudios/USD). We recommend
@@ -408,7 +427,11 @@ renderer.*
 
 # News, Updates, and Announcements
 
-  - May 28, 2021: Version v0.7 now released on GitHub
+  - August 24, 2021: Version 0.8 - Update to USD 20.08 - Houdini support
+    - Color buffer AOV support - Superbuild script added - Added camera
+    light visibility flags - Add thin materials
+
+  - May 28, 2021: Version v0.7
     
         - Update to OSPRay 2.6.0
         - Ptex support re-enabled.
@@ -417,7 +440,7 @@ renderer.*
         - Animation update fixes.
         - Support for curves.
 
-  - October 12, 2020: Version v0.6 now released on GitHub
+  - October 12, 2020: Version v0.6
     
         - Update to OSPRay 2.4.0
         - Added support for opacity textures.
@@ -426,7 +449,7 @@ renderer.*
         - Fixed some bigs with animated shapes (e.g., ARKit data sets).
         - Added support to toggle the visibility of light sources and shapes.
 
-  - July 31, 2020: Version v0.5 now released on GitHub
+  - July 31, 2020: Version v0.5
     
       - Update to OSPRay 2.2.0.
       - Added UsdLux light support.
@@ -435,31 +458,31 @@ renderer.*
       - Pixel Filters.
       - Subdivision surfaces interpolation mode fixes.
 
-  - June 15, 2020: Version v0.4 now released on GitHub
+  - June 15, 2020: Version v0.4
     
       - Update to OSPRay 2.1.0.
       - Update to USD 20.05.
 
-  - September 15, 2019: Version v0.3 now released on GitHub
+  - September 15, 2019: Version v0.3
     
       - Subdivision surfaces support.
       - GUI options for usdview.
       - Various bug fixes.
 
-  - April 30, 2019: Version v0.2.2 now released on GitHub
+  - April 30, 2019: Version v0.2.2
     
       - Various bug fixes.
       - OSPRay version updated to 1.8.5.
       - CMake targets.
       - Added animation support.
 
-  - Mar 7, 2019: Version v0.2.1 now released on GitHub
+  - Mar 7, 2019: Version v0.2.1
     
       - Bug fixes.
       - Ptex updates.
       - Documentation.
 
-  - Feb 28, 2019: Version v0.2.0 now released on GitHub
+  - Feb 28, 2019: Version v0.2.0
     
       - Initial Beta release version 0.2.0 is now available on the
         [HdOSPRay GitHub

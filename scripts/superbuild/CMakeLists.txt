@@ -127,3 +127,22 @@ if (BUILD_HDOSPRAY)
       )
 
 endif()
+
+###############################################################################
+#########          Create Setup Script                         ################
+###############################################################################
+
+if (SUPERBUILD_USE_HOUDINI)
+  FILE(WRITE ${CMAKE_INSTALL_PREFIX}/bin/setup_hdospray.sh 
+  "export LD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib:\${LD_LIBRARY_PATH}\n"
+  "cd ${SUPERBUILD_HOUDINI_DIR}/../../\n"
+  "source houdini_setup_bash\n"
+  "cd -\n"
+  "export PXR_PLUGINPATH_NAME=${CMAKE_INSTALL_PREFIX}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
+  )
+else()
+  FILE(WRITE ${CMAKE_INSTALL_PREFIX}/bin/setup_hdospray.sh 
+  "export LD_LIBRARY_PATH=${CMAKE_INSTALL_PREFIX}/lib:\${LD_LIBRARY_PATH}\n"
+  "export PYTHONPATH=${CMAKE_INSTALL_PREFIX}/lib/python:\${PYTHONPATH}\n"
+  "export PATH=${CMAKE_INSTALL_PREFIX}/bin:\${PATH}\n")
+endif()

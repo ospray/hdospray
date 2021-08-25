@@ -1,6 +1,6 @@
-# Building HdOSPRay
+# Building OSPRay for Hydra
 
-HdOSPRay source is available on GitHub at
+OSPRay for Hydra source is available on GitHub at
 [HdOSPRay](http://github.com/ospray/hdospray). The master branch is typically
 the most stable branch and contains tagged releases.
 
@@ -14,14 +14,16 @@ also experimental, but we have not tested HdOSPRay with it.
 
 ## Prerequisites
 
-- [USD v20.05](https://graphics.pixar.com/usd/docs/index.html)
+If using the superbuild, all listed dependencies are downloaded for you. 
+
+- [USD v20.08](https://graphics.pixar.com/usd/docs/index.html)
   - USD is primarily tested with Linux, but has experimental support for MacOS and Windows.
     For a full list of USD dependencies, see the USD page.
-  - [OSPRay 2.5.0](http://www.ospray.org/)
+  - [OSPRay 2.6.0](http://www.ospray.org/)
       - We recommend using ospray’s superbuild to build dependencies
         such as embree, ospcommon, and openvkl.  OpenImageDenoise can
         also be enabled through superbuild.
-  - [OpenImageIO 1.8.9](https://sites.google.com/site/openimageio/home)
+  - [OpenImageIO 1.8.17](https://sites.google.com/site/openimageio/home)
   - CMake 3.1.1+
 
 ## Optional Dependencies
@@ -33,7 +35,29 @@ also experimental, but we have not tested HdOSPRay with it.
         to be enabled in the OSPRay build and the library accessible 
         on library paths
 
-## Compiling USD on Linux/MacOS
+## Superbuild on Linux/MacOS
+
+HdOSPRay contains a cmake superbuild script that builds external dependencies for you
+and is the recommended way of building hdospray.  By default, this will also build
+usdview.
+
+```
+mkdir build
+cd build
+cmake ../scripts/superbuild/ (or use ccmake to specify option through gui)
+cmake --build . -j <numthreads>
+```
+
+By default, all install files will be installed into <build dir>/install.
+A setup script can then be called to set paths:
+
+```
+source <build dir>/install/bin/setup_hdospray.sh
+usdview <usdfile> --renderer OSPRay
+```
+
+
+## Manual Compiling USD on Linux/MacOS
 
 To build USD, see the [USD GitHub
 site](https://github.com/PixarAnimationStudios/USD). 
