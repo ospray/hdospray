@@ -43,10 +43,6 @@ include(GNUInstallDirs)
 option(USE_PYTHON "enable python support" ON)
 option(USE_PYTHON2 "if USE_PYTHON enabled, use python2 instead of python3" OFF)
 
-#TODO: superbuild will likely be included as part of hdospray repo as script
-set(SUPERBUILD_HDOSPRAY_VERSION "release-0.8.x" CACHE STRING "git tag of hdospray")
-set(SUPERBUILD_HDOSPRAY_URL "https://github.com/ospray/hdospray.git"
-   CACHE STRING "url of git repo for hdospray")
 set(SUPERBUILD_USD_VERSION "release-20.08" CACHE STRING "git tag of usd superbuild")
 set(SUPERBUILD_USD_URL "https://github.com/carsonbrownlee/USD_superbuild.git"
   CACHE STRING "url of usd superbuild git")
@@ -54,6 +50,7 @@ option(OSPRAY_USE_GIT OFF)
 set(SUPERBUILD_OSPRAY_VERSION "v2.6.0" CACHE STRING "git tag of ospray")
 set(SUPERBUILD_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.6.0.zip"
   CACHE STRING "url of ospray git")
+option(SUPERBUILD_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
 
 ###############################################################################
 #########          Dependency Build Switches                   ################
@@ -105,12 +102,9 @@ if (BUILD_HDOSPRAY)
     ${EP_HDOSPRAY}
     PREFIX ${EP_HDOSPRAY}
     DOWNLOAD_COMMAND ""
-    DOWNLOAD_DIR ${EP_HDOSPRAY}
     STAMP_DIR ${EP_HDOSPRAY}/stamp
     SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../
     BINARY_DIR ${EP_HDOSPRAY}/build
-    GIT_REPOSITORY ${SUPERBUILD_HDOSPRAY_URL}
-    GIT_TAG ${SUPERBUILD_HDOSPRAY_VERSION}
     CMAKE_ARGS
       -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_INSTALL_PREFIX}
       -DCMAKE_PREFIX_PATH:PATH=${CMAKE_INSTALL_PREFIX}
@@ -121,6 +115,7 @@ if (BUILD_HDOSPRAY)
       -DOIIO_BASE_DIR=${CMAKE_INSTALL_PREFIX}
       -DUSE_HOUDINI_USD=${SUPERBUILD_USE_HOUDINI}
       -DHoudini_DIR=${SUPERBUILD_HOUDINI_DIR}
+      -DHDOSPRAY_ENABLE_DENOISER=${SUPERBUILD_USE_DENOISER}
   )
   ExternalProject_Add_StepDependencies(${EP_HDOSPRAY}
         configure ${EP_USD} ${EP_OSPRAY}
