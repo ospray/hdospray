@@ -129,19 +129,19 @@ endif()
 
 if (SUPERBUILD_USE_HOUDINI)
   FILE(WRITE ${CMAKE_INSTALL_PREFIX}/setup_hdospray.sh 
-  "export HDOSPRAY_ROOT=${CMAKE_INSTALL_PREFIX}"
-  "export LD_LIBRARY_PATH=${HDOSPRAY_ROOT}/lib:\${LD_LIBRARY_PATH}\n"
+  "export HDOSPRAY_ROOT=${CMAKE_INSTALL_PREFIX}\n"
+  "export LD_LIBRARY_PATH=\${HDOSPRAY_ROOT}/lib:\${LD_LIBRARY_PATH}\n"
   "cd ${SUPERBUILD_HOUDINI_DIR}/../../\n"
   "source houdini_setup_bash\n"
   "cd -\n"
-  "export PXR_PLUGINPATH_NAME=${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
+  "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
   )
 else()
   FILE(WRITE ${CMAKE_INSTALL_PREFIX}/setup_hdospray.sh 
-  "export HDOSPRAY_ROOT=${CMAKE_INSTALL_PREFIX}"
-  "export LD_LIBRARY_PATH=${HDOSPRAY_ROOT}/lib:\${LD_LIBRARY_PATH}\n"
-  "export PYTHONPATH=${HDOSPRAY_ROOT}/lib/python:\${PYTHONPATH}\n"
-  "export PATH=${HDOSPRAY_ROOT}/bin:\${PATH}\n"
-  "export PXR_PLUGINPATH_NAME=${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
+  "export HDOSPRAY_ROOT=${CMAKE_INSTALL_PREFIX}\n"
+  "export LD_LIBRARY_PATH=\${HDOSPRAY_ROOT}/lib:\${LD_LIBRARY_PATH}\n"
+  "export PYTHONPATH=\${HDOSPRAY_ROOT}/lib/python:\${PYTHONPATH}\n"
+  "export PATH=\${HDOSPRAY_ROOT}/bin:\${PATH}\n"
+  "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
   )
 endif()
