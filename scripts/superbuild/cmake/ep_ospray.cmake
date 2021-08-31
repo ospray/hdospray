@@ -23,6 +23,7 @@ set(ARGS_OSPRAY_DOWNLOAD URL ${SUPERBUILD_OSPRAY_URL})
       -DDOWNLOAD_TBB=OFF
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
       -DBUILD_OIDN=${SUPERBUILD_USE_DENOISER}
+      -DBUILD_OIDN_FROM_SOURCE=${SUPERBUILD_USE_DENOISER}
       -DTBB_PATH=${TBB_PATH}
       # -DOSPRAY_BUILD_ISA=ALL
       # -DOSPRAY_ENABLE_TESTING=OFF
@@ -35,6 +36,7 @@ set(ARGS_OSPRAY_DOWNLOAD URL ${SUPERBUILD_OSPRAY_URL})
       # -Drkcommon_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/rkcommon-1.6.1
       # -Dopenvkl_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/openvkl-0.13.0
     INSTALL_COMMAND ""
+    PATCH_COMMAND patch ${CMAKE_BINARY_DIR}/${EP_OSPRAY}/source/scripts/superbuild/dependencies/dep_oidn.cmake < ${CMAKE_SOURCE_DIR}/patches/OSPRay_superbuild_OIDN.patch COMMAND patch ${CMAKE_BINARY_DIR}/${EP_OSPRAY}/source/scripts/superbuild/CMakeLists.txt < ${CMAKE_SOURCE_DIR}/patches/OSPRay_superbuild_CMakeLists.patch
   )
 
   ExternalProject_Add_StepDependencies(${EP_OSPRAY}

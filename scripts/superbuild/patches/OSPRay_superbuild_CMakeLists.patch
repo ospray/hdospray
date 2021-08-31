@@ -1,0 +1,11 @@
+--- CMakeLists.txt	2021-05-20 03:52:21.000000000 +0200
++++ OSPRay_superbuild_CMakeLists_patched.txt	2021-08-31 10:18:56.645757053 +0200
+@@ -110,7 +110,7 @@
+ set(OIDN_VERSION "1.4.0" CACHE STRING "Which version of OpenImageDenoise to build?")
+ if (OIDN_VERSION STREQUAL "1.4.0")
+   if (BUILD_OIDN_FROM_SOURCE)
+-    set(OIDN_HASH "c4292d692dda4b3ca220d732d1a5830970b5a23e3f7a04c5120f044c8fc870f8")
++    set(OIDN_HASH "bbe15f6e8070beeb2bb4d2e0115e75fa8c2d40e7f90809092a421f41406b7790")
+   else()
+     if (APPLE)
+       set(OIDN_HASH "0bbab6ac504fbde2d3b9c247e7a88dc7134f93e64ccaa7f441c6c8e00a0231d5")

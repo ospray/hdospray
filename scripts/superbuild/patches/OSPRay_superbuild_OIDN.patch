@@ -1,0 +1,16 @@
+--- dep_oidn.cmake	2021-05-20 03:52:21.000000000 +0200
++++ dep_oidn_patched.cmake	2021-08-31 11:32:48.001073412 +0200
+@@ -21,7 +21,7 @@
+     SOURCE_DIR ${COMPONENT_NAME}/src
+     BINARY_DIR ${COMPONENT_NAME}/build
+     LIST_SEPARATOR | # Use the alternate list separator
+-    URL "https://github.com/OpenImageDenoise/oidn/archive/${OIDN_ARCHIVE}.zip"
++    URL "https://github.com/OpenImageDenoise/oidn/releases/download/${OIDN_ARCHIVE}/oidn-${OIDN_VERSION}.src.zip"
+     ${OIDN_URL_HASH}
+     CMAKE_ARGS
+       -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}
+@@ -77,3 +77,4 @@
+ list(APPEND CMAKE_PREFIX_PATH ${COMPONENT_PATH})
+ string(REPLACE ";" "|" CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}")
+ 
++
