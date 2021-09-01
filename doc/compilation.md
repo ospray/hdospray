@@ -48,7 +48,7 @@ usdview.
 ```
 mkdir build
 cd build
-cmake ../scripts/superbuild/ (or use ccmake to specify option through gui)
+cmake -DCMAKE_INSTALL_PREFIX=<install_dir> ../scripts/superbuild/ (or use ccmake to specify option through gui)
 cmake --build . -j <numthreads>
 ```
 
@@ -56,7 +56,7 @@ By default, all install files will be installed into <build dir>/install.
 A setup script can then be called to set paths:
 
 ```
-source <build dir>/install/bin/setup_hdospray.sh
+source <install_dir>/setup_hdospray.sh
 usdview <usdfile> --renderer OSPRay
 ```
 
