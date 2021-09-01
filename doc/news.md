@@ -1,13 +1,14 @@
 News, Updates, and Announcements
 ================================
 
-- August 24, 2021: Version 0.8
-      - Update to USD 20.08
-      - Houdini support
-      - Color buffer AOV support
-      - Superbuild script added
-      - Added camera light visibility flags
-      - Add thin materials
+- August 24, 2021: Version v0.8
+
+      - Update to USD 20.08.
+      - Houdini support.
+      - Color buffer AOV support.
+      - Superbuild script added.
+      - Added camera light visibility flags.
+      - Add thin materials.
 
 
 - May 28, 2021: Version v0.7

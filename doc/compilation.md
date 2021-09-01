@@ -14,26 +14,30 @@ also experimental, but we have not tested HdOSPRay with it.
 
 ## Prerequisites
 
-If using the superbuild, all listed dependencies are downloaded for you. 
+If using the superbuild, the only dependencies are:
+- c/c++ compiler (gcc 6.3.1+)
+- cmake 3.1.1+
+- python (3.7.x+ recommended), with PySide/PySide2 and PyOpenGL.  'pip install PySide2 PyOpenGL' may work
 
+If you are building standalone, you will need:
 - [USD v20.08](https://graphics.pixar.com/usd/docs/index.html)
   - USD is primarily tested with Linux, but has experimental support for MacOS and Windows.
     For a full list of USD dependencies, see the USD page.
-  - [OSPRay 2.6.0](http://www.ospray.org/)
+  - [OSPRay 2.7.0](http://www.ospray.org/)
       - We recommend using ospray’s superbuild to build dependencies
         such as embree, ospcommon, and openvkl.  OpenImageDenoise can
         also be enabled through superbuild.
   - [OpenImageIO 1.8.17](https://sites.google.com/site/openimageio/home)
-  - CMake 3.1.1+
 
 ## Optional Dependencies
 
+  - Houdini SDK (tested against 18.5). To use, enable SUPERBUILD_USE_HOUDINI in superbuild.
   - [OpenImageDenoise](https://github.com/OpenImageDenoise/oidn.git)
       - Open Image Denoise needs be be enabled in the OSPRay build.
   - [Ptex](https://github.com/wdas/ptex)
       - [Ptex module](https://github.com/ospray/module_ptex) needs
         to be enabled in the OSPRay build and the library accessible 
-        on library paths
+        on library paths. 
 
 ## Superbuild on Linux/MacOS
 
