@@ -84,6 +84,7 @@ public:
         // The resolved output buffer, in GL_RGBA. This is an intermediate
         // between _sampleBuffer and the GL framebuffer.
         std::vector<vec4f> colorBuffer;
+        std::vector<float> depthBuffer;
 
         bool isValid()
         {
@@ -149,6 +150,7 @@ private:
     HdRenderPassAovBindingVector _aovBindings;
     HdParsedAovTokenVector _aovNames;
     HdOSPRayRenderBuffer _colorBuffer;
+    HdOSPRayRenderBuffer _depthBuffer;
     float _currentFrameBufferScale { 1.0f };
     float _interactiveFrameBufferScale { 2.0f };
     float _interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
