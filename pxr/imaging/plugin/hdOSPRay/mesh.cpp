@@ -31,14 +31,10 @@
 
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/matrix4f.h>
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/imaging/hd/meshUtil.h>
 #include <pxr/imaging/hd/smoothNormals.h>
 #include <pxr/imaging/pxOsd/tokens.h>
-
-#include <pxr/imaging/hdSt/drawItem.h>
-#include <pxr/imaging/hdSt/geometricShader.h>
-#include <pxr/imaging/hdSt/material.h>
+#include <pxr/base/gf/vec3f.h>
+#include <pxr/imaging/hd/meshUtil.h>
 
 #include <rkcommon/math/AffineSpace.h>
 
@@ -385,6 +381,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _topology = HdMeshTopology(GetMeshTopology(sceneDelegate), refineLevel);
         _topology.SetSubdivTags(subdivTags);
         _adjacencyValid = false;
+        _geomSubsets = _topology.GetGeomSubsets();
+
 
         if (doRefine) {
             _ospMesh = _CreateOSPRaySubdivMesh();
@@ -447,37 +445,23 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                                            HdOSPRayTokens->st)) {
 
         const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
-        const HdOSPRayMaterial* material
-               = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
-                      HdPrimTypeTokens->material, GetMaterialId()));
+        // Check if texcoords are provides as face varying.
+        // XXX: (This code currently only cares about _texcoords, but
+        // should be generalized to all primvars)
+        bool faceVaryingTexcoord = false;
+        HdPrimvarDescriptorVector faceVaryingPrimvars = GetPrimvarDescriptors(
+               sceneDelegate, HdInterpolationFaceVarying);
+        for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
+            if (pv.name == "Texture_uv" || pv.name == "st")
+                faceVaryingTexcoord = true;
+        }
+
+        bool useQuads = _UseQuadIndices(renderIndex, _topology);
 
         if (!_refined) {
-            bool useQuads = _UseQuadIndices(renderIndex, _topology);
-
             if (useQuads) {
-                _ospMesh = opp::Geometry("mesh");
-
                 HdMeshUtil meshUtil(&_topology, GetId());
-                meshUtil.ComputeQuadIndices(&_quadIndices,
-                                            &_quadPrimitiveParams);
-
-                opp::SharedData indices = opp::SharedData(
-                       _quadIndices.cdata(), OSP_VEC4UI, _quadIndices.size());
-
-                indices.commit();
-                _ospMesh.setParam("index", indices);
-
-                // Check if texcoords are provides as face varying.
-                // XXX: (This code currently only cares about _texcoords, but
-                // should be generalized to all primvars)
-                bool faceVaryingTexcoord = false;
-                HdPrimvarDescriptorVector faceVaryingPrimvars
-                       = GetPrimvarDescriptors(sceneDelegate,
-                                               HdInterpolationFaceVarying);
-                for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
-                    if (pv.name == "Texture_uv" || pv.name == "st")
-                        faceVaryingTexcoord = true;
-                }
+                meshUtil.ComputeQuadIndices(&_quadIndices, &_quadPrimitiveParams);
 
                 if (faceVaryingTexcoord) {
                     TfToken buffName = HdOSPRayTokens->st;
@@ -512,32 +496,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                     }
                     _texcoords = texcoords2;
                 }
-
-            } else { // triangles
-                _ospMesh = opp::Geometry("mesh");
-
+            } else {
                 HdMeshUtil meshUtil(&_topology, GetId());
                 meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
                                                 &_trianglePrimitiveParams);
-
-                opp::SharedData indices = opp::SharedData(
-                       _triangulatedIndices.cdata(), OSP_VEC3UI,
-                       _triangulatedIndices.size());
-
-                indices.commit();
-                _ospMesh.setParam("index", indices);
-
-                // Check if texcoords are provides as face varying.
-                // XXX: (This code currently only cares about _texcoords, but
-                // should be generalized to all primvars)
-                bool faceVaryingTexcoord = false;
-                HdPrimvarDescriptorVector faceVaryingPrimvars
-                       = GetPrimvarDescriptors(sceneDelegate,
-                                               HdInterpolationFaceVarying);
-                for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
-                    if (pv.name == "Texture_uv" || pv.name == "st")
-                        faceVaryingTexcoord = true;
-                }
 
                 if (faceVaryingTexcoord) {
                     TfToken buffName = HdOSPRayTokens->st;
@@ -578,32 +540,13 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             }
         }
 
-        opp::SharedData vertices
-               = opp::SharedData(_points.cdata(), OSP_VEC3F, _points.size());
-        vertices.commit();
-        _ospMesh.setParam("vertex.position", vertices);
+        _ospMesh = _CreateOSPRayMesh(_quadIndices, _quadPrimitiveParams,
+            _triangulatedIndices, _trianglePrimitiveParams, faceVaryingTexcoord,
+            _texcoords, _points, _computedNormals, _colors, _refined, useQuads);
 
-        if (_computedNormals.size()) {
-            opp::SharedData normals
-                   = opp::SharedData(_computedNormals.cdata(), OSP_VEC3F,
-                                     _computedNormals.size());
-            normals.commit();
-            _ospMesh.setParam("vertex.normal", normals);
-        }
-
-        if (_colors.size() > 1) {
-            opp::SharedData colors = opp::SharedData(_colors.cdata(), OSP_VEC4F,
-                                                     _colors.size());
-            colors.commit();
-            _ospMesh.setParam("vetex.color", colors);
-        }
-
-        if (_texcoords.size() > 1) {
-            opp::SharedData texcoords = opp::SharedData(
-                   _texcoords.cdata(), OSP_VEC2F, _texcoords.size());
-            texcoords.commit();
-            _ospMesh.setParam("vertex.texcoord", texcoords);
-        }
+        const HdOSPRayMaterial* material
+               = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
+                      HdPrimTypeTokens->material, GetMaterialId()));
 
         opp::Material ospMaterial;
 
@@ -733,6 +676,65 @@ HdOSPRayMesh::_UpdateDrawItemGeometricShader(HdSceneDelegate* sceneDelegate,
     // See HdSt_GeometricShader::BindResources()
     // The batches need to be validated and rebuilt if necessary.
     renderIndex.GetChangeTracker().MarkBatchesDirty();
+}
+
+opp::Geometry
+HdOSPRayMesh::_CreateOSPRayMesh(VtVec4iArray& quadIndices, 
+    VtVec2iArray& quadPrimitiveParams, VtVec3iArray& triangulatedIndices,
+    VtIntArray trianglePrimitiveParams, bool faceVaryingTexcoord, VtVec2fArray& texcoords, 
+    VtVec3fArray& points, VtVec3fArray& normals, VtVec4fArray& colors, bool refined,
+    bool useQuads)
+{
+    opp::Geometry ospMesh = nullptr;
+    if (!_refined) {
+        if (useQuads) {
+            ospMesh = opp::Geometry("mesh");
+
+            opp::SharedData indices = opp::SharedData(
+                   quadIndices.cdata(), OSP_VEC4UI, quadIndices.size());
+
+            indices.commit();
+            ospMesh.setParam("index", indices);
+
+
+        } else { // triangles
+            ospMesh = opp::Geometry("mesh");
+
+            opp::SharedData indices
+                   = opp::SharedData(triangulatedIndices.cdata(), OSP_VEC3UI,
+                                     triangulatedIndices.size());
+
+            indices.commit();
+            ospMesh.setParam("index", indices);
+
+        }
+    }
+
+    opp::SharedData verticesData
+           = opp::SharedData(points.cdata(), OSP_VEC3F, points.size());
+    verticesData.commit();
+    ospMesh.setParam("vertex.position", verticesData);
+
+    if (normals.size()) {
+        opp::SharedData normalsData = opp::SharedData(
+               normals.cdata(), OSP_VEC3F, normals.size());
+        normalsData.commit();
+        ospMesh.setParam("vertex.normal", normalsData);
+    }
+
+    if (colors.size() > 1) {
+        opp::SharedData colorsData
+               = opp::SharedData(colors.cdata(), OSP_VEC4F, colors.size());
+        colorsData.commit();
+        ospMesh.setParam("vetex.color", colorsData);
+    }
+
+    if (texcoords.size() > 1) {
+        opp::SharedData texcoordsData = opp::SharedData(
+               texcoords.cdata(), OSP_VEC2F, texcoords.size());
+        texcoordsData.commit();
+        ospMesh.setParam("vertex.texcoord", texcoordsData);
+    }
 }
 
 opp::Geometry
