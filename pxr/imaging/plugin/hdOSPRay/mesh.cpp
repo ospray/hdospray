@@ -381,7 +381,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _topology = HdMeshTopology(GetMeshTopology(sceneDelegate), refineLevel);
         _topology.SetSubdivTags(subdivTags);
         _adjacencyValid = false;
-        _geomSubsets = _topology.GetGeomSubsets();
+        // _geomSubsets = _topology.GetGeomSubsets();
 
 
         if (doRefine) {
@@ -540,9 +540,54 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             }
         }
 
+        // _geomSubsets = _topology.GetGeomSubsets();
+
+        for(auto subset : _geomSubsets) {
+            // TF_VERIFY(subset.type == HdGeomSubset::TypeFaceSet);
+            // VtVec3iArray triangulatedIndices;
+            // VtIntArray trianglePrimitiveParams;
+            // VtVec4iArray quadIndices;
+            // VtVec2iArray quadPrimitiveParams;
+            // if (useQuads) {
+            //     HdMeshUtil meshUtil(&_topology, subset.id);
+            //     meshUtil.ComputeQuadIndices(&quadIndices,
+            //                                     &quadPrimitiveParams);
+            // } else {
+            //     HdMeshUtil meshUtil(&_topology, subset.id);
+            //     meshUtil.ComputeTriangleIndices(&triangulatedIndices,
+            //                                     &trianglePrimitiveParams);
+            // }
+
+            // auto ospMesh = _CreateOSPRayMesh(quadIndices, quadPrimitiveParams,
+            // triangulatedIndices, trianglePrimitiveParams, faceVaryingTexcoord,
+            // _texcoords, _points, _computedNormals, _colors, _refined, useQuads);
+
+            // const HdOSPRayMaterial* material
+            //     = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
+            //             HdPrimTypeTokens->material, subset.materialId));
+
+            // opp::Material ospMaterial;
+
+            // if (material && material->GetOSPRayMaterial()) {
+            //     ospMaterial = material->GetOSPRayMaterial();
+            // } else {
+            //     // Create new ospMaterial
+            //     ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
+            // }
+
+            // auto geometricModel = new opp::GeometricModel(ospMesh);
+
+            // geometricModel->setParam("material", ospMaterial);
+            // ospMesh.commit();
+            // geometricModel->commit();
+            // _geomSubsetModels.push_back(geometricModel);
+            std::cout << "added subset geometric model\n";
+        }
+
         _ospMesh = _CreateOSPRayMesh(_quadIndices, _quadPrimitiveParams,
             _triangulatedIndices, _trianglePrimitiveParams, faceVaryingTexcoord,
             _texcoords, _points, _computedNormals, _colors, _refined, useQuads);
+        _ospMesh.commit();
 
         const HdOSPRayMaterial* material
                = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(

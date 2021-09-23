@@ -194,6 +194,7 @@ private:
     // the prototype has a single identity istance.
     opp::Geometry _ospMesh;
     opp::GeometricModel* _geometricModel;
+    std::vector<opp::GeometricModel*> _geomSubsetModels;
     // Each instance of the mesh in the top-level scene is stored in
     // _ospInstances.
     std::vector<opp::Instance> _ospInstances;
