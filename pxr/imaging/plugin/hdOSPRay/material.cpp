@@ -52,19 +52,19 @@ PXR_NAMESPACE_OPEN_SCOPE
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayMaterialTokens,
     (UsdPreviewSurface)
+    (OSPRayPrincipledSurface)
     (HwPtexTexture_1)
 );
 
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayTokens,
     (UsdPreviewSurface)
+    (OSPRayPrincipledSurface)
     (diffuseColor)
     (specularColor)
     (emissiveColor)
     (metallic)
     (roughness)
-    (clearcoat)
-    (clearcoatRoughness)
     (ior)
     (color)
     (opacity)
@@ -79,6 +79,24 @@ TF_DEFINE_PRIVATE_TOKENS(
     (repeat)
     (mirror)
     (HwPtexTexture_1)
+    // OSPRay specific
+    (type)
+    (baseColor)
+    (edgeColor)
+    (transmissionDepth)
+    (transmissionColor)
+    (rotation)
+    (coatIor)
+    (coat)
+    (coatThickness)
+    (coatColor)
+    (coatRoughness)
+    (OSPRayLuminous)
+    (OSPRayCarPaint)
+    (intensity)
+    (diffuse)
+    (specular)
+    (anisotropy)
 );
 // clang-format on
 
@@ -108,6 +126,8 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
 
         if (networkMap.map.empty())
             std::cout << "material network map was empty!!!!!\n";
+        else
+            std::cout << "found material network map\n";
 
         // get material network from network map
         TF_FOR_ALL (itr, networkMap.map) {
@@ -122,6 +142,8 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
         TF_FOR_ALL (node, matNetwork.nodes) {
             if (node->identifier == HdOSPRayTokens->UsdPreviewSurface)
                 _ProcessUsdPreviewSurfaceNode(*node);
+            else if (node->identifier == HdOSPRayTokens->OSPRayPrincipledSurface)
+                std::cout << "found ospray principled surface\n";
             else if (node->identifier == HdOSPRayTokens->UsdUVTexture
                      || node->identifier == HdOSPRayTokens->HwPtexTexture_1) {
 
@@ -175,20 +197,48 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
         const auto& value = param->second;
         if (name == HdOSPRayTokens->diffuseColor) {
             diffuseColor = value.Get<GfVec3f>();
+        } else if (name == HdOSPRayTokens->type) {
+            type = value.Get<TfToken>();
         } else if (name == HdOSPRayTokens->metallic) {
             metallic = value.Get<float>();
         } else if (name == HdOSPRayTokens->roughness) {
             roughness = value.Get<float>();
+        } else if (name == HdOSPRayTokens->intensity) {
+            intensity = value.Get<float>();
+        } else if (name == HdOSPRayTokens->normal) {
+            normal = value.Get<float>();
+        } else if (name == HdOSPRayTokens->specular) {
+            specular = value.Get<float>();
+        } else if (name == HdOSPRayTokens->rotation) {
+            rotation = value.Get<float>();
+        } else if (name == HdOSPRayTokens->anisotropy) {
+            anisotropy = value.Get<float>();
         } else if (name == HdOSPRayTokens->ior) {
             ior = value.Get<float>();
+        } else if (name == HdOSPRayTokens->diffuse) {
+            diffuse = value.Get<float>();
         } else if (name == HdOSPRayTokens->color) {
             diffuseColor = value.Get<GfVec3f>();
+        } else if (name == HdOSPRayTokens->baseColor) {
+            diffuseColor = value.Get<GfVec3f>();
+        } else if (name == HdOSPRayTokens->edgeColor) {
+            edgeColor = value.Get<GfVec3f>();
+        } else if (name == HdOSPRayTokens->intensity) {
+            intensity = value.Get<float>();
+        } else if (name == HdOSPRayTokens->transmissionDepth) {
+            transmissionDepth = value.Get<float>();
+        } else if (name == HdOSPRayTokens->transmissionColor) {
+            transmissionColor = value.Get<GfVec3f>();
+        } else if (name == HdOSPRayTokens->coatRoughness) {
+            coatRoughness = value.Get<float>();
+        } else if (name == HdOSPRayTokens->coatIor) {
+            coatIor = value.Get<float>();
+        } else if (name == HdOSPRayTokens->coat) {
+            coat = value.Get<float>();
+        } else if (name == HdOSPRayTokens->coatThickness) {
+            coatThickness = value.Get<float>();
         } else if (name == HdOSPRayTokens->opacity) {
             opacity = value.Get<float>();
-        } else if (name == HdOSPRayTokens->clearcoat) {
-            clearcoat = value.Get<float>();
-        } else if (name == HdOSPRayTokens->clearcoatRoughness) {
-            clearcoatRoughness = value.Get<float>();
         }
     }
 }
@@ -275,23 +325,51 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
 opp::Material
 HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
 {
-
-    opp::Material ospMaterial
-           = opp::Material(rendererType.c_str(), "principled");
+    opp::Material ospMaterial = nullptr;
+    if (type == HdOSPRayTokens->OSPRayCarPaint)
+        ospMaterial = opp::Material(rendererType.c_str(), "carPaint");
+    else if (type == HdOSPRayTokens->OSPRayLuminous)
+        ospMaterial = opp::Material(rendererType.c_str(), "luminous");
+    else
+        ospMaterial = opp::Material(rendererType.c_str(), "principled");
     ospMaterial.setParam("ior", ior);
     ospMaterial.setParam(
            "baseColor",
            vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
+    ospMaterial.setParam( // luminous material
+           "color",
+           vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
+    ospMaterial.setParam(
+           "specularColor",
+           vec3f(specularColor[0], specularColor[1], specularColor[2]));
+    ospMaterial.setParam(
+           "edgeColor",
+           vec3f(edgeColor[0], edgeColor[1], edgeColor[2]));
+    ospMaterial.setParam(
+           "transmissionColor",
+           vec3f(transmissionColor[0], transmissionColor[1], transmissionColor[2]));
+    ospMaterial.setParam(
+           "coatColor",
+           vec3f(coatColor[0], coatColor[1], coatColor[2]));
     ospMaterial.setParam("metallic", metallic);
+    ospMaterial.setParam("intensity", intensity);
+    ospMaterial.setParam("transmissionDepth", transmissionDepth);
     ospMaterial.setParam("roughness", roughness);
     ospMaterial.setParam("normal", normal);
+    ospMaterial.setParam("coat", coat);
+    ospMaterial.setParam("coatIor", coatIor);
+    ospMaterial.setParam("rotation", rotation);
+    ospMaterial.setParam("coatRoughness", coatRoughness);
+    ospMaterial.setParam("ior", ior);
+    ospMaterial.setParam("aniosotropy", anisotropy);
+    ospMaterial.setParam("diffuse", diffuse);
     ospMaterial.setParam("transmission", 1.0f - opacity);
     ospMaterial.setParam("thin", true);
     if (opacity < 1.0f) {
-        ospMaterial.setParam(
-               "transmissionColor",
-               vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
-        ospMaterial.setParam("thin", true);
+        // ospMaterial.setParam(
+        //        "transmissionColor",
+        //        vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
+        // ospMaterial.setParam("thin", true);
     }
     if (map_diffuseColor.ospTexture) {
         ospMaterial.setParam("map_baseColor", map_diffuseColor.ospTexture);

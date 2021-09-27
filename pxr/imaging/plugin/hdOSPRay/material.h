@@ -140,15 +140,26 @@ protected:
     };
 
     GfVec3f diffuseColor { 0.5f, 0.5f, 0.5f };
-    GfVec3f emissiveColor { 0.f, 0.f, 0.f };
+    GfVec3f coatColor { 1.0f, 1.0f, 1.0f };
+    GfVec3f edgeColor { 1.0f, 1.0f, 1.0f };
     GfVec3f specularColor { 1.f, 1.f, 1.f };
+    GfVec3f transmissionColor { 1.f, 1.f, 1.f };
     float metallic { 0.f };
+    float specular { 0.f };
+    float transmissionDepth { 1.f };
+    float intensity { 0.f };
     float roughness { 0.f };
-    float clearcoat { 0.f };
-    float clearcoatRoughness { 0.01f };
+    float coatRoughness { 0.f };
+    float coatThickness { 1.f };
+    float coat { 0.f };
+    float coatIor { 1.5f };
+    float rotation { 0.f };
     float ior { 1.f };
     float opacity { 1.f };
     float normal { 1.f };
+    float anisotropy { 0.f };
+    float diffuse { 1.f };
+    TfToken type;
     bool hasPtex { false };
 
     HdOSPRayTexture map_diffuseColor;
@@ -156,8 +167,8 @@ protected:
     HdOSPRayTexture map_specularColor;
     HdOSPRayTexture map_metallic;
     HdOSPRayTexture map_roughness;
-    HdOSPRayTexture map_clearcoat;
-    HdOSPRayTexture map_clearcoatRoughness;
+    HdOSPRayTexture map_coat;
+    HdOSPRayTexture map_coatRoughness;
     HdOSPRayTexture map_ior;
     HdOSPRayTexture map_opacity;
     HdOSPRayTexture map_normal;

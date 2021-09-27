@@ -667,7 +667,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             // geometricModel.setParam("material", ospMaterial);
             // geometricModel.commit();
             // _geomSubsetModels.push_back(geometricModel);
-            std::cout << "added subset geometric model\n";
+            // std::cout << "added subset geometric model\n";
         }
 
         if (_geomSubsetModels.empty()) {
@@ -716,7 +716,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || isTransformDirty) {
         _ospInstances.clear();
         if (!GetInstancerId().IsEmpty()) {
-            std::cout << "using instancer\n";
+            // std::cout << "using instancer\n";
             // Retrieve instance transforms from the instancer.
             HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
             HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
@@ -751,7 +751,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         // Otherwise, create our single instance (if necessary) and update
         // the transform (if necessary).
         else {
-            std::cout << "single instance\n";
+            // std::cout << "single instance\n";
             opp::Group group;
             opp::Instance instance(group);
             // TODO: do we need to check for a local transform as well?
@@ -764,10 +764,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             instance.setParam("xfm", xfm);
             instance.commit();
             if (_geomSubsetModels.size()) {
-                std::cout << "pushing geomsubsets instance\n";
                 group.setParam("geometry", opp::CopiedData(_geomSubsetModels));
             } else {
-                // std::cout << "pushing geom instance\n";
                 group.setParam("geometry", opp::CopiedData(*_geometricModel));
             }
             group.commit();
@@ -836,7 +834,7 @@ HdOSPRayMesh::_CreateOSPRayMesh(VtVec4iArray& quadIndices,
 
             indices.commit();
             ospMesh.setParam("index", indices);
-            std::cout << "mesh indices of size: " << quadIndices.size() << std::endl;
+            // std::cout << "mesh indices of size: " << quadIndices.size() << std::endl;
 
         } else { // triangles
             opp::SharedData indices
@@ -845,7 +843,7 @@ HdOSPRayMesh::_CreateOSPRayMesh(VtVec4iArray& quadIndices,
 
             indices.commit();
             ospMesh.setParam("index", indices);
-            std::cout << "mesh indices of size: " << triangulatedIndices.size() << std::endl;
+            // std::cout << "mesh indices of size: " << triangulatedIndices.size() << std::endl;
         }
     }
 
