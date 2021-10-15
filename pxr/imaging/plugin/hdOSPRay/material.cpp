@@ -59,7 +59,7 @@ TF_DEFINE_PRIVATE_TOKENS(
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayTokens,
     (UsdPreviewSurface)
-    (OSPRayPrincipledSurface)
+    (OSPPrincipled)
     (diffuseColor)
     (specularColor)
     (emissiveColor)
@@ -70,9 +70,11 @@ TF_DEFINE_PRIVATE_TOKENS(
     (opacity)
     (UsdUVTexture)
     (normal)
+    (normalScale)
     (displacement)
     (file)
     (filename)
+    ( (infoFilename, "info:filename"))
     (scale)
     (wrapS)
     (wrapT)
@@ -91,11 +93,15 @@ TF_DEFINE_PRIVATE_TOKENS(
     (coatThickness)
     (coatColor)
     (coatRoughness)
-    (OSPRayLuminous)
-    (OSPRayCarPaint)
+    (OSPLuminous)
+    (OSPCarPaint)
     (intensity)
     (diffuse)
+    (diffuseScale)
+    (OSPdiffuse)
     (specular)
+    (specularScale)
+    (OSPspecular)
     (anisotropy)
 );
 // clang-format on
@@ -123,6 +129,7 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
         HdMaterialNetworkMap networkMap
                = networkMapResource.Get<HdMaterialNetworkMap>();
         HdMaterialNetwork matNetwork;
+        std::cout << "updating material: " << GetId().GetString() << std::endl;
 
         if (networkMap.map.empty())
             std::cout << "material network map was empty!!!!!\n";
@@ -139,14 +146,17 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
             }
         }
 
+        std::cout << "walking material network map\n";
         TF_FOR_ALL (node, matNetwork.nodes) {
+            std::cout << "mat node: " << node->path.GetString() << std::endl;
             if (node->identifier == HdOSPRayTokens->UsdPreviewSurface)
                 _ProcessUsdPreviewSurfaceNode(*node);
-            else if (node->identifier == HdOSPRayTokens->OSPRayPrincipledSurface)
+            else if (node->identifier == HdOSPRayTokens->OSPPrincipled)
                 std::cout << "found ospray principled surface\n";
             else if (node->identifier == HdOSPRayTokens->UsdUVTexture
                      || node->identifier == HdOSPRayTokens->HwPtexTexture_1) {
 
+                         std::cout << "found usduvtexture\n";
                 // find texture inputs and outputs
                 auto relationships = matNetwork.relationships;
                 auto relationship = std::find_if(
@@ -158,6 +168,7 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
                     continue; // node isn't actually used
                 }
 
+                         std::cout << "processing usduvtexture\n";
                 TfToken texNameToken = relationship->outputName;
                 _ProcessTextureNode(*node, texNameToken);
             }
@@ -205,9 +216,9 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
             roughness = value.Get<float>();
         } else if (name == HdOSPRayTokens->intensity) {
             intensity = value.Get<float>();
-        } else if (name == HdOSPRayTokens->normal) {
+        } else if (name == HdOSPRayTokens->normalScale) {
             normal = value.Get<float>();
-        } else if (name == HdOSPRayTokens->specular) {
+        } else if (name == HdOSPRayTokens->specularScale) {
             specular = value.Get<float>();
         } else if (name == HdOSPRayTokens->rotation) {
             rotation = value.Get<float>();
@@ -215,7 +226,7 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
             anisotropy = value.Get<float>();
         } else if (name == HdOSPRayTokens->ior) {
             ior = value.Get<float>();
-        } else if (name == HdOSPRayTokens->diffuse) {
+        } else if (name == HdOSPRayTokens->diffuseScale) {
             diffuse = value.Get<float>();
         } else if (name == HdOSPRayTokens->color) {
             diffuseColor = value.Get<GfVec3f>();
@@ -254,10 +265,11 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
         const auto& value = param->second;
         if (name == HdOSPRayTokens->file) {
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
+            std::cout << "texture path: " << path << std::endl;
             texture.file = path.GetResolvedPath();
             texture.ospTexture = LoadOIIOTexture2D(texture.file);
         } else if (name == HdOSPRayTokens->filename
-                   || name.GetString() == "info:filename") {
+                   || name == HdOSPRayTokens->infoFilename) {
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
             texture.file = path.GetResolvedPath();
             if (isPtex) {
@@ -282,6 +294,10 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
 
     if (textureName == HdOSPRayTokens->diffuseColor) {
         map_diffuseColor = texture;
+    } else if (textureName == HdOSPRayTokens->diffuse) {
+        map_diffuse = texture;
+    } else if (textureName == HdOSPRayTokens->specular) {
+        map_specular = texture;
     } else if (textureName == HdOSPRayTokens->metallic) {
         map_metallic = texture;
     } else if (textureName == HdOSPRayTokens->roughness) {
@@ -326,9 +342,9 @@ opp::Material
 HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
 {
     opp::Material ospMaterial = nullptr;
-    if (type == HdOSPRayTokens->OSPRayCarPaint)
+    if (type == HdOSPRayTokens->OSPCarPaint)
         ospMaterial = opp::Material(rendererType.c_str(), "carPaint");
-    else if (type == HdOSPRayTokens->OSPRayLuminous)
+    else if (type == HdOSPRayTokens->OSPLuminous)
         ospMaterial = opp::Material(rendererType.c_str(), "luminous");
     else
         ospMaterial = opp::Material(rendererType.c_str(), "principled");
@@ -353,6 +369,7 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
            vec3f(coatColor[0], coatColor[1], coatColor[2]));
     ospMaterial.setParam("metallic", metallic);
     ospMaterial.setParam("intensity", intensity);
+    ospMaterial.setParam("specular", specular);
     ospMaterial.setParam("transmissionDepth", transmissionDepth);
     ospMaterial.setParam("roughness", roughness);
     ospMaterial.setParam("normal", normal);
@@ -373,26 +390,32 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     }
     if (map_diffuseColor.ospTexture) {
         ospMaterial.setParam("map_baseColor", map_diffuseColor.ospTexture);
-        ospMaterial.setParam("baseColor",
-                             vec3f(map_diffuseColor.scale[0],
-                                   map_diffuseColor.scale[1],
-                                   map_diffuseColor.scale[2]));
+        // ospMaterial.setParam("baseColor",
+        //                     vec3f(map_diffuseColor.scale[0],
+        //                           map_diffuseColor.scale[1],
+        //                           map_diffuseColor.scale[2]));
+    }
+    if (map_specular.ospTexture) {
+        ospMaterial.setParam("map_specular", map_specular.ospTexture);
+    }
+    if (map_diffuse.ospTexture) {
+        ospMaterial.setParam("map_diffuse", map_diffuse.ospTexture);
     }
     if (map_metallic.ospTexture) {
         ospMaterial.setParam("map_metallic", map_metallic.ospTexture);
-        metallic = 1.0f;
+        // metallic = 1.0f;
     }
     if (map_roughness.ospTexture) {
         ospMaterial.setParam("map_roughness", map_roughness.ospTexture);
-        roughness = 1.0f;
+        // roughness = 1.0f;
     }
     if (map_normal.ospTexture) {
         ospMaterial.setParam("map_normal", map_normal.ospTexture);
-        normal = 1.f;
+        // normal = 1.f;
     }
     if (map_opacity.ospTexture) {
         ospMaterial.setParam("map_opacity", map_opacity.ospTexture);
-        opacity = 1.f;
+        // opacity = 1.f;
     }
     ospMaterial.commit();
     return ospMaterial;

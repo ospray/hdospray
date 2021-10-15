@@ -46,6 +46,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayTokens,
     (st)
+    (map1)
 );
 // clang-format on
 
@@ -191,6 +192,7 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
         primvars = GetPrimvarDescriptors(sceneDelegate, interp);
         for (HdPrimvarDescriptor const& pv : primvars) {
 
+            std::cout << pv.name.GetString() << std::endl;
             // Points are handled outside _UpdatePrimvarSources
             if (pv.name == HdTokens->points)
                 continue;
@@ -200,10 +202,11 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
             // TODO: need to find a better way to identify the primvar for
             // the texture coordinates
             // texcoords
-            if ((pv.name == "Texture_uv" || pv.name == "st")
+            if ((pv.role == HdPrimvarRoleTokens->textureCoordinate)
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdOSPRayTokens->st)) {
                 if (value.IsHolding<VtVec2fArray>()) {
+                    std::cout << "found tcoords " << pv.name << "\n";
                     _texcoords = value.Get<VtVec2fArray>();
                 }
             }
@@ -460,6 +463,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
         if (!_refined) {
             if (useQuads) {
+                std::cout << "use quads\n";
                 HdMeshUtil meshUtil(&_topology, GetId());
                 meshUtil.ComputeQuadIndices(&_quadIndices, &_quadPrimitiveParams);
 
@@ -497,6 +501,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                     _texcoords = texcoords2;
                 }
             } else {
+                std::cout << "use triangles\n";
                 HdMeshUtil meshUtil(&_topology, GetId());
                 meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
                                                 &_trianglePrimitiveParams);
@@ -539,6 +544,9 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                 }
             }
         }
+
+        if ((_quadIndices.empty() && _triangulatedIndices.empty()) || _points.empty())
+            return; //invalid mesh
 
         _geomSubsets = _topology.GetGeomSubsets();
         const HdOSPRayMaterial* subsetMaterial = nullptr;
@@ -867,11 +875,13 @@ HdOSPRayMesh::_CreateOSPRayMesh(VtVec4iArray& quadIndices,
     }
 
     if (texcoords.size() > 1) {
+        std::cout << "texcoords found: " << GetId().GetString() << std::endl;
         opp::SharedData texcoordsData = opp::SharedData(
                texcoords.cdata(), OSP_VEC2F, texcoords.size());
         texcoordsData.commit();
         ospMesh.setParam("vertex.texcoord", texcoordsData);
-    }
+    } else 
+        std::cout << "no texcoords: " << GetId().GetString() << std::endl;
     return ospMesh;
 }
 

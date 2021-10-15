@@ -145,7 +145,7 @@ protected:
     GfVec3f specularColor { 1.f, 1.f, 1.f };
     GfVec3f transmissionColor { 1.f, 1.f, 1.f };
     float metallic { 0.f };
-    float specular { 0.f };
+    float specular { 1.f };
     float transmissionDepth { 1.f };
     float intensity { 0.f };
     float roughness { 0.f };
@@ -163,8 +163,10 @@ protected:
     bool hasPtex { false };
 
     HdOSPRayTexture map_diffuseColor;
+    HdOSPRayTexture map_diffuse;
     HdOSPRayTexture map_emissiveColor;
     HdOSPRayTexture map_specularColor;
+    HdOSPRayTexture map_specular;
     HdOSPRayTexture map_metallic;
     HdOSPRayTexture map_roughness;
     HdOSPRayTexture map_coat;
