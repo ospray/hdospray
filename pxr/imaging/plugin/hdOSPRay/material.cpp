@@ -293,6 +293,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
         texture.ospTexture.commit();
 
     if (textureName == HdOSPRayTokens->diffuseColor) {
+        std::cout << "found map_diffuseColor\n";
         map_diffuseColor = texture;
     } else if (textureName == HdOSPRayTokens->diffuse) {
         map_diffuse = texture;

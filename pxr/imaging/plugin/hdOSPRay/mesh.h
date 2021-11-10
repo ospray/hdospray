@@ -184,7 +184,7 @@ private:
     opp::Geometry _CreateOSPRaySubdivMesh();
     opp::Geometry _CreateOSPRayMesh(VtVec4iArray& quadIndices, 
     VtVec2iArray& quadPrimitiveParams, VtVec3iArray& triangulatedIndices,
-    VtIntArray trianglePrimitiveParams, bool faceVaryingTexcoord, VtVec2fArray& texcoords, 
+    VtIntArray& trianglePrimitiveParams, bool faceVaryingTexcoord, VtVec2fArray& texcoords, 
     VtVec3fArray& points, VtVec3fArray& normals, VtVec4fArray& colors, bool refined,
     bool useQuads);
 

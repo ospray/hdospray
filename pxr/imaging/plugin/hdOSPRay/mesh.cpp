@@ -389,7 +389,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
         if (doRefine) {
             _ospMesh = _CreateOSPRaySubdivMesh();
-            _ospMesh.commit();
 
             HdMeshUtil meshUtil(&_topology, GetId());
             meshUtil.ComputeQuadIndices(&_quadIndices, &_quadPrimitiveParams);
@@ -543,172 +542,58 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                     _texcoords = texcoords2;
                 }
             }
-        }
 
         if ((_quadIndices.empty() && _triangulatedIndices.empty()) || _points.empty())
             return; //invalid mesh
 
+
+        _ospMesh = _CreateOSPRayMesh(_quadIndices, _quadPrimitiveParams,
+            _triangulatedIndices, _trianglePrimitiveParams, faceVaryingTexcoord,
+            _texcoords, _points, _computedNormals, _colors, _refined, useQuads);
+
+        }
+
         _geomSubsets = _topology.GetGeomSubsets();
         const HdOSPRayMaterial* subsetMaterial = nullptr;
 
-        // static int count = 0;
         for(auto subset : _geomSubsets) {
-            // if (count++ > 5)
-            //     continue;
             if (!TF_VERIFY(subset.type == HdGeomSubset::TypeFaceSet))
                 continue;
             VtVec3iArray triangulatedIndices;
             VtIntArray trianglePrimitiveParams;
             VtVec4iArray quadIndices;
             VtVec2iArray quadPrimitiveParams;
-            // if (useQuads) {
-            //     std::cout << "quad subset\n";
-            //     HdMeshUtil meshUtil(&_topology, subset.id);
-            //     meshUtil.ComputeQuadIndices(&quadIndices,
-            //                                     &quadPrimitiveParams);
-            //     if (quadIndices.empty())
-            //         continue;
-            // } else {
-            //     std::cout << "triangle subset\n";
-            //     HdMeshUtil meshUtil(&_topology, subset.id);
-            //     meshUtil.ComputeTriangleIndices(&triangulatedIndices,
-            //                                     &trianglePrimitiveParams);
-            //     if (triangulatedIndices.empty())
-            //         continue;
-            // }
-            //geomsubsets use face indices instead of vertex indices.
-            //create new list of indices from these for ospray
-            // std::vector<unsigned int> vertexIndices;
-            // int vertexStride = (useQuads) ? 4 : 3;
-            // for (auto i : subset.indices) {
-            //     // unsigned int offset = i * vertexStride;
-            //     for (int j = 0; j < vertexStride; j++) {
-            //         if (useQuads) {
-            //             auto index = _quadIndices[i][j];
-            //             vertexIndices.push_back(index);
-            //         } else {
-            //             auto index = _triangulatedIndices[i][j];
-            //             if (index < _points.size())
-            //                 vertexIndices.push_back(index);
-            //         }
-            //     }
-            // }
-
-            // auto ospMesh = _CreateOSPRayMesh(vertexIndices, quadPrimitiveParams,
-            // vertexIndices, trianglePrimitiveParams, faceVaryingTexcoord,
-            // _texcoords, _points, _computedNormals, _colors, _refined, useQuads);
-
-            // opp::Geometry ospMesh = opp::Geometry("mesh");
-            // {
-            //     VtVec3fArray& points = _points;
-            //     VtVec3fArray& normals = _normals;
-            //     VtVec4fArray& colors = _colors;
-            //     VtVec2fArray& texcoords = _texcoords;
-            //     if (!_refined) {
-            //         if (useQuads) {
-            //             opp::SharedData indices = opp::SharedData(
-            //                    vertexIndices.data(), OSP_VEC4UI,
-            //                    vertexIndices.size()/4);
-
-            //             indices.commit();
-            //             ospMesh.setParam("index", indices);
-            //             std::cout
-            //                    << "mesh indices of size: " << vertexIndices.size()
-            //                    << std::endl;
-
-            //         } else { // triangles
-            //             opp::SharedData indices = opp::SharedData(
-            //                    vertexIndices.data(), OSP_VEC3UI,
-            //                    vertexIndices.size()/3);
-
-            //             indices.commit();
-            //             ospMesh.setParam("index", indices);
-            //             std::cout << "mesh indices of size: "
-            //                       << vertexIndices.size() << std::endl;
-            //         }
-            //     }
-
-            //     opp::SharedData verticesData = opp::SharedData(
-            //            points.cdata(), OSP_VEC3F, points.size());
-            //     verticesData.commit();
-            //     ospMesh.setParam("vertex.position", verticesData);
-
-            //     if (normals.size()) {
-            //         opp::SharedData normalsData = opp::SharedData(
-            //                normals.cdata(), OSP_VEC3F, normals.size());
-            //         normalsData.commit();
-            //         ospMesh.setParam("vertex.normal", normalsData);
-            //     }
-
-            //     if (colors.size() > 1) {
-            //         opp::SharedData colorsData = opp::SharedData(
-            //                colors.cdata(), OSP_VEC4F, colors.size());
-            //         colorsData.commit();
-            //         ospMesh.setParam("vetex.color", colorsData);
-            //     }
-
-            //     if (texcoords.size() > 1) {
-            //         opp::SharedData texcoordsData = opp::SharedData(
-            //                texcoords.cdata(), OSP_VEC2F, texcoords.size());
-            //         texcoordsData.commit();
-            //         ospMesh.setParam("vertex.texcoord", texcoordsData);
-            //     }
-            // }
-            // ospMesh.commit();
 
             const HdOSPRayMaterial* material
                 = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
                         HdPrimTypeTokens->material, subset.materialId));
             subsetMaterial = material;
-
-            // opp::Material ospMaterial;
-
-            // if (material && material->GetOSPRayMaterial()) {
-            //     ospMaterial = material->GetOSPRayMaterial();
-            // } else {
-            //     // Create new ospMaterial
-            //     ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
-            // }
-
-            // auto geometricModel = opp::GeometricModel(ospMesh);
-
-            // geometricModel.setParam("material", ospMaterial);
-            // geometricModel.commit();
-            // _geomSubsetModels.push_back(geometricModel);
-            // std::cout << "added subset geometric model\n";
         }
 
-        if (_geomSubsetModels.empty()) {
-            _ospMesh = _CreateOSPRayMesh(_quadIndices, _quadPrimitiveParams,
-                _triangulatedIndices, _trianglePrimitiveParams, faceVaryingTexcoord,
-                _texcoords, _points, _computedNormals, _colors, _refined, useQuads);
-            _ospMesh.commit();
+        const HdOSPRayMaterial* material = nullptr;
+        if (subsetMaterial)
+            material = subsetMaterial;
+        else
+            material = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
+                    HdPrimTypeTokens->material, GetMaterialId()));
 
-            const HdOSPRayMaterial* material = nullptr;
-            if (subsetMaterial)
-                material = subsetMaterial;
-            else
-                material = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
-                        HdPrimTypeTokens->material, GetMaterialId()));
+        opp::Material ospMaterial;
 
-            opp::Material ospMaterial;
-
-            if (material && material->GetOSPRayMaterial()) {
-                ospMaterial = material->GetOSPRayMaterial();
-            } else {
-                // Create new ospMaterial
-                ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
-            }
-
-            // Create new OSP Mesh
-            if (_geometricModel)
-                delete _geometricModel;
-            _geometricModel = new opp::GeometricModel(_ospMesh);
-
-            _geometricModel->setParam("material", ospMaterial);
-            _ospMesh.commit();
-            _geometricModel->commit();
+        if (material && material->GetOSPRayMaterial()) {
+            ospMaterial = material->GetOSPRayMaterial();
+        } else {
+            // Create new ospMaterial
+            ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
         }
+
+        // Create new OSP Mesh
+        if (_geometricModel)
+            delete _geometricModel;
+        _geometricModel = new opp::GeometricModel(_ospMesh);
+
+        _geometricModel->setParam("material", ospMaterial);
+        _ospMesh.commit();
+        _geometricModel->commit();
 
         renderParam->UpdateModelVersion();
     }
@@ -830,7 +715,7 @@ HdOSPRayMesh::_UpdateDrawItemGeometricShader(HdSceneDelegate* sceneDelegate,
 opp::Geometry
 HdOSPRayMesh::_CreateOSPRayMesh(VtVec4iArray& quadIndices, 
     VtVec2iArray& quadPrimitiveParams, VtVec3iArray& triangulatedIndices,
-    VtIntArray trianglePrimitiveParams, bool faceVaryingTexcoord, VtVec2fArray& texcoords, 
+    VtIntArray& trianglePrimitiveParams, bool faceVaryingTexcoord, VtVec2fArray& texcoords, 
     VtVec3fArray& points, VtVec3fArray& normals, VtVec4fArray& colors, bool refined,
     bool useQuads)
 {
@@ -842,7 +727,6 @@ HdOSPRayMesh::_CreateOSPRayMesh(VtVec4iArray& quadIndices,
 
             indices.commit();
             ospMesh.setParam("index", indices);
-            // std::cout << "mesh indices of size: " << quadIndices.size() << std::endl;
 
         } else { // triangles
             opp::SharedData indices
@@ -851,7 +735,6 @@ HdOSPRayMesh::_CreateOSPRayMesh(VtVec4iArray& quadIndices,
 
             indices.commit();
             ospMesh.setParam("index", indices);
-            // std::cout << "mesh indices of size: " << triangulatedIndices.size() << std::endl;
         }
     }
 
@@ -882,6 +765,8 @@ HdOSPRayMesh::_CreateOSPRayMesh(VtVec4iArray& quadIndices,
         ospMesh.setParam("vertex.texcoord", texcoordsData);
     } else 
         std::cout << "no texcoords: " << GetId().GetString() << std::endl;
+
+    ospMesh.commit();
     return ospMesh;
 }
 
