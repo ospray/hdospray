@@ -46,7 +46,6 @@ PXR_NAMESPACE_OPEN_SCOPE
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayTokens,
     (st)
-    (map1)
 );
 // clang-format on
 
@@ -199,19 +198,20 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
 
             auto value = sceneDelegate->Get(id, pv.name);
 
+
             // TODO: need to find a better way to identify the primvar for
             // the texture coordinates
             // texcoords
-            if ((pv.role == HdPrimvarRoleTokens->textureCoordinate)
+            if ((pv.role == HdPrimvarRoleTokens->textureCoordinate 
+                || pv.name == HdOSPRayTokens->st)
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdOSPRayTokens->st)) {
                 if (value.IsHolding<VtVec2fArray>()) {
-                    std::cout << "found tcoords " << pv.name << "\n";
                     _texcoords = value.Get<VtVec2fArray>();
                 }
             }
 
-            if (pv.name == "displayColor"
+            if (pv.name == HdTokens->displayColor
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdTokens->displayColor)) {
                 // Create 4 component displayColor/opacity array for OSPRay
@@ -236,7 +236,7 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                 }
             }
 
-            if (pv.name == "displayOpacity"
+            if (pv.name == HdTokens->displayOpacity
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdTokens->displayOpacity)) {
                 // XXX assuming displayOpacity can't exist without
