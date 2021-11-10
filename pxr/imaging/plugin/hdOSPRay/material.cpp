@@ -52,14 +52,12 @@ PXR_NAMESPACE_OPEN_SCOPE
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayMaterialTokens,
     (UsdPreviewSurface)
-    (OSPRayPrincipledSurface)
     (HwPtexTexture_1)
 );
 
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayTokens,
     (UsdPreviewSurface)
-    (OSPPrincipled)
     (diffuseColor)
     (specularColor)
     (emissiveColor)
@@ -129,12 +127,6 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
         HdMaterialNetworkMap networkMap
                = networkMapResource.Get<HdMaterialNetworkMap>();
         HdMaterialNetwork matNetwork;
-        std::cout << "updating material: " << GetId().GetString() << std::endl;
-
-        if (networkMap.map.empty())
-            std::cout << "material network map was empty!!!!!\n";
-        else
-            std::cout << "found material network map\n";
 
         // get material network from network map
         TF_FOR_ALL (itr, networkMap.map) {
@@ -146,17 +138,12 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
             }
         }
 
-        std::cout << "walking material network map\n";
         TF_FOR_ALL (node, matNetwork.nodes) {
-            std::cout << "mat node: " << node->path.GetString() << std::endl;
             if (node->identifier == HdOSPRayTokens->UsdPreviewSurface)
                 _ProcessUsdPreviewSurfaceNode(*node);
-            else if (node->identifier == HdOSPRayTokens->OSPPrincipled)
-                std::cout << "found ospray principled surface\n";
             else if (node->identifier == HdOSPRayTokens->UsdUVTexture
                      || node->identifier == HdOSPRayTokens->HwPtexTexture_1) {
 
-                         std::cout << "found usduvtexture\n";
                 // find texture inputs and outputs
                 auto relationships = matNetwork.relationships;
                 auto relationship = std::find_if(
@@ -168,7 +155,6 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
                     continue; // node isn't actually used
                 }
 
-                         std::cout << "processing usduvtexture\n";
                 TfToken texNameToken = relationship->outputName;
                 _ProcessTextureNode(*node, texNameToken);
             }
@@ -265,7 +251,6 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
         const auto& value = param->second;
         if (name == HdOSPRayTokens->file) {
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
-            std::cout << "texture path: " << path << std::endl;
             texture.file = path.GetResolvedPath();
             texture.ospTexture = LoadOIIOTexture2D(texture.file);
         } else if (name == HdOSPRayTokens->filename
@@ -293,7 +278,6 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
         texture.ospTexture.commit();
 
     if (textureName == HdOSPRayTokens->diffuseColor) {
-        std::cout << "found map_diffuseColor\n";
         map_diffuseColor = texture;
     } else if (textureName == HdOSPRayTokens->diffuse) {
         map_diffuse = texture;
@@ -368,6 +352,35 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     ospMaterial.setParam(
            "coatColor",
            vec3f(coatColor[0], coatColor[1], coatColor[2]));
+
+    // texture maps
+    if (map_diffuseColor.ospTexture) {
+        ospMaterial.setParam("map_baseColor", map_diffuseColor.ospTexture);
+    }
+    if (map_specular.ospTexture) {
+        ospMaterial.setParam("map_specular", map_specular.ospTexture);
+    }
+    if (map_diffuse.ospTexture) {
+        ospMaterial.setParam("map_diffuse", map_diffuse.ospTexture);
+    }
+    if (map_metallic.ospTexture) {
+        ospMaterial.setParam("map_metallic", map_metallic.ospTexture);
+        if (metallic == 0.f) //ospray appears to mulitply texture, so reset default
+            metallic = 1.0f;
+    }
+    if (map_roughness.ospTexture) {
+        ospMaterial.setParam("map_roughness", map_roughness.ospTexture);
+        if (roughness = 0.f)
+           roughness = 1.0f;
+    }
+    if (map_normal.ospTexture) {
+        ospMaterial.setParam("map_normal", map_normal.ospTexture);
+        ospMaterial.setParam("map_baseNormal", map_normal.ospTexture);
+        if (normal = 0.f)
+            normal = 1.f;
+    }
+
+    // params
     ospMaterial.setParam("metallic", metallic);
     ospMaterial.setParam("intensity", intensity);
     ospMaterial.setParam("specular", specular);
@@ -383,42 +396,8 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     ospMaterial.setParam("diffuse", diffuse);
     ospMaterial.setParam("transmission", 1.0f - opacity);
     ospMaterial.setParam("thin", true);
-    if (opacity < 1.0f) {
-        // ospMaterial.setParam(
-        //        "transmissionColor",
-        //        vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
-        // ospMaterial.setParam("thin", true);
-    }
-    if (map_diffuseColor.ospTexture) {
-        ospMaterial.setParam("map_baseColor", map_diffuseColor.ospTexture);
-        // ospMaterial.setParam("baseColor",
-        //                     vec3f(map_diffuseColor.scale[0],
-        //                           map_diffuseColor.scale[1],
-        //                           map_diffuseColor.scale[2]));
-    }
-    if (map_specular.ospTexture) {
-        ospMaterial.setParam("map_specular", map_specular.ospTexture);
-    }
-    if (map_diffuse.ospTexture) {
-        ospMaterial.setParam("map_diffuse", map_diffuse.ospTexture);
-    }
-    if (map_metallic.ospTexture) {
-        ospMaterial.setParam("map_metallic", map_metallic.ospTexture);
-        // metallic = 1.0f;
-    }
-    if (map_roughness.ospTexture) {
-        ospMaterial.setParam("map_roughness", map_roughness.ospTexture);
-        // roughness = 1.0f;
-    }
-    if (map_normal.ospTexture) {
-        ospMaterial.setParam("map_normal", map_normal.ospTexture);
-        // normal = 1.f;
-    }
-    if (map_opacity.ospTexture) {
-        ospMaterial.setParam("map_opacity", map_opacity.ospTexture);
-        // opacity = 1.f;
-    }
     ospMaterial.commit();
+
     return ospMaterial;
 }
 

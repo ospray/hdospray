@@ -191,7 +191,6 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
         primvars = GetPrimvarDescriptors(sceneDelegate, interp);
         for (HdPrimvarDescriptor const& pv : primvars) {
 
-            std::cout << pv.name.GetString() << std::endl;
             // Points are handled outside _UpdatePrimvarSources
             if (pv.name == HdTokens->points)
                 continue;
@@ -384,7 +383,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _topology = HdMeshTopology(GetMeshTopology(sceneDelegate), refineLevel);
         _topology.SetSubdivTags(subdivTags);
         _adjacencyValid = false;
-        // _geomSubsets = _topology.GetGeomSubsets();
 
 
         if (doRefine) {
@@ -462,7 +460,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
         if (!_refined) {
             if (useQuads) {
-                std::cout << "use quads\n";
                 HdMeshUtil meshUtil(&_topology, GetId());
                 meshUtil.ComputeQuadIndices(&_quadIndices, &_quadPrimitiveParams);
 
@@ -500,7 +497,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                     _texcoords = texcoords2;
                 }
             } else {
-                std::cout << "use triangles\n";
                 HdMeshUtil meshUtil(&_topology, GetId());
                 meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
                                                 &_trianglePrimitiveParams);
@@ -609,7 +605,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || isTransformDirty) {
         _ospInstances.clear();
         if (!GetInstancerId().IsEmpty()) {
-            // std::cout << "using instancer\n";
             // Retrieve instance transforms from the instancer.
             HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
             HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
@@ -644,7 +639,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         // Otherwise, create our single instance (if necessary) and update
         // the transform (if necessary).
         else {
-            // std::cout << "single instance\n";
             opp::Group group;
             opp::Instance instance(group);
             // TODO: do we need to check for a local transform as well?
@@ -758,7 +752,6 @@ HdOSPRayMesh::_CreateOSPRayMesh(VtVec4iArray& quadIndices,
     }
 
     if (texcoords.size() > 1) {
-        std::cout << "texcoords found: " << GetId().GetString() << std::endl;
         opp::SharedData texcoordsData = opp::SharedData(
                texcoords.cdata(), OSP_VEC2F, texcoords.size());
         texcoordsData.commit();

@@ -75,13 +75,11 @@ LoadPtexTexture(std::string file)
 opp::Texture
 LoadOIIOTexture2D(std::string file, bool nearestFilter)
 {
-    std::cout << "loading " << file << std::endl;
     auto in = ImageInput::open(file.c_str());
     if (!in) {
         std::cerr << "#osp: failed to load texture '" + file + "'" << std::endl;
         return nullptr;
     }
-    std::cout << "loaded " << file << std::endl;
 
     const ImageSpec& spec = in->spec();
     vec2i size;
