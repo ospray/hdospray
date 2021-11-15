@@ -207,6 +207,7 @@ private:
     GfMatrix4f _transform;
     VtVec3fArray _points;
     VtVec2fArray _texcoords;
+    HdInterpolation _texcoordsInterpolation;
     VtVec3fArray _normals;
     VtVec4fArray _colors;
     GfVec4f _singleColor { .5f, .5f, .5f, 1.f };

@@ -207,6 +207,7 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                                                    HdOSPRayTokens->st)) {
                 if (value.IsHolding<VtVec2fArray>()) {
                     _texcoords = value.Get<VtVec2fArray>();
+                    _texcoordsInterpolation = interp;
                 }
             }
 
@@ -389,20 +390,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             _ospMesh = _CreateOSPRaySubdivMesh();
 
             HdMeshUtil meshUtil(&_topology, GetId());
-            meshUtil.ComputeQuadIndices(&_quadIndices, &_quadPrimitiveParams);
-            // Check if texcoords are provides as face varying.
-            // XXX: (This code currently only cares about _texcoords, but
-            // should be generalized to all primvars)
-            bool faceVaryingTexcoord = false;
-            HdPrimvarDescriptorVector faceVaryingPrimvars
-                   = GetPrimvarDescriptors(sceneDelegate,
-                                           HdInterpolationFaceVarying);
-            for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
-                if (pv.name == "Texture_uv" || pv.name == "st")
-                    faceVaryingTexcoord = true;
-            }
-
-            if (faceVaryingTexcoord) {
+            // meshUtil.ComputeQuadIndices(&_quadIndices, &_quadPrimitiveParams);
+            // Check if texcoords are provided as face varying.
+            if (_texcoordsInterpolation == HdInterpolationFaceVarying) {
+                //WARNING:  face varying currently only supported by ptex
                 TfToken buffName = HdOSPRayTokens->st;
                 VtValue buffValue = VtValue(_texcoords);
                 HdVtBufferSource buffer(buffName, buffValue);
@@ -536,6 +527,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                         }
                     }
                     _texcoords = texcoords2;
+
                 }
             }
 
@@ -756,8 +748,7 @@ HdOSPRayMesh::_CreateOSPRayMesh(VtVec4iArray& quadIndices,
                texcoords.cdata(), OSP_VEC2F, texcoords.size());
         texcoordsData.commit();
         ospMesh.setParam("vertex.texcoord", texcoordsData);
-    } else 
-        std::cout << "no texcoords: " << GetId().GetString() << std::endl;
+    }
 
     ospMesh.commit();
     return ospMesh;
