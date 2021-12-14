@@ -258,7 +258,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _frameBuffer.commit();
         _currentFrame.colorBuffer.resize(_width * _height,
                                          vec4f({ 0.f, 0.f, 0.f, 0.f }));
-        _colorBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32,
+        _colorBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatUNorm8Vec4,
                               /*multiSampled=*/false);
         interactiveFramebufferDirty = true;
         _pendingResetImage = true;
@@ -593,6 +593,7 @@ HdOSPRayRenderPass::ProcessSettings()
     int samplesToConvergence = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->samplesToConvergence,
            _samplesToConvergence);
+    //TODO: check HdRenderSettingsTokens->convergedSamplesPerPixel
     float aoRadius = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->aoRadius, _aoRadius);
     float aoIntensity = renderDelegate->GetRenderSetting<float>(
