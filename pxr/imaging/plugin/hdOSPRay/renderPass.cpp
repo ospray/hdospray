@@ -575,8 +575,8 @@ HdOSPRayRenderPass::ProcessLights()
     }
     if (_ambientLight || lights.empty()) {
         auto ambient = opp::Light("ambient");
-        //ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
-        //ambient.setParam("intensity", glToPTLightIntensityMultiplier);
+        // ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
+        // ambient.setParam("intensity", glToPTLightIntensityMultiplier);
         ambient.commit();
         lights.push_back(ambient);
     }
@@ -593,7 +593,7 @@ HdOSPRayRenderPass::ProcessSettings()
     int samplesToConvergence = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->samplesToConvergence,
            _samplesToConvergence);
-    //TODO: check HdRenderSettingsTokens->convergedSamplesPerPixel
+    // TODO: check HdRenderSettingsTokens->convergedSamplesPerPixel
     float aoRadius = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->aoRadius, _aoRadius);
     float aoIntensity = renderDelegate->GetRenderSetting<float>(

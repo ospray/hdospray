@@ -31,10 +31,10 @@
 
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/gf/matrix4f.h>
-#include <pxr/imaging/hd/smoothNormals.h>
-#include <pxr/imaging/pxOsd/tokens.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/imaging/hd/meshUtil.h>
+#include <pxr/imaging/hd/smoothNormals.h>
+#include <pxr/imaging/pxOsd/tokens.h>
 
 #include <rkcommon/math/AffineSpace.h>
 
@@ -197,12 +197,11 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
 
             auto value = sceneDelegate->Get(id, pv.name);
 
-
             // TODO: need to find a better way to identify the primvar for
             // the texture coordinates
             // texcoords
-            if ((pv.role == HdPrimvarRoleTokens->textureCoordinate 
-                || pv.name == HdOSPRayTokens->st)
+            if ((pv.role == HdPrimvarRoleTokens->textureCoordinate
+                 || pv.name == HdOSPRayTokens->st)
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdOSPRayTokens->st)) {
                 if (value.IsHolding<VtVec2fArray>()) {
@@ -385,15 +384,15 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _topology.SetSubdivTags(subdivTags);
         _adjacencyValid = false;
 
-
         if (doRefine) {
             _ospMesh = _CreateOSPRaySubdivMesh();
 
             HdMeshUtil meshUtil(&_topology, GetId());
-            // meshUtil.ComputeQuadIndices(&_quadIndices, &_quadPrimitiveParams);
-            // Check if texcoords are provided as face varying.
+            // meshUtil.ComputeQuadIndices(&_quadIndices,
+            // &_quadPrimitiveParams); Check if texcoords are provided as face
+            // varying.
             if (_texcoordsInterpolation == HdInterpolationFaceVarying) {
-                //WARNING:  face varying currently only supported by ptex
+                // WARNING:  face varying currently only supported by ptex
                 TfToken buffName = HdOSPRayTokens->st;
                 VtValue buffValue = VtValue(_texcoords);
                 HdVtBufferSource buffer(buffName, buffValue);
@@ -452,7 +451,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         if (!_refined) {
             if (useQuads) {
                 HdMeshUtil meshUtil(&_topology, GetId());
-                meshUtil.ComputeQuadIndices(&_quadIndices, &_quadPrimitiveParams);
+                meshUtil.ComputeQuadIndices(&_quadIndices,
+                                            &_quadPrimitiveParams);
 
                 if (faceVaryingTexcoord) {
                     TfToken buffName = HdOSPRayTokens->st;
@@ -527,24 +527,23 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                         }
                     }
                     _texcoords = texcoords2;
-
                 }
             }
 
-        if ((_quadIndices.empty() && _triangulatedIndices.empty()) || _points.empty())
-            return; //invalid mesh
+            if ((_quadIndices.empty() && _triangulatedIndices.empty())
+                || _points.empty())
+                return; // invalid mesh
 
-
-        _ospMesh = _CreateOSPRayMesh(_quadIndices, _quadPrimitiveParams,
-            _triangulatedIndices, _trianglePrimitiveParams, faceVaryingTexcoord,
-            _texcoords, _points, _computedNormals, _colors, _refined, useQuads);
-
+            _ospMesh = _CreateOSPRayMesh(
+                   _quadIndices, _quadPrimitiveParams, _triangulatedIndices,
+                   _trianglePrimitiveParams, faceVaryingTexcoord, _texcoords,
+                   _points, _computedNormals, _colors, _refined, useQuads);
         }
 
         _geomSubsets = _topology.GetGeomSubsets();
         const HdOSPRayMaterial* subsetMaterial = nullptr;
 
-        for(auto subset : _geomSubsets) {
+        for (auto subset : _geomSubsets) {
             if (!TF_VERIFY(subset.type == HdGeomSubset::TypeFaceSet))
                 continue;
             VtVec3iArray triangulatedIndices;
@@ -553,8 +552,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             VtVec2iArray quadPrimitiveParams;
 
             const HdOSPRayMaterial* material
-                = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
-                        HdPrimTypeTokens->material, subset.materialId));
+                   = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
+                          HdPrimTypeTokens->material, subset.materialId));
             subsetMaterial = material;
         }
 
@@ -562,8 +561,9 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         if (subsetMaterial)
             material = subsetMaterial;
         else
-            material = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
-                    HdPrimTypeTokens->material, GetMaterialId()));
+            material
+                   = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
+                          HdPrimTypeTokens->material, GetMaterialId()));
 
         opp::Material ospMaterial;
 
@@ -699,11 +699,13 @@ HdOSPRayMesh::_UpdateDrawItemGeometricShader(HdSceneDelegate* sceneDelegate,
 }
 
 opp::Geometry
-HdOSPRayMesh::_CreateOSPRayMesh(const VtVec4iArray& quadIndices, 
-    const VtVec2iArray& quadPrimitiveParams, const VtVec3iArray& triangulatedIndices,
-    const VtIntArray& trianglePrimitiveParams, bool faceVaryingTexcoord, const VtVec2fArray& texcoords, 
-    const VtVec3fArray& points, const VtVec3fArray& normals, const VtVec4fArray& colors, bool refined,
-    bool useQuads)
+HdOSPRayMesh::_CreateOSPRayMesh(
+       const VtVec4iArray& quadIndices, const VtVec2iArray& quadPrimitiveParams,
+       const VtVec3iArray& triangulatedIndices,
+       const VtIntArray& trianglePrimitiveParams, bool faceVaryingTexcoord,
+       const VtVec2fArray& texcoords, const VtVec3fArray& points,
+       const VtVec3fArray& normals, const VtVec4fArray& colors, bool refined,
+       bool useQuads)
 {
     opp::Geometry ospMesh = opp::Geometry("mesh");
     if (!_refined) {
@@ -730,8 +732,8 @@ HdOSPRayMesh::_CreateOSPRayMesh(const VtVec4iArray& quadIndices,
     ospMesh.setParam("vertex.position", verticesData);
 
     if (normals.size()) {
-        opp::SharedData normalsData = opp::SharedData(
-               normals.cdata(), OSP_VEC3F, normals.size());
+        opp::SharedData normalsData
+               = opp::SharedData(normals.cdata(), OSP_VEC3F, normals.size());
         normalsData.commit();
         ospMesh.setParam("vertex.normal", normalsData);
     }

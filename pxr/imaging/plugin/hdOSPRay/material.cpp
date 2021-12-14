@@ -338,20 +338,17 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
            "baseColor",
            vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
     ospMaterial.setParam( // luminous material
-           "color",
-           vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
+           "color", vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
     ospMaterial.setParam(
            "specularColor",
            vec3f(specularColor[0], specularColor[1], specularColor[2]));
-    ospMaterial.setParam(
-           "edgeColor",
-           vec3f(edgeColor[0], edgeColor[1], edgeColor[2]));
-    ospMaterial.setParam(
-           "transmissionColor",
-           vec3f(transmissionColor[0], transmissionColor[1], transmissionColor[2]));
-    ospMaterial.setParam(
-           "coatColor",
-           vec3f(coatColor[0], coatColor[1], coatColor[2]));
+    ospMaterial.setParam("edgeColor",
+                         vec3f(edgeColor[0], edgeColor[1], edgeColor[2]));
+    ospMaterial.setParam("transmissionColor",
+                         vec3f(transmissionColor[0], transmissionColor[1],
+                               transmissionColor[2]));
+    ospMaterial.setParam("coatColor",
+                         vec3f(coatColor[0], coatColor[1], coatColor[2]));
 
     // texture maps
     if (map_diffuseColor.ospTexture) {
@@ -365,13 +362,14 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     }
     if (map_metallic.ospTexture) {
         ospMaterial.setParam("map_metallic", map_metallic.ospTexture);
-        if (metallic == -1.f) //ospray appears to mulitply texture, so reset default
+        if (metallic
+            == -1.f) // ospray appears to mulitply texture, so reset default
             metallic = 1.0f;
     }
     if (map_roughness.ospTexture) {
         ospMaterial.setParam("map_roughness", map_roughness.ospTexture);
         if (roughness == -1.f)
-           roughness = 1.0f;
+            roughness = 1.0f;
     }
     if (map_normal.ospTexture) {
         ospMaterial.setParam("map_normal", map_normal.ospTexture);

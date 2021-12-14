@@ -54,9 +54,9 @@ HdOSPRayDiskLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
     if (bits & DirtyParams) {
         _radius = sceneDelegate->GetLightParamValue(id, HdLightTokens->radius)
                          .Get<float>();
-        auto vtOpeningAngle = sceneDelegate->GetLightParamValue(id, HdLightTokens->shapingConeAngle);
-        if (vtOpeningAngle.IsHolding<float>())
-        {
+        auto vtOpeningAngle = sceneDelegate->GetLightParamValue(
+               id, HdLightTokens->shapingConeAngle);
+        if (vtOpeningAngle.IsHolding<float>()) {
             _openingAngle = vtOpeningAngle.Get<float>();
         }
     }
@@ -68,9 +68,11 @@ HdOSPRayDiskLight::_PrepareOSPLight()
     float intensity = _emissionParam.ExposedIntensity();
 
     OSPIntensityQuantity intensityQuantity = _emissionParam.intensityQuantity;
-    if(intensityQuantity == OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN)
-    {
-        intensityQuantity = _emissionParam.normalize ? OSP_INTENSITY_QUANTITY_POWER : OSP_INTENSITY_QUANTITY_RADIANCE;
+    if (intensityQuantity
+        == OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN) {
+        intensityQuantity = _emissionParam.normalize
+               ? OSP_INTENSITY_QUANTITY_POWER
+               : OSP_INTENSITY_QUANTITY_RADIANCE;
     }
 
     // the initial center of the disk
@@ -108,7 +110,7 @@ HdOSPRayDiskLight::_PrepareOSPLight()
     _ospLight.setParam("penumbraAngle", 0.0f);
 
     // emission
-    _ospLight.setParam("intensityQuantity",intensityQuantity);
+    _ospLight.setParam("intensityQuantity", intensityQuantity);
 
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],

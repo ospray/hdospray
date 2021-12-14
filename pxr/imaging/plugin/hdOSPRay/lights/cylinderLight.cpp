@@ -48,15 +48,16 @@ HdOSPRayCylinderLight::~HdOSPRayCylinderLight()
 
 void
 HdOSPRayCylinderLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
-                                      SdfPath const& id, HdDirtyBits* dirtyBits)
+                                          SdfPath const& id,
+                                          HdDirtyBits* dirtyBits)
 {
     HdDirtyBits bits = *dirtyBits;
     if (bits & DirtyParams) {
         _radius = sceneDelegate->GetLightParamValue(id, HdLightTokens->radius)
                          .Get<float>();
-        auto length = sceneDelegate->GetLightParamValue(id, HdLightTokens->length);
-        if (length.IsHolding<float>())
-        {
+        auto length
+               = sceneDelegate->GetLightParamValue(id, HdLightTokens->length);
+        if (length.IsHolding<float>()) {
             _length = length.Get<float>();
         }
     }
@@ -68,9 +69,11 @@ HdOSPRayCylinderLight::_PrepareOSPLight()
     float intensity = _emissionParam.ExposedIntensity();
 
     OSPIntensityQuantity intensityQuantity = _emissionParam.intensityQuantity;
-    if(intensityQuantity == OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN)
-    {
-        intensityQuantity = _emissionParam.normalize ? OSP_INTENSITY_QUANTITY_POWER : OSP_INTENSITY_QUANTITY_RADIANCE;
+    if (intensityQuantity
+        == OSPIntensityQuantity::OSP_INTENSITY_QUANTITY_UNKNOWN) {
+        intensityQuantity = _emissionParam.normalize
+               ? OSP_INTENSITY_QUANTITY_POWER
+               : OSP_INTENSITY_QUANTITY_RADIANCE;
     }
 
     GfVec3f position0(0, 0, 0);
@@ -88,7 +91,7 @@ HdOSPRayCylinderLight::_PrepareOSPLight()
     _ospLight.setParam("radius", _radius);
 
     // emission
-    _ospLight.setParam("intensityQuantity",intensityQuantity);
+    _ospLight.setParam("intensityQuantity", intensityQuantity);
 
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],

@@ -32,12 +32,12 @@
 #include <pxr/imaging/hd/resourceRegistry.h>
 
 #include "basisCurves.h"
+#include "lights/cylinderLight.h"
 #include "lights/diskLight.h"
 #include "lights/distantLight.h"
 #include "lights/domeLight.h"
 #include "lights/rectLight.h"
 #include "lights/sphereLight.h"
-#include "lights/cylinderLight.h"
 #include "material.h"
 #include "mesh.h"
 

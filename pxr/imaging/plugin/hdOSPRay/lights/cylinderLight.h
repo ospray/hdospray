@@ -45,7 +45,6 @@ protected:
     void _PrepareOSPLight() override;
 
 private:
-
     float _radius { 1.f };
     float _length { 1.f };
 };
