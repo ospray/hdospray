@@ -182,11 +182,11 @@ private:
                                HdDirtyBits dirtyBits);
 
     opp::Geometry _CreateOSPRaySubdivMesh();
-    opp::Geometry _CreateOSPRayMesh(VtVec4iArray& quadIndices, 
-    VtVec2iArray& quadPrimitiveParams, VtVec3iArray& triangulatedIndices,
-    VtIntArray& trianglePrimitiveParams, bool faceVaryingTexcoord, VtVec2fArray& texcoords, 
-    VtVec3fArray& points, VtVec3fArray& normals, VtVec4fArray& colors, bool refined,
-    bool useQuads);
+    opp::Geometry _CreateOSPRayMesh(const VtVec4iArray& quadIndices,
+        const VtVec2iArray& quadPrimitiveParams, const VtVec3iArray& triangulatedIndices,
+        const VtIntArray& trianglePrimitiveParams, bool faceVaryingTexcoord, const VtVec2fArray& texcoords,
+        const VtVec3fArray& points, const VtVec3fArray& normals, const VtVec4fArray& colors, bool refined,
+        bool useQuads);
 
     bool _populated { false };
 

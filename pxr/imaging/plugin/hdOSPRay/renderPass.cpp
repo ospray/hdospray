@@ -575,8 +575,8 @@ HdOSPRayRenderPass::ProcessLights()
     }
     if (_ambientLight || lights.empty()) {
         auto ambient = opp::Light("ambient");
-        ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
-        ambient.setParam("intensity", glToPTLightIntensityMultiplier);
+        //ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
+        //ambient.setParam("intensity", glToPTLightIntensityMultiplier);
         ambient.commit();
         lights.push_back(ambient);
     }

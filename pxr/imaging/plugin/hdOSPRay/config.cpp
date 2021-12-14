@@ -79,6 +79,9 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_PIXELFILTER_TYPE, OSPPixelFilterTypes::OSP_PIXELF
 TF_DEFINE_ENV_SETTING(HDOSPRAY_FORCE_QUADRANGULATE, 0,
         "OSPRay force Quadrangulate meshes for debug");
 
+TF_DEFINE_ENV_SETTING(HDOSPRAY_INTERACTIVE_TARGET_FPS, int(HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS),
+        "set interactive scaling to match target fps when interacting");
+
 HdOSPRayConfig::HdOSPRayConfig()
 {
     // Read in values from the environment, clamping them to valid ranges.
@@ -90,6 +93,7 @@ HdOSPRayConfig::HdOSPRayConfig()
             TfGetEnvSetting(HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES));
     lightSamples = std::max(-1,
             TfGetEnvSetting(HDOSPRAY_LIGHT_SAMPLES));
+    interactiveTargetFPS = TfGetEnvSetting(HDOSPRAY_INTERACTIVE_TARGET_FPS);
 
     cameraLightIntensity = (std::max(100,
             TfGetEnvSetting(HDOSPRAY_CAMERA_LIGHT_INTENSITY)) / 100.0f);
