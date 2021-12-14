@@ -365,27 +365,25 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     }
     if (map_metallic.ospTexture) {
         ospMaterial.setParam("map_metallic", map_metallic.ospTexture);
-        if (metallic == 0.f) //ospray appears to mulitply texture, so reset default
+        if (metallic == -1.f) //ospray appears to mulitply texture, so reset default
             metallic = 1.0f;
     }
     if (map_roughness.ospTexture) {
         ospMaterial.setParam("map_roughness", map_roughness.ospTexture);
-        if (roughness = 0.f)
+        if (roughness == -1.f)
            roughness = 1.0f;
     }
     if (map_normal.ospTexture) {
         ospMaterial.setParam("map_normal", map_normal.ospTexture);
         ospMaterial.setParam("map_baseNormal", map_normal.ospTexture);
-        if (normal = 0.f)
-            normal = 1.f;
     }
 
     // params
-    ospMaterial.setParam("metallic", metallic);
+    ospMaterial.setParam("metallic", std::max(0.f, metallic));
     ospMaterial.setParam("intensity", intensity);
     ospMaterial.setParam("specular", specular);
     ospMaterial.setParam("transmissionDepth", transmissionDepth);
-    ospMaterial.setParam("roughness", roughness);
+    ospMaterial.setParam("roughness", std::max(0.f, roughness));
     ospMaterial.setParam("normal", normal);
     ospMaterial.setParam("coat", coat);
     ospMaterial.setParam("coatIor", coatIor);
