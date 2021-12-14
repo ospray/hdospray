@@ -69,6 +69,8 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _clearColor(0.0f, 0.0f, 0.0f)
     , _renderParam(renderParam)
     , _colorBuffer(SdfPath::EmptyPath())
+    , _depthBuffer(SdfPath::EmptyPath())
+    , _normalBuffer(SdfPath::EmptyPath())
 {
     _world = opp::World();
     _camera = opp::Camera("perspective");
@@ -219,6 +221,17 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             std::copy(rgba, rgba + _currentFrame.width * _currentFrame.height,
                       _currentFrame.colorBuffer.data());
             frameBuffer.unmap(rgba);
+
+            float* depth = static_cast<float*>(frameBuffer.map(OSP_FB_DEPTH));
+            std::copy(depth, depth + _currentFrame.width * _currentFrame.height,
+                      _currentFrame.depthBuffer.data());
+            frameBuffer.unmap(depth);
+
+            vec3f* normal = static_cast<vec3f*>(frameBuffer.map(OSP_FB_NORMAL));
+            std::copy(depth, depth + _currentFrame.width * _currentFrame.height,
+                      _currentFrame.normalBuffer.data());
+            frameBuffer.unmap(normal);
+
             DisplayRenderBuffer(_currentFrame);
             _previousFrame = _currentFrame;
 
@@ -249,7 +262,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
         _frameBuffer
                = opp::FrameBuffer((int)_width, (int)_height, OSP_FB_RGBA32F,
-                                  OSP_FB_COLOR | OSP_FB_ACCUM |
+                                  OSP_FB_COLOR | OSP_FB_ACCUM | OSP_FB_DEPTH |
+                                  OSP_FB_NORMAL |
 #if HDOSPRAY_ENABLE_DENOISER
                                          OSP_FB_NORMAL | OSP_FB_ALBEDO
                                          | OSP_FB_VARIANCE | OSP_FB_DEPTH |
@@ -259,6 +273,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _currentFrame.colorBuffer.resize(_width * _height,
                                          vec4f({ 0.f, 0.f, 0.f, 0.f }));
         _colorBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatUNorm8Vec4,
+                              /*multiSampled=*/false);
+        _depthBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32,
+                              /*multiSampled=*/false);
+        _normalBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32,
                               /*multiSampled=*/false);
         interactiveFramebufferDirty = true;
         _pendingResetImage = true;
@@ -285,6 +303,20 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 colorAov.clearValue
                        = VtValue(GfVec4f(0.0707f, 0.0707f, 0.0707f, 0.0f));
                 aovBindings.push_back(colorAov);
+
+                HdRenderPassAovBinding depthAov;
+                depthAov.aovName = HdAovTokens->depth;
+                depthAov.renderBuffer = &_depthBuffer;
+                depthAov.clearValue
+                       = VtValue(float(0.0f));
+                aovBindings.push_back(depthAov);
+
+                HdRenderPassAovBinding normalAov;
+                depthAov.aovName = HdAovTokens->normal;
+                normalAov.renderBuffer = &_depthBuffer;
+                normalAov.clearValue
+                       = VtValue(GfVec3f(0.0f, 1.0f, 0.0f));
+                aovBindings.push_back(normalAov);
             }
             SetAovBindings(aovBindings);
         }
@@ -294,7 +326,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _interactiveFrameBuffer = opp::FrameBuffer(
                (int)(float(_width) / _interactiveFrameBufferScale),
                (int)(float(_height) / _interactiveFrameBufferScale),
-               OSP_FB_RGBA32F, OSP_FB_COLOR);
+               OSP_FB_RGBA32F, OSP_FB_COLOR | OSP_FB_DEPTH | OSP_FB_NORMAL);
         _interactiveFrameBuffer.commit();
         interactiveFramebufferDirty = false;
         _pendingResetImage = true;
@@ -345,18 +377,14 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _currentFrame.height
                    = (unsigned int)(float(_height)
                                     / _interactiveFrameBufferScale);
-            _currentFrame.colorBuffer.resize(_currentFrame.width
-                                                    * _currentFrame.height,
-                                             vec4f({ 0.f, 0.f, 0.f, 0.f }));
+            _currentFrame.resize(_currentFrame.width * _currentFrame.height);
         }
         _currentFrameBufferScale = _interactiveFrameBufferScale;
     } else {
         if (_currentFrame.width != _width || _currentFrame.height != _height) {
             _currentFrame.width = _width;
             _currentFrame.height = _height;
-            _currentFrame.colorBuffer.resize(_currentFrame.width
-                                                    * _currentFrame.height,
-                                             vec4f({ 0.f, 0.f, 0.f, 0.f }));
+            _currentFrame.resize(_currentFrame.width * _currentFrame.height);
         }
         _currentFrameBufferScale = 1.0f;
     }
@@ -440,6 +468,56 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                                                       [js * renderBuffer.width
                                                        + is]
                                                .x));
+                           }
+                       });
+                aovRenderBuffer->Unmap();
+            } else
+                std::cout << "ERROR: displayrenderbuffer size out of sync\n";
+        } else  if (_aovNames[aovIndex].name == HdAovTokens->depth) {
+            if (aovWidth >= renderBuffer.width
+                && aovHeight >= renderBuffer.height) {
+                TF_DEBUG_MSG(OSP_RP, "found aov depth\n");
+                aovRenderBuffer->Map();
+                float xscale = float(renderBuffer.width) / float(aovWidth);
+                float yscale = float(renderBuffer.height) / float(aovHeight);
+                tbb::parallel_for(
+                       tbb::blocked_range<int>(0, aovWidth * aovHeight),
+                       [&](tbb::blocked_range<int> r) {
+                           for (int pIdx = r.begin(); pIdx < r.end(); ++pIdx) {
+                               int j = pIdx / aovWidth;
+                               int i = pIdx - j * aovWidth;
+                               int js = j * xscale;
+                               int is = i * yscale;
+                               aovRenderBuffer->Write(
+                                      GfVec3i(i, j, 1), 1,
+                                      &(renderBuffer.depthBuffer
+                                                      [js * renderBuffer.width
+                                                       + is]));
+                           }
+                       });
+                aovRenderBuffer->Unmap();
+            } else
+                std::cout << "ERROR: displayrenderbuffer size out of sync\n";
+        } else  if (_aovNames[aovIndex].name == HdAovTokens->normal) {
+            if (aovWidth >= renderBuffer.width
+                && aovHeight >= renderBuffer.height) {
+                TF_DEBUG_MSG(OSP_RP, "found aov normal\n");
+                aovRenderBuffer->Map();
+                float xscale = float(renderBuffer.width) / float(aovWidth);
+                float yscale = float(renderBuffer.height) / float(aovHeight);
+                tbb::parallel_for(
+                       tbb::blocked_range<int>(0, aovWidth * aovHeight),
+                       [&](tbb::blocked_range<int> r) {
+                           for (int pIdx = r.begin(); pIdx < r.end(); ++pIdx) {
+                               int j = pIdx / aovWidth;
+                               int i = pIdx - j * aovWidth;
+                               int js = j * xscale;
+                               int is = i * yscale;
+                               aovRenderBuffer->Write(
+                                      GfVec3i(i, j, 1), 1,
+                                      &(renderBuffer.normalBuffer
+                                                      [js * renderBuffer.width
+                                                       + is].x));
                            }
                        });
                 aovRenderBuffer->Unmap();

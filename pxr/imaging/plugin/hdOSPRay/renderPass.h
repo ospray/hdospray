@@ -84,6 +84,8 @@ public:
         // The resolved output buffer, in GL_RGBA. This is an intermediate
         // between _sampleBuffer and the GL framebuffer.
         std::vector<vec4f> colorBuffer;
+        std::vector<float> depthBuffer;
+        std::vector<vec3f> normalBuffer;
 
         bool isValid()
         {
@@ -93,6 +95,13 @@ public:
         inline float Duration()
         {
             return osprayFrame.duration();
+        }
+
+        inline void resize(size_t size)
+        {
+            colorBuffer.resize(size, vec4f({ 0.f, 0.f, 0.f, 0.f }));
+            depthBuffer.resize(size, FLT_MAX);
+            normalBuffer.resize(size, vec3f({ 0.f, 1.f, 0.f}));
         }
     };
 
@@ -149,6 +158,8 @@ private:
     HdRenderPassAovBindingVector _aovBindings;
     HdParsedAovTokenVector _aovNames;
     HdOSPRayRenderBuffer _colorBuffer;
+    HdOSPRayRenderBuffer _depthBuffer;
+    HdOSPRayRenderBuffer _normalBuffer;
     float _currentFrameBufferScale { 1.0f };
     float _interactiveFrameBufferScale { 2.0f };
     float _interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
