@@ -37,6 +37,7 @@
 #include "lights/domeLight.h"
 #include "lights/rectLight.h"
 #include "lights/sphereLight.h"
+#include "lights/cylinderLight.h"
 #include "material.h"
 #include "mesh.h"
 
@@ -65,7 +66,7 @@ const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES = {
     HdPrimTypeTokens->camera,       HdPrimTypeTokens->material,
     HdPrimTypeTokens->rectLight,    HdPrimTypeTokens->diskLight,
     HdPrimTypeTokens->sphereLight,  HdPrimTypeTokens->domeLight,
-    HdPrimTypeTokens->distantLight,
+    HdPrimTypeTokens->distantLight, HdPrimTypeTokens->cylinderLight,
 };
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {
@@ -337,6 +338,8 @@ HdOSPRayRenderDelegate::CreateSprim(TfToken const& typeId,
         return new HdOSPRayDomeLight(sprimId);
     } else if (typeId == HdPrimTypeTokens->distantLight) {
         return new HdOSPRayDistantLight(sprimId);
+    } else if (typeId == HdPrimTypeTokens->cylinderLight) {
+        return new HdOSPRayCylinderLight(sprimId);
     } else {
         TF_CODING_ERROR("Unknown Sprim Type %s", typeId.GetText());
     }

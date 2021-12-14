@@ -55,7 +55,7 @@ add_library(hdOSPRay SHARED
     lights/domeLight.cpp
     lights/rectLight.cpp
     lights/sphereLight.cpp
-    #lights/simpleLight
+    lights/cylinderLight.cpp
     context.h
     renderParam.h
     plugInfo.json
