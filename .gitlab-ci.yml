@@ -24,12 +24,12 @@ stages:
 
 build-arch-gcc:
    <<: *build_job_docker
-   image: hdospray/docker-images:arch
+   image: hdospray/docker-images:centos7
 
 build-kw-scan:
   stage: pre-scan
   tags: [docker]
-  image: hdospray/docker-images:arch
+  image: hdospray/docker-images:centos7
   script:
     - scripts/build_gitlab/linux-kw.sh
   artifacts:
