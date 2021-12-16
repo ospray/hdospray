@@ -551,12 +551,13 @@ HdOSPRayRenderPass::ProcessCamera(
     renderPassState->GetProjectionMatrix().Get(prjMatrix);
     float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
 
-    float focalDistance = 1.f;
-    float horizontalAperture = 0.f;
-    float verticalAperture = 0.f;
+    OSPRayCameraParams params = _renderParam->GetCameraParams();
+    float focalLength = params.focalLength;
+    float horizontalAperture = params.horizontalAperture;
+    float verticalAperture = params.verticalAperture;
     float aperture = std::max(horizontalAperture,
         verticalAperture);
-    _camera.setParam("focusDistance", focalDistance);
+    _camera.setParam("focusDistance", focalLength);
     _camera.setParam("apertureRadius", aperture);
     _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));
     _camera.setParam("direction", vec3f(dir[0], dir[1], dir[2]));

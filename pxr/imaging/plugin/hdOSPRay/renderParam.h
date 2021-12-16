@@ -38,6 +38,13 @@ namespace opp = ospray::cpp;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+struct OSPRayCameraParams
+{
+    float horizontalAperture {0.f};
+    float verticalAperture {0.f};
+    float focalLength {1.f};
+};
+
 ///
 /// \class HdOSPRayRenderParam
 ///
@@ -128,6 +135,17 @@ public:
         return _hdOSPRayBasisCurves;
     }
 
+    OSPRayCameraParams GetCameraParams()
+    {
+        return _cameraParams;
+    }
+
+    void SetCameraParams(OSPRayCameraParams cameraParams)
+    {
+        std::lock_guard<std::mutex> lock(_ospMutex);
+        _cameraParams = cameraParams;
+    }
+
 private:
     // mutex over ospray calls to the global model and global instances. OSPRay
     // is not thread safe
@@ -143,8 +161,9 @@ private:
     opp::Renderer _renderer;
     /// A version counters for edits to scene (e.g., models or lights).
     std::atomic<int> _modelVersion { 1 };
-
     std::atomic<int> _lightVersion { 1 };
+
+    OSPRayCameraParams _cameraParams;
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE
