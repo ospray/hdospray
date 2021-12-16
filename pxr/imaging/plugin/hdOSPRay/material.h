@@ -140,25 +140,13 @@ protected:
     };
 
     GfVec3f diffuseColor { 0.5f, 0.5f, 0.5f };
-    GfVec3f coatColor { 1.0f, 1.0f, 1.0f };
-    GfVec3f edgeColor { 1.0f, 1.0f, 1.0f };
-    GfVec3f specularColor { 1.f, 1.f, 1.f };
-    GfVec3f transmissionColor { 1.f, 1.f, 1.f };
+    GfVec3f specularColor { 1.0f, 1.0f, 1.0f };
     float metallic { -1.f };
-    float specular { 1.f };
-    float transmissionDepth { 1.f };
-    float intensity { 0.f };
     float roughness { -1.f };
     float coatRoughness { 0.f };
-    float coatThickness { 1.f };
     float coat { 0.f };
-    float coatIor { 1.5f };
-    float rotation { 0.f };
     float ior { 1.f };
     float opacity { 1.f };
-    float normal { 1.f };
-    float anisotropy { 0.f };
-    float diffuse { 1.f };
     TfToken type;
     bool hasPtex { false };
 
