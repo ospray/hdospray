@@ -22,9 +22,23 @@ stages:
 
 ### BUILD JOBS ###
 
-build-arch-gcc:
+      #build-centos7-gcc:
+      #   <<: *build_job_docker
+      #   image: hdospray/docker-images:centos7
+      #   script:
+      #     - scl enable devtoolset-8 -- bash
+      #     - scripts/build_gitlab/linux.sh
+
+build-centos7-icc:
    <<: *build_job_docker
    image: hdospray/docker-images:centos7
+   script:
+     - module load cmake
+     - module load intel/2020.1
+     - export CC=icc
+     - export CXX=icpc
+     - export CXXFLAGS="-std=c++17"
+     - scripts/build_gitlab/linux.sh
 
 build-kw-scan:
   stage: pre-scan
