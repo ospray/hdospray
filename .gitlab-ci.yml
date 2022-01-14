@@ -14,6 +14,15 @@ stages:
   script:
     - scripts/build_gitlab/linux.sh
 
+.job_template: &build_job_docker_modules
+  stage: build
+  tags:
+    - docker
+    - modules
+  image: hdospray/docker-images:centos7-mod
+  script:
+    - scripts/build_gitlab/linux.sh
+
 .job_template: &build_job_shell
   stage: build
   tags:
@@ -22,23 +31,29 @@ stages:
 
 ### BUILD JOBS ###
 
-      #build-centos7-gcc:
-      #   <<: *build_job_docker
-      #   image: hdospray/docker-images:centos7
-      #   script:
-      #     - scl enable devtoolset-8 -- bash
-      #     - scripts/build_gitlab/linux.sh
 
-build-centos7-icc:
-   <<: *build_job_docker
-   image: hdospray/docker-images:centos7
-   script:
-     - module load cmake
-     - module load intel/2020.1
-     - export CC=icc
-     - export CXX=icpc
-     - export CXXFLAGS="-std=c++17"
-     - scripts/build_gitlab/linux.sh
+build-ubuntu20.04-gcc:
+      <<: *build_job_docker
+      image: hdospray/docker-images:ubuntu20.04
+      script:
+           - scripts/build_gitlab/linux.sh
+
+             #build-centos7-gcc:
+             #      <<: *build_job_docker
+             #      image: hdospray/docker-images:centos7
+             #      script:
+             #           - scl enable devtoolset-8 -- bash
+             #           - scripts/build_gitlab/linux.sh
+
+             #build-centos7-icc:
+             #   <<: *build_job_docker_modules
+             #   script:
+             #     - module load cmake
+             #     - module load intel
+             #     - export CC=icc
+             #     - export CXX=icpc
+             #     - export CXXFLAGS="-std=c++17"
+             #     - scripts/build_gitlab/linux.sh
 
 build-kw-scan:
   stage: pre-scan
