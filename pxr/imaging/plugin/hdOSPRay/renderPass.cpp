@@ -585,11 +585,10 @@ HdOSPRayRenderPass::ProcessLights()
     GfVec3f right_light = GfCross(dir, up);
     std::vector<opp::Light> lights;
 
-    // push scene lights
-    const auto hdOSPRayLights = _renderParam->GetHdOSPRayLights();
     // if have image background, overide background color with image
     bool hasHDRI = false;
-    for (auto l : hdOSPRayLights) {
+    // push scene lights
+    for (auto l : _renderParam->GetHdOSPRayLights()) {
         if (l.second->IsVisible()) {
             lights.push_back(l.second->GetOSPLight());
             if (dynamic_cast<const HdOSPRayDomeLight*>(l.second)

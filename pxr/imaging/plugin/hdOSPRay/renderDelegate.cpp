@@ -74,7 +74,7 @@ const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {
 };
 
 std::mutex HdOSPRayRenderDelegate::_mutexResourceRegistry;
-std::atomic_int HdOSPRayRenderDelegate::_counterResourceRegistry;
+std::atomic_int HdOSPRayRenderDelegate::_counterResourceRegistry(0);
 HdResourceRegistrySharedPtr HdOSPRayRenderDelegate::_resourceRegistry;
 
 HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()

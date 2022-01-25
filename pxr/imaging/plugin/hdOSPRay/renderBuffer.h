@@ -183,7 +183,7 @@ private:
     // Buffer format.
     HdFormat _format;
     // Whether the buffer is operating in multisample mode.
-    bool _multiSampled;
+    bool _multiSampled; // currently always false for OSPRay
 
     // The resolved output buffer.
     std::vector<uint8_t> _buffer;

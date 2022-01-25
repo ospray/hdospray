@@ -110,8 +110,6 @@ bool
 HdOSPRayRenderBuffer::Allocate(GfVec3i const& dimensions, HdFormat format,
                                bool multiSampled)
 {
-    // force single sampled for OSPRay buffers
-    multiSampled = false;
     _Deallocate();
 
     if (dimensions[2] != 1) {
@@ -131,13 +129,6 @@ HdOSPRayRenderBuffer::Allocate(GfVec3i const& dimensions, HdFormat format,
     _height = dimensions[1];
     _format = format;
     _buffer.resize(_GetBufferSize(GfVec2i(_width, _height), format));
-
-    _multiSampled = multiSampled;
-    if (_multiSampled) {
-        _sampleBuffer.resize(_GetBufferSize(GfVec2i(_width, _height),
-                                            _GetSampleFormat(format)));
-        _sampleCount.resize(_width * _height);
-    }
 
     return true;
 }

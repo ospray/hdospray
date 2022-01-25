@@ -34,41 +34,15 @@ void HdOSPRayCamera::Sync(HdSceneDelegate *sceneDelegate,
   auto focalLength = sceneDelegate->GetCameraParamValue(GetId(), 
       HdOSPRayCameraTokens->focalLength);
 
-  if (vtActive.IsHolding<bool>()
-   || vtExposure.IsHolding<float>()
-   || vtContrast.IsHolding<float>()
-   || vtShoulder.IsHolding<float>()
-   || vtMidIn.IsHolding<float>()
-   || vtMidOut.IsHolding<float>()
-   || vtHdrMax.IsHolding<float>())
-  {
-    ToneMappingParams tmParams = renderParam->GetToneMappingParams();
-
-    if (vtActive.IsHolding<bool>()) {
-      tmParams.active = vtActive.Get<bool>();
-    }
-    if (vtExposure.IsHolding<float>()) {
-      tmParams.exposure = vtExposure.Get<float>();
-    }
-    if (vtContrast.IsHolding<float>()) {
-      tmParams.contrast = vtContrast.Get<float>();
-    }
-    if (vtShoulder.IsHolding<float>()) {
-      tmParams.shoulder = vtShoulder.Get<float>();
-    }
-    if (vtMidIn.IsHolding<float>()) {
-      tmParams.midIn = vtMidIn.Get<float>();
-    }
-    if (vtMidOut.IsHolding<float>()) {
-      tmParams.midOut = vtMidOut.Get<float>();
-    }
-    if (vtHdrMax.IsHolding<float>()) {
-      tmParams.hdrMax = vtHdrMax.Get<float>();
-    }
-
-    renderParam->SetToneMappingParams(tmParams);
+  if (horizontalAperture.IsHolding<float>()) {
+      tmParams.active = vtActive.Get<float>();
   }
-
+  if (vtExposure.IsHolding<float>()) {
+      tmParams.exposure = vtExposure.Get<float>();
+  }
+  if (vtContrast.IsHolding<float>()) {
+      tmParams.contrast = vtContrast.Get<float>();
+  }
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

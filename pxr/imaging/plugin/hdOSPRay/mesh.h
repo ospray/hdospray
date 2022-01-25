@@ -206,7 +206,6 @@ private:
     // only call const accessors keeping them around doesn't incur a buffer
     // copy.
     HdMeshTopology _topology;
-    HdGeomSubsets _geomSubsets;
     GfMatrix4f _transform;
     VtVec3fArray _points;
     VtVec2fArray _texcoords;

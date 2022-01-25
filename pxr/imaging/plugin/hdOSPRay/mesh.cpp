@@ -175,6 +175,8 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
     HD_TRACE_FUNCTION();
     SdfPath const& id = GetId();
 
+    TF_VERIFY(sceneDelegate);
+
     // Update _primvarSourceMap, our local cache of raw primvar data.
     // This function pulls data from the scene delegate, but defers processing.
     //
@@ -540,16 +542,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                    _points, _computedNormals, _colors, _refined, useQuads);
         }
 
-        _geomSubsets = _topology.GetGeomSubsets();
         const HdOSPRayMaterial* subsetMaterial = nullptr;
 
-        for (auto subset : _geomSubsets) {
+        for (auto subset : _topology.GetGeomSubsets()) {
             if (!TF_VERIFY(subset.type == HdGeomSubset::TypeFaceSet))
                 continue;
-            VtVec3iArray triangulatedIndices;
-            VtIntArray trianglePrimitiveParams;
-            VtVec4iArray quadIndices;
-            VtVec2iArray quadPrimitiveParams;
 
             const HdOSPRayMaterial* material
                    = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
