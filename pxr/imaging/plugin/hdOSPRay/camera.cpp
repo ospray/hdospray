@@ -34,15 +34,21 @@ void HdOSPRayCamera::Sync(HdSceneDelegate *sceneDelegate,
   auto focalLength = sceneDelegate->GetCameraParamValue(GetId(), 
       HdOSPRayCameraTokens->focalLength);
 
+  HdOSPRayRenderParam* ospRenderParam
+         = static_cast<HdOSPRayRenderParam*>(renderParam);
+  OSPRayCameraParams params = ospRenderParam->GetCameraParams();
+
   if (horizontalAperture.IsHolding<float>()) {
-      tmParams.active = vtActive.Get<float>();
+      params.horizontalAperture = horizontalAperture.Get<float>();
   }
-  if (vtExposure.IsHolding<float>()) {
-      tmParams.exposure = vtExposure.Get<float>();
+  if (verticalAperture.IsHolding<float>()) {
+      params.verticalAperture = verticalAperture.Get<float>();
   }
-  if (vtContrast.IsHolding<float>()) {
-      tmParams.contrast = vtContrast.Get<float>();
+  if (focalLength.IsHolding<float>()) {
+      params.focalLength = focalLength.Get<float>();
   }
+
+  ospRenderParam->SetCameraParams(params);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

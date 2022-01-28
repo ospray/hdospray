@@ -406,8 +406,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                 if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
                     _texcoords = quadPrimvar.Get<VtVec2fArray>();
                 } else {
-                    std::cout << "ERROR: could not quadrangulate face-varying "
-                                 "data\n";
+                    TF_CODING_ERROR("ERROR: could not quadrangulate face-varying data\n");
                 }
             }
         }
@@ -469,9 +468,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                     if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
                         _texcoords = quadPrimvar.Get<VtVec2fArray>();
                     } else {
-                        std::cout
-                               << "ERROR: could not quadrangulate face-varying "
-                                  "data\n";
+                        TF_CODING_ERROR("ERROR: could not quadrangulate face-varying data\n");
                     }
 
                     // usd stores texcoords in face indexed -> each quad has 4
@@ -509,9 +506,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                         && triangulatedPrimvar.IsHolding<VtVec2fArray>()) {
                         _texcoords = triangulatedPrimvar.Get<VtVec2fArray>();
                     } else {
-                        std::cout
-                               << "ERROR: could not triangulate face-varying "
-                                  "data\n";
+                        TF_CODING_ERROR("ERROR: could not triangulate face-varying data\n");
                     }
 
                     // usd stores texcoords in face indexed -> each triangle has

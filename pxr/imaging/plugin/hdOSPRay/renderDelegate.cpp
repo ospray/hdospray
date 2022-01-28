@@ -28,6 +28,7 @@
 #include "renderBuffer.h"
 #include "renderParam.h"
 #include "renderPass.h"
+#include "camera.h"
 
 #include <pxr/imaging/hd/resourceRegistry.h>
 
@@ -325,7 +326,7 @@ HdOSPRayRenderDelegate::CreateSprim(TfToken const& typeId,
                                     SdfPath const& sprimId)
 {
     if (typeId == HdPrimTypeTokens->camera) {
-        return new HdCamera(sprimId);
+        return new HdOSPRayCamera(sprimId);
     } else if (typeId == HdPrimTypeTokens->material) {
         return new HdOSPRayMaterial(sprimId);
     } else if (typeId == HdPrimTypeTokens->rectLight) {

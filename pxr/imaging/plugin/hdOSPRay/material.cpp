@@ -220,8 +220,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
         } else if (name == HdOSPRayTokens->wrapS) {
         } else if (name == HdOSPRayTokens->wrapT) {
         } else {
-            std::cout << "unhandled token: " << name.GetString() << " "
-                      << std::endl;
+            TF_CODING_ERROR("unhandled token: %s\n", name.GetString().c_str());
         }
     }
 
@@ -239,8 +238,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
     } else if (textureName == HdOSPRayTokens->opacity) {
         map_opacity = texture;
     } else
-        std::cout << "unhandled texToken: " << textureName.GetString()
-                  << std::endl;
+        TF_CODING_ERROR("unhandled texToken: %s\n", textureName.GetString().c_str());
 }
 
 opp::Material

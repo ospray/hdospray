@@ -41,6 +41,7 @@ add_library(hdOSPRay SHARED
     config.cpp
     instancer.cpp
     mesh.cpp
+    camera.cpp
     basisCurves.cpp
     material.cpp
     rendererPlugin.cpp

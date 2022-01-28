@@ -463,7 +463,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                                int js = j * xscale;
                                int is = i * yscale;
                                aovRenderBuffer->Write(
-                                      GfVec3i(i, j, 1), 4,
+                                      GfVec3i(i, j, 1), 3,
                                       &(renderBuffer
                                                .colorBuffer
                                                       [js * renderBuffer.width
@@ -473,7 +473,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                        });
                 aovRenderBuffer->Unmap();
             } else
-                std::cout << "ERROR: displayrenderbuffer size out of sync\n";
+                TF_CODING_ERROR("ERROR: displayrenderbuffer size out of sync\n");
         } else  if (_aovNames[aovIndex].name == HdAovTokens->depth) {
             if (aovWidth >= renderBuffer.width
                 && aovHeight >= renderBuffer.height) {
@@ -498,7 +498,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                        });
                 aovRenderBuffer->Unmap();
             } else
-                std::cout << "ERROR: displayrenderbuffer size out of sync\n";
+                TF_CODING_ERROR("ERROR: displayrenderbuffer size out of sync\n");
         } else  if (_aovNames[aovIndex].name == HdAovTokens->normal) {
             if (aovWidth >= renderBuffer.width
                 && aovHeight >= renderBuffer.height) {
@@ -523,7 +523,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                        });
                 aovRenderBuffer->Unmap();
             } else
-                std::cout << "ERROR: displayrenderbuffer size out of sync\n";
+                TF_CODING_ERROR("ERROR: displayrenderbuffer size out of sync\n");
         }
     }
     timer.Stop();
