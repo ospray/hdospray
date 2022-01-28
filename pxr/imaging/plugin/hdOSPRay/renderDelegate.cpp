@@ -23,12 +23,12 @@
 //
 #include "renderDelegate.h"
 
+#include "camera.h"
 #include "config.h"
 #include "instancer.h"
 #include "renderBuffer.h"
 #include "renderParam.h"
 #include "renderPass.h"
-#include "camera.h"
 
 #include <pxr/imaging/hd/resourceRegistry.h>
 

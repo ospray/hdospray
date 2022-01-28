@@ -101,7 +101,7 @@ public:
         {
             colorBuffer.resize(size, vec4f({ 0.f, 0.f, 0.f, 0.f }));
             depthBuffer.resize(size, FLT_MAX);
-            normalBuffer.resize(size, vec3f({ 0.f, 1.f, 0.f}));
+            normalBuffer.resize(size, vec3f({ 0.f, 1.f, 0.f }));
         }
     };
 

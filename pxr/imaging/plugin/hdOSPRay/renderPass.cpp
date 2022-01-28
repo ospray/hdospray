@@ -32,9 +32,9 @@
 #include "mesh.h"
 #include "renderDelegate.h"
 
+#include <pxr/imaging/hd/camera.h>
 #include <pxr/imaging/hd/perfLog.h>
 #include <pxr/imaging/hd/renderPassState.h>
-#include <pxr/imaging/hd/camera.h>
 
 #include <pxr/base/gf/vec2f.h>
 #include <pxr/base/tf/stopwatch.h>
@@ -261,15 +261,14 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _width = vp[2];
         _height = vp[3];
 
-        _frameBuffer
-               = opp::FrameBuffer((int)_width, (int)_height, OSP_FB_RGBA32F,
-                                  OSP_FB_COLOR | OSP_FB_ACCUM | OSP_FB_DEPTH |
-                                  OSP_FB_NORMAL |
+        _frameBuffer = opp::FrameBuffer(
+               (int)_width, (int)_height, OSP_FB_RGBA32F,
+               OSP_FB_COLOR | OSP_FB_ACCUM | OSP_FB_DEPTH | OSP_FB_NORMAL |
 #if HDOSPRAY_ENABLE_DENOISER
-                                         OSP_FB_NORMAL | OSP_FB_ALBEDO
-                                         | OSP_FB_VARIANCE | OSP_FB_DEPTH |
+                      OSP_FB_NORMAL | OSP_FB_ALBEDO | OSP_FB_VARIANCE
+                      | OSP_FB_DEPTH |
 #endif
-                                         0);
+                      0);
         _frameBuffer.commit();
         _currentFrame.colorBuffer.resize(_width * _height,
                                          vec4f({ 0.f, 0.f, 0.f, 0.f }));
@@ -278,7 +277,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _depthBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32,
                               /*multiSampled=*/false);
         _normalBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32,
-                              /*multiSampled=*/false);
+                               /*multiSampled=*/false);
         interactiveFramebufferDirty = true;
         _pendingResetImage = true;
         _previousFrame = _currentFrame;
@@ -308,15 +307,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 HdRenderPassAovBinding depthAov;
                 depthAov.aovName = HdAovTokens->depth;
                 depthAov.renderBuffer = &_depthBuffer;
-                depthAov.clearValue
-                       = VtValue(float(0.0f));
+                depthAov.clearValue = VtValue(float(0.0f));
                 aovBindings.push_back(depthAov);
 
                 HdRenderPassAovBinding normalAov;
                 depthAov.aovName = HdAovTokens->normal;
                 normalAov.renderBuffer = &_depthBuffer;
-                normalAov.clearValue
-                       = VtValue(GfVec3f(0.0f, 1.0f, 0.0f));
+                normalAov.clearValue = VtValue(GfVec3f(0.0f, 1.0f, 0.0f));
                 aovBindings.push_back(normalAov);
             }
             SetAovBindings(aovBindings);
@@ -473,8 +470,9 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                        });
                 aovRenderBuffer->Unmap();
             } else
-                TF_CODING_ERROR("ERROR: displayrenderbuffer size out of sync\n");
-        } else  if (_aovNames[aovIndex].name == HdAovTokens->depth) {
+                TF_CODING_ERROR(
+                       "ERROR: displayrenderbuffer size out of sync\n");
+        } else if (_aovNames[aovIndex].name == HdAovTokens->depth) {
             if (aovWidth >= renderBuffer.width
                 && aovHeight >= renderBuffer.height) {
                 TF_DEBUG_MSG(OSP_RP, "found aov depth\n");
@@ -492,14 +490,14 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                                aovRenderBuffer->Write(
                                       GfVec3i(i, j, 1), 1,
                                       &(renderBuffer.depthBuffer
-                                                      [js * renderBuffer.width
-                                                       + is]));
+                                               [js * renderBuffer.width + is]));
                            }
                        });
                 aovRenderBuffer->Unmap();
             } else
-                TF_CODING_ERROR("ERROR: displayrenderbuffer size out of sync\n");
-        } else  if (_aovNames[aovIndex].name == HdAovTokens->normal) {
+                TF_CODING_ERROR(
+                       "ERROR: displayrenderbuffer size out of sync\n");
+        } else if (_aovNames[aovIndex].name == HdAovTokens->normal) {
             if (aovWidth >= renderBuffer.width
                 && aovHeight >= renderBuffer.height) {
                 TF_DEBUG_MSG(OSP_RP, "found aov normal\n");
@@ -516,14 +514,17 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                                int is = i * yscale;
                                aovRenderBuffer->Write(
                                       GfVec3i(i, j, 1), 1,
-                                      &(renderBuffer.normalBuffer
+                                      &(renderBuffer
+                                               .normalBuffer
                                                       [js * renderBuffer.width
-                                                       + is].x));
+                                                       + is]
+                                               .x));
                            }
                        });
                 aovRenderBuffer->Unmap();
             } else
-                TF_CODING_ERROR("ERROR: displayrenderbuffer size out of sync\n");
+                TF_CODING_ERROR(
+                       "ERROR: displayrenderbuffer size out of sync\n");
         }
     }
     timer.Stop();
@@ -555,8 +556,7 @@ HdOSPRayRenderPass::ProcessCamera(
     float focalLength = params.focalLength;
     float horizontalAperture = params.horizontalAperture;
     float verticalAperture = params.verticalAperture;
-    float aperture = std::max(horizontalAperture,
-        verticalAperture);
+    float aperture = std::max(horizontalAperture, verticalAperture);
     _camera.setParam("focusDistance", focalLength);
     _camera.setParam("apertureRadius", aperture);
     _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));

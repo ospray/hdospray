@@ -238,7 +238,8 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
     } else if (textureName == HdOSPRayTokens->opacity) {
         map_opacity = texture;
     } else
-        TF_CODING_ERROR("unhandled texToken: %s\n", textureName.GetString().c_str());
+        TF_CODING_ERROR("unhandled texToken: %s\n",
+                        textureName.GetString().c_str());
 }
 
 opp::Material
@@ -271,7 +272,8 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
 opp::Material
 HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
 {
-    opp::Material ospMaterial = opp::Material(rendererType.c_str(), "principled");
+    opp::Material ospMaterial
+           = opp::Material(rendererType.c_str(), "principled");
     ospMaterial.setParam("ior", ior);
     ospMaterial.setParam(
            "baseColor",

@@ -38,11 +38,10 @@ namespace opp = ospray::cpp;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-struct OSPRayCameraParams
-{
-    float horizontalAperture {0.f};
-    float verticalAperture {0.f};
-    float focalLength {1.f};
+struct OSPRayCameraParams {
+    float horizontalAperture { 0.f };
+    float verticalAperture { 0.f };
+    float focalLength { 1.f };
 };
 
 ///
