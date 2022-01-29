@@ -7,7 +7,7 @@
 PXR_NAMESPACE_OPEN_SCOPE
 
 TF_DEFINE_PRIVATE_TOKENS(HdOSPRayCameraTokens,
-                         (horizontalAperture)(verticalAperture)(focalLength));
+                         (fStop)(focalLength)(focusDistance));
 
 HdOSPRayCamera::HdOSPRayCamera(SdfPath const& id)
     : HdCamera(id)
@@ -23,10 +23,10 @@ HdOSPRayCamera::Sync(HdSceneDelegate* sceneDelegate,
     HdCamera::Sync(sceneDelegate, _renderParam, dirtyBits);
     auto renderParam = dynamic_cast<HdOSPRayRenderParam*>(_renderParam);
 
-    auto horizontalAperture = sceneDelegate->GetCameraParamValue(
-           GetId(), HdOSPRayCameraTokens->horizontalAperture);
-    auto verticalAperture = sceneDelegate->GetCameraParamValue(
-           GetId(), HdOSPRayCameraTokens->verticalAperture);
+    auto fStop = sceneDelegate->GetCameraParamValue(
+           GetId(), HdOSPRayCameraTokens->fStop);
+    auto focusDistance = sceneDelegate->GetCameraParamValue(
+           GetId(), HdOSPRayCameraTokens->focusDistance);
     auto focalLength = sceneDelegate->GetCameraParamValue(
            GetId(), HdOSPRayCameraTokens->focalLength);
 
@@ -34,14 +34,14 @@ HdOSPRayCamera::Sync(HdSceneDelegate* sceneDelegate,
            = static_cast<HdOSPRayRenderParam*>(renderParam);
     OSPRayCameraParams params = ospRenderParam->GetCameraParams();
 
-    if (horizontalAperture.IsHolding<float>()) {
-        params.horizontalAperture = horizontalAperture.Get<float>();
-    }
-    if (verticalAperture.IsHolding<float>()) {
-        params.verticalAperture = verticalAperture.Get<float>();
+    if (fStop.IsHolding<float>()) {
+        params.aperture = fStop.Get<float>();
     }
     if (focalLength.IsHolding<float>()) {
-        params.focalLength = focalLength.Get<float>();
+        params.focusDistance = focalLength.Get<float>()*10.f;
+    }
+    if (focusDistance.IsHolding<float>()) {
+        params.focusDistance = focusDistance.Get<float>();
     }
 
     ospRenderParam->SetCameraParams(params);
