@@ -272,11 +272,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _frameBuffer.commit();
         _currentFrame.colorBuffer.resize(_width * _height,
                                          vec4f({ 0.f, 0.f, 0.f, 0.f }));
-        _colorBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatUNorm8Vec4,
+        _colorBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32Vec4,
                               /*multiSampled=*/false);
         _depthBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32,
                               /*multiSampled=*/false);
-        _normalBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32,
+        _normalBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32Vec3,
                                /*multiSampled=*/false);
         interactiveFramebufferDirty = true;
         _pendingResetImage = true;
@@ -460,7 +460,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                                int js = j * xscale;
                                int is = i * yscale;
                                aovRenderBuffer->Write(
-                                      GfVec3i(i, j, 1), 3,
+                                      GfVec3i(i, j, 1), 4,
                                       &(renderBuffer
                                                .colorBuffer
                                                       [js * renderBuffer.width

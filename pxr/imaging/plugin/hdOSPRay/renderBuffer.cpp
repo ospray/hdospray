@@ -119,12 +119,7 @@ HdOSPRayRenderBuffer::Allocate(GfVec3i const& dimensions, HdFormat format,
                 TfEnum::GetName(format).c_str());
         return false;
     }
-
-    // A hack for Houdini, which does not respect the formats we impose.
-    if (GetId().GetString().find("aov_color") != std::string::npos) {
-        format = HdFormatUNorm8Vec4;
-    }
-
+    
     _width = dimensions[0];
     _height = dimensions[1];
     _format = format;
