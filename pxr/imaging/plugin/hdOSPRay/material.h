@@ -139,13 +139,13 @@ protected:
         bool isPtex { false };
     };
 
-    GfVec3f diffuseColor { 0.5f, 0.5f, 0.5f };
-    GfVec3f specularColor { 1.0f, 1.0f, 1.0f };
+    GfVec3f diffuseColor { 0.18f, 0.18f, 0.18f };
+    GfVec3f specularColor { 0.0f, 0.0f, 0.0f };
     float metallic { -1.f };
     float roughness { -1.f };
-    float coatRoughness { 0.f };
+    float coatRoughness { 0.01f };
     float coat { 0.f };
-    float ior { 1.f };
+    float ior { 1.5f };
     float opacity { 1.f };
     TfToken type;
     bool hasPtex { false };
