@@ -136,14 +136,17 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     GfVec4f vp = renderPassState->GetViewport();
 
+    HdRenderPassAovBindingVector aovBindings
+            = renderPassState->GetAovBindings();
+    bool aovDirty = (_aovBindings != aovBindings || _aovBindings.empty());
     GfVec2i aovSize({
            0,
            0,
     });
-    for (int aovIndex = 0; aovIndex < _aovBindings.size(); aovIndex++) {
+    for (int aovIndex = 0; aovIndex < aovBindings.size(); aovIndex++) {
         auto aovRenderBuffer = static_cast<HdOSPRayRenderBuffer*>(
-               _aovBindings[aovIndex].renderBuffer);
-        if (_aovNames[aovIndex].name == HdAovTokens->color)
+               aovBindings[aovIndex].renderBuffer);
+        if (HdParsedAovToken(aovBindings[aovIndex].aovName).name == HdAovTokens->color)
             aovSize = { (int)aovRenderBuffer->GetWidth(),
                         (int)aovRenderBuffer->GetHeight() };
     }
@@ -191,7 +194,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     _pendingResetImage |= (_pendingModelUpdate || _pendingLightUpdate);
     _pendingResetImage |= (frameBufferDirty || cameraDirty);
 
-    if (_currentFrame.isValid()) {
+    if (_currentFrame.isValid() && !aovDirty) {
         if (frameBufferDirty || (_pendingResetImage && !_interacting)) {
             _currentFrame.osprayFrame.cancel();
             if (_previousFrame.isValid() && !frameBufferDirty)
@@ -229,7 +232,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             frameBuffer.unmap(depth);
 
             vec3f* normal = static_cast<vec3f*>(frameBuffer.map(OSP_FB_NORMAL));
-            std::copy(depth, depth + _currentFrame.width * _currentFrame.height,
+            std::copy(normal, normal + _currentFrame.width * _currentFrame.height,
                       _currentFrame.normalBuffer.data());
             frameBuffer.unmap(normal);
 
@@ -281,7 +284,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         interactiveFramebufferDirty = true;
         _pendingResetImage = true;
         _previousFrame = _currentFrame;
-
+        aovDirty = true;
+    }
+    
+    if (aovDirty)
+    {
         // Determine whether we need to update the renderer AOV bindings.
         //
         // It's possible for the passed in bindings to be empty, but that's
@@ -311,8 +318,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 aovBindings.push_back(depthAov);
 
                 HdRenderPassAovBinding normalAov;
-                depthAov.aovName = HdAovTokens->normal;
-                normalAov.renderBuffer = &_depthBuffer;
+                normalAov.aovName = HdAovTokens->normal;
+                normalAov.renderBuffer = &_normalBuffer;
                 normalAov.clearValue = VtValue(GfVec3f(0.0f, 1.0f, 0.0f));
                 aovBindings.push_back(normalAov);
             }
@@ -440,8 +447,12 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
 
     TF_DEBUG_MSG(OSP_RP, "displayRB %zu\n", _aovBindings.size());
     for (int aovIndex = 0; aovIndex < _aovBindings.size(); aovIndex++) {
-        auto aovRenderBuffer = static_cast<HdOSPRayRenderBuffer*>(
+        auto aovRenderBuffer = dynamic_cast<HdRenderBuffer*>(
                _aovBindings[aovIndex].renderBuffer);
+        auto ospRenderBuffer = dynamic_cast<HdOSPRayRenderBuffer*>(
+               _aovBindings[aovIndex].renderBuffer);
+        if (!aovRenderBuffer || !ospRenderBuffer)
+            continue;
         int aovWidth = aovRenderBuffer->GetWidth();
         int aovHeight = aovRenderBuffer->GetHeight();
         if (_aovNames[aovIndex].name == HdAovTokens->color) {
@@ -459,7 +470,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                                int i = pIdx - j * aovWidth;
                                int js = j * xscale;
                                int is = i * yscale;
-                               aovRenderBuffer->Write(
+                               ospRenderBuffer->Write(
                                       GfVec3i(i, j, 1), 4,
                                       &(renderBuffer
                                                .colorBuffer
@@ -487,7 +498,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                                int i = pIdx - j * aovWidth;
                                int js = j * xscale;
                                int is = i * yscale;
-                               aovRenderBuffer->Write(
+                               ospRenderBuffer->Write(
                                       GfVec3i(i, j, 1), 1,
                                       &(renderBuffer.depthBuffer
                                                [js * renderBuffer.width + is]));
@@ -512,8 +523,8 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                                int i = pIdx - j * aovWidth;
                                int js = j * xscale;
                                int is = i * yscale;
-                               aovRenderBuffer->Write(
-                                      GfVec3i(i, j, 1), 1,
+                               ospRenderBuffer->Write(
+                                      GfVec3i(i, j, 1), 3,
                                       &(renderBuffer
                                                .normalBuffer
                                                       [js * renderBuffer.width
