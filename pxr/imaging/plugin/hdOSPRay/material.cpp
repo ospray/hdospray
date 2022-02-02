@@ -284,19 +284,14 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     }
     if (map_metallic.ospTexture) {
         ospMaterial.setParam("map_metallic", map_metallic.ospTexture);
-        if (metallic
-            == -1.f) // ospray appears to mulitply texture, so reset default
-            metallic = 1.0f;
     }
     if (map_roughness.ospTexture) {
         ospMaterial.setParam("map_roughness", map_roughness.ospTexture);
-        if (roughness == -1.f)
-            roughness = 1.0f;
     }
 
     // params
-    ospMaterial.setParam("metallic", std::max(0.f, metallic));
-    ospMaterial.setParam("roughness", std::max(0.f, roughness));
+    ospMaterial.setParam("metallic", map_metallic.ospTexture ? 1.0 : metallic);
+    ospMaterial.setParam("roughness", map_roughness.ospTexture ? 1.0 : roughness);
     ospMaterial.setParam("coat", coat);
     ospMaterial.setParam("coatRoughness", coatRoughness);
     ospMaterial.setParam("ior", ior);
