@@ -48,7 +48,7 @@ set(SUPERBUILD_USD_URL "https://github.com/carsonbrownlee/USD_superbuild.git"
   CACHE STRING "url of usd superbuild git")
 option(OSPRAY_USE_GIT OFF)
 set(SUPERBUILD_OSPRAY_VERSION "v2.8.0" CACHE STRING "git tag of ospray")
-set(SUPERBUILD_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.7.0.zip"
+set(SUPERBUILD_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.8.0.zip"
   CACHE STRING "url of ospray git")
 option(SUPERBUILD_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
 
