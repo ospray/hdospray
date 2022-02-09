@@ -6,9 +6,6 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-TF_DEFINE_PRIVATE_TOKENS(HdOSPRayCameraTokens,
-                         (fStop)(focalLength)(focusDistance));
-
 HdOSPRayCamera::HdOSPRayCamera(SdfPath const& id)
     : HdCamera(id)
 {
@@ -21,30 +18,29 @@ HdOSPRayCamera::Sync(HdSceneDelegate* sceneDelegate,
                      HdRenderParam* _renderParam, HdDirtyBits* dirtyBits)
 {
     HdCamera::Sync(sceneDelegate, _renderParam, dirtyBits);
-    auto renderParam = dynamic_cast<HdOSPRayRenderParam*>(_renderParam);
 
     auto fStop = sceneDelegate->GetCameraParamValue(
-           GetId(), HdOSPRayCameraTokens->fStop);
+           GetId(), HdCameraTokens->fStop);
+    auto horizontalAperture = sceneDelegate->GetCameraParamValue(
+           GetId(), HdCameraTokens->horizontalAperture);
+    auto verticalAperture = sceneDelegate->GetCameraParamValue(
+           GetId(), HdCameraTokens->verticalAperture);
     auto focusDistance = sceneDelegate->GetCameraParamValue(
-           GetId(), HdOSPRayCameraTokens->focusDistance);
+           GetId(), HdCameraTokens->focusDistance);
     auto focalLength = sceneDelegate->GetCameraParamValue(
-           GetId(), HdOSPRayCameraTokens->focalLength);
+           GetId(), HdCameraTokens->focalLength);
 
-    HdOSPRayRenderParam* ospRenderParam
-           = static_cast<HdOSPRayRenderParam*>(renderParam);
-    OSPRayCameraParams params = ospRenderParam->GetCameraParams();
+    if (fStop.IsHolding<float>())
+        _fStop = fStop.Get<float>();
+    if (horizontalAperture.IsHolding<float>())
+        _horizontalAperture = horizontalAperture.Get<float>();
+    if (verticalAperture.IsHolding<float>())
+        _verticalAperture = verticalAperture.Get<float>();
+    if (focalLength.IsHolding<float>())
+        _focalLength = focalLength.Get<float>();
+    if (focusDistance.IsHolding<float>())
+        _focusDistance = focusDistance.Get<float>();
 
-    if (fStop.IsHolding<float>()) {
-        params.aperture = fStop.Get<float>();
-    }
-    if (focalLength.IsHolding<float>()) {
-        params.focusDistance = focalLength.Get<float>()*10.f;
-    }
-    if (focusDistance.IsHolding<float>()) {
-        params.focusDistance = focusDistance.Get<float>();
-    }
-
-    ospRenderParam->SetCameraParams(params);
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE

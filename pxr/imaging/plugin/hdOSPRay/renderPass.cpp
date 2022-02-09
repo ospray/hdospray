@@ -30,6 +30,7 @@
 #include "lights/domeLight.h"
 #include "lights/light.h"
 #include "mesh.h"
+#include "camera.h"
 #include "renderDelegate.h"
 
 #include <pxr/imaging/hd/camera.h>
@@ -563,9 +564,21 @@ HdOSPRayRenderPass::ProcessCamera(
     renderPassState->GetProjectionMatrix().Get(prjMatrix);
     float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
 
-    OSPRayCameraParams params = _renderParam->GetCameraParams();
-    float focusDistance = params.focusDistance;
-    float aperture = params.aperture;
+    float focusDistance = 3.96f;
+    float focalLength = 8.f;
+    float fStop = 0.f;
+    float aperture = 0.f;
+
+    const HdCamera* camera = renderPassState->GetCamera();
+    const HdOSPRayCamera* ospCamera = dynamic_cast<const HdOSPRayCamera*>(camera);
+    if (ospCamera) {
+        fStop = ospCamera->GetFStop();
+        focusDistance = ospCamera->GetFocusDistance();
+        focalLength = ospCamera->GetFocalLength();
+    }
+
+    if (fStop > 0.f)
+        aperture = focalLength/fStop/2.f*.1f;
     _camera.setParam("focusDistance", focusDistance);
     _camera.setParam("apertureRadius", aperture);
     _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));
