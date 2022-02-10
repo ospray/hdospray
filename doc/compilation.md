@@ -23,7 +23,7 @@ If you are building standalone, you will need:
 - [USD v20.08](https://graphics.pixar.com/usd/docs/index.html)
   - USD is primarily tested with Linux, but has experimental support for MacOS and Windows.
     For a full list of USD dependencies, see the USD page.
-  - [OSPRay 2.7.0](http://www.ospray.org/)
+  - [OSPRay 2.8.0](http://www.ospray.org/)
       - We recommend using ospray’s superbuild to build dependencies
         such as embree, ospcommon, and openvkl.  OpenImageDenoise can
         also be enabled through superbuild.
