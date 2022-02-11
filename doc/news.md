@@ -5,12 +5,12 @@ News, Updates, and Announcements
 
       - Adding depth AOV
       - Adding normals AOV
-      - Minimal support for geomsubset materials
       - Additional material parameters
       - Fixing generic texcoord naming
       - Update to OSPRay 2.8
       - Adding cylinder light
-      - Adding camera FOV
+      - Adding camera depth of field
+      - Minimal support for geomsubset materials
 
 - August 24, 2021: Version v0.8
 

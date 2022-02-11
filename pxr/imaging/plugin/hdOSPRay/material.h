@@ -135,7 +135,7 @@ protected:
         GfVec4f scale { 1.0f };
         enum class ColorType { NONE, RGBA, RGB, R, G, B, A };
         ColorType type;
-        opp::Texture ospTexture;
+        opp::Texture ospTexture { nullptr };
         bool isPtex { false };
     };
 

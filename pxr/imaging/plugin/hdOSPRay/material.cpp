@@ -290,8 +290,8 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     }
 
     // params
-    ospMaterial.setParam("metallic", map_metallic.ospTexture ? 1.0 : metallic);
-    ospMaterial.setParam("roughness", map_roughness.ospTexture ? 1.0 : roughness);
+    ospMaterial.setParam("metallic", ( map_metallic.ospTexture ? 1.0f : metallic ) );
+    ospMaterial.setParam("roughness", ( map_roughness.ospTexture ? 1.0f : roughness ) );
     ospMaterial.setParam("coat", coat);
     ospMaterial.setParam("coatRoughness", coatRoughness);
     ospMaterial.setParam("ior", ior);
