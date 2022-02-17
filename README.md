@@ -228,10 +228,6 @@ OpenImageDenoise can also be enabled through superbuild. -
     SUPERBUILD\_USE\_HOUDINI in superbuild.
   - [OpenImageDenoise](https://github.com/OpenImageDenoise/oidn.git)
       - Open Image Denoise needs be be enabled in the OSPRay build.
-  - [Ptex](https://github.com/wdas/ptex)
-      - [Ptex module](https://github.com/ospray/module_ptex) needs to be
-        enabled in the OSPRay build and the library accessible on
-        library paths.
 
 ## Superbuild on Linux/MacOS
 
@@ -261,7 +257,7 @@ The options and compilers used can vary from our example, but make sure
 that TBB use is consistent across your build of USD, hdOSPRay, and
 OSPRay. The command we use for building USD is:
 
-    python <USD_SOURCE>/build_scripts/build_usd.py --python --usd-imaging --openimageio --ptex <USD_BUILD_DIR>
+    python <USD_SOURCE>/build_scripts/build_usd.py --python --usd-imaging --openimageio <USD_BUILD_DIR>
 
 To set TBB explicitly, go to `<USD_BUILD_DIR>`/build/USD and set TBB
 libraries and include directories using cmake.
@@ -425,7 +421,6 @@ renderer.*
   - Path tracing
   - Physically-based materials
   - Principled shader (similar to Disney BSDF shader)
-  - Ptex support
 
 # News, Updates, and Announcements
 
@@ -439,6 +434,7 @@ renderer.*
         - Adding cylinder light
         - Adding camera depth of field
         - Minimal support for geomsubset materials
+        - Ptex support currently deprecated in OSPRay.  Will be re-enabled upon OSPRay module_ptex release.
 
   - August 24, 2021: Version v0.8
     

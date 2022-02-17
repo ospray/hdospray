@@ -11,6 +11,7 @@ News, Updates, and Announcements
       - Adding cylinder light
       - Adding camera depth of field
       - Minimal support for geomsubset materials
+      - Ptex support currently deprecated in OSPRay.  Will be re-enabled upon OSPRay module_ptex release.
 
 - August 24, 2021: Version v0.8
 
