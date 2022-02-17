@@ -86,4 +86,3 @@ Hydra Settings.
 - Path tracing
 - Physically-based materials
 - Principled shader (similar to Disney BSDF shader)
-- Ptex support

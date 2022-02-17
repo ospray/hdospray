@@ -73,6 +73,7 @@ TF_DEFINE_PRIVATE_TOKENS(
     (displacement)
     (file)
     (filename)
+    ( (infoFilename, "info:filename"))
     (scale)
     (wrapS)
     (wrapT)
@@ -105,9 +106,6 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
         HdMaterialNetworkMap networkMap
                = networkMapResource.Get<HdMaterialNetworkMap>();
         HdMaterialNetwork matNetwork;
-
-        if (networkMap.map.empty())
-            std::cout << "material network map was empty!!!!!\n";
 
         // get material network from network map
         TF_FOR_ALL (itr, networkMap.map) {
@@ -175,20 +173,20 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
         const auto& value = param->second;
         if (name == HdOSPRayTokens->diffuseColor) {
             diffuseColor = value.Get<GfVec3f>();
+        } else if (name == HdOSPRayTokens->specularColor) {
+            specularColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayTokens->metallic) {
             metallic = value.Get<float>();
         } else if (name == HdOSPRayTokens->roughness) {
             roughness = value.Get<float>();
         } else if (name == HdOSPRayTokens->ior) {
             ior = value.Get<float>();
-        } else if (name == HdOSPRayTokens->color) {
-            diffuseColor = value.Get<GfVec3f>();
+        } else if (name == HdOSPRayTokens->clearcoatRoughness) {
+            coatRoughness = value.Get<float>();
+        } else if (name == HdOSPRayTokens->clearcoat) {
+            coat = value.Get<float>();
         } else if (name == HdOSPRayTokens->opacity) {
             opacity = value.Get<float>();
-        } else if (name == HdOSPRayTokens->clearcoat) {
-            clearcoat = value.Get<float>();
-        } else if (name == HdOSPRayTokens->clearcoatRoughness) {
-            clearcoatRoughness = value.Get<float>();
         }
     }
 }
@@ -207,7 +205,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
             texture.file = path.GetResolvedPath();
             texture.ospTexture = LoadOIIOTexture2D(texture.file);
         } else if (name == HdOSPRayTokens->filename
-                   || name.GetString() == "info:filename") {
+                   || name == HdOSPRayTokens->infoFilename) {
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
             texture.file = path.GetResolvedPath();
             if (isPtex) {
@@ -222,8 +220,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
         } else if (name == HdOSPRayTokens->wrapS) {
         } else if (name == HdOSPRayTokens->wrapT) {
         } else {
-            std::cout << "unhandled token: " << name.GetString() << " "
-                      << std::endl;
+            TF_CODING_ERROR("unhandled token: %s\n", name.GetString().c_str());
         }
     }
 
@@ -241,8 +238,8 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
     } else if (textureName == HdOSPRayTokens->opacity) {
         map_opacity = texture;
     } else
-        std::cout << "unhandled texToken: " << textureName.GetString()
-                  << std::endl;
+        TF_CODING_ERROR("unhandled texToken: %s\n",
+                        textureName.GetString().c_str());
 }
 
 opp::Material
@@ -275,48 +272,33 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
 opp::Material
 HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
 {
-
     opp::Material ospMaterial
            = opp::Material(rendererType.c_str(), "principled");
     ospMaterial.setParam("ior", ior);
     ospMaterial.setParam(
            "baseColor",
            vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
-    ospMaterial.setParam("metallic", metallic);
-    ospMaterial.setParam("roughness", roughness);
-    ospMaterial.setParam("normal", normal);
-    ospMaterial.setParam("transmission", 1.0f - opacity);
-    ospMaterial.setParam("thin", true);
-    if (opacity < 1.0f) {
-        ospMaterial.setParam(
-               "transmissionColor",
-               vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
-        ospMaterial.setParam("thin", true);
-    }
+    // texture maps
     if (map_diffuseColor.ospTexture) {
         ospMaterial.setParam("map_baseColor", map_diffuseColor.ospTexture);
-        ospMaterial.setParam("baseColor",
-                             vec3f(map_diffuseColor.scale[0],
-                                   map_diffuseColor.scale[1],
-                                   map_diffuseColor.scale[2]));
     }
     if (map_metallic.ospTexture) {
         ospMaterial.setParam("map_metallic", map_metallic.ospTexture);
-        metallic = 1.0f;
     }
     if (map_roughness.ospTexture) {
         ospMaterial.setParam("map_roughness", map_roughness.ospTexture);
-        roughness = 1.0f;
     }
-    if (map_normal.ospTexture) {
-        ospMaterial.setParam("map_normal", map_normal.ospTexture);
-        normal = 1.f;
-    }
-    if (map_opacity.ospTexture) {
-        ospMaterial.setParam("map_opacity", map_opacity.ospTexture);
-        opacity = 1.f;
-    }
+
+    // params
+    ospMaterial.setParam("metallic", ( map_metallic.ospTexture ? 1.0f : metallic ) );
+    ospMaterial.setParam("roughness", ( map_roughness.ospTexture ? 1.0f : roughness ) );
+    ospMaterial.setParam("coat", coat);
+    ospMaterial.setParam("coatRoughness", coatRoughness);
+    ospMaterial.setParam("ior", ior);
+    ospMaterial.setParam("transmission", 1.0f - opacity);
+    ospMaterial.setParam("thin", true);
     ospMaterial.commit();
+
     return ospMaterial;
 }
 

@@ -143,8 +143,8 @@ private:
     opp::Renderer _renderer;
     /// A version counters for edits to scene (e.g., models or lights).
     std::atomic<int> _modelVersion { 1 };
-
     std::atomic<int> _lightVersion { 1 };
+
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

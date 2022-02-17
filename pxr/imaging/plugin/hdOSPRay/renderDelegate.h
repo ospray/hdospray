@@ -50,7 +50,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
                          HDOSPRAY_RENDER_SETTINGS_TOKENS);
 
-#define HDOSPRAY_TOKENS (ospray)(glslfx)
+#define HDOSPRAY_TOKENS (ospray)(glslfx)(OSPRayPrincipledSurface)
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayTokens, HDOSPRAY_API, HDOSPRAY_TOKENS);
 

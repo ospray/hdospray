@@ -182,6 +182,14 @@ private:
                                HdDirtyBits dirtyBits);
 
     opp::Geometry _CreateOSPRaySubdivMesh();
+    opp::Geometry
+    _CreateOSPRayMesh(const VtVec4iArray& quadIndices,
+                      const VtVec2iArray& quadPrimitiveParams,
+                      const VtVec3iArray& triangulatedIndices,
+                      const VtIntArray& trianglePrimitiveParams,
+                      bool faceVaryingTexcoord, const VtVec2fArray& texcoords,
+                      const VtVec3fArray& points, const VtVec3fArray& normals,
+                      const VtVec4fArray& colors, bool refined, bool useQuads);
 
     bool _populated { false };
 
@@ -189,6 +197,7 @@ private:
     // the prototype has a single identity istance.
     opp::Geometry _ospMesh;
     opp::GeometricModel* _geometricModel;
+    std::vector<opp::GeometricModel> _geomSubsetModels;
     // Each instance of the mesh in the top-level scene is stored in
     // _ospInstances.
     std::vector<opp::Instance> _ospInstances;
@@ -200,6 +209,7 @@ private:
     GfMatrix4f _transform;
     VtVec3fArray _points;
     VtVec2fArray _texcoords;
+    HdInterpolation _texcoordsInterpolation;
     VtVec3fArray _normals;
     VtVec4fArray _colors;
     GfVec4f _singleColor { .5f, .5f, .5f, 1.f };

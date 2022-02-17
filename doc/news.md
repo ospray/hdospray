@@ -1,6 +1,18 @@
 News, Updates, and Announcements
 ================================
 
+- Feb 15, 2022: Version v0.9
+
+      - Adding depth AOV
+      - Adding normals AOV
+      - Additional material parameters
+      - Fixing generic texcoord naming
+      - Update to OSPRay 2.9
+      - Adding cylinder light
+      - Adding camera depth of field
+      - Minimal support for geomsubset materials
+      - Ptex support currently deprecated in OSPRay.  Will be re-enabled upon OSPRay module_ptex release.
+
 - August 24, 2021: Version v0.8
 
       - Update to USD 20.08.

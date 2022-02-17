@@ -21,7 +21,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#include "diskLight.h"
+#include "cylinderLight.h"
 
 #include <pxr/imaging/hd/perfLog.h>
 #include <pxr/imaging/hd/rprimCollection.h>
@@ -37,33 +37,34 @@ using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 
-HdOSPRayDiskLight::HdOSPRayDiskLight(SdfPath const& id)
+HdOSPRayCylinderLight::HdOSPRayCylinderLight(SdfPath const& id)
     : HdOSPRayLight(id)
 {
 }
 
-HdOSPRayDiskLight::~HdOSPRayDiskLight()
+HdOSPRayCylinderLight::~HdOSPRayCylinderLight()
 {
 }
 
 void
-HdOSPRayDiskLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
-                                      SdfPath const& id, HdDirtyBits* dirtyBits)
+HdOSPRayCylinderLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
+                                          SdfPath const& id,
+                                          HdDirtyBits* dirtyBits)
 {
     HdDirtyBits bits = *dirtyBits;
     if (bits & DirtyParams) {
         _radius = sceneDelegate->GetLightParamValue(id, HdLightTokens->radius)
                          .Get<float>();
-        auto vtOpeningAngle = sceneDelegate->GetLightParamValue(
-               id, HdLightTokens->shapingConeAngle);
-        if (vtOpeningAngle.IsHolding<float>()) {
-            _openingAngle = vtOpeningAngle.Get<float>();
+        auto length
+               = sceneDelegate->GetLightParamValue(id, HdLightTokens->length);
+        if (length.IsHolding<float>()) {
+            _length = length.Get<float>();
         }
     }
 }
 
 void
-HdOSPRayDiskLight::_PrepareOSPLight()
+HdOSPRayCylinderLight::_PrepareOSPLight()
 {
     float intensity = _emissionParam.ExposedIntensity();
 
@@ -75,39 +76,18 @@ HdOSPRayDiskLight::_PrepareOSPLight()
                : OSP_INTENSITY_QUANTITY_RADIANCE;
     }
 
-    // the initial center of the disk
-    GfVec3f position(0, 0, 0);
-    // positing to determine the direction of the spotlight
-    GfVec3f position1(0, 0, -1);
-    // position to dertermine the scale of the original
-    // radius due to transformations
-    GfVec3f position2(1, 0, 0);
-
-    // transforming the disk light to its location
-    // in the scene (including translation and scaling)
-    position = _transform.Transform(position);
+    GfVec3f position0(-_length/2.0f, 0, 0);
+    GfVec3f position1(_length/2.0f, 0, 0);
+    position0 = _transform.Transform(position0);
     position1 = _transform.Transform(position1);
-    position2 = _transform.Transform(position2);
 
-    float radiusScale = (position2 - position).GetLength();
-
-    GfVec3f direction = position1 - position;
-    direction.Normalize();
-
-    float radius = _radius * radiusScale;
-
-    // in OSPRay a disk light is represented by a spot light
-    // having a radius > 0.0
-    _ospLight = opp::Light("spot");
+    _ospLight = opp::Light("cylinder");
     // placement
-    _ospLight.setParam("position",
-                       vec3f(position[0], position[1], position[2]));
-    _ospLight.setParam("direction",
-                       vec3f(direction[0], direction[1], direction[2]));
-    _ospLight.setParam("radius", radius);
-
-    _ospLight.setParam("openingAngle", _openingAngle);
-    _ospLight.setParam("penumbraAngle", 0.0f);
+    _ospLight.setParam("position0",
+                       vec3f(position0[0], position0[1], position0[2]));
+    _ospLight.setParam("position1",
+                       vec3f(position1[0], position1[1], position1[2]));
+    _ospLight.setParam("radius", _radius);
 
     // emission
     _ospLight.setParam("intensityQuantity", intensityQuantity);

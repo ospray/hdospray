@@ -20,6 +20,7 @@ mkdir build
 cd build
 
 cmake \
+  -D CMAKE_CXX_FLAGS="-std=c++17" \
   -D pxr_DIR=/gitlab/USD-install \
   -D ospray_DIR=/usr \
   -D embree_DIR=/usr \

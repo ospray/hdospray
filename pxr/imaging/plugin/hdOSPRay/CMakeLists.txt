@@ -41,6 +41,7 @@ add_library(hdOSPRay SHARED
     config.cpp
     instancer.cpp
     mesh.cpp
+    camera.cpp
     basisCurves.cpp
     material.cpp
     rendererPlugin.cpp
@@ -55,7 +56,7 @@ add_library(hdOSPRay SHARED
     lights/domeLight.cpp
     lights/rectLight.cpp
     lights/sphereLight.cpp
-    #lights/simpleLight
+    lights/cylinderLight.cpp
     context.h
     renderParam.h
     plugInfo.json

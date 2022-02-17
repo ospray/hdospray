@@ -23,6 +23,7 @@
 //
 #include "renderDelegate.h"
 
+#include "camera.h"
 #include "config.h"
 #include "instancer.h"
 #include "renderBuffer.h"
@@ -32,6 +33,7 @@
 #include <pxr/imaging/hd/resourceRegistry.h>
 
 #include "basisCurves.h"
+#include "lights/cylinderLight.h"
 #include "lights/diskLight.h"
 #include "lights/distantLight.h"
 #include "lights/domeLight.h"
@@ -65,7 +67,7 @@ const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_SPRIM_TYPES = {
     HdPrimTypeTokens->camera,       HdPrimTypeTokens->material,
     HdPrimTypeTokens->rectLight,    HdPrimTypeTokens->diskLight,
     HdPrimTypeTokens->sphereLight,  HdPrimTypeTokens->domeLight,
-    HdPrimTypeTokens->distantLight,
+    HdPrimTypeTokens->distantLight, HdPrimTypeTokens->cylinderLight,
 };
 
 const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {
@@ -73,7 +75,7 @@ const TfTokenVector HdOSPRayRenderDelegate::SUPPORTED_BPRIM_TYPES = {
 };
 
 std::mutex HdOSPRayRenderDelegate::_mutexResourceRegistry;
-std::atomic_int HdOSPRayRenderDelegate::_counterResourceRegistry;
+std::atomic_int HdOSPRayRenderDelegate::_counterResourceRegistry(0);
 HdResourceRegistrySharedPtr HdOSPRayRenderDelegate::_resourceRegistry;
 
 HdOSPRayRenderDelegate::HdOSPRayRenderDelegate()
@@ -224,7 +226,7 @@ HdOSPRayRenderDelegate::GetMaterialNetworkSelector() const
     // Carson: this should be "HdOSPRayTokens->ospray", but we return glslfx so
     // that we work with many supplied shaders
     // TODO: is it possible to return both?
-    return HdOSPRayTokens->glslfx;
+    return HdOSPRayTokens->OSPRayPrincipledSurface;
 }
 
 TfTokenVector const&
@@ -324,7 +326,7 @@ HdOSPRayRenderDelegate::CreateSprim(TfToken const& typeId,
                                     SdfPath const& sprimId)
 {
     if (typeId == HdPrimTypeTokens->camera) {
-        return new HdCamera(sprimId);
+        return new HdOSPRayCamera(sprimId);
     } else if (typeId == HdPrimTypeTokens->material) {
         return new HdOSPRayMaterial(sprimId);
     } else if (typeId == HdPrimTypeTokens->rectLight) {
@@ -337,6 +339,8 @@ HdOSPRayRenderDelegate::CreateSprim(TfToken const& typeId,
         return new HdOSPRayDomeLight(sprimId);
     } else if (typeId == HdPrimTypeTokens->distantLight) {
         return new HdOSPRayDistantLight(sprimId);
+    } else if (typeId == HdPrimTypeTokens->cylinderLight) {
+        return new HdOSPRayCylinderLight(sprimId);
     } else {
         TF_CODING_ERROR("Unknown Sprim Type %s", typeId.GetText());
     }

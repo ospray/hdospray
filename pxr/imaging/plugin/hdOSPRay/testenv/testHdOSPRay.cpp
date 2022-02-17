@@ -173,7 +173,7 @@ HdOSPRay_TestGLDrawing::InitTest()
     if (_aov.size() > 0) {
         HdFormat format = HdFormatInvalid;
         if (_aov == "color") {
-            format = HdFormatUNorm8Vec4;
+            format = HdFormatFloat32;
             attach.aovName = HdAovTokens->color;
             attach.clearValue = VtValue(GfVec4f(0.0f, 0.0f, 0.0f, 1.0f));
         } else if (_aov == "linearDepth") {
