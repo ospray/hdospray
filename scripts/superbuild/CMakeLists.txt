@@ -47,8 +47,8 @@ set(SUPERBUILD_USD_VERSION "release-20.08" CACHE STRING "git tag of usd superbui
 set(SUPERBUILD_USD_URL "https://github.com/carsonbrownlee/USD_superbuild.git"
   CACHE STRING "url of usd superbuild git")
 option(OSPRAY_USE_GIT OFF)
-set(SUPERBUILD_OSPRAY_VERSION "v2.8.0" CACHE STRING "git tag of ospray")
-set(SUPERBUILD_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.8.0.zip"
+set(SUPERBUILD_OSPRAY_VERSION "v2.9.0" CACHE STRING "git tag of ospray")
+set(SUPERBUILD_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.9.0.zip"
   CACHE STRING "url of ospray git")
 option(SUPERBUILD_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
 
@@ -110,7 +110,7 @@ if (BUILD_HDOSPRAY)
       -DCMAKE_PREFIX_PATH:PATH=${CMAKE_INSTALL_PREFIX}
       -DUSE_HOUDINI_USD=OFF
       -Dpxr_DIR=${USD_ROOT_DIR}
-      -Dospray_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/ospray-2.8.0
+      -Dospray_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/ospray-2.9.0
       -Drkcommon_DIR=${CMAKE_INSTALL_PREFIX}/lib/cmake/rkcommon-1.8.0
       -DOIIO_BASE_DIR=${CMAKE_INSTALL_PREFIX}
       -DUSE_HOUDINI_USD=${SUPERBUILD_USE_HOUDINI}

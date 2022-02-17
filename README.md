@@ -217,7 +217,7 @@ If you are building standalone, you will need: - [USD
 v20.08](https://graphics.pixar.com/usd/docs/index.html) - USD is
 primarily tested with Linux, but has experimental support for MacOS and
 Windows. For a full list of USD dependencies, see the USD page. -
-[OSPRay 2.8.0](http://www.ospray.org/) - We recommend using ospray’s
+[OSPRay 2.9.0](http://www.ospray.org/) - We recommend using ospray’s
 superbuild to build dependencies such as embree, ospcommon, and openvkl.
 OpenImageDenoise can also be enabled through superbuild. -
 [OpenImageIO 1.8.17](https://sites.google.com/site/openimageio/home)
@@ -435,7 +435,7 @@ renderer.*
         - Adding normals AOV
         - Additional material parameters
         - Fixing generic texcoord naming
-        - Update to OSPRay 2.8
+        - Update to OSPRay 2.9
         - Adding cylinder light
         - Adding camera depth of field
         - Minimal support for geomsubset materials

@@ -7,7 +7,7 @@ News, Updates, and Announcements
       - Adding normals AOV
       - Additional material parameters
       - Fixing generic texcoord naming
-      - Update to OSPRay 2.8
+      - Update to OSPRay 2.9
       - Adding cylinder light
       - Adding camera depth of field
       - Minimal support for geomsubset materials
