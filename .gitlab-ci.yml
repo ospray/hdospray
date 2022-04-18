@@ -6,6 +6,10 @@ stages:
  - pre-scan
  - scan
 
+.job_template: &centos7
+  tags: [ docker, modules ]
+  image: $DOCKER_REGISTRY/centos:7-devel
+
 .job_template: &build_job_docker
   stage: build
   tags:
@@ -86,3 +90,9 @@ gen-kw-report:
     paths:
       - ./klocwork/*
 
+protex:
+  <<: *centos7
+  stage: scan
+  needs: []
+  script:
+    - $CI_TOOLS_PATH/bin/protex.sh
