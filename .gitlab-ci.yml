@@ -8,7 +8,7 @@ stages:
 
 .job_template: &centos7
   tags: [ docker, modules ]
-  image: $DOCKER_REGISTRY/centos:7-devel
+  image: $DOCKER_REGISTRY/centos:7
 
 .job_template: &build_job_docker
   stage: build
