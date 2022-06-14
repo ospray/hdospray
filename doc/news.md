@@ -1,6 +1,10 @@
 News, Updates, and Announcements
 ================================
 
+- June 10, 2022: Version v0.10
+
+      - USD 21.08 support, which is now the default in superbuild.
+
 - Feb 15, 2022: Version v0.9
 
       - Adding depth AOV

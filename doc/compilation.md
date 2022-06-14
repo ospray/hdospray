@@ -20,10 +20,10 @@ If using the superbuild, the only dependencies are:
 - python (3.7.x+ recommended), with PySide/PySide2 and PyOpenGL.  'pip install PySide2 PyOpenGL' may work
 
 If you are building standalone, you will need:
-- [USD v20.08](https://graphics.pixar.com/usd/docs/index.html)
+- [USD v21.08 (default) or USD v20.08](https://graphics.pixar.com/usd/docs/index.html)
   - USD is primarily tested with Linux, but has experimental support for MacOS and Windows.
     For a full list of USD dependencies, see the USD page.
-  - [OSPRay 2.9.0](http://www.ospray.org/)
+  - [OSPRay 2.10.0](http://www.ospray.org/)
       - We recommend using ospray’s superbuild to build dependencies
         such as embree, ospcommon, and openvkl.  OpenImageDenoise can
         also be enabled through superbuild.
@@ -31,7 +31,7 @@ If you are building standalone, you will need:
 
 ## Optional Dependencies
 
-  - Houdini SDK (tested against 18.5). To use, enable SUPERBUILD_USE_HOUDINI in superbuild.
+  - Houdini SDK (tested against 18.5 and 19.0). To use, enable SUPERBUILD_USE_HOUDINI in superbuild.
   - [OpenImageDenoise](https://github.com/OpenImageDenoise/oidn.git)
       - Open Image Denoise needs be be enabled in the OSPRay build.
 

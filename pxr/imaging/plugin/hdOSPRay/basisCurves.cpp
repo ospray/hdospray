@@ -50,9 +50,12 @@ TF_DEFINE_PRIVATE_TOKENS(
 );
 // clang-format on
 
-HdOSPRayBasisCurves::HdOSPRayBasisCurves(SdfPath const& id,
-                                         SdfPath const& instancerId)
+HdOSPRayBasisCurves::HdOSPRayBasisCurves(SdfPath const& id, SdfPath const &instancerId)
+#if HD_API_VERSION < 36
     : HdBasisCurves(id, instancerId)
+#else
+    : HdBasisCurves(id)
+#endif
 {
 }
 
@@ -135,6 +138,20 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
     if (updateGeometry) {
         _UpdateOSPRayRepr(delegate, reprToken, dirtyBits, ospRenderParam);
     }
+
+#if HD_API_VERSION < 36
+#else
+    // First, update our own instancer data.
+    _UpdateInstancer(delegate, dirtyBits);
+
+    // Make sure we call sync on parent instancers.
+    // XXX: In theory, this should be done automatically by the render index.
+    // At the moment, it's done by rprim-reference.  The helper function on
+    // HdInstancer needs to use a mutex to guard access, if there are actually
+    // updates pending, so this might be a contention point.
+    HdInstancer::_SyncInstancerAndParents(
+        delegate->GetRenderIndex(), GetInstancerId());
+#endif
 
     if ((HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || isTransformDirty)
         && !_geometricModels.empty()) {

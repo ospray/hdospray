@@ -113,6 +113,7 @@ public:
     CreateRenderPass(HdRenderIndex* index,
                      HdRprimCollection const& collection) override;
 
+#if HD_API_VERSION < 36
     /// Create an instancer. Hydra instancers store data needed for an
     /// instanced object to draw itself multiple times.
     ///   \param delegate The scene delegate providing data for this
@@ -124,12 +125,24 @@ public:
     ///   \return An OSPRay instancer object.
     virtual HdInstancer* CreateInstancer(HdSceneDelegate* delegate,
                                          SdfPath const& id,
-                                         SdfPath const& instancerId);
+                                         SdfPath const& instancerId) override;
+#else
+    /// Create an instancer. Hydra instancers store data needed for an
+    /// instanced object to draw itself multiple times.
+    ///   \param delegate The scene delegate providing data for this
+    ///                   instancer.
+    ///   \param id The scene graph ID of this instancer, used when pulling
+    ///             data from a scene delegate.
+    ///   \return An OSPRay instancer object.
+    virtual HdInstancer* CreateInstancer(HdSceneDelegate* delegate,
+                                         SdfPath const& id) override;
+#endif
 
     /// Destroy an instancer created with CreateInstancer.
     ///   \param instancer The instancer to be destroyed.
     virtual void DestroyInstancer(HdInstancer* instancer);
 
+#if HD_API_VERSION < 36
     /// Create an OSPRay specific hydra Rprim, representing scene geometry.
     ///   \param typeId The rprim type to create. This must be one of the types
     ///                 from GetSupportedRprimTypes().
@@ -139,7 +152,16 @@ public:
     ///                      new rprim as a prototype.
     ///   \return An OSPRay rprim object.
     virtual HdRprim* CreateRprim(TfToken const& typeId, SdfPath const& rprimId,
-                                 SdfPath const& instancerId) override;
+        SdfPath const& instancerId) override;
+#else
+    /// Create an OSPRay specific hydra Rprim, representing scene geometry.
+    ///   \param typeId The rprim type to create. This must be one of the types
+    ///                 from GetSupportedRprimTypes().
+    ///   \param rprimId The scene graph ID of this rprim, used when pulling
+    ///                  data from a scene delegate.
+    ///   \return An OSPRay rprim object.
+    virtual HdRprim* CreateRprim(TfToken const& typeId, SdfPath const& rprimId) override;
+#endif
 
     /// Destroy an Rprim created with CreateRprim.
     ///   \param rPrim The rprim to be destroyed.
@@ -194,7 +216,11 @@ public:
     virtual void CommitResources(HdChangeTracker* tracker) override;
 
     HDOSPRAY_API
-    virtual TfToken GetMaterialNetworkSelector() const;
+#if HD_API_VERSION < 41
+    virtual TfToken GetMaterialNetworkSelector() const override;
+#else
+    virtual TfTokenVector GetMaterialRenderContexts() const override;
+#endif
 
     /// This function tells the scene which material variant to reference.
     ///   \return A token specifying which material variant this renderer

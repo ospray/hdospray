@@ -58,6 +58,7 @@ TF_DEFINE_PRIVATE_TOKENS(
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayTokens,
     (UsdPreviewSurface)
+    (sourceColorSpace)
     (diffuseColor)
     (specularColor)
     (emissiveColor)
@@ -200,12 +201,8 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
     TF_FOR_ALL (param, node.parameters) {
         const auto& name = param->first;
         const auto& value = param->second;
-        if (name == HdOSPRayTokens->file) {
-            SdfAssetPath const& path = value.Get<SdfAssetPath>();
-            texture.file = path.GetResolvedPath();
-            texture.ospTexture = LoadOIIOTexture2D(texture.file);
-        } else if (name == HdOSPRayTokens->filename
-                   || name == HdOSPRayTokens->infoFilename) {
+        if (name == HdOSPRayTokens->file || name == HdOSPRayTokens->filename
+                || name == HdOSPRayTokens->infoFilename) {
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
             texture.file = path.GetResolvedPath();
             if (isPtex) {
@@ -214,11 +211,13 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
 #ifdef HDOSPRAY_PLUGIN_PTEX
                 texture.ospTexture = LoadPtexTexture(texture.file);
 #endif
-            }
+            } else
+                texture.ospTexture = LoadOIIOTexture2D(texture.file);
         } else if (name == HdOSPRayTokens->scale) {
             texture.scale = value.Get<GfVec4f>();
         } else if (name == HdOSPRayTokens->wrapS) {
         } else if (name == HdOSPRayTokens->wrapT) {
+        } else if (name == HdOSPRayTokens->sourceColorSpace) {
         } else {
             TF_CODING_ERROR("unhandled token: %s\n", name.GetString().c_str());
         }
@@ -240,6 +239,13 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
     } else
         TF_CODING_ERROR("unhandled texToken: %s\n",
                         textureName.GetString().c_str());
+}
+
+void HdOSPRayMaterial::SetDisplayColor(GfVec4f color)
+{
+    diffuseColor = GfVec3f(color[0], color[1], color[2]);
+    opacity = color[3];
+    _UpdateOSPRayMaterial();
 }
 
 opp::Material

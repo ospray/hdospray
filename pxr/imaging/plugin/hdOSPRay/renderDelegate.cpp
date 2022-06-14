@@ -99,6 +99,8 @@ HdOSPRayRenderDelegate::_Initialize()
     OSPError err = ospLoadModule("ptex");
     if (err != OSP_NO_ERROR)
         TF_RUNTIME_ERROR("hdosp::renderDelegate - error loading ptex");
+    if (err != OSP_NO_ERROR)
+        std::cout << "error loading ptex\n";
 #endif
 
     if (HdOSPRayConfig::GetInstance().usePathTracing == 1)
@@ -220,14 +222,25 @@ HdOSPRayRenderDelegate::CommitResources(HdChangeTracker* tracker)
     }
 }
 
+#if HD_API_VERSION < 41
 TfToken
 HdOSPRayRenderDelegate::GetMaterialNetworkSelector() const
 {
     // Carson: this should be "HdOSPRayTokens->ospray", but we return glslfx so
     // that we work with many supplied shaders
     // TODO: is it possible to return both?
-    return HdOSPRayTokens->OSPRayPrincipledSurface;
+    return HdOSPRayTokens->glslfx;
 }
+#else
+TfTokenVector
+HdOSPRayRenderDelegate::GetMaterialRenderContexts() const
+{
+    // Carson: this should be "HdOSPRayTokens->ospray", but we return glslfx so
+    // that we work with many supplied shaders
+    // TODO: is it possible to return both?
+    return {HdOSPRayTokens->glslfx};
+}
+#endif
 
 TfTokenVector const&
 HdOSPRayRenderDelegate::GetSupportedRprimTypes() const
@@ -285,6 +298,7 @@ HdOSPRayRenderDelegate::CreateRenderPass(HdRenderIndex* index,
            new HdOSPRayRenderPass(index, collection, _renderer, _renderParam));
 }
 
+#if HD_API_VERSION < 36
 HdInstancer*
 HdOSPRayRenderDelegate::CreateInstancer(HdSceneDelegate* delegate,
                                         SdfPath const& id,
@@ -292,6 +306,14 @@ HdOSPRayRenderDelegate::CreateInstancer(HdSceneDelegate* delegate,
 {
     return new HdOSPRayInstancer(delegate, id, instancerId);
 }
+#else
+HdInstancer*
+HdOSPRayRenderDelegate::CreateInstancer(HdSceneDelegate* delegate,
+                                        SdfPath const& id)
+{
+    return new HdOSPRayInstancer(delegate, id);
+}
+#endif
 
 void
 HdOSPRayRenderDelegate::DestroyInstancer(HdInstancer* instancer)
@@ -299,21 +321,38 @@ HdOSPRayRenderDelegate::DestroyInstancer(HdInstancer* instancer)
     delete instancer;
 }
 
+#if HD_API_VERSION < 36
 HdRprim*
 HdOSPRayRenderDelegate::CreateRprim(TfToken const& typeId,
                                     SdfPath const& rprimId,
                                     SdfPath const& instancerId)
 {
     if (typeId == HdPrimTypeTokens->mesh) {
-        return new HdOSPRayMesh(rprimId, instancerId);
+        return new HdOSPRayMesh(rprimId);
     } else if (typeId == HdPrimTypeTokens->basisCurves) {
-        return new HdOSPRayBasisCurves(rprimId, instancerId);
+        return new HdOSPRayBasisCurves(rprimId);
     } else {
         TF_CODING_ERROR("Unknown Rprim Type %s", typeId.GetText());
     }
 
     return nullptr;
 }
+#else
+HdRprim*
+HdOSPRayRenderDelegate::CreateRprim(TfToken const& typeId,
+                                    SdfPath const& rprimId)
+{
+    if (typeId == HdPrimTypeTokens->mesh) {
+        return new HdOSPRayMesh(rprimId);
+    } else if (typeId == HdPrimTypeTokens->basisCurves) {
+        return new HdOSPRayBasisCurves(rprimId);
+    } else {
+        TF_CODING_ERROR("Unknown Rprim Type %s", typeId.GetText());
+    }
+
+    return nullptr;
+}
+#endif
 
 void
 HdOSPRayRenderDelegate::DestroyRprim(HdRprim* rPrim)

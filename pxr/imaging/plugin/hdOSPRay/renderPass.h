@@ -25,6 +25,7 @@
 #define HDOSPRAY_RENDER_PASS_H
 
 #include <pxr/base/gf/matrix4d.h>
+#include "pxr/base/gf/rect2i.h"
 #include <pxr/base/tf/debug.h>
 #include <pxr/imaging/hd/renderPass.h>
 #include <pxr/pxr.h>
@@ -155,6 +156,9 @@ private:
 
     opp::FrameBuffer _frameBuffer;
     opp::FrameBuffer _interactiveFrameBuffer;
+    // The pixels written to. Like viewport in OpenGL,
+    // but coordinates are y-Down.
+    GfRect2i _dataWindow;
     HdRenderPassAovBindingVector _aovBindings;
     HdParsedAovTokenVector _aovNames;
     HdOSPRayRenderBuffer _colorBuffer;

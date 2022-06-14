@@ -49,8 +49,12 @@ TF_DEFINE_PRIVATE_TOKENS(
 );
 // clang-format on
 
-HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
+HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const &instancerId)
+#if HD_API_VERSION < 36
     : HdMesh(id, instancerId)
+#else
+    : HdMesh(id)
+#endif
     , _ospMesh(nullptr)
     , _geometricModel(nullptr)
     , _adjacencyValid(false)
@@ -156,8 +160,12 @@ HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
     opp::Renderer renderer = ospRenderParam->GetOSPRayRenderer();
 
     if (*dirtyBits & HdChangeTracker::DirtyMaterialId) {
+#if HD_API_VERSION < 37
         _SetMaterialId(sceneDelegate->GetRenderIndex().GetChangeTracker(),
-                       sceneDelegate->GetMaterialId(GetId()));
+            sceneDelegate->GetMaterialId(GetId()));
+#else
+        SetMaterialId(sceneDelegate->GetMaterialId(GetId()));
+#endif
     }
 
     // Create ospray geometry objects.
@@ -215,25 +223,36 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
             if (pv.name == HdTokens->displayColor
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdTokens->displayColor)) {
-                // Create 4 component displayColor/opacity array for OSPRay
-                // XXX OSPRay currently expects 4 component color array.
-                // XXX Extend OSPRay to support separate RGB/Opacity arrays
-                if (value.IsHolding<VtVec3fArray>()) {
+                if (interp == HdInterpolationConstant) {
+                    //single color across mesh
                     const VtVec3fArray& colors = value.Get<VtVec3fArray>();
-                    _colors.resize(colors.size());
-                    for (size_t i = 0; i < colors.size(); i++) {
-                        _colors[i] = { colors[i].data()[0], colors[i].data()[1],
-                                       colors[i].data()[2], 1.f };
-                    }
-                    if (!_colors.empty()) {
-                        // for vertex coloring, make diffuse color white
-                        if (_colors.size() > 1) {
-                            _singleColor = { 1.f, 1.f, 1.f, 1.f };
-                        } else {
+                    _colors.push_back({ colors[0].data()[0], colors[0].data()[1],
+                                colors[0].data()[2], 1.f });
+                } else if (interp == HdInterpolationUniform) {
+                    //each face has a color
+                    //not yet supported, instead treat as constant color
+                    const VtVec3fArray& colors = value.Get<VtVec3fArray>();
+                    _colors.push_back({ colors[0].data()[0], colors[0].data()[1],
+                                colors[0].data()[2], 1.f });
+                } else if (interp == HdInterpolationVertex || interp == 
+                    HdInterpolationVarying) {
+                    // Create 4 component displayColor/opacity array for OSPRay
+                    // XXX OSPRay currently expects 4 component color array.
+                    // XXX Extend OSPRay to support separate RGB/Opacity arrays
+                    if (value.IsHolding<VtVec3fArray>()) {
+                        const VtVec3fArray& colors = value.Get<VtVec3fArray>();
+                        _colors.resize(colors.size());
+                        for (size_t i = 0; i < colors.size(); i++) {
+                            _colors[i] = { colors[i].data()[0], colors[i].data()[1],
+                                        colors[i].data()[2], 1.f };
+                        }
+                        if (!_colors.empty()) {
                             _singleColor = { _colors[0][0], _colors[0][1],
                                              _colors[0][2], 1.f };
                         }
                     }
+                } else if (interp == HdInterpolationFaceVarying) {
+                    //one color per face-vertex
                 }
             }
 
@@ -534,9 +553,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                 || _points.empty())
                 return; // invalid mesh
 
-            _ospMesh = _CreateOSPRayMesh(
-                   _quadIndices, _quadPrimitiveParams, _triangulatedIndices,
-                   _trianglePrimitiveParams, faceVaryingTexcoord, _texcoords,
+            _ospMesh = _CreateOSPRayMesh(faceVaryingTexcoord, _texcoords,
                    _points, _computedNormals, _colors, _refined, useQuads);
         }
 
@@ -588,6 +605,12 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     // XXX: The current instancer invalidation tracking makes it hard for
     // HdOSPRay to tell whether transforms will be dirty, so this code
     // pulls them every frame.
+#if HD_API_VERSION < 36
+#else
+    _UpdateInstancer(sceneDelegate, dirtyBits);
+    HdInstancer::_SyncInstancerAndParents(
+        sceneDelegate->GetRenderIndex(), GetInstancerId());
+#endif
 
     if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || isTransformDirty) {
         _ospInstances.clear();
@@ -671,8 +694,6 @@ HdOSPRayMesh::_UpdateDrawItemGeometricShader(HdSceneDelegate* sceneDelegate,
                                              const HdMeshReprDesc& desc,
                                              size_t drawItemIdForDesc)
 {
-    HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
-
     // resolve geom style, cull style
     HdCullStyle cullStyle = desc.cullStyle;
 
@@ -686,18 +707,10 @@ HdOSPRayMesh::_UpdateDrawItemGeometricShader(HdSceneDelegate* sceneDelegate,
     if (cullStyle == HdCullStyleDontCare) {
         cullStyle = _cullStyle;
     }
-
-    // The edge geomstyles below are rasterized as lines.
-    // See HdSt_GeometricShader::BindResources()
-    // The batches need to be validated and rebuilt if necessary.
-    renderIndex.GetChangeTracker().MarkBatchesDirty();
 }
 
 opp::Geometry
-HdOSPRayMesh::_CreateOSPRayMesh(
-       const VtVec4iArray& quadIndices, const VtVec2iArray& quadPrimitiveParams,
-       const VtVec3iArray& triangulatedIndices,
-       const VtIntArray& trianglePrimitiveParams, bool faceVaryingTexcoord,
+HdOSPRayMesh::_CreateOSPRayMesh(bool faceVaryingTexcoord,
        const VtVec2fArray& texcoords, const VtVec3fArray& points,
        const VtVec3fArray& normals, const VtVec4fArray& colors, bool refined,
        bool useQuads)
@@ -706,15 +719,15 @@ HdOSPRayMesh::_CreateOSPRayMesh(
     if (!_refined) {
         if (useQuads) {
             opp::SharedData indices = opp::SharedData(
-                   quadIndices.cdata(), OSP_VEC4UI, quadIndices.size());
+                   _quadIndices.cdata(), OSP_VEC4UI, _quadIndices.size());
 
             indices.commit();
             ospMesh.setParam("index", indices);
 
         } else { // triangles
             opp::SharedData indices
-                   = opp::SharedData(triangulatedIndices.cdata(), OSP_VEC3UI,
-                                     triangulatedIndices.size());
+                   = opp::SharedData(_triangulatedIndices.cdata(), OSP_VEC3UI,
+                                     _triangulatedIndices.size());
 
             indices.commit();
             ospMesh.setParam("index", indices);
@@ -737,7 +750,11 @@ HdOSPRayMesh::_CreateOSPRayMesh(
         opp::SharedData colorsData
                = opp::SharedData(colors.cdata(), OSP_VEC4F, colors.size());
         colorsData.commit();
-        ospMesh.setParam("vetex.color", colorsData);
+        ospMesh.setParam("vertex.color", colorsData);
+    } else if (colors.size() == 1) {
+        vec4f color = {colors[0][0], colors[0][1], colors[0][2], 1.f};
+        std::vector<vec4f> colorDummy(points.size(), color);
+        ospMesh.setParam("vertex.color", opp::CopiedData(colorDummy));
     }
 
     if (texcoords.size() > 1) {

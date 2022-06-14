@@ -121,6 +121,26 @@ HdOSPRayRenderPass::_MarkCollectionDirty()
     _pendingModelUpdate = true;
 }
 
+static
+GfRect2i
+_GetDataWindow(HdRenderPassStateSharedPtr const& renderPassState)
+{
+#if PXR_VERSION > 2011
+    const CameraUtilFraming &framing = renderPassState->GetFraming();
+    if (framing.IsValid()) {
+        return framing.dataWindow;
+    } else {
+        // For applications that use the old viewport API instead of
+        // the new camera framing API.
+        const GfVec4f vp = renderPassState->GetViewport();
+        return GfRect2i(GfVec2i(0), int(vp[2]), int(vp[3]));        
+    }
+#else
+    const GfVec4f vp = renderPassState->GetViewport();
+    return GfRect2i(GfVec2i(0), int(vp[2]), int(vp[3]));        
+#endif
+}
+
 void
 HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                              TfTokenVector const& renderTags)
@@ -134,8 +154,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     float updateInteractiveFrameBufferScale = _interactiveFrameBufferScale;
     bool interactiveFramebufferDirty = false;
-
-    GfVec4f vp = renderPassState->GetViewport();
 
     HdRenderPassAovBindingVector aovBindings
             = renderPassState->GetAovBindings();
@@ -151,12 +169,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             aovSize = { (int)aovRenderBuffer->GetWidth(),
                         (int)aovRenderBuffer->GetHeight() };
     }
-    if (aovSize[0] != 0 && (aovSize[0] != vp[2] || aovSize[1] != vp[3])) {
-        std::cout << "WARNING: mismatch in Framebuffer to aovSize: "
-                  << aovSize[0] << " " << aovSize[1] << "\nvp: " << vp[2] << " "
-                  << vp[3] << std::endl;
-    }
-    bool frameBufferDirty = (_width != vp[2] || _height != vp[3]);
+    bool frameBufferDirty = false;
     bool useDenoiser = _denoiserLoaded && _useDenoiser
            && (_numSamplesAccumulated >= _denoiserSPPThreshold);
     bool denoiserDirty = (useDenoiser != _denoiserState);
@@ -194,6 +207,34 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     _pendingResetImage |= (_pendingModelUpdate || _pendingLightUpdate);
     _pendingResetImage |= (frameBufferDirty || cameraDirty);
+
+    const GfRect2i dataWindow = _GetDataWindow(renderPassState);
+
+    if (_dataWindow != dataWindow) {
+        _dataWindow = dataWindow;
+        frameBufferDirty = true;
+        _width = dataWindow.GetWidth();
+        _height = dataWindow.GetHeight();
+
+#if PXR_VERSION > 2011
+        if (!renderPassState->GetFraming().IsValid())
+#endif
+        {
+            // Support clients that do not use the new framing API
+            // and do not use AOVs.
+            //
+            // Note that we do not support the case of using the
+            // new camera framing API without using AOVs.
+            //
+            _colorBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32Vec4,
+                                /*multiSampled=*/false);
+            _depthBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32,
+                                /*multiSampled=*/false);
+            _normalBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32Vec3,
+                                /*multiSampled=*/false);
+        }
+    }
+
 
     if (_currentFrame.isValid() && !aovDirty) {
         if (frameBufferDirty || (_pendingResetImage && !_interacting)) {
@@ -262,9 +303,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (frameBufferDirty) {
-        _width = vp[2];
-        _height = vp[3];
-
         _frameBuffer = opp::FrameBuffer(
                (int)_width, (int)_height, OSP_FB_RGBA32F,
                OSP_FB_COLOR | OSP_FB_ACCUM | OSP_FB_DEPTH | OSP_FB_NORMAL |
@@ -276,12 +314,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _frameBuffer.commit();
         _currentFrame.colorBuffer.resize(_width * _height,
                                          vec4f({ 0.f, 0.f, 0.f, 0.f }));
-        _colorBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32Vec4,
-                              /*multiSampled=*/false);
-        _depthBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32,
-                              /*multiSampled=*/false);
-        _normalBuffer.Allocate(GfVec3i(_width, _height, 1), HdFormatFloat32Vec3,
-                               /*multiSampled=*/false);
         interactiveFramebufferDirty = true;
         _pendingResetImage = true;
         _previousFrame = _currentFrame;
@@ -430,6 +462,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _currentFrame.osprayFrame
                = frameBuffer.renderFrame(_renderer, _camera, _world);
         _numSamplesAccumulated += std::max(1, _spp);
+    } else {
+        for (int aovIndex = 0; aovIndex < _aovBindings.size(); aovIndex++) {
+            auto ospRenderBuffer = dynamic_cast<HdOSPRayRenderBuffer*>(
+               _aovBindings[aovIndex].renderBuffer);
+            ospRenderBuffer->SetConverged(true);
+        }
     }
     TF_DEBUG_MSG(OSP_RP, "ospRP::Execute done\n");
 }
@@ -525,7 +563,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                                int js = j * xscale;
                                int is = i * yscale;
                                ospRenderBuffer->Write(
-                                      GfVec3i(i, j, 1), 3,
+                                      GfVec3i(i, j, 1), 4,
                                       &(renderBuffer
                                                .normalBuffer
                                                       [js * renderBuffer.width
@@ -614,8 +652,9 @@ HdOSPRayRenderPass::ProcessLights()
         if (l.second->IsVisible()) {
             lights.push_back(l.second->GetOSPLight());
             if (dynamic_cast<const HdOSPRayDomeLight*>(l.second)
-                && l.second->IsVisibleToCamera())
+                && l.second->IsVisibleToCamera()) {
                 hasHDRI = true;
+                }
         }
     }
     if (hasHDRI && HdOSPRayConfig::GetInstance().usePathTracing) {

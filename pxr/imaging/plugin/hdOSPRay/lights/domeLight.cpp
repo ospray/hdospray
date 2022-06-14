@@ -55,11 +55,11 @@ HdOSPRayDomeLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
 {
     HdDirtyBits bits = *dirtyBits;
     if (bits & DirtyParams) {
-        SdfAssetPath textureFilePath
-               = sceneDelegate
-                        ->GetLightParamValue(id, HdLightTokens->textureFile)
-                        .Get<SdfAssetPath>();
-        _textureFile = textureFilePath.GetResolvedPath();
+        VtValue v = sceneDelegate->GetLightParamValue(
+                id, HdLightTokens->textureFile);
+        if (v.IsHolding<SdfAssetPath>()) {
+            _textureFile = v.UncheckedGet<SdfAssetPath>().GetResolvedPath();
+        }
     }
 }
 

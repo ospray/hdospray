@@ -43,7 +43,7 @@ include(GNUInstallDirs)
 option(USE_PYTHON "enable python support" ON)
 option(USE_PYTHON2 "if USE_PYTHON enabled, use python2 instead of python3" OFF)
 
-set(SUPERBUILD_USD_VERSION "release-20.08" CACHE STRING "git tag of usd superbuild")
+set(SUPERBUILD_USD_VERSION "release-21.08" CACHE STRING "git tag of usd superbuild")
 set(SUPERBUILD_USD_URL "https://github.com/carsonbrownlee/USD_superbuild.git"
   CACHE STRING "url of usd superbuild git")
 option(OSPRAY_USE_GIT OFF)

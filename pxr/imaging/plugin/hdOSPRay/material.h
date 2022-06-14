@@ -66,6 +66,8 @@ public:
     {
     }
 
+    void SetDisplayColor(GfVec4f color);
+
     /// Create a default material based on the renderer type specified in config
     static opp::Material CreateDefaultMaterial(GfVec4f color);
 

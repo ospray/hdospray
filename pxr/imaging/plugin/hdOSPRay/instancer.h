@@ -51,16 +51,33 @@ PXR_NAMESPACE_OPEN_SCOPE
 ///
 class HdOSPRayInstancer : public HdInstancer {
 public:
+#if HD_API_VERSION < 36
     /// Constructor.
     ///   \param delegate The scene delegate backing this instancer's data.
     ///   \param id The unique id of this instancer.
     ///   \param parentInstancerId The unique id of the parent instancer,
     ///                            or an empty id if not applicable.
-    HdOSPRayInstancer(HdSceneDelegate* delegate, SdfPath const& id,
-                      SdfPath const& parentInstancerId);
+    HdOSPRayInstancer(HdSceneDelegate* delegate, SdfPath const& id, SdfPath const& parentId);
+#else
+    /// Constructor.
+    ///   \param delegate The scene delegate backing this instancer's data.
+    ///   \param id The unique id of this instancer.
+    HdOSPRayInstancer(HdSceneDelegate* delegate, SdfPath const& id);
+#endif
 
     /// Destructor.
     ~HdOSPRayInstancer();
+
+#if HD_API_VERSION > 35
+    /// Updates cached primvar data from the scene delegate.
+    ///   \param sceneDelegate The scene delegate for this prim.
+    ///   \param renderParam The hdOSPRay render param.
+    ///   \param dirtyBits The dirty bits for this instancer.
+    void Sync(HdSceneDelegate *sceneDelegate,
+              HdRenderParam   *renderParam,
+              HdDirtyBits     *dirtyBits) override;
+#endif
+
 
     /// Computes all instance transforms for the provided prototype id,
     /// taking into account the scene delegate's instancerTransform and the
@@ -79,7 +96,12 @@ private:
     // to be guarded by _instanceLock.
     //
     // Pulled primvars are cached in _primvarMap.
+#if HD_API_VERSION < 36
     void _SyncPrimvars();
+#else
+    void _SyncPrimvars(HdSceneDelegate* delegate,
+        HdDirtyBits dirtyBits);
+#endif
 
     // Mutex guard for _SyncPrimvars().
     std::mutex _instanceLock;

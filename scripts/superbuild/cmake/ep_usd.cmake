@@ -9,7 +9,7 @@ SET(EP_USD "USD")
     BINARY_DIR    ${EP_USD}/build
     GIT_REPOSITORY ${SUPERBUILD_USD_URL}
     GIT_TAG       ${SUPERBUILD_USD_VERSION}
-    GIT_SHALLOW   ON
+    GIT_SHALLOW   OFF
 
     LIST_SEPARATOR | # Use the alternate list separator
     CMAKE_ARGS

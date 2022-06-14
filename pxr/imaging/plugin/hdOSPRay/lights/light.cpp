@@ -94,13 +94,17 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
 
     // Extrating the transformation/positioning of the light source in the scene
     if (bits & DirtyTransform) {
-        VtValue transform = sceneDelegate->GetLightParamValue(
-               id, HdTokens->transform);
-        if (transform.IsHolding<GfMatrix4d>()) {
-            _transform = transform.Get<GfMatrix4d>();
-        } else {
-            _transform = GfMatrix4d(1);
-        }
+        #if HD_API_VERSION < 41
+            VtValue transform = sceneDelegate->GetLightParamValue(
+                id, HdTokens->transform);
+            if (transform.IsHolding<GfMatrix4d>()) {
+                _transform = transform.Get<GfMatrix4d>();
+            } else {
+                _transform = GfMatrix4d(1);
+            }
+        #else
+            _transform = sceneDelegate->GetTransform(id);
+        #endif
     }
 
     _visibility = sceneDelegate->GetVisible(id);
@@ -172,8 +176,7 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         if (vtCameraVisibility.IsHolding<bool>())
         {
             _cameraVisibility = vtCameraVisibility.Get<bool>();
-        }
-        else if (vtCameraVisibility.IsHolding<int>())
+        } else if (vtCameraVisibility.IsHolding<int>())
         {
             _cameraVisibility = vtCameraVisibility.Get<int>();
         }

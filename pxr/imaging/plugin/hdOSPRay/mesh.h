@@ -183,11 +183,7 @@ private:
 
     opp::Geometry _CreateOSPRaySubdivMesh();
     opp::Geometry
-    _CreateOSPRayMesh(const VtVec4iArray& quadIndices,
-                      const VtVec2iArray& quadPrimitiveParams,
-                      const VtVec3iArray& triangulatedIndices,
-                      const VtIntArray& trianglePrimitiveParams,
-                      bool faceVaryingTexcoord, const VtVec2fArray& texcoords,
+    _CreateOSPRayMesh(bool faceVaryingTexcoord, const VtVec2fArray& texcoords,
                       const VtVec3fArray& points, const VtVec3fArray& normals,
                       const VtVec4fArray& colors, bool refined, bool useQuads);
 
@@ -226,7 +222,11 @@ private:
     VtVec3fArray _computedNormals;
 
     VtVec4iArray _quadIndices;
+#if HD_API_VERSION < 36
     VtVec2iArray _quadPrimitiveParams;
+#else
+    VtIntArray _quadPrimitiveParams;
+#endif
 
     // Derived scene data. Hd_VertexAdjacency is an acceleration datastructure
     // for computing per-vertex smooth normals. _adjacencyValid indicates
