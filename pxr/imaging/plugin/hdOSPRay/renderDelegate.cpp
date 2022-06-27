@@ -277,7 +277,9 @@ HdOSPRayRenderDelegate::GetDefaultAovDescriptor(TfToken const& name) const
                                VtValue(GfVec3f(-1.0f)));
     } else if (name == HdAovTokens->depth) {
         return HdAovDescriptor(HdFormatFloat32, false, VtValue(1.0f));
-    } else if (name == HdAovTokens->primId) {
+    } else if (name == HdAovTokens->primId ||
+               name == HdAovTokens->elementId ||
+               name == HdAovTokens->instanceId) {
         return HdAovDescriptor(HdFormatInt32, false, VtValue(0));
     } else {
         HdParsedAovToken aovId(name);

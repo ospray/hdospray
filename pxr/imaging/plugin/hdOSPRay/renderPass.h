@@ -24,16 +24,18 @@
 #ifndef HDOSPRAY_RENDER_PASS_H
 #define HDOSPRAY_RENDER_PASS_H
 
+#include "renderBuffer.h"
+
 #include <pxr/base/gf/matrix4d.h>
 #include "pxr/base/gf/rect2i.h"
 #include <pxr/base/tf/debug.h>
 #include <pxr/imaging/hd/renderPass.h>
 #include <pxr/pxr.h>
 
-#include "renderBuffer.h"
-
 #include <ospray/ospray_cpp.h>
 #include <ospray/ospray_cpp/ext/rkcommon.h>
+
+#include <pxr/base/work/loops.h>
 
 #include "config.h"
 
@@ -87,6 +89,9 @@ public:
         std::vector<vec4f> colorBuffer;
         std::vector<float> depthBuffer;
         std::vector<vec3f> normalBuffer;
+        std::vector<unsigned int> primIdBuffer;
+        std::vector<unsigned int> elementIdBuffer;
+        std::vector<unsigned int> instIdBuffer;
 
         bool isValid()
         {
@@ -103,6 +108,9 @@ public:
             colorBuffer.resize(size, vec4f({ 0.f, 0.f, 0.f, 0.f }));
             depthBuffer.resize(size, FLT_MAX);
             normalBuffer.resize(size, vec3f({ 0.f, 1.f, 0.f }));
+            primIdBuffer.resize(size, -1);
+            elementIdBuffer.resize(size, -1);
+            instIdBuffer.resize(size, -1);
         }
     };
 
@@ -147,6 +155,36 @@ private:
     // should also call ResetImage().
     void _ResizeSampleBuffer(unsigned int width, unsigned int height);
 
+    template<class T>
+    void _writeRenderBuffer(HdOSPRayRenderBuffer* ospRenderBuffer,
+        RenderFrame& renderBuffer, T* data, int numElements)
+    {
+        int aovWidth = ospRenderBuffer->GetWidth();
+        int aovHeight = ospRenderBuffer->GetHeight();
+            if (aovWidth >= renderBuffer.width
+                && aovHeight >= renderBuffer.height) {
+                ospRenderBuffer->Map();
+                float xscale = float(renderBuffer.width) / float(aovWidth);
+                float yscale = float(renderBuffer.height) / float(aovHeight);
+                tbb::parallel_for(
+                       tbb::blocked_range<int>(0, aovWidth * aovHeight),
+                       [&](tbb::blocked_range<int> r) {
+                           for (int pIdx = r.begin(); pIdx < r.end(); ++pIdx) {
+                               int j = pIdx / aovWidth;
+                               int i = pIdx - j * aovWidth;
+                               int js = j * xscale;
+                               int is = i * yscale;
+                               ospRenderBuffer->Write(
+                                      GfVec3i(i, j, 1), numElements,
+                                      &(data[(js * renderBuffer.width + is)*numElements]));
+                           }
+                       });
+                ospRenderBuffer->Unmap();
+            } else
+                TF_CODING_ERROR(
+                       "ERROR: displayrenderbuffer size out of sync\n");
+    };
+
     // The sample buffer is cleared in Execute(), so this flag records whether
     // ResetImage() has been called since the last Execute().
     bool _pendingResetImage { true };
@@ -162,8 +200,17 @@ private:
     HdRenderPassAovBindingVector _aovBindings;
     HdParsedAovTokenVector _aovNames;
     HdOSPRayRenderBuffer _colorBuffer;
+    bool _hasColor { true };
     HdOSPRayRenderBuffer _depthBuffer;
+    bool _hasDepth { false };
     HdOSPRayRenderBuffer _normalBuffer;
+    bool _hasNormal { false };
+    HdOSPRayRenderBuffer _primIdBuffer;
+    bool _hasPrimId { false };
+    HdOSPRayRenderBuffer _elementIdBuffer;
+    bool _hasElementId { false };
+    HdOSPRayRenderBuffer _instIdBuffer;
+    bool _hasInstId { false };
     float _currentFrameBufferScale { 1.0f };
     float _interactiveFrameBufferScale { 2.0f };
     float _interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };

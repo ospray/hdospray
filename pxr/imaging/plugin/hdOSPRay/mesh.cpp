@@ -592,6 +592,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _geometricModel = new opp::GeometricModel(_ospMesh);
 
         _geometricModel->setParam("material", ospMaterial);
+        _geometricModel->setParam("id", (unsigned int)GetPrimId());
         _ospMesh.commit();
         _geometricModel->commit();
 
@@ -642,6 +643,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                              vec3f(xfmf[8], xfmf[9], xfmf[10]),
                              vec3f(xfmf[12], xfmf[13], xfmf[14]));
                 instance.setParam("xfm", xfm);
+                instance.setParam("id", (unsigned int)i);
                 instance.commit();
                 _ospInstances.push_back(instance);
             }
@@ -659,12 +661,15 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                          vec3f(xfmf[8], xfmf[9], xfmf[10]),
                          vec3f(xfmf[12], xfmf[13], xfmf[14]));
             instance.setParam("xfm", xfm);
+            instance.setParam("id", (unsigned int)0);
             instance.commit();
+
             if (_geomSubsetModels.size()) {
                 group.setParam("geometry", opp::CopiedData(_geomSubsetModels));
             } else {
                 group.setParam("geometry", opp::CopiedData(*_geometricModel));
             }
+
             group.commit();
             _ospInstances.push_back(instance);
         }
@@ -764,6 +769,7 @@ HdOSPRayMesh::_CreateOSPRayMesh(bool faceVaryingTexcoord,
         ospMesh.setParam("vertex.texcoord", texcoordsData);
     }
 
+    ospMesh.setParam("id", (unsigned int)GetPrimId());
     ospMesh.commit();
     return ospMesh;
 }
@@ -907,6 +913,7 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
         vertex_crease_weights.commit();
         mesh.setParam("vertexCrease.weight", vertex_crease_weights);
     }
+    mesh.setParam("id", (unsigned int)GetPrimId());
     mesh.commit();
 
     return mesh;

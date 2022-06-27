@@ -81,7 +81,7 @@ public:
     ///   \param id The scene-graph path to this mesh.
     ///   \param instancerId If specified, the HdOSPRayInstancer at this id uses
     ///                      this mesh as a prototype.
-    HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId = SdfPath());
+    HdOSPRayMesh(SdfPath const& id, SdfPath const &instancerId = SdfPath());
 
     /// HdOSPRayMesh destructor.
     /// (Note: OSPRay resources are released in Finalize()).
