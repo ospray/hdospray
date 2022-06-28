@@ -152,7 +152,7 @@ public:
     ///                      new rprim as a prototype.
     ///   \return An OSPRay rprim object.
     virtual HdRprim* CreateRprim(TfToken const& typeId, SdfPath const& rprimId,
-        SdfPath const& instancerId) override;
+                                 SdfPath const& instancerId) override;
 #else
     /// Create an OSPRay specific hydra Rprim, representing scene geometry.
     ///   \param typeId The rprim type to create. This must be one of the types
@@ -160,7 +160,8 @@ public:
     ///   \param rprimId The scene graph ID of this rprim, used when pulling
     ///                  data from a scene delegate.
     ///   \return An OSPRay rprim object.
-    virtual HdRprim* CreateRprim(TfToken const& typeId, SdfPath const& rprimId) override;
+    virtual HdRprim* CreateRprim(TfToken const& typeId,
+                                 SdfPath const& rprimId) override;
 #endif
 
     /// Destroy an Rprim created with CreateRprim.

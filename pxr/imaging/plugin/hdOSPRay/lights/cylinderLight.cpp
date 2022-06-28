@@ -76,8 +76,8 @@ HdOSPRayCylinderLight::_PrepareOSPLight()
                : OSP_INTENSITY_QUANTITY_RADIANCE;
     }
 
-    GfVec3f position0(-_length/2.0f, 0, 0);
-    GfVec3f position1(_length/2.0f, 0, 0);
+    GfVec3f position0(-_length / 2.0f, 0, 0);
+    GfVec3f position1(_length / 2.0f, 0, 0);
     position0 = _transform.Transform(position0);
     position1 = _transform.Transform(position1);
 

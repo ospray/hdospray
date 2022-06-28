@@ -202,7 +202,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
         const auto& name = param->first;
         const auto& value = param->second;
         if (name == HdOSPRayTokens->file || name == HdOSPRayTokens->filename
-                || name == HdOSPRayTokens->infoFilename) {
+            || name == HdOSPRayTokens->infoFilename) {
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
             texture.file = path.GetResolvedPath();
             if (isPtex) {
@@ -241,7 +241,8 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
                         textureName.GetString().c_str());
 }
 
-void HdOSPRayMaterial::SetDisplayColor(GfVec4f color)
+void
+HdOSPRayMaterial::SetDisplayColor(GfVec4f color)
 {
     diffuseColor = GfVec3f(color[0], color[1], color[2]);
     opacity = color[3];
@@ -296,8 +297,10 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     }
 
     // params
-    ospMaterial.setParam("metallic", ( map_metallic.ospTexture ? 1.0f : metallic ) );
-    ospMaterial.setParam("roughness", ( map_roughness.ospTexture ? 1.0f : roughness ) );
+    ospMaterial.setParam("metallic",
+                         (map_metallic.ospTexture ? 1.0f : metallic));
+    ospMaterial.setParam("roughness",
+                         (map_roughness.ospTexture ? 1.0f : roughness));
     ospMaterial.setParam("coat", coat);
     ospMaterial.setParam("coatRoughness", coatRoughness);
     ospMaterial.setParam("ior", ior);

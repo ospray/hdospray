@@ -18,18 +18,33 @@ public:
     void Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
               HdDirtyBits* dirtyBits) override final;
 
-    float GetFStop() const { return _fStop; }
-    float GetFocalLength() const { return _focalLength; }
-    float GetFocusDistance() const { return _focusDistance; }
-    float GetHorizontalAperture() const { return _horizontalAperture; }
-    float GetVerticalAperture() const { return _verticalAperture; }
+    float GetFStop() const
+    {
+        return _fStop;
+    }
+    float GetFocalLength() const
+    {
+        return _focalLength;
+    }
+    float GetFocusDistance() const
+    {
+        return _focusDistance;
+    }
+    float GetHorizontalAperture() const
+    {
+        return _horizontalAperture;
+    }
+    float GetVerticalAperture() const
+    {
+        return _verticalAperture;
+    }
 
 protected:
-    float _fStop {0.f};
-    float _horizontalAperture {20.955f};
-    float _verticalAperture {15.2908f};
-    float _focalLength {0.f};
-    float _focusDistance {0.f};
+    float _fStop { 0.f };
+    float _horizontalAperture { 20.955f };
+    float _verticalAperture { 15.2908f };
+    float _focalLength { 0.f };
+    float _focusDistance { 0.f };
 };
 
 PXR_NAMESPACE_CLOSE_SCOPE

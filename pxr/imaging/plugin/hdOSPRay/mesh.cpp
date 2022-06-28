@@ -705,7 +705,7 @@ HdOSPRayMesh::_CreateOSPRayMesh(const VtVec2fArray& texcoords,
         if (_texcoordsInterpolation == HdInterpolationFaceVarying)
             ospMesh.setParam("texcoord", texcoordsData);
         else if (_texcoordsInterpolation == HdInterpolationVertex
-                   || _texcoordsInterpolation == HdInterpolationVarying) {
+                 || _texcoordsInterpolation == HdInterpolationVarying) {
             ospMesh.setParam("vertex.texcoord", texcoordsData);
         }
     }

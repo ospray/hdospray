@@ -53,8 +53,7 @@ TF_DEFINE_PRIVATE_TOKENS(
 
 #if HD_API_VERSION < 36
 HdOSPRayInstancer::HdOSPRayInstancer(HdSceneDelegate* delegate,
-                                     SdfPath const& id,
-                                     SdfPath const &parentId)
+                                     SdfPath const& id, SdfPath const& parentId)
     : HdInstancer(delegate, id, parentId)
 #else
 HdOSPRayInstancer::HdOSPRayInstancer(HdSceneDelegate* delegate,
@@ -73,8 +72,8 @@ HdOSPRayInstancer::~HdOSPRayInstancer()
 }
 
 #if HD_API_VERSION > 35
-void HdOSPRayInstancer::Sync(HdSceneDelegate* delegate,
-                        HdRenderParam* renderParam,
+void
+HdOSPRayInstancer::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
                         HdDirtyBits* dirtyBits)
 {
     _UpdateInstancer(delegate, dirtyBits);
@@ -86,7 +85,8 @@ void HdOSPRayInstancer::Sync(HdSceneDelegate* delegate,
 #endif
 
 #if HD_API_VERSION < 36
-void HdOSPRayInstancer::_SyncPrimvars()
+void
+HdOSPRayInstancer::_SyncPrimvars()
 {
     HD_TRACE_FUNCTION();
     HF_MALLOC_TAG_FUNCTION();
@@ -106,8 +106,8 @@ void HdOSPRayInstancer::_SyncPrimvars()
 
         TfTokenVector primvarNames;
         HdPrimvarDescriptorVector primvars
-                = GetDelegate()->GetPrimvarDescriptors(
-                        id, HdInterpolationInstance);
+               = GetDelegate()->GetPrimvarDescriptors(id,
+                                                      HdInterpolationInstance);
 
         for (HdPrimvarDescriptor const& pv : primvars) {
             if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, pv.name)) {
@@ -116,8 +116,7 @@ void HdOSPRayInstancer::_SyncPrimvars()
                     if (_primvarMap.count(pv.name) > 0) {
                         delete _primvarMap[pv.name];
                     }
-                    _primvarMap[pv.name]
-                            = new HdVtBufferSource(pv.name, value);
+                    _primvarMap[pv.name] = new HdVtBufferSource(pv.name, value);
                 }
             }
         }
@@ -129,15 +128,15 @@ void HdOSPRayInstancer::_SyncPrimvars()
 #else
 void
 HdOSPRayInstancer::_SyncPrimvars(HdSceneDelegate* delegate,
-    HdDirtyBits dirtyBits)
+                                 HdDirtyBits dirtyBits)
 {
     HD_TRACE_FUNCTION();
     HF_MALLOC_TAG_FUNCTION();
 
     std::lock_guard<std::mutex> lock(_instanceLock);
     SdfPath const& id = GetId();
-    HdPrimvarDescriptorVector primvars = delegate->GetPrimvarDescriptors(id,
-        HdInterpolationInstance);
+    HdPrimvarDescriptorVector primvars
+           = delegate->GetPrimvarDescriptors(id, HdInterpolationInstance);
 
     for (HdPrimvarDescriptor const& pv : primvars) {
         if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, pv.name)) {
@@ -146,8 +145,7 @@ HdOSPRayInstancer::_SyncPrimvars(HdSceneDelegate* delegate,
                 if (_primvarMap.count(pv.name) > 0) {
                     delete _primvarMap[pv.name];
                 }
-                _primvarMap[pv.name]
-                        = new HdVtBufferSource(pv.name, value);
+                _primvarMap[pv.name] = new HdVtBufferSource(pv.name, value);
             }
         }
     }

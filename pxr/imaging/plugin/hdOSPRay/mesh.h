@@ -28,13 +28,13 @@
 #include <pxr/base/gf/vec2f.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4f.h>
-#include <pxr/imaging/pxOsd/tokens.h>
 #include <pxr/imaging/hd/enums.h>
 #include <pxr/imaging/hd/mesh.h>
 #include <pxr/imaging/hd/meshUtil.h>
 #include <pxr/imaging/hd/smoothNormals.h>
 #include <pxr/imaging/hd/vertexAdjacency.h>
 #include <pxr/imaging/hd/vtBufferSource.h>
+#include <pxr/imaging/pxOsd/tokens.h>
 #include <pxr/pxr.h>
 
 #include <ospray/ospray_cpp.h>
@@ -86,7 +86,7 @@ public:
     ///   \param id The scene-graph path to this mesh.
     ///   \param instancerId If specified, the HdOSPRayInstancer at this id uses
     ///                      this mesh as a prototype.
-    HdOSPRayMesh(SdfPath const& id, SdfPath const &instancerId = SdfPath());
+    HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId = SdfPath());
 
     /// HdOSPRayMesh destructor.
     /// (Note: OSPRay resources are released in Finalize()).
@@ -134,7 +134,8 @@ public:
                       HdRenderParam* renderParam, HdDirtyBits* dirtyBits,
                       TfToken const& reprToken) override;
 
-    /// Add generated instances from sync function to the instance list for rendering
+    /// Add generated instances from sync function to the instance list for
+    /// rendering
     void AddOSPInstances(std::vector<opp::Instance>& instanceList) const;
 
 protected:
@@ -188,19 +189,21 @@ private:
                                HdDirtyBits dirtyBits);
 
     opp::Geometry _CreateOSPRaySubdivMesh();
-    opp::Geometry
-    _CreateOSPRayMesh(const VtVec2fArray& texcoords,
-                      const VtVec3fArray& points, const VtVec3fArray& normals,
-                      const VtVec3fArray& colors, bool refined, bool useQuads);
+    opp::Geometry _CreateOSPRayMesh(const VtVec2fArray& texcoords,
+                                    const VtVec3fArray& points,
+                                    const VtVec3fArray& normals,
+                                    const VtVec3fArray& colors, bool refined,
+                                    bool useQuads);
 
-    /// Compute primvar array of type "type" for the specified interpolation mode.
+    /// Compute primvar array of type "type" for the specified interpolation
+    /// mode.
     ///  \param meshUtil
     ///  \param useQuads
     ///  \param primvars the specified primvar array, ie _texcoords
     ///  \param computedPrimvars the output primvar array
     ///  \param name HdToken speficying the primvar
     ///  \param interpolation facevarying, vertexvarying, uniform, or constant
-        template <class type>
+    template <class type>
     void _ComputePrimvars(HdMeshUtil& meshUtil, bool useQuads, type& primvars,
                           type& computedPrimvars, TfToken name,
                           HdInterpolation interpolation)
@@ -229,7 +232,8 @@ private:
                     computedPrimvars[i] = primvars
                            [HdMeshUtil::DecodeFaceIndexFromCoarseFaceParam(
                                   _quadPrimitiveParams[i])];
-            } else if (interpolation == HdInterpolationConstant && !primvars.empty()) {
+            } else if (interpolation == HdInterpolationConstant
+                       && !primvars.empty()) {
                 computedPrimvars.resize(1);
                 computedPrimvars[0] = primvars[0];
             } else
@@ -258,7 +262,8 @@ private:
                     computedPrimvars[i] = primvars
                            [HdMeshUtil::DecodeFaceIndexFromCoarseFaceParam(
                                   _trianglePrimitiveParams[i])];
-            } else if (interpolation == HdInterpolationConstant && !primvars.empty()) {
+            } else if (interpolation == HdInterpolationConstant
+                       && !primvars.empty()) {
                 computedPrimvars.resize(1);
                 computedPrimvars[0] = primvars[0];
             } else
@@ -284,11 +289,11 @@ private:
     GfMatrix4f _transform;
     VtVec3fArray _points;
     VtVec2fArray _texcoords;
-    VtVec2fArray _computedTexcoords;  // triangulated / quadrangulated primvars
+    VtVec2fArray _computedTexcoords; // triangulated / quadrangulated primvars
     VtVec3fArray _normals;
-    VtVec3fArray _computedNormals;  // triangulated / quadrangulated primvars
+    VtVec3fArray _computedNormals; // triangulated / quadrangulated primvars
     VtVec3fArray _colors;
-    VtVec3fArray _computedColors;  // triangulated / quadrangulated primvars
+    VtVec3fArray _computedColors; // triangulated / quadrangulated primvars
     GfVec4f _singleColor { .5f, .5f, .5f, 1.f };
     HdInterpolation _texcoordsInterpolation;
     HdInterpolation _colorsInterpolation;

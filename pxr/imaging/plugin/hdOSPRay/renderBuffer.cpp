@@ -119,7 +119,7 @@ HdOSPRayRenderBuffer::Allocate(GfVec3i const& dimensions, HdFormat format,
                 TfEnum::GetName(format).c_str());
         return false;
     }
-    
+
     _width = dimensions[0];
     _height = dimensions[1];
     _format = format;

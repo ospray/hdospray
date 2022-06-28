@@ -50,7 +50,8 @@ TF_DEFINE_PRIVATE_TOKENS(
 );
 // clang-format on
 
-HdOSPRayBasisCurves::HdOSPRayBasisCurves(SdfPath const& id, SdfPath const &instancerId)
+HdOSPRayBasisCurves::HdOSPRayBasisCurves(SdfPath const& id,
+                                         SdfPath const& instancerId)
 #if HD_API_VERSION < 36
     : HdBasisCurves(id, instancerId)
 #else
@@ -149,8 +150,8 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
     // At the moment, it's done by rprim-reference.  The helper function on
     // HdInstancer needs to use a mutex to guard access, if there are actually
     // updates pending, so this might be a contention point.
-    HdInstancer::_SyncInstancerAndParents(
-        delegate->GetRenderIndex(), GetInstancerId());
+    HdInstancer::_SyncInstancerAndParents(delegate->GetRenderIndex(),
+                                          GetInstancerId());
 #endif
 
     if ((HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || isTransformDirty)
@@ -302,7 +303,6 @@ HdOSPRayBasisCurves::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
             if (pv.name == "displayOpacity"
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdTokens->displayOpacity)) {
-                std::cout << "hdospBC: has displayOpacity\n";
                 // XXX assuming displayOpacity can't exist without
                 // displayColor and/or have a different size
                 if (value.IsHolding<VtFloatArray>()) {
@@ -329,7 +329,6 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
     bool hasWidths = (_widths.size() == _points.size());
     bool hasNormals = (_normals.size() == _points.size());
     if (_points.empty()) {
-        std::cout << "points empty\n";
         TF_RUNTIME_ERROR("_UpdateOSPRayRepr: points empty");
         return;
     }

@@ -26,8 +26,8 @@
 
 #include "renderBuffer.h"
 
-#include <pxr/base/gf/matrix4d.h>
 #include "pxr/base/gf/rect2i.h"
+#include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/tf/debug.h>
 #include <pxr/imaging/hd/renderPass.h>
 #include <pxr/pxr.h>
@@ -155,34 +155,34 @@ private:
     // should also call ResetImage().
     void _ResizeSampleBuffer(unsigned int width, unsigned int height);
 
-    template<class T>
+    template <class T>
     void _writeRenderBuffer(HdOSPRayRenderBuffer* ospRenderBuffer,
-        RenderFrame& renderBuffer, T* data, int numElements)
+                            RenderFrame& renderBuffer, T* data, int numElements)
     {
         int aovWidth = ospRenderBuffer->GetWidth();
         int aovHeight = ospRenderBuffer->GetHeight();
-            if (aovWidth >= renderBuffer.width
-                && aovHeight >= renderBuffer.height) {
-                ospRenderBuffer->Map();
-                float xscale = float(renderBuffer.width) / float(aovWidth);
-                float yscale = float(renderBuffer.height) / float(aovHeight);
-                tbb::parallel_for(
-                       tbb::blocked_range<int>(0, aovWidth * aovHeight),
-                       [&](tbb::blocked_range<int> r) {
-                           for (int pIdx = r.begin(); pIdx < r.end(); ++pIdx) {
-                               int j = pIdx / aovWidth;
-                               int i = pIdx - j * aovWidth;
-                               int js = j * xscale;
-                               int is = i * yscale;
-                               ospRenderBuffer->Write(
-                                      GfVec3i(i, j, 1), numElements,
-                                      &(data[(js * renderBuffer.width + is)*numElements]));
-                           }
-                       });
-                ospRenderBuffer->Unmap();
-            } else
-                TF_CODING_ERROR(
-                       "ERROR: displayrenderbuffer size out of sync\n");
+        if (aovWidth >= renderBuffer.width
+            && aovHeight >= renderBuffer.height) {
+            ospRenderBuffer->Map();
+            float xscale = float(renderBuffer.width) / float(aovWidth);
+            float yscale = float(renderBuffer.height) / float(aovHeight);
+            tbb::parallel_for(
+                   tbb::blocked_range<int>(0, aovWidth * aovHeight),
+                   [&](tbb::blocked_range<int> r) {
+                       for (int pIdx = r.begin(); pIdx < r.end(); ++pIdx) {
+                           int j = pIdx / aovWidth;
+                           int i = pIdx - j * aovWidth;
+                           int js = j * xscale;
+                           int is = i * yscale;
+                           ospRenderBuffer->Write(
+                                  GfVec3i(i, j, 1), numElements,
+                                  &(data[(js * renderBuffer.width + is)
+                                         * numElements]));
+                       }
+                   });
+            ospRenderBuffer->Unmap();
+        } else
+            TF_CODING_ERROR("ERROR: displayrenderbuffer size out of sync\n");
     };
 
     // The sample buffer is cleared in Execute(), so this flag records whether

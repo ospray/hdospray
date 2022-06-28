@@ -48,7 +48,8 @@ class HdOSPRayBasisCurves : public HdBasisCurves {
 public:
     HF_MALLOC_TAG_NEW("new HdOSPRayBasisCurves");
 
-    HdOSPRayBasisCurves(SdfPath const& id, SdfPath const& instancerId = SdfPath());
+    HdOSPRayBasisCurves(SdfPath const& id,
+                        SdfPath const& instancerId = SdfPath());
     virtual ~HdOSPRayBasisCurves() = default;
 
     virtual void Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,

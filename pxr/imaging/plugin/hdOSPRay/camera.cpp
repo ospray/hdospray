@@ -19,8 +19,8 @@ HdOSPRayCamera::Sync(HdSceneDelegate* sceneDelegate,
 {
     HdCamera::Sync(sceneDelegate, _renderParam, dirtyBits);
 
-    auto fStop = sceneDelegate->GetCameraParamValue(
-           GetId(), HdCameraTokens->fStop);
+    auto fStop
+           = sceneDelegate->GetCameraParamValue(GetId(), HdCameraTokens->fStop);
     auto horizontalAperture = sceneDelegate->GetCameraParamValue(
            GetId(), HdCameraTokens->horizontalAperture);
     auto verticalAperture = sceneDelegate->GetCameraParamValue(
@@ -40,7 +40,6 @@ HdOSPRayCamera::Sync(HdSceneDelegate* sceneDelegate,
         _focalLength = focalLength.Get<float>();
     if (focusDistance.IsHolding<float>())
         _focusDistance = focusDistance.Get<float>();
-
 }
 
 PXR_NAMESPACE_CLOSE_SCOPE
