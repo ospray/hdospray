@@ -1,4 +1,4 @@
-# OSPRay for Hydra (HdOSPRay)
+# OSPRay for Hydra
 OSPRay interactive rendering plugin for USD Hydra
 
 <p align="center">
@@ -7,4 +7,4 @@ OSPRay interactive rendering plugin for USD Hydra
 
 Staircase model by Wig42 [CC](https://creativecommons.org/licenses/by/3.0/), modified by [Bitterli](https://benedikt-bitterli.me/resources/), rendered in usdview.
 
-Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more information.
+Visit [github](https://github.com/ospray/hdospray) for more information.

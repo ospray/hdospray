@@ -1,7 +1,7 @@
 # Building OSPRay for Hydra
 
 OSPRay for Hydra source is available on GitHub at
-[HdOSPRay](http://github.com/ospray/hdospray). The master branch is typically
+[OSPRay for Hydra](http://github.com/ospray/hdospray). The master branch is typically
 the most stable branch and contains tagged releases.
 
 Tags are of the form `hdospray-vx.x.x-usdvx.x.x`, with `vx.x.x` being the

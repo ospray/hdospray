@@ -1,4 +1,4 @@
-# OSPRay for Hydra (HdOSPRay)
+# OSPRay for Hydra
 
 OSPRay interactive rendering plugin for USD Hydra
 
@@ -13,8 +13,7 @@ Staircase model by Wig42
 [Bitterli](https://benedikt-bitterli.me/resources/), rendered in
 usdview.
 
-Visit [HdOSPRay on github](https://github.com/ospray/hdospray) for more
-information.
+Visit [github](https://github.com/ospray/hdospray) for more information.
 
 ## OSPRay for Hydra
 
@@ -44,13 +43,13 @@ and resulting issues for users. Please report any issues you may run
 into to our [issue tracker](https://github.com/ospray/hdospray/issues).
 We always welcome suggestions and especially pull requests\!
 
-## HdOSPRay Gallery
+## Gallery
 
 Our gallery currently contains a limited set of renderings done with
-HdOSPRay inside of usdview using publicly available USD datasets. We
-hope to grow this gallery as more assets become available. Please let us
-know of any great scenes we may be missing, or if you would like to send
-us a scene for testing and displaying here\!
+OSPRay inside of usdview using publicly available USD datasets. We hope
+to grow this gallery as more assets become available. Please let us know
+of any great scenes we may be missing, or if you would like to send us a
+scene for testing and displaying here\!
 
 Instructions are provided for loading some of the scenes below. <br/>
 
@@ -84,11 +83,11 @@ modified by [Bitterli](https://benedikt-bitterli.me/resources/).
 
 <p align="center">
 
-<img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced with HdOSPRay in usdview">
+<img src="images/hdospray_kitchen_pt.jpg" alt="Pixar Kitchen Set path traced in usdview">
 
 </p>
 
-<br/> Pixar Kitchen Set path traced with HdOSPRay in usdview <br/>
+<br/> Pixar Kitchen Set path traced in usdview <br/>
 
 </center>
 
@@ -97,7 +96,7 @@ modified by [Bitterli](https://benedikt-bitterli.me/resources/).
   - Download Kitchen Set asset from
     [Pixar](http://graphics.pixar.com/usd/downloads.html)
 
-  - Run usdview using HdOSPRay using
+  - Run usdview using OSPRay using
     
         HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Kitchen_set.usd
     
@@ -115,7 +114,7 @@ modified by [Bitterli](https://benedikt-bitterli.me/resources/).
 <p align="center">
 
 <img src="images/usd_shadows_thumbnail.jpg" alt="Pixar Kitchen Set shadows" width=30%>
-<br/> Pixar Kitchen Set rendered with HdOSPRay and basic shadows in
+<br/> Pixar Kitchen Set rendered with OSPRay and basic shadows in
 usdview <br/>
 
 </p>
@@ -125,8 +124,8 @@ usdview <br/>
 <p align="center">
 
 <img src="images/usd_ao_thumbnail.jpg" alt="Pixar Kitchen Set AO" width=30%>
-<br/> Pixar Kitchen Set rendered with HdOSPRay and basic ambient
-occlusion in usdview <br/>
+<br/> Pixar Kitchen Set rendered with OSPRay and basic ambient occlusion
+in usdview <br/>
 
 </p>
 
@@ -135,8 +134,8 @@ occlusion in usdview <br/>
 <p align="center">
 
 <img src="images/usd_pt_thumbnail.jpg" alt="Pixar Kitchen Set path traced" width=30%>
-<br/> Pixar Kitchen Set rendered with HdOSPRay and path tracing in
-usdview <br/>
+<br/> Pixar Kitchen Set rendered with OSPRay and path tracing in usdview
+<br/>
 
 </p>
 
@@ -147,7 +146,7 @@ usdview <br/>
 <p align="center">
 
 <img src="images/hdospray_teapot2_thumbnail.jpg" alt="Teapot" width=70%>
-<br/> Apple teapot rendered with HdOSPRay in usdview <br/>
+<br/> Apple teapot rendered with OSPRay in usdview <br/>
 
 </p>
 
@@ -161,7 +160,7 @@ usdview <br/>
     
         unzip teapot.usdz
 
-  - Run usdview using HdOSPRay using
+  - Run usdview using OSPRay using
     
         HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Teapot.usdc
     
@@ -172,7 +171,7 @@ usdview <br/>
 <p align="center">
 
 <img src="images/hdospray_gramophone_thumbnail.jpg" alt="Gramophone" width=70%>
-<br/> Apple Gramophone rendered with HdOSPRay in usdview <br/>
+<br/> Apple Gramophone rendered with OSPRay in usdview <br/>
 
 </p>
 
@@ -186,7 +185,7 @@ usdview <br/>
     
         unzip teapot.usdz
 
-  - Run usdview using HdOSPRay using
+  - Run usdview using OSPRay using
     
         HDOSPRAY_USE_PATH_TRACING=1 usdview --renderer OSPRay Gramophone.usdc
     
@@ -194,8 +193,8 @@ usdview <br/>
 
 # Building OSPRay for Hydra
 
-OSPRay for Hydra source is available on GitHub at
-[HdOSPRay](http://github.com/ospray/hdospray). The master branch is
+OSPRay for Hydra source is available on GitHub at [OSPRay for
+Hydra](http://github.com/ospray/hdospray). The master branch is
 typically the most stable branch and contains tagged releases.
 
 Tags are of the form `hdospray-vx.x.x-usdvx.x.x`, with `vx.x.x` being
@@ -428,7 +427,7 @@ renderer.*
 
   - June 10, 2022: Version v0.10
     
-        - USD 21.08 support, which is now the default in superbuild.
+        - USD 21.08 support, which is now the default in superbuild.  20.08 still supported if enabled.
         - Instance, Element, and Primitive ID buffers added
         - Testing added with image comparisons
         - Added facevarying texture and color support.
