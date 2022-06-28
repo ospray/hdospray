@@ -18,31 +18,31 @@ information.
 
 ## OSPRay for Hydra
 
-OSPRay for Hydra (hdOSPRay) is an open source plugin for Pixar’s USD to
-extend the Hydra rendering framework with [Intel®
-OSPRay](https://www.ospray.org). HdOSPRay enables interactive, path
-traced rendering by utilizing OSPRay’s renderers and [Intel® Open Image
+OSPRay for Hydra is an open source plugin for Pixar’s USD to extend the
+Hydra rendering framework with [Intel® OSPRay](https://www.ospray.org).
+OSPRay for Hydra enables interactive, path traced rendering by utilizing
+OSPRay’s renderers and [Intel® Open Image
 Denoise](http://openimagedenoise.org). OSPRay for Hydra and OSPRay are
 released under the permissive Apache 2.0 license.
 
 As part of the [Intel oneAPI Rendering
 Toolkit](https://software.intel.com/en-us/rendering-framework), OSPRay
 is highly-optimized for Intel® CPU architectures ranging from laptops to
-large-scale distributed HPC systems. HdOSPRay leverages the Intel®
-Rendering Framework to deliver interactive rendering for large-scale
-models at high levels of fidelity, as demonstrated at SIGGRAPH 2018
-using over [100GB of production
+large-scale distributed HPC systems. OSPRay for Hydra leverages the
+Intel® Rendering Framework to deliver interactive rendering for
+large-scale models at high levels of fidelity, as demonstrated at
+SIGGRAPH 2018 using over [100GB of production
 assets](https://itpeernetwork.intel.com/intel-open-source-libraries-hollywood).
 
 ### Support and Contact
 
-HdOSPRay is still in beta, with new features and existing issues being
-worked on regularly. USD is also under active development and is often
-fast changing. We tag the HdOSPRay releases to match specified USD
-releases, but cannot always anticipate all of the changes and resulting
-issues for users. Please report any issues you may run into to our
-[issue tracker](https://github.com/ospray/hdospray/issues). We always
-welcome suggestions and especially pull requests\!
+OSPRay for Hydra is still in beta, with new features and existing issues
+being worked on regularly. USD is also under active development and is
+often fast changing. We tag the OSPRay for Hydra releases to match
+specified USD releases, but cannot always anticipate all of the changes
+and resulting issues for users. Please report any issues you may run
+into to our [issue tracker](https://github.com/ospray/hdospray/issues).
+We always welcome suggestions and especially pull requests\!
 
 ## HdOSPRay Gallery
 
@@ -199,13 +199,14 @@ OSPRay for Hydra source is available on GitHub at
 typically the most stable branch and contains tagged releases.
 
 Tags are of the form `hdospray-vx.x.x-usdvx.x.x`, with `vx.x.x` being
-the release of HdOSPRay and `usdv` being the version of USD it is built
-against. This is required due to the frequently changing internals of
-hydra.
+the release of OSPRay for Hydra and `usdv` being the version of USD it
+is built against. This is required due to the frequently changing
+internals of hydra.
 
-Currently HdOSPRay is regularly tested on Linux Arch. MacOS support in
-USD is experimental, but we often test against it. Windows support of
-USD is also experimental, but we have not tested HdOSPRay with it.
+Currently OSPRay for Hydra is regularly tested on Linux Arch. MacOS
+support in USD is experimental, but we often test against it. Windows
+support of USD is also experimental, but we have not tested OSPRay for
+Hydra with it.
 
 ## Prerequisites
 
@@ -231,9 +232,9 @@ OpenImageDenoise can also be enabled through superbuild. -
 
 ## Superbuild on Linux/MacOS
 
-HdOSPRay contains a cmake superbuild script that builds external
-dependencies for you and is the recommended way of building hdospray. By
-default, this will also build usdview.
+OSPRay for Hydra contains a cmake superbuild script that builds external
+dependencies for you and is the recommended way of building OSPRay for
+Hydra. By default, this will also build usdview.
 
     mkdir build
     cd build
@@ -254,8 +255,8 @@ following the build scripts provided, for which we provide an example
 invocation below.  
 If you wish to use usdview, you must also enable imaging and python.  
 The options and compilers used can vary from our example, but make sure
-that TBB use is consistent across your build of USD, hdOSPRay, and
-OSPRay. The command we use for building USD is:
+that TBB use is consistent across your build of USD, OSPRay for Hydra,
+and OSPRay. The command we use for building USD is:
 
     python <USD_SOURCE>/build_scripts/build_usd.py --python --usd-imaging --openimageio <USD_BUILD_DIR>
 
@@ -271,15 +272,16 @@ is the same used by USD. You can force using system TBB using the
 superbuild by going to `<OSPRAY_BUILD_DIR>`, and setting the cmake
 variable `DOWNLOAD_TBB` to OFF.
 
-## Compiling HdOSPRay on Linux/MacOS
+## Compiling OSPRay for Hydra on Linux/MacOS
 
-HdOSPRay plugin uses a CMake build system which links in USD and builds
-externally from the USD source directory, but configures CMake as if it
-were inside the USD repository in order to build the plugin using USD
-internals. It must therefore be built against a version of USD that
-matches HdOSPRay, which is specified in the versioning tag of HdOSPRay.
+OSPRay for Hydra plugin uses a CMake build system which links in USD and
+builds externally from the USD source directory, but configures CMake as
+if it were inside the USD repository in order to build the plugin using
+USD internals. It must therefore be built against a version of USD that
+matches OSPRay for Hydra, which is specified in the versioning tag of
+OSPRay for Hydra.
 
-  - Download/clone the git repo for HdOSPRay
+  - Download/clone the git repo for OSPRay for Hydra
     
         $ git clone https://github.com/ospray/hdospray.git
 
@@ -317,17 +319,17 @@ matches HdOSPRay, which is specified in the versioning tag of HdOSPRay.
     OSPRay’s superbuild directory under
     install/embree/lib/cmake/embree\*.
 
-  - Compile and install HdOSPRay
+  - Compile and install OSPRay for Hydra
     
         $ make -j install
 
 The plugin should now be in `<usd install
 directory>/plugin/usd/hdOSPRay`
 
-## Compiling HdOSPRay on Windows
+## Compiling OSPRay for Hydra on Windows
 
-Windows support of USD is experimental. We have not tested HdOSPRay with
-it, so use at your own risk.
+Windows support of USD is experimental. We have not tested OSPRay for
+Hydra with it, so use at your own risk.
 
 # Documentation
 
@@ -428,6 +430,8 @@ renderer.*
     
         - USD 21.08 support, which is now the default in superbuild.
         - Instance, Element, and Primitive ID buffers added
+        - Testing added with image comparisons
+        - Added facevarying texture and color support.
 
   - Feb 15, 2022: Version v0.9
     

@@ -5,12 +5,12 @@ OSPRay for Hydra source is available on GitHub at
 the most stable branch and contains tagged releases.
 
 Tags are of the form `hdospray-vx.x.x-usdvx.x.x`, with `vx.x.x` being the
-release of HdOSPRay and `usdv` being the version of USD it is built against.
+release of OSPRay for Hydra and `usdv` being the version of USD it is built against.
 This is required due to the frequently changing internals of hydra.
 
-Currently HdOSPRay is regularly tested on Linux Arch.  MacOS support in USD is 
+Currently OSPRay for Hydra is regularly tested on Linux Arch.  MacOS support in USD is 
 experimental, but we often test against it. Windows support of USD is
-also experimental, but we have not tested HdOSPRay with it.
+also experimental, but we have not tested OSPRay for Hydra with it.
 
 ## Prerequisites
 
@@ -37,8 +37,8 @@ If you are building standalone, you will need:
 
 ## Superbuild on Linux/MacOS
 
-HdOSPRay contains a cmake superbuild script that builds external dependencies for you
-and is the recommended way of building hdospray.  By default, this will also build
+OSPRay for Hydra contains a cmake superbuild script that builds external dependencies for you
+and is the recommended way of building OSPRay for Hydra.  By default, this will also build
 usdview.
 
 ```
@@ -66,7 +66,7 @@ build scripts provided, for which we provide an example invocation below.
 If you wish to use usdview, you must also enable imaging and python.  
 The options and compilers used can vary from our example,
  but make sure that TBB use is consistent across your build of USD, 
- hdOSPRay, and OSPRay.  The command we use for building USD is:
+ OSPRay for Hydra, and OSPRay.  The command we use for building USD is:
 
 ```
 python <USD_SOURCE>/build_scripts/build_usd.py --python --usd-imaging --openimageio <USD_BUILD_DIR>
@@ -79,15 +79,15 @@ To set TBB explicitly, go to `<USD_BUILD_DIR>`/build/USD and set TBB libraries a
 You can use the distributed binaries of OSPRay or build it yourself.
 We recommend using the OSPRay superbuild system according the instructions listed on [github](https://github.com/ospray/OSPRay).  Make sure that TBB is the same used by USD.  You can force using system TBB using the superbuild by going to `<OSPRAY_BUILD_DIR>`, and setting the cmake variable `DOWNLOAD_TBB` to OFF.
 
-## Compiling HdOSPRay on Linux/MacOS
+## Compiling OSPRay for Hydra on Linux/MacOS
 
-HdOSPRay plugin uses a CMake build system which links in USD and builds
+OSPRay for Hydra plugin uses a CMake build system which links in USD and builds
 externally from the USD source directory, but configures CMake as if it were
 inside the USD repository in order to build the plugin using USD internals. It
-must therefore be built against a version of USD that matches HdOSPRay, which is
-specified in the versioning tag of HdOSPRay.
+must therefore be built against a version of USD that matches OSPRay for Hydra, which is
+specified in the versioning tag of OSPRay for Hydra.
 
-- Download/clone the git repo for HdOSPRay
+- Download/clone the git repo for OSPRay for Hydra
 
     ```
     $ git clone https://github.com/ospray/hdospray.git
@@ -117,7 +117,7 @@ specified in the versioning tag of HdOSPRay.
 - Set `embree_DIR` to install directory of Embree. These will be the same as
   `ospray_DIR` if you downloaded the OSPRay binaries, or in OSPRay's 
   superbuild directory under install/embree/lib/cmake/embree*.
-- Compile and install HdOSPRay
+- Compile and install OSPRay for Hydra
 
     ```
     $ make -j install
@@ -125,7 +125,7 @@ specified in the versioning tag of HdOSPRay.
 
 The plugin should now be in `<usd install directory>/plugin/usd/hdOSPRay`
 
-## Compiling HdOSPRay on Windows
+## Compiling OSPRay for Hydra on Windows
 
-Windows support of USD is experimental.  We have not tested HdOSPRay with it,
+Windows support of USD is experimental.  We have not tested OSPRay for Hydra with it,
 so use at your own risk.
