@@ -51,8 +51,8 @@ option(OSPRAY_USE_EXTERNAL OFF)
 if (OSPRAY_USE_EXTERNAL)
   set(OSPRAY_EXTERNAL_DIR "" CACHE PATH "location of external ospray install")
 else()
-  set(SUPERBUILD_OSPRAY_VERSION "v2.9.0" CACHE STRING "git tag of ospray")
-  set(SUPERBUILD_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.9.0.zip"
+  set(SUPERBUILD_OSPRAY_VERSION "v2.10.0" CACHE STRING "git tag of ospray")
+  set(SUPERBUILD_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.10.0.zip"
     CACHE STRING "url of ospray git")
 endif()
 option(SUPERBUILD_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
