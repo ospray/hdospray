@@ -52,3 +52,9 @@ else()
 endif()
 
 add_subdirectory(pxr/imaging/plugin/hdOSPRay)
+
+option(ENABLE_TESTING "build testing suite" OFF)
+
+if (ENABLE_TESTING)
+    add_subdirectory(testing)
+endif()
