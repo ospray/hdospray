@@ -5,7 +5,8 @@ News, Updates, and Announcements
 
       - USD 21.08 support, which is now the default in superbuild.
       - Instance, Element, and Primitive ID buffers added
-      - testing added with image comparisons
+      - Testing added with image comparisons
+      - Added facevarying texture and color support.
 
 - Feb 15, 2022: Version v0.9
 

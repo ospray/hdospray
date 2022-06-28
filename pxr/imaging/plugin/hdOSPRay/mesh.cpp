@@ -30,10 +30,9 @@
 #include "renderPass.h"
 
 #include <pxr/base/gf/matrix4d.h>
-#include <pxr/base/gf/matrix4f.h>
-#include <pxr/base/gf/vec3f.h>
-#include <pxr/imaging/hd/meshUtil.h>
-#include <pxr/imaging/hd/smoothNormals.h>
+// #include <pxr/base/gf/matrix4f.h>
+// #include <pxr/base/gf/vec3f.h>
+// #include <pxr/imaging/hd/smoothNormals.h>
 #include <pxr/imaging/pxOsd/tokens.h>
 
 #include <rkcommon/math/AffineSpace.h>
@@ -49,7 +48,7 @@ TF_DEFINE_PRIVATE_TOKENS(
 );
 // clang-format on
 
-HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const &instancerId)
+HdOSPRayMesh::HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId)
 #if HD_API_VERSION < 36
     : HdMesh(id, instancerId)
 #else
@@ -162,7 +161,7 @@ HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
     if (*dirtyBits & HdChangeTracker::DirtyMaterialId) {
 #if HD_API_VERSION < 37
         _SetMaterialId(sceneDelegate->GetRenderIndex().GetChangeTracker(),
-            sceneDelegate->GetMaterialId(GetId()));
+                       sceneDelegate->GetMaterialId(GetId()));
 #else
         SetMaterialId(sceneDelegate->GetMaterialId(GetId()));
 #endif
@@ -216,61 +215,42 @@ HdOSPRayMesh::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                                                    HdOSPRayTokens->st)) {
                 if (value.IsHolding<VtVec2fArray>()) {
                     _texcoords = value.Get<VtVec2fArray>();
+                    _texcoordsPrimVarName = pv.name;
                     _texcoordsInterpolation = interp;
                 }
-            }
-
-            if (pv.name == HdTokens->displayColor
-                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
-                                                   HdTokens->displayColor)) {
-                if (interp == HdInterpolationConstant) {
-                    //single color across mesh
-                    const VtVec3fArray& colors = value.Get<VtVec3fArray>();
-                    _colors.push_back({ colors[0].data()[0], colors[0].data()[1],
-                                colors[0].data()[2], 1.f });
-                } else if (interp == HdInterpolationUniform) {
-                    //each face has a color
-                    //not yet supported, instead treat as constant color
-                    const VtVec3fArray& colors = value.Get<VtVec3fArray>();
-                    _colors.push_back({ colors[0].data()[0], colors[0].data()[1],
-                                colors[0].data()[2], 1.f });
-                } else if (interp == HdInterpolationVertex || interp == 
-                    HdInterpolationVarying) {
-                    // Create 4 component displayColor/opacity array for OSPRay
-                    // XXX OSPRay currently expects 4 component color array.
-                    // XXX Extend OSPRay to support separate RGB/Opacity arrays
-                    if (value.IsHolding<VtVec3fArray>()) {
-                        const VtVec3fArray& colors = value.Get<VtVec3fArray>();
-                        _colors.resize(colors.size());
-                        for (size_t i = 0; i < colors.size(); i++) {
-                            _colors[i] = { colors[i].data()[0], colors[i].data()[1],
-                                        colors[i].data()[2], 1.f };
-                        }
-                        if (!_colors.empty()) {
-                            _singleColor = { _colors[0][0], _colors[0][1],
-                                             _colors[0][2], 1.f };
-                        }
-                    }
-                } else if (interp == HdInterpolationFaceVarying) {
-                    //one color per face-vertex
+            } else if (pv.name == HdTokens->normals) {
+                if (value.IsHolding<VtVec3fArray>()) {
+                    _normals = value.Get<VtVec3fArray>();
+                    _normalsPrimVarName = pv.name;
+                    _normalsInterpolation = interp;
+                }
+            } else if (pv.name == HdTokens->displayColor
+                       && HdChangeTracker::IsPrimvarDirty(
+                              dirtyBits, id, HdTokens->displayColor)) {
+                _colorsInterpolation = interp;
+                if (value.IsHolding<VtVec3fArray>()) {
+                    _colorsPrimVarName = pv.name;
+                    _colors = value.Get<VtVec3fArray>();
                 }
             }
 
-            if (pv.name == HdTokens->displayOpacity
-                && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
-                                                   HdTokens->displayOpacity)) {
-                // XXX assuming displayOpacity can't exist without
-                // displayColor and/or have a different size
-                if (value.IsHolding<VtFloatArray>()) {
-                    const VtFloatArray& opacities = value.Get<VtFloatArray>();
-                    if (_colors.size() < opacities.size())
-                        _colors.resize(opacities.size());
-                    for (size_t i = 0; i < opacities.size(); i++)
-                        _colors[i].data()[3] = opacities[i];
-                    if (!_colors.empty())
-                        _singleColor[3] = _colors[0][3];
-                }
-            }
+            // if (pv.name == HdTokens->displayOpacity
+            //     && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
+            //                                        HdTokens->displayOpacity))
+            //                                        {
+            //     // XXX assuming displayOpacity can't exist without
+            //     // displayColor and/or have a different size
+            //     if (value.IsHolding<VtFloatArray>()) {
+            //         const VtFloatArray& opacities =
+            //         value.Get<VtFloatArray>(); if (_colors.size() <
+            //         opacities.size())
+            //             _colors.resize(opacities.size());
+            //         for (size_t i = 0; i < opacities.size(); i++)
+            //             _colors[i].data()[3] = opacities[i];
+            //         if (!_colors.empty())
+            //             _singleColor[3] = _colors[0][3];
+            //     }
+            // }
         }
     }
 }
@@ -356,6 +336,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     _smoothNormals = _smoothNormals
            && ((_topology.GetScheme() != PxOsdOpenSubdivTokens->none));
 
+    HdMeshUtil meshUtil(&_topology, GetId());
+
+    const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
+    bool useQuads = _UseQuadIndices(renderIndex, _topology);
+
     if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)
         && _topology.GetRefineLevel() > 0) {
         _topology.SetSubdivTags(sceneDelegate->GetSubdivTags(id));
@@ -408,7 +393,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         if (doRefine) {
             _ospMesh = _CreateOSPRaySubdivMesh();
 
-            HdMeshUtil meshUtil(&_topology, GetId());
             // meshUtil.ComputeQuadIndices(&_quadIndices,
             // &_quadPrimitiveParams); Check if texcoords are provided as face
             // varying.
@@ -423,7 +407,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                        buffer.GetData(), buffer.GetNumElements(),
                        buffer.GetTupleType().type, &quadPrimvar);
                 if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
-                    _texcoords = quadPrimvar.Get<VtVec2fArray>();
+                    _computedTexcoords = quadPrimvar.Get<VtVec2fArray>();
                 } else {
                     TF_CODING_ERROR("ERROR: could not quadrangulate "
                                     "face-varying data\n");
@@ -444,8 +428,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         // If we rebuilt the adjacency table, force a rebuild of normals.
         _normalsValid = false;
     }
-    if (_smoothNormals && !_normalsValid && !doRefine) {
-        _computedNormals = Hd_SmoothNormals::ComputeSmoothNormals(
+    if (_normals.empty() && _smoothNormals && !_normalsValid && !doRefine) {
+        _normals = Hd_SmoothNormals::ComputeSmoothNormals(
                &_adjacency, _points.size(), _points.cdata());
         _normalsValid = true;
     }
@@ -455,106 +439,38 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
 
-        const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
-        // Check if texcoords are provides as face varying.
-        // XXX: (This code currently only cares about _texcoords, but
-        // should be generalized to all primvars)
-        bool faceVaryingTexcoord = false;
-        HdPrimvarDescriptorVector faceVaryingPrimvars = GetPrimvarDescriptors(
-               sceneDelegate, HdInterpolationFaceVarying);
-        for (HdPrimvarDescriptor const& pv : faceVaryingPrimvars) {
-            if (pv.name == "Texture_uv" || pv.name == "st")
-                faceVaryingTexcoord = true;
-        }
-
-        bool useQuads = _UseQuadIndices(renderIndex, _topology);
-
         if (!_refined) {
             if (useQuads) {
-                HdMeshUtil meshUtil(&_topology, GetId());
                 meshUtil.ComputeQuadIndices(&_quadIndices,
                                             &_quadPrimitiveParams);
-
-                if (faceVaryingTexcoord) {
-                    TfToken buffName = HdOSPRayTokens->st;
-                    VtValue buffValue = VtValue(_texcoords);
-                    HdVtBufferSource buffer(buffName, buffValue);
-                    VtValue quadPrimvar;
-
-                    auto success
-                           = meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(
-                                  buffer.GetData(), buffer.GetNumElements(),
-                                  buffer.GetTupleType().type, &quadPrimvar);
-                    if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
-                        _texcoords = quadPrimvar.Get<VtVec2fArray>();
-                    } else {
-                        TF_CODING_ERROR("ERROR: could not quadrangulate "
-                                        "face-varying data\n");
-                    }
-
-                    // usd stores texcoords in face indexed -> each quad has 4
-                    // unique texcoords.
-                    // let's try converting it to match our vertex indices
-                    VtVec2fArray texcoords2;
-                    texcoords2.resize(_points.size());
-                    for (size_t q = 0; q < _quadIndices.size(); q++) {
-                        for (int i = 0; i < 4; i++) {
-                            // value at quadindex[q][i] maps to q*4+i texcoord;
-                            const size_t tc1index = q * 4 + i;
-                            const size_t tc2index = _quadIndices[q][i];
-                            texcoords2[tc2index] = _texcoords[tc1index];
-                        }
-                    }
-                    _texcoords = texcoords2;
-                }
             } else {
-                HdMeshUtil meshUtil(&_topology, GetId());
                 meshUtil.ComputeTriangleIndices(&_triangulatedIndices,
                                                 &_trianglePrimitiveParams);
-
-                if (faceVaryingTexcoord) {
-                    TfToken buffName = HdOSPRayTokens->st;
-                    VtValue buffValue = VtValue(_texcoords);
-                    HdVtBufferSource buffer(buffName, buffValue);
-                    VtValue triangulatedPrimvar;
-
-                    auto success
-                           = meshUtil.ComputeTriangulatedFaceVaryingPrimvar(
-                                  buffer.GetData(), buffer.GetNumElements(),
-                                  buffer.GetTupleType().type,
-                                  &triangulatedPrimvar);
-                    if (success
-                        && triangulatedPrimvar.IsHolding<VtVec2fArray>()) {
-                        _texcoords = triangulatedPrimvar.Get<VtVec2fArray>();
-                    } else {
-                        TF_CODING_ERROR("ERROR: could not triangulate "
-                                        "face-varying data\n");
-                    }
-
-                    // usd stores texcoords in face indexed -> each triangle has
-                    // 3 unique texcoords. let's try converting it to match our
-                    // vertex indices
-                    VtVec2fArray texcoords2;
-                    texcoords2.resize(_points.size());
-                    for (size_t t = 0; t < _triangulatedIndices.size(); t++) {
-                        for (int i = 0; i < 3; i++) {
-                            // value at triangleIndex[t][i] maps to t*3+i
-                            // texcoord;
-                            const size_t tc1index = t * 3 + i;
-                            const size_t tc2index = _triangulatedIndices[t][i];
-                            texcoords2[tc2index] = _texcoords[tc1index];
-                        }
-                    }
-                    _texcoords = texcoords2;
-                }
             }
 
             if ((_quadIndices.empty() && _triangulatedIndices.empty())
                 || _points.empty())
                 return; // invalid mesh
 
-            _ospMesh = _CreateOSPRayMesh(faceVaryingTexcoord, _texcoords,
-                   _points, _computedNormals, _colors, _refined, useQuads);
+            if (!_colors.empty()) {
+                _ComputePrimvars<VtVec3fArray>(
+                       meshUtil, useQuads, _colors, _computedColors,
+                       _colorsPrimVarName, _colorsInterpolation);
+            }
+            if (!_normals.empty()) {
+                _ComputePrimvars<VtVec3fArray>(
+                       meshUtil, useQuads, _normals, _computedNormals,
+                       _normalsPrimVarName, _normalsInterpolation);
+            }
+            if (!_texcoords.empty()) {
+                _ComputePrimvars<VtVec2fArray>(
+                       meshUtil, useQuads, _texcoords, _computedTexcoords,
+                       _texcoordsPrimVarName, _texcoordsInterpolation);
+            }
+
+            _ospMesh = _CreateOSPRayMesh(_computedTexcoords, _points,
+                                         _computedNormals, _computedColors,
+                                         _refined, useQuads);
         }
 
         const HdOSPRayMaterial* subsetMaterial = nullptr;
@@ -594,6 +510,19 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _geometricModel->setParam("material", ospMaterial);
         _geometricModel->setParam("id", (unsigned int)GetPrimId());
         _ospMesh.commit();
+        if (_colorsInterpolation == HdInterpolationUniform) {
+            std::vector<vec4f> colors(_computedColors.size());
+            for (int i = 0; i < _computedColors.size(); i++) {
+                const auto& c = _computedColors[i];
+                colors[i] = vec4f(c[0], c[1], c[2], 1.f);
+            }
+            _geometricModel->setParam("color", opp::CopiedData(colors));
+        }
+        if (_colorsInterpolation == HdInterpolationConstant
+            && !_computedColors.empty())
+            _geometricModel->setParam(
+                   "color",
+                   vec4f(_colors[0][0], _colors[0][1], _colors[0][2], 1.f));
         _geometricModel->commit();
 
         renderParam->UpdateModelVersion();
@@ -609,8 +538,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 #if HD_API_VERSION < 36
 #else
     _UpdateInstancer(sceneDelegate, dirtyBits);
-    HdInstancer::_SyncInstancerAndParents(
-        sceneDelegate->GetRenderIndex(), GetInstancerId());
+    HdInstancer::_SyncInstancerAndParents(sceneDelegate->GetRenderIndex(),
+                                          GetInstancerId());
 #endif
 
     if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || isTransformDirty) {
@@ -715,10 +644,11 @@ HdOSPRayMesh::_UpdateDrawItemGeometricShader(HdSceneDelegate* sceneDelegate,
 }
 
 opp::Geometry
-HdOSPRayMesh::_CreateOSPRayMesh(bool faceVaryingTexcoord,
-       const VtVec2fArray& texcoords, const VtVec3fArray& points,
-       const VtVec3fArray& normals, const VtVec4fArray& colors, bool refined,
-       bool useQuads)
+HdOSPRayMesh::_CreateOSPRayMesh(const VtVec2fArray& texcoords,
+                                const VtVec3fArray& points,
+                                const VtVec3fArray& normals,
+                                const VtVec3fArray& colors, bool refined,
+                                bool useQuads)
 {
     opp::Geometry ospMesh = opp::Geometry("mesh");
     if (!_refined) {
@@ -744,29 +674,40 @@ HdOSPRayMesh::_CreateOSPRayMesh(bool faceVaryingTexcoord,
     verticesData.commit();
     ospMesh.setParam("vertex.position", verticesData);
 
-    if (normals.size()) {
+    if (!normals.empty()) {
         opp::SharedData normalsData
                = opp::SharedData(normals.cdata(), OSP_VEC3F, normals.size());
         normalsData.commit();
-        ospMesh.setParam("vertex.normal", normalsData);
+        if (_normalsInterpolation == HdInterpolationFaceVarying)
+            ospMesh.setParam("normal", normalsData);
+        else if ((_normalsInterpolation == HdInterpolationVarying)
+                 || (_normalsInterpolation == HdInterpolationVertex))
+            ospMesh.setParam("vertex.normal", normalsData);
     }
 
-    if (colors.size() > 1) {
+    if (!colors.empty()) {
+        // TODO: add back in opacities
         opp::SharedData colorsData
-               = opp::SharedData(colors.cdata(), OSP_VEC4F, colors.size());
+               = opp::SharedData(colors.cdata(), OSP_VEC3F, colors.size());
         colorsData.commit();
-        ospMesh.setParam("vertex.color", colorsData);
-    } else if (colors.size() == 1) {
-        vec4f color = {colors[0][0], colors[0][1], colors[0][2], 1.f};
-        std::vector<vec4f> colorDummy(points.size(), color);
-        ospMesh.setParam("vertex.color", opp::CopiedData(colorDummy));
+        // if (_colorsInterpolation == HdInterpolationFaceVarying)
+        //     ospMesh.setParam("color", colorsData);
+        // else
+        if ((_colorsInterpolation == HdInterpolationVarying)
+            || (_colorsInterpolation == HdInterpolationVertex))
+            ospMesh.setParam("vertex.color", colorsData);
     }
 
     if (texcoords.size() > 1) {
         opp::SharedData texcoordsData = opp::SharedData(
                texcoords.cdata(), OSP_VEC2F, texcoords.size());
         texcoordsData.commit();
-        ospMesh.setParam("vertex.texcoord", texcoordsData);
+        if (_texcoordsInterpolation == HdInterpolationFaceVarying)
+            ospMesh.setParam("texcoord", texcoordsData);
+        else if (_texcoordsInterpolation == HdInterpolationVertex
+                   || _texcoordsInterpolation == HdInterpolationVarying) {
+            ospMesh.setParam("vertex.texcoord", texcoordsData);
+        }
     }
 
     ospMesh.setParam("id", (unsigned int)GetPrimId());
@@ -854,7 +795,7 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
         mesh.setParam("vertex.color", opp::CopiedData(colorDummy));
     } else {
         opp::CopiedData colorsData
-               = opp::CopiedData(_colors.cdata(), OSP_VEC4F, _colors.size());
+               = opp::CopiedData(_colors.cdata(), OSP_VEC3F, _colors.size());
         colorsData.commit();
         mesh.setParam("vertex.color", colorsData);
     }

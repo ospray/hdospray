@@ -184,7 +184,6 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
 
     if  (_emissionParam.enableColorTemperature)
     {
-         GfVec3f oldColor = _emissionParam.color;
          _emissionParam.color = UsdLuxBlackbodyTemperatureAsRgb(_emissionParam.colorTemperature);
 
          // we apply a gama correction to match Houdini's Karama

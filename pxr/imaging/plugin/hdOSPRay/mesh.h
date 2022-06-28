@@ -28,9 +28,13 @@
 #include <pxr/base/gf/vec2f.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4f.h>
+#include <pxr/imaging/pxOsd/tokens.h>
 #include <pxr/imaging/hd/enums.h>
 #include <pxr/imaging/hd/mesh.h>
+#include <pxr/imaging/hd/meshUtil.h>
+#include <pxr/imaging/hd/smoothNormals.h>
 #include <pxr/imaging/hd/vertexAdjacency.h>
+#include <pxr/imaging/hd/vtBufferSource.h>
 #include <pxr/pxr.h>
 
 #include <ospray/ospray_cpp.h>
@@ -43,6 +47,7 @@ namespace opp = ospray::cpp;
 PXR_NAMESPACE_OPEN_SCOPE
 
 class HdStDrawItem;
+class HdMeshUtil;
 class HdOSPRayRenderParam;
 
 // class HdOSPRayPrototypeContext;
@@ -129,6 +134,7 @@ public:
                       HdRenderParam* renderParam, HdDirtyBits* dirtyBits,
                       TfToken const& reprToken) override;
 
+    /// Add generated instances from sync function to the instance list for rendering
     void AddOSPInstances(std::vector<opp::Instance>& instanceList) const;
 
 protected:
@@ -183,9 +189,82 @@ private:
 
     opp::Geometry _CreateOSPRaySubdivMesh();
     opp::Geometry
-    _CreateOSPRayMesh(bool faceVaryingTexcoord, const VtVec2fArray& texcoords,
+    _CreateOSPRayMesh(const VtVec2fArray& texcoords,
                       const VtVec3fArray& points, const VtVec3fArray& normals,
-                      const VtVec4fArray& colors, bool refined, bool useQuads);
+                      const VtVec3fArray& colors, bool refined, bool useQuads);
+
+    /// Compute primvar array of type "type" for the specified interpolation mode.
+    ///  \param meshUtil
+    ///  \param useQuads
+    ///  \param primvars the specified primvar array, ie _texcoords
+    ///  \param computedPrimvars the output primvar array
+    ///  \param name HdToken speficying the primvar
+    ///  \param interpolation facevarying, vertexvarying, uniform, or constant
+        template <class type>
+    void _ComputePrimvars(HdMeshUtil& meshUtil, bool useQuads, type& primvars,
+                          type& computedPrimvars, TfToken name,
+                          HdInterpolation interpolation)
+    {
+        if (useQuads) {
+            if (interpolation == HdInterpolationFaceVarying) {
+                VtValue buffValue = VtValue(primvars);
+                HdVtBufferSource buffer(name, buffValue);
+                VtValue quadPrimvar;
+
+                auto success = meshUtil.ComputeQuadrangulatedFaceVaryingPrimvar(
+                       buffer.GetData(), buffer.GetNumElements(),
+                       buffer.GetTupleType().type, &quadPrimvar);
+                if (success && quadPrimvar.IsHolding<type>()) {
+                    computedPrimvars = quadPrimvar.Get<type>();
+                } else {
+                    TF_CODING_ERROR("ERROR: could not quadrangulate "
+                                    "face-varying data\n");
+                }
+            } else if (interpolation == HdInterpolationVarying
+                       || interpolation == HdInterpolationVertex) {
+                computedPrimvars = primvars;
+            } else if (interpolation == HdInterpolationUniform) {
+                computedPrimvars.resize(_quadIndices.size());
+                for (size_t i = 0; i < computedPrimvars.size(); i++)
+                    computedPrimvars[i] = primvars
+                           [HdMeshUtil::DecodeFaceIndexFromCoarseFaceParam(
+                                  _quadPrimitiveParams[i])];
+            } else if (interpolation == HdInterpolationConstant && !primvars.empty()) {
+                computedPrimvars.resize(1);
+                computedPrimvars[0] = primvars[0];
+            } else
+                TF_CODING_ERROR("HdOSPRayMesh: unsupported interpolation mode");
+        } else {
+            if (interpolation == HdInterpolationFaceVarying) {
+                VtValue buffValue = VtValue(primvars);
+                HdVtBufferSource buffer(name, buffValue);
+                VtValue triangulatedPrimvar;
+
+                auto success = meshUtil.ComputeTriangulatedFaceVaryingPrimvar(
+                       buffer.GetData(), buffer.GetNumElements(),
+                       buffer.GetTupleType().type, &triangulatedPrimvar);
+                if (success && triangulatedPrimvar.IsHolding<type>()) {
+                    computedPrimvars = triangulatedPrimvar.Get<type>();
+                } else {
+                    TF_CODING_ERROR("ERROR: could not triangulate "
+                                    "face-varying data\n");
+                }
+            } else if (interpolation == HdInterpolationVarying
+                       || interpolation == HdInterpolationVertex) {
+                computedPrimvars = primvars;
+            } else if (interpolation == HdInterpolationUniform) {
+                computedPrimvars.resize(_triangulatedIndices.size());
+                for (size_t i = 0; i < computedPrimvars.size(); i++)
+                    computedPrimvars[i] = primvars
+                           [HdMeshUtil::DecodeFaceIndexFromCoarseFaceParam(
+                                  _trianglePrimitiveParams[i])];
+            } else if (interpolation == HdInterpolationConstant && !primvars.empty()) {
+                computedPrimvars.resize(1);
+                computedPrimvars[0] = primvars[0];
+            } else
+                TF_CODING_ERROR("HdOSPRayMesh: unsupported interpolation mode");
+        }
+    }
 
     bool _populated { false };
 
@@ -205,10 +284,18 @@ private:
     GfMatrix4f _transform;
     VtVec3fArray _points;
     VtVec2fArray _texcoords;
-    HdInterpolation _texcoordsInterpolation;
+    VtVec2fArray _computedTexcoords;  // triangulated / quadrangulated primvars
     VtVec3fArray _normals;
-    VtVec4fArray _colors;
+    VtVec3fArray _computedNormals;  // triangulated / quadrangulated primvars
+    VtVec3fArray _colors;
+    VtVec3fArray _computedColors;  // triangulated / quadrangulated primvars
     GfVec4f _singleColor { .5f, .5f, .5f, 1.f };
+    HdInterpolation _texcoordsInterpolation;
+    HdInterpolation _colorsInterpolation;
+    HdInterpolation _normalsInterpolation;
+    TfToken _texcoordsPrimVarName;
+    TfToken _colorsPrimVarName;
+    TfToken _normalsPrimVarName;
 
     // Derived scene data:
     // - _triangulatedIndices holds a triangulation of the source topology,
@@ -219,7 +306,6 @@ private:
     //   adjacent face normals.
     VtVec3iArray _triangulatedIndices;
     VtIntArray _trianglePrimitiveParams;
-    VtVec3fArray _computedNormals;
 
     VtVec4iArray _quadIndices;
 #if HD_API_VERSION < 36
