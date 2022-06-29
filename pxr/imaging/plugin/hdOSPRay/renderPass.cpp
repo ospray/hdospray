@@ -155,6 +155,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     float updateInteractiveFrameBufferScale = _interactiveFrameBufferScale;
     bool interactiveFramebufferDirty = false;
+    bool frameBufferDirty = false;
 
     HdRenderPassAovBindingVector aovBindings
            = renderPassState->GetAovBindings();
@@ -176,6 +177,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             } else if (name == HdAovTokens->instanceId) {
                 _hasInstId = true;
             }
+            frameBufferDirty = true;
         }
 
         // Determine whether we need to update the renderer AOV bindings.
@@ -204,7 +206,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         }
         _pendingResetImage = true;
     }
-    bool frameBufferDirty = false;
     bool useDenoiser = _denoiserLoaded && _useDenoiser
            && (_numSamplesAccumulated >= _denoiserSPPThreshold);
     bool denoiserDirty = (useDenoiser != _denoiserState);
@@ -323,48 +324,54 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             if (_hasColor) {
                 vec4f* rgba
                        = static_cast<vec4f*>(frameBuffer.map(OSP_FB_COLOR));
-                std::copy(rgba, rgba + frameSize,
-                          _currentFrame.colorBuffer.data());
+                if (rgba)
+                    std::copy(rgba, rgba + frameSize,
+                            _currentFrame.colorBuffer.data());
                 frameBuffer.unmap(rgba);
             }
 
             if (_hasDepth) {
                 float* depth
                        = static_cast<float*>(frameBuffer.map(OSP_FB_DEPTH));
-                std::copy(depth, depth + frameSize,
-                          _currentFrame.depthBuffer.data());
+                if (depth)
+                    std::copy(depth, depth + frameSize,
+                            _currentFrame.depthBuffer.data());
                 frameBuffer.unmap(depth);
             }
 
             if (_hasNormal) {
                 vec3f* normal
                        = static_cast<vec3f*>(frameBuffer.map(OSP_FB_NORMAL));
-                std::copy(normal, normal + frameSize,
-                          _currentFrame.normalBuffer.data());
+                if (normal)
+                    std::copy(normal, normal + frameSize,
+                            _currentFrame.normalBuffer.data());
                 frameBuffer.unmap(normal);
             }
 
             if (_hasPrimId) {
                 unsigned int* primId = static_cast<unsigned int*>(
                        frameBuffer.map(OSP_FB_ID_OBJECT));
-                std::copy(primId, primId + frameSize,
-                          _currentFrame.primIdBuffer.data());
+                if (primId)
+                    std::copy(primId, primId + frameSize,
+                            _currentFrame.primIdBuffer.data());
                 frameBuffer.unmap(primId);
             }
 
             if (_hasElementId) {
                 unsigned int* geomId = static_cast<unsigned int*>(
                        frameBuffer.map(OSP_FB_ID_PRIMITIVE));
-                std::copy(geomId, geomId + frameSize,
-                          _currentFrame.elementIdBuffer.data());
+                if (geomId)
+                    std::copy(geomId, geomId + frameSize,
+                            _currentFrame.elementIdBuffer.data());
                 frameBuffer.unmap(geomId);
             }
 
             if (_hasInstId) {
                 unsigned int* instId = static_cast<unsigned int*>(
                        frameBuffer.map(OSP_FB_ID_INSTANCE));
-                std::copy(instId, instId + frameSize,
-                          _currentFrame.instIdBuffer.data());
+                if (instId)
+                    std::copy(instId, instId + frameSize,
+                            _currentFrame.instIdBuffer.data());
                 frameBuffer.unmap(instId);
             }
 
