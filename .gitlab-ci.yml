@@ -2,6 +2,7 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 stages:
+ - test
  - build
  - pre-scan
  - scan
@@ -31,6 +32,11 @@ stages:
   stage: build
   tags:
     - build
+
+.job_template: &base_validation_job
+  stage: test
+  script:
+    - scripts/run_gitlab/validation.sh
 
 
 ### BUILD JOBS ###
@@ -96,3 +102,12 @@ protex:
   needs: []
   script:
     - $CI_TOOLS_PATH/bin/protex.sh
+
+image-validation-schedule:
+  <<: *base_validation_job
+  only:
+    variables:
+      - $RUN_SCHEDULE_VALIDATION
+  image: hdospray/docker-images:ubuntu20.04
+  tags:
+   - docker

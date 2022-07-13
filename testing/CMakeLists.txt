@@ -31,34 +31,42 @@
 enable_testing()
 
 include(FetchContent)
-FetchContent_Populate(
-    shoe
-    URL https://devimages-cdn.apple.com/ar/photogrammetry/PegasusTrail.usdz
-    URL_HASH SHA256=8550c6ec55da0e2916a523f9a3bccf9302b79cf856fdb48c99b1821c98ffaa94
-    SOURCE_DIR external/shoe
-    )
 
+if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/external/shoe)
+    FetchContent_Populate(
+        shoe
+        URL https://devimages-cdn.apple.com/ar/photogrammetry/PegasusTrail.usdz
+        URL_HASH SHA256=8550c6ec55da0e2916a523f9a3bccf9302b79cf856fdb48c99b1821c98ffaa94
+        SOURCE_DIR external/shoe
+        )
+endif()
+
+if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/external/gramophone)
 FetchContent_Populate(
     gramophone
     URL https://developer.apple.com/augmented-reality/quick-look/models/gramophone/gramophone.usdz
     URL_HASH SHA256=a1af44c699d2b7549531f69be4593eb80b2fc4f187a53e643d583f07043b6251
     SOURCE_DIR external/gramophone
     )
+endif()
 
+if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/external/toy_biplane)
 FetchContent_Populate(
     toy_biplane
     URL https://developer.apple.com/augmented-reality/quick-look/models/biplane/toy_biplane.usdz
     URL_HASH SHA256=d9edf5f4101bb28a96abcbee0c99e56167225d0dc842333e88003ddd59e39cc8
     SOURCE_DIR external/toy_biplane
     )
+endif()
 
+if (NOT EXISTS ${CMAKE_CURRENT_BINARY_DIR}/external/kitchen)
 FetchContent_Populate(
     kitchen
     URL https://graphics.pixar.com/usd/files/Kitchen_set.zip
     URL_HASH SHA256=413e3b99de635d674815692357382433b5757f52c4fa88576b003acdfaa6ac74
     SOURCE_DIR external/kitchen
     )
-
+endif()
 
 set(IMAGE_GEN_CMD usdrecord)
 set(IMAGE_GEN_ARGS --renderer OSPRay --imageWidth 800)
@@ -72,7 +80,7 @@ set_property(TEST ${name}
 PROPERTY ENVIRONMENT HDOSPRAY_SAMPLES_TO_CONVERGENCE=8)
 
 add_test(NAME ${name}_diff
-    COMMAND compare -metric AE -fuzz 5% generated_images/${name}.png golden_images/${name}.png /tmp/compare.png)
+    COMMAND ${CMAKE_SOURCE_DIR}/scripts/run_gitlab/compare.sh generated_images/${name}.png golden_images/${name}.png)
 set_property(TEST ${name}_diff
 PROPERTY ENVIRONMENT HDOSPRAY_SAMPLES_TO_CONVERGENCE=8)
 endfunction()
