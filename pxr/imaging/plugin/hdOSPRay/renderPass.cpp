@@ -584,6 +584,14 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                                     (int*)renderBuffer.instIdBuffer.data(), 1);
         }
     }
+    static float avgTime = 0.f;
+    avgTime += time;
+    static int avgCounter = 0;
+    if (++avgCounter >= 15) {
+        TF_DEBUG_MSG(OSP_FPS, "average fps: %f\n", avgTime/float(avgCounter));
+        avgTime = 0.f;
+        avgCounter = 0;
+    }
     timer.Stop();
     time = timer.GetSeconds();
     timer.Start();

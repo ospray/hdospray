@@ -45,6 +45,7 @@ using namespace rkcommon::math;
 
 PXR_NAMESPACE_OPEN_SCOPE
 TF_DEBUG_CODES(OSP_RP);
+TF_DEBUG_CODES(OSP_FPS);
 
 class HdOSPRayRenderParam;
 
