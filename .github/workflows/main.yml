@@ -1,0 +1,113 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# XXX This uses FetchContent on the other components' release packages
+# XXX not their devel branches.
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "devel" branch
+  push:
+    branches: '**'
+  pull_request:
+    branches: '**'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+
+  ## Build Jobs ##
+    ## Linux
+    #build-centos7:
+    #  secrets: inherit
+    #  uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    #  with:
+    #    image: centos:7-devenv
+    #    cmd: scripts/build_gitlab/linux.sh
+
+## Needs updated cmake
+#    build-centos8:
+#      secrets: inherit
+#      uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+#      with:
+#        image: ospray/docker-images:centos8
+#        cmd: gitlab/build.sh
+
+    #build-ubuntu18-04:
+    #  secrets: inherit
+    #  uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    #  with:
+    #    image: ubuntu:18.04
+    #    cmd: scripts/build_gitlab/linux.sh
+
+    build-ubuntu20-04:
+      secrets: inherit
+      uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+      with:
+        image: ubuntu:20.04-hdospray-cb-hdospray
+        cmd: scripts/build_gitlab/linux.sh
+
+    #build-arch:
+    #  secrets: inherit
+    #  uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@devel
+    #  with:
+    #    image: ospray/docker-images:arch
+    #    cmd: gitlab/build.sh
+
+    ## Windows
+    #build-windows-msvc15:
+    #  secrets: inherit
+    #  uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/win_powershell.yml@devel
+    #  with:
+    #    cmd: gitlab/win.ps1
+
+    ## macOS
+    #build-macOS:
+    #  secrets: inherit
+    #  uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/macos.yml@main
+    #  with:
+    #    cmd: gitlab/macos.sh
+
+  ## Scan Jobs ##
+    ## Linux
+    ## Windows
+    ## macOS
+
+  ### KW Jobs ###
+
+  ## Release Jobs ##
+    ## Linux
+    ## Windows
+    ## macOS
+
+  ## Binary Scan Jobs ##
+    ## Linux
+    ## Windows
+    ## macOS
+
+
+
+###### Original main.yml kept for reference
+#  # This workflow contains a single job called "build"
+#  build:
+#    # The type of runner that the job will run on
+#    runs-on: [ Windows, build ]
+#
+#    # Steps represent a sequence of tasks that will be executed as part of the job
+#    steps:
+#      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+#      - uses: actions/checkout@v3
+#
+#      # Runs a single command using the runners shell
+#      - name: Run a one-line script
+#        run: echo Hello, world!
+#
+#      # Runs a set of commands using the runners shell
+#      - name: Run a multi-line script
+#        run: |
+#          echo Add other actions to build,
+#          echo test, and deploy your project.
+#
