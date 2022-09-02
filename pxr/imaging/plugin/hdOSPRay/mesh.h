@@ -229,9 +229,7 @@ private:
             } else if (interpolation == HdInterpolationUniform) {
                 computedPrimvars.resize(_quadIndices.size());
                 for (size_t i = 0; i < computedPrimvars.size(); i++)
-                    computedPrimvars[i] = primvars
-                           [HdMeshUtil::DecodeFaceIndexFromCoarseFaceParam(
-                                  _quadPrimitiveParams[i])];
+                    computedPrimvars[i] = primvars[i];
             } else if (interpolation == HdInterpolationConstant
                        && !primvars.empty()) {
                 computedPrimvars.resize(1);
