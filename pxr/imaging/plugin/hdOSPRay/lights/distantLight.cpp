@@ -75,7 +75,6 @@ HdOSPRayDistantLight::_PrepareOSPLight()
     GfMatrix3d rotTransform = _transform.ExtractRotationMatrix();
     direction = direction * rotTransform;
     if (std::abs(direction.GetLength() - 1.0f) > GF_MIN_VECTOR_LENGTH) {
-        std::cout << "DistantLight: direction is not normalized" << std::endl;
         direction.Normalize();
     }
 

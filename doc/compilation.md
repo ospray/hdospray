@@ -20,9 +20,8 @@ If using the superbuild, the only dependencies are:
 - python (3.7.x+ recommended), with PySide/PySide2 and PyOpenGL.  'pip install PySide2 PyOpenGL' may work
 
 If you are building standalone, you will need:
-- [USD v21.08 (default) or USD v20.08](https://graphics.pixar.com/usd/docs/index.html)
-  - USD is primarily tested with Linux, but has experimental support for MacOS and Windows.
-    For a full list of USD dependencies, see the USD page.
+- [USD 22.08, 21.08, or 20.08](https://graphics.pixar.com/usd/docs/index.html)
+  - For a full list of USD dependencies, see the USD page.
   - [OSPRay 2.10.0](http://www.ospray.org/)
       - We recommend using ospray’s superbuild to build dependencies
         such as embree, ospcommon, and openvkl.  OpenImageDenoise can
@@ -38,8 +37,9 @@ If you are building standalone, you will need:
 ## Superbuild on Linux/MacOS
 
 OSPRay for Hydra contains a cmake superbuild script that builds external dependencies for you
-and is the recommended way of building OSPRay for Hydra.  By default, this will also build
-usdview.
+and is the recommended way of building OSPRay for Hydra. Alternatively, instructions for
+manually building each component is also given.  Currently, USD 21.08 is the default to match
+Houdini, but this can be changed to 20.08 or 22.08 by setting the USD_VERSION in cmake.
 
 ```
 mkdir build
@@ -56,18 +56,14 @@ source <install_dir>/setup_hdospray.sh
 usdview <usdfile> --renderer OSPRay
 ```
 
-
 ## Manual Compiling USD on Linux/MacOS
 
 To build USD, see the [USD GitHub
 site](https://github.com/PixarAnimationStudios/USD). 
-We recommend following the
-build scripts provided, for which we provide an example invocation below.  
 If you wish to use usdview, you must also enable imaging and python.  
 The options and compilers used can vary from our example,
  but make sure that TBB use is consistent across your build of USD, 
- OSPRay for Hydra, and OSPRay.  The command we use for building USD is:
-
+ OSPRay for Hydra, and OSPRay.  The command we use for building USD manually is:
 ```
 python <USD_SOURCE>/build_scripts/build_usd.py --python --usd-imaging --openimageio <USD_BUILD_DIR>
 ```
@@ -127,5 +123,4 @@ The plugin should now be in `<usd install directory>/plugin/usd/hdOSPRay`
 
 ## Compiling OSPRay for Hydra on Windows
 
-Windows support of USD is experimental.  We have not tested OSPRay for Hydra with it,
-so use at your own risk.
+We do not currently test on Windows, but all dependencies are.

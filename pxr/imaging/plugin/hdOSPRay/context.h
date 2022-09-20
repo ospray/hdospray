@@ -32,6 +32,8 @@
 
 PXR_NAMESPACE_OPEN_SCOPE
 
+class HdRprim;
+
 /// \class HdOSPRayPrototypeContext
 ///
 /// A small bit of state attached to each bit of prototype geometry in OSPRay,

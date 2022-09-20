@@ -310,7 +310,11 @@ private:
     VtVec3iArray _triangulatedIndices;
     VtIntArray _trianglePrimitiveParams;
 
+#if HD_API_VERSION < 44
     VtVec4iArray _quadIndices;
+#else
+    VtIntArray _quadIndices;
+#endif
 #if HD_API_VERSION < 36
     VtVec2iArray _quadPrimitiveParams;
 #else

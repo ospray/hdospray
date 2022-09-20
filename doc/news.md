@@ -1,6 +1,13 @@
 News, Updates, and Announcements
 ================================
 
+- Sep 20, 2022: Version v0.10.1
+
+      - USD 22.08 support. 21.08 is still default in superbuild for houdini. 
+      - Golden image tests added
+      - Github actions workflow added for CI
+      - Bug fixes
+
 - June 10, 2022: Version v0.10
 
       - USD 21.08 support, which is now the default in superbuild.  20.08 still supported if enabled.

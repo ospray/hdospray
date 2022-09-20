@@ -43,19 +43,20 @@ include(GNUInstallDirs)
 option(USE_PYTHON "enable python support" ON)
 option(USE_PYTHON2 "if USE_PYTHON enabled, use python2 instead of python3" OFF)
 
-set(SUPERBUILD_USD_VERSION "release-21.08" CACHE STRING "git tag of usd superbuild")
-set(SUPERBUILD_USD_URL "https://github.com/carsonbrownlee/USD_superbuild.git"
+set(HDSUPER_USD_VERSION "v21.08" CACHE STRING "git tag of usd")
+set(HDSUPER_USDSUPER_TAG "release-21.08" CACHE STRING "git tag of usd superbuild")
+set(HDSUPER_USDSUPER_URL "https://github.com/carsonbrownlee/USD_superbuild.git"
   CACHE STRING "url of usd superbuild git")
 option(OSPRAY_USE_GIT OFF)
 option(OSPRAY_USE_EXTERNAL OFF)
-if (OSPRAY_USE_EXTERNAL)
-  set(OSPRAY_EXTERNAL_DIR "" CACHE PATH "location of external ospray install")
+if (HDSUPER_OSPRAY_USE_EXTERNAL)
+  set(HDSUPER_OSPRAY_EXTERNAL_DIR "" CACHE PATH "location of external ospray install")
 else()
-  set(SUPERBUILD_OSPRAY_VERSION "v2.10.0" CACHE STRING "git tag of ospray")
-  set(SUPERBUILD_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.10.0.zip"
+  set(HDSUPER_OSPRAY_VERSION "v2.10.0" CACHE STRING "git tag of ospray")
+  set(HDSUPER_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.10.0.zip"
     CACHE STRING "url of ospray git")
 endif()
-option(SUPERBUILD_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
+option(HDSUPER_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
 
 ###############################################################################
 #########          Dependency Build Switches                   ################
@@ -67,11 +68,11 @@ option(BUILD_HDOSPRAY "Build HDOSPRAY" ON)
 set(DOWNLOAD_TBB ON CACHE BOOL "download and build tbb")
 set(TBB_PATH ${CMAKE_INSTALL_PREFIX} CACHE PATH "tbb root")
 
-option(SUPERBUILD_USE_HOUDINI "build against existing houdini USD")
-if (SUPERBUILD_USE_HOUDINI)
-  set(SUPERBUILD_HOUDINI_DIR "/opt/hfs18.5/toolkit/cmake" CACHE PATH "path to houdini dir with HoudiniConfig.cmake")
+option(HDSUPER_USE_HOUDINI "build against existing houdini USD")
+if (HDSUPER_USE_HOUDINI)
+  set(HDSUPER_HOUDINI_DIR "/opt/hfs18.5/toolkit/cmake" CACHE PATH "path to houdini dir with HoudiniConfig.cmake")
   set(BUILD_USD OFF CACHE BOOL "Build USD" FORCE)
-  set(TBB_PATH "${SUPERBUILD_HOUDINI_DIR}/../../dsolib/" CACHE PATH "tbb root" FORCE)
+  set(TBB_PATH "${HDSUPER_HOUDINI_DIR}/../../dsolib/" CACHE PATH "tbb root" FORCE)
   set(DOWNLOAD_TBB OFF CACHE BOOL "download and build tbb" FORCE)
 endif()
 set(INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
@@ -125,9 +126,9 @@ if (BUILD_HDOSPRAY)
       -Dospray_DIR=${OSPRAY_INSTALL_DIR}/lib/cmake/ospray-${OSPRAY_VERSION}
       -Drkcommon_DIR=${OSPRAY_INSTALL_DIR}/lib/cmake/rkcommon-${RKCOMMON_VERSION}
       -DOIIO_BASE_DIR=${CMAKE_INSTALL_PREFIX}
-      -DUSE_HOUDINI_USD=${SUPERBUILD_USE_HOUDINI}
-      -DHoudini_DIR=${SUPERBUILD_HOUDINI_DIR}
-      -DHDOSPRAY_ENABLE_DENOISER=${SUPERBUILD_USE_DENOISER}
+      -DUSE_HOUDINI_USD=${HDSUPER_USE_HOUDINI}
+      -DHoudini_DIR=${HDSUPER_HOUDINI_DIR}
+      -DHDOSPRAY_ENABLE_DENOISER=${HDSUPER_USE_DENOISER}
   )
   ExternalProject_Add_StepDependencies(${EP_HDOSPRAY}
         configure ${EP_USD} ${EP_OSPRAY}
@@ -145,11 +146,11 @@ if (APPLE)
 endif()
 
 
-if (SUPERBUILD_USE_HOUDINI)
+if (HDSUPER_USE_HOUDINI)
   FILE(WRITE ${CMAKE_INSTALL_PREFIX}/setup_hdospray.sh 
   "export HDOSPRAY_ROOT=${CMAKE_INSTALL_PREFIX}\n"
   "export ${LD_EXPORT}=\${HDOSPRAY_ROOT}/lib:\${LD_LIBRARY_PATH}\n"
-  "cd ${SUPERBUILD_HOUDINI_DIR}/../../\n"
+  "cd ${HDSUPER_HOUDINI_DIR}/../../\n"
   "source houdini_setup_bash\n"
   "cd -\n"
   "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"

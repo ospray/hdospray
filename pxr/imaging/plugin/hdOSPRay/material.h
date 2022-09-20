@@ -25,8 +25,12 @@
 #ifndef HDOSPRAY_MATERIAL_H
 #define HDOSPRAY_MATERIAL_H
 
-#include <pxr/imaging/hd/material.h>
 #include <pxr/pxr.h>
+#include "pxr/imaging/hd/material.h"
+#include "pxr/imaging/hd/sceneDelegate.h"
+#include <pxr/base/gf/vec2f.h>
+#include <pxr/base/gf/vec4f.h>
+#include <pxr/base/gf/vec3f.h>
 
 #include <ospray/ospray_cpp.h>
 #include <ospray/ospray_cpp/ext/rkcommon.h>

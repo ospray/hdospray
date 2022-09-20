@@ -114,28 +114,26 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         _emissionParam.color
                = sceneDelegate->GetLightParamValue(id, HdLightTokens->color)
                         .Get<GfVec3f>();
-        _emissionParam.enableColorTemperature
-               = sceneDelegate
-                        ->GetLightParamValue(
-                               id, HdLightTokens->enableColorTemperature)
-                        .Get<bool>();
-        _emissionParam.colorTemperature
-               = sceneDelegate
-                        ->GetLightParamValue(id,
-                                             HdLightTokens->colorTemperature)
-                        .Get<float>();
-        _emissionParam.diffuse
-               = sceneDelegate->GetLightParamValue(id, HdLightTokens->diffuse)
-                        .Get<float>();
-        _emissionParam.specular
-               = sceneDelegate->GetLightParamValue(id, HdLightTokens->specular)
-                        .Get<float>();
-        _emissionParam.exposure
-               = sceneDelegate->GetLightParamValue(id, HdLightTokens->exposure)
-                        .Get<float>();
-        _emissionParam.intensity
-               = sceneDelegate->GetLightParamValue(id, HdLightTokens->intensity)
-                        .Get<float>();
+        auto enableColorTemperatureVal = sceneDelegate->GetLightParamValue(
+            id, HdLightTokens->enableColorTemperature);
+        if (enableColorTemperatureVal.IsHolding<bool>())
+            _emissionParam.enableColorTemperature = enableColorTemperatureVal.Get<bool>();
+        auto colorTemperatureVal = sceneDelegate
+            ->GetLightParamValue(id, HdLightTokens->colorTemperature);
+        if (colorTemperatureVal.IsHolding<float>())
+            _emissionParam.colorTemperature = colorTemperatureVal.Get<float>();
+        auto diffuseVal = sceneDelegate->GetLightParamValue(id, HdLightTokens->diffuse);
+        if (diffuseVal.IsHolding<float>())
+            _emissionParam.diffuse = diffuseVal.Get<float>();
+        auto specularVal = sceneDelegate->GetLightParamValue(id, HdLightTokens->specular);
+        if (specularVal.IsHolding<float>())
+            _emissionParam.specular = specularVal.Get<float>();
+        auto exposureVal = sceneDelegate->GetLightParamValue(id, HdLightTokens->exposure);
+        if (exposureVal.IsHolding<float>())
+            _emissionParam.exposure = exposureVal.Get<float>();
+        auto intensityVal = sceneDelegate->GetLightParamValue(id, HdLightTokens->intensity);
+        if (intensityVal.IsHolding<float>())
+            _emissionParam.intensity = intensityVal.Get<float>();
 
         VtValue normalize = sceneDelegate->GetLightParamValue(id, HdLightTokens->normalize);
         if(normalize.IsHolding<int>())
