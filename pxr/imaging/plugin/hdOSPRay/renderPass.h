@@ -89,6 +89,7 @@ public:
         // between _sampleBuffer and the GL framebuffer.
         std::vector<vec4f> colorBuffer;
         std::vector<float> depthBuffer;
+        std::vector<float> cameraDepthBuffer;
         std::vector<vec3f> normalBuffer;
         std::vector<unsigned int> primIdBuffer;
         std::vector<unsigned int> elementIdBuffer;
@@ -108,6 +109,7 @@ public:
         {
             colorBuffer.resize(size, vec4f({ 0.f, 0.f, 0.f, 0.f }));
             depthBuffer.resize(size, FLT_MAX);
+            cameraDepthBuffer.resize(size, FLT_MAX);
             normalBuffer.resize(size, vec3f({ 0.f, 1.f, 0.f }));
             primIdBuffer.resize(size, -1);
             elementIdBuffer.resize(size, -1);
@@ -186,6 +188,9 @@ private:
             TF_CODING_ERROR("ERROR: displayrenderbuffer size out of sync\n");
     };
 
+    // Return the clear color to use for the given VtValue
+    static GfVec4f _ComputeClearColor(VtValue const& clearValue);
+
     // The sample buffer is cleared in Execute(), so this flag records whether
     // ResetImage() has been called since the last Execute().
     bool _pendingResetImage { true };
@@ -204,6 +209,8 @@ private:
     bool _hasColor { true };
     HdOSPRayRenderBuffer _depthBuffer;
     bool _hasDepth { false };
+    HdOSPRayRenderBuffer _cameraDepthBuffer;
+    bool _hasCameraDepth { false };
     HdOSPRayRenderBuffer _normalBuffer;
     bool _hasNormal { false };
     HdOSPRayRenderBuffer _primIdBuffer;
@@ -217,6 +224,7 @@ private:
     float _interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
 
     opp::Renderer _renderer;
+    bool _rendererDirty {true};
 
     bool _interacting { true };
 
@@ -240,7 +248,7 @@ private:
     GfMatrix4d _inverseProjMatrix;
 
     // The color of a ray miss.
-    GfVec3f _clearColor;
+    GfVec4f _clearColor;
 
     std::shared_ptr<HdOSPRayRenderParam> _renderParam;
 

@@ -67,10 +67,11 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _height(0)
     , _inverseViewMatrix(1.0f) // == identity
     , _inverseProjMatrix(1.0f) // == identity
-    , _clearColor(0.0f, 0.0f, 0.0f)
+    , _clearColor(0.0f, 0.0f, 0.0f, 0.f)
     , _renderParam(renderParam)
     , _colorBuffer(SdfPath::EmptyPath())
     , _depthBuffer(SdfPath::EmptyPath())
+    , _cameraDepthBuffer(SdfPath::EmptyPath())
     , _normalBuffer(SdfPath::EmptyPath())
     , _primIdBuffer(SdfPath::EmptyPath())
     , _elementIdBuffer(SdfPath::EmptyPath())
@@ -80,7 +81,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _camera = opp::Camera("perspective");
     _renderer.setParam(
            "backgroundColor",
-           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 0.f));
+           vec4f(_clearColor[0], _clearColor[1], _clearColor[2], _clearColor[3]));
 #if HDOSPRAY_ENABLE_DENOISER
     _denoiserLoaded = (ospLoadModule("denoiser") == OSP_NO_ERROR);
     if (!_denoiserLoaded)
@@ -94,7 +95,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("maxContribution", _maxContribution);
     _renderer.setParam("epsilon", 0.001f);
     _renderer.setParam("geometryLights", true);
-    _renderer.commit();
+    _rendererDirty = true;
 }
 
 HdOSPRayRenderPass::~HdOSPRayRenderPass()
@@ -159,15 +160,34 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     HdRenderPassAovBindingVector aovBindings
            = renderPassState->GetAovBindings();
+
+    // get clear color
+    for (int aovIndex = 0; aovIndex < _aovBindings.size(); aovIndex++) {
+        if (_aovNames[aovIndex].name == HdAovTokens->color) {
+            GfVec4f clearColor
+                   = _ComputeClearColor(_aovBindings[aovIndex].clearValue);
+            if (clearColor != _clearColor) {
+                _clearColor = clearColor;
+                _renderer.setParam(
+                    "backgroundColor",
+                    vec4f(_clearColor[0], _clearColor[1], _clearColor[2], _clearColor[3]));
+                _rendererDirty = true;
+                _pendingResetImage = true;
+            }
+        }
+    }
+
     bool aovDirty = (_aovBindings != aovBindings || _aovBindings.empty());
     if (aovDirty) {
-        _hasColor = _hasDepth = _hasNormal = _hasPrimId = _hasInstId = false;
+        _hasColor = _hasDepth = _hasCameraDepth = _hasNormal = _hasPrimId = _hasInstId = false;
         for (int aovIndex = 0; aovIndex < aovBindings.size(); aovIndex++) {
             auto name = HdParsedAovToken(aovBindings[aovIndex].aovName).name;
             if (name == HdAovTokens->color) {
                 _hasColor = true;
             } else if (name == HdAovTokens->depth) {
                 _hasDepth = true;
+            } else if (name == HdAovTokens->cameraDepth) {
+                _hasCameraDepth = true;
             } else if (name == HdAovTokens->normal) {
                 _hasNormal = true;
             } else if (name == HdAovTokens->primId) {
@@ -198,7 +218,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 colorAov.aovName = HdAovTokens->color;
                 colorAov.renderBuffer = &_colorBuffer;
                 colorAov.clearValue
-                       = VtValue(GfVec4f(0.0707f, 0.0707f, 0.0707f, 0.0f));
+                       = VtValue(GfVec4f(0.0f, 0.0f, 0.0f, 1.0f));
                 aovBindings.push_back(colorAov);
                 _hasColor = true;
             }
@@ -270,6 +290,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 _depthBuffer.Allocate(GfVec3i(_width, _height, 1),
                                       HdFormatFloat32,
                                       /*multiSampled=*/false);
+            if (_hasCameraDepth)
+                _cameraDepthBuffer.Allocate(GfVec3i(_width, _height, 1),
+                                      HdFormatFloat32,
+                                      /*multiSampled=*/false);
             if (_hasNormal)
                 _normalBuffer.Allocate(GfVec3i(_width, _height, 1),
                                        HdFormatFloat32Vec3,
@@ -302,7 +326,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             _renderer.setParam("minContribution", 0.1f);
             _renderer.setParam("maxContribution", 3.0f);
             _renderer.setParam("aoSamples", 0);
-            _renderer.commit();
+            _rendererDirty = true;
         } else {
             // display previous ready frame until next one is ready
             // set next frame as interactive or final
@@ -330,49 +354,77 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 frameBuffer.unmap(rgba);
             }
 
-            if (_hasDepth) {
-                float* depth
-                       = static_cast<float*>(frameBuffer.map(OSP_FB_DEPTH));
-                if (depth)
-                    std::copy(depth, depth + frameSize,
-                            _currentFrame.depthBuffer.data());
-                frameBuffer.unmap(depth);
-            }
+            if (_numSamplesAccumulated == 0 || _pendingResetImage) {
+                if (_hasDepth || _hasCameraDepth) { // clip space depth
+                    float* depth
+                        = static_cast<float*>(frameBuffer.map(OSP_FB_DEPTH));
+                    if (depth) {
+                        if (_hasCameraDepth) {
+                            std::copy(depth, depth + frameSize,
+                                    _currentFrame.cameraDepthBuffer.data());
+                        }
+                        if (_hasDepth) {
+                            // convert depth to clip space
+                            double pm[4][4];
+                            renderPassState->GetProjectionMatrix().Get(pm);
+                            auto vm = renderPassState->GetWorldToViewMatrix();
+                            const float m1 = -pm[2][2];
+                            const float m2 = -pm[3][2];
+                            const float far = (2.f * m2)/(2.f * m1 - 2.f);
+                            const float near = ((m1 - 1.f) * near)/(m1 + 1.f);
+                            const float diff = (far - near);
+                            bool valid = false;
+                            tbb::parallel_for(
+                                tbb::blocked_range<int>(0, frameSize),
+                                [&](tbb::blocked_range<int> r) {
+                                    for (int i = r.begin(); i < r.end(); ++i) {
+                                        float& d = depth[i];
+                                        d = clamp((d - near) / diff, 0.f, 1.f);
+                                    }
+                                });
 
-            if (_hasNormal) {
-                vec3f* normal
-                       = static_cast<vec3f*>(frameBuffer.map(OSP_FB_NORMAL));
-                if (normal)
-                    std::copy(normal, normal + frameSize,
-                            _currentFrame.normalBuffer.data());
-                frameBuffer.unmap(normal);
-            }
+                            std::copy(depth, depth + frameSize,
+                                    _currentFrame.depthBuffer.data());
+                        }
+                    }
+                    frameBuffer.unmap(depth);
+                }
 
-            if (_hasPrimId) {
-                unsigned int* primId = static_cast<unsigned int*>(
-                       frameBuffer.map(OSP_FB_ID_OBJECT));
-                if (primId)
-                    std::copy(primId, primId + frameSize,
-                            _currentFrame.primIdBuffer.data());
-                frameBuffer.unmap(primId);
-            }
+                if (_hasNormal) {
+                    vec3f* normal
+                        = static_cast<vec3f*>(frameBuffer.map(OSP_FB_NORMAL));
+                    if (normal)
+                        std::copy(normal, normal + frameSize,
+                                _currentFrame.normalBuffer.data());
+                    frameBuffer.unmap(normal);
+                }
 
-            if (_hasElementId) {
-                unsigned int* geomId = static_cast<unsigned int*>(
-                       frameBuffer.map(OSP_FB_ID_PRIMITIVE));
-                if (geomId)
-                    std::copy(geomId, geomId + frameSize,
-                            _currentFrame.elementIdBuffer.data());
-                frameBuffer.unmap(geomId);
-            }
+                if (_hasPrimId) {
+                    unsigned int* primId = static_cast<unsigned int*>(
+                        frameBuffer.map(OSP_FB_ID_OBJECT));
+                    if (primId)
+                        std::copy(primId, primId + frameSize,
+                                _currentFrame.primIdBuffer.data());
+                    frameBuffer.unmap(primId);
+                }
 
-            if (_hasInstId) {
-                unsigned int* instId = static_cast<unsigned int*>(
-                       frameBuffer.map(OSP_FB_ID_INSTANCE));
-                if (instId)
-                    std::copy(instId, instId + frameSize,
-                            _currentFrame.instIdBuffer.data());
-                frameBuffer.unmap(instId);
+                if (_hasElementId) {
+                    unsigned int* geomId = static_cast<unsigned int*>(
+                        frameBuffer.map(OSP_FB_ID_PRIMITIVE));
+                    if (geomId)
+                        std::copy(geomId, geomId + frameSize,
+                                _currentFrame.elementIdBuffer.data());
+                    frameBuffer.unmap(geomId);
+                }
+
+                if (_hasInstId) {
+                    unsigned int* instId = static_cast<unsigned int*>(
+                        frameBuffer.map(OSP_FB_ID_INSTANCE));
+                    if (instId)
+                        std::copy(instId, instId + frameSize,
+                                _currentFrame.instIdBuffer.data());
+                    frameBuffer.unmap(instId);
+                }
             }
 
             DisplayRenderBuffer(_currentFrame);
@@ -402,7 +454,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (frameBufferDirty) {
         _frameBuffer = opp::FrameBuffer(
                (int)_width, (int)_height, OSP_FB_RGBA32F,
-               (_hasColor ? OSP_FB_COLOR : 0) | (_hasDepth ? OSP_FB_DEPTH : 0)
+               (_hasColor ? OSP_FB_COLOR : 0) | (_hasDepth || _hasCameraDepth ? OSP_FB_DEPTH : 0)
                       | (_hasNormal ? OSP_FB_NORMAL : 0)
                       | (_hasElementId ? OSP_FB_ID_PRIMITIVE : 0)
                       | (_hasPrimId ? OSP_FB_ID_OBJECT : 0)
@@ -425,7 +477,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                (int)(float(_width) / _interactiveFrameBufferScale),
                (int)(float(_height) / _interactiveFrameBufferScale),
                OSP_FB_RGBA32F,
-               (_hasColor ? OSP_FB_COLOR : 0) | (_hasDepth ? OSP_FB_DEPTH : 0)
+               (_hasColor ? OSP_FB_COLOR : 0) | (_hasDepth || _hasCameraDepth? OSP_FB_DEPTH : 0)
                       | (_hasNormal ? OSP_FB_NORMAL : 0)
                       | (_hasElementId ? OSP_FB_ID_PRIMITIVE : 0)
                       | (_hasPrimId ? OSP_FB_ID_OBJECT : 0)
@@ -454,7 +506,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _renderer.setParam("maxContribution",
                            (cameraDirty ? 3.0f : _maxContribution));
         _renderer.setParam("aoSamples", (cameraDirty ? 0 : _aoSamples));
-        _renderer.commit();
+        _rendererDirty = true;
     }
 
     if (cameraDirty) {
@@ -512,6 +564,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _world.commit();
     }
 
+    if (_rendererDirty) {
+        _renderer.commit();
+        _rendererDirty = false;
+    }
+
     // Reset the sample buffer if it's been requested.
     if (_pendingResetImage) {
         _frameBuffer.resetAccumulation();
@@ -560,6 +617,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
                _aovBindings[aovIndex].renderBuffer);
         if (!aovRenderBuffer || !ospRenderBuffer)
             continue;
+        ospRenderBuffer->Map();
         if (_aovNames[aovIndex].name == HdAovTokens->color) {
             _writeRenderBuffer<float>(ospRenderBuffer, renderBuffer,
                                       (float*)renderBuffer.colorBuffer.data(),
@@ -567,6 +625,10 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
         } else if (_aovNames[aovIndex].name == HdAovTokens->depth) {
             _writeRenderBuffer<float>(ospRenderBuffer, renderBuffer,
                                       (float*)renderBuffer.depthBuffer.data(),
+                                      1);
+        } else if (_aovNames[aovIndex].name == HdAovTokens->cameraDepth) {
+            _writeRenderBuffer<float>(ospRenderBuffer, renderBuffer,
+                                      (float*)renderBuffer.cameraDepthBuffer.data(),
                                       1);
         } else if (_aovNames[aovIndex].name == HdAovTokens->normal) {
             _writeRenderBuffer<float>(ospRenderBuffer, renderBuffer,
@@ -582,7 +644,20 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
         } else if (_aovNames[aovIndex].name == HdAovTokens->instanceId) {
             _writeRenderBuffer<int>(ospRenderBuffer, renderBuffer,
                                     (int*)renderBuffer.instIdBuffer.data(), 1);
+        } else { //unsupported buffer, clear it
+            if (ospRenderBuffer->GetFormat() == HdFormatInt32) {
+                int32_t clearValue = _aovBindings[aovIndex].clearValue.Get<int32_t>();
+                ospRenderBuffer->Clear(1, &clearValue);
+            } else if (ospRenderBuffer->GetFormat() == HdFormatFloat32) {
+                float clearValue = _aovBindings[aovIndex].clearValue.Get<float>();
+                ospRenderBuffer->Clear(1, &clearValue);
+            } else if (ospRenderBuffer->GetFormat() == HdFormatFloat32Vec3) {
+                GfVec3f clearValue = _aovBindings[aovIndex].clearValue.Get<GfVec3f>();
+                ospRenderBuffer->Clear(2, clearValue.data());
+            }
         }
+        ospRenderBuffer->SetConverged(false);
+        ospRenderBuffer->Unmap();
     }
     static float avgTime = 0.f;
     avgTime += time;
@@ -661,22 +736,11 @@ HdOSPRayRenderPass::ProcessLights()
     GfVec3f right_light = GfCross(dir, up);
     std::vector<opp::Light> lights;
 
-    // if have image background, overide background color with image
-    bool hasHDRI = false;
     // push scene lights
     for (auto l : _renderParam->GetHdOSPRayLights()) {
         if (l.second->IsVisible()) {
             lights.push_back(l.second->GetOSPLight());
-            if (dynamic_cast<const HdOSPRayDomeLight*>(l.second)
-                && l.second->IsVisibleToCamera()) {
-                hasHDRI = true;
-            }
         }
-    }
-    if (hasHDRI && HdOSPRayConfig::GetInstance().usePathTracing) {
-        _renderer.setParam(
-               "backgroundColor",
-               vec4f(_clearColor[0], _clearColor[1], _clearColor[2], 1.f));
     }
 
     float glToPTLightIntensityMultiplier = 1.f;
@@ -740,6 +804,7 @@ HdOSPRayRenderPass::ProcessLights()
         auto ambient = opp::Light("ambient");
         ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
         ambient.setParam("intensity", glToPTLightIntensityMultiplier);
+        ambient.setParam("visible", false);
         ambient.commit();
         lights.push_back(ambient);
     }
@@ -822,7 +887,7 @@ HdOSPRayRenderPass::ProcessSettings()
         _renderer.setParam("minContribution", _minContribution);
         _renderer.setParam("maxContribution", _maxContribution);
         _renderer.setParam("pixelFilter", (int)_pixelFilterType);
-        _renderer.commit();
+        _rendererDirty = true;
 
         _pendingResetImage = true;
     }
@@ -892,6 +957,45 @@ HdOSPRayRenderPass::SetAovBindings(
     _aovNames.resize(_aovBindings.size());
     for (size_t i = 0; i < _aovBindings.size(); ++i) {
         _aovNames[i] = HdParsedAovToken(_aovBindings[i].aovName);
+    }
+}
+
+/* static */
+GfVec4f
+HdOSPRayRenderPass::_ComputeClearColor(VtValue const& clearValue)
+{
+    HdTupleType type = HdGetValueTupleType(clearValue);
+    if (type.count != 1) {
+        return GfVec4f(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+
+    switch(type.type) {
+        case HdTypeFloatVec3:
+        {
+            GfVec3f f =
+                *(static_cast<const GfVec3f*>(HdGetValueData(clearValue)));
+            return GfVec4f(f[0], f[1], f[2], 1.0f);
+        }
+        case HdTypeFloatVec4:
+        {
+            GfVec4f f =
+                *(static_cast<const GfVec4f*>(HdGetValueData(clearValue)));
+            return f;
+        }
+        case HdTypeDoubleVec3:
+        {
+            GfVec3d f =
+                *(static_cast<const GfVec3d*>(HdGetValueData(clearValue)));
+            return GfVec4f(f[0], f[1], f[2], 1.0f);
+        }
+        case HdTypeDoubleVec4:
+        {
+            GfVec4d f =
+                *(static_cast<const GfVec4d*>(HdGetValueData(clearValue)));
+            return GfVec4f(f);
+        }
+        default:
+            return GfVec4f(0.0f, 0.0f, 0.0f, 1.0f);
     }
 }
 
