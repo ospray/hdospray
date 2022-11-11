@@ -218,7 +218,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 colorAov.aovName = HdAovTokens->color;
                 colorAov.renderBuffer = &_colorBuffer;
                 colorAov.clearValue
-                       = VtValue(GfVec4f(0.0f, 0.0f, 0.0f, 1.0f));
+                       = VtValue(GfVec4f(0.0707f, 0.0707f, 0.0707f, 0.0f));
                 aovBindings.push_back(colorAov);
                 _hasColor = true;
             }
@@ -353,7 +353,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                             _currentFrame.colorBuffer.data());
                 frameBuffer.unmap(rgba);
             }
-
             if (_numSamplesAccumulated == 0 || _pendingResetImage) {
                 if (_hasDepth || _hasCameraDepth) { // clip space depth
                     float* depth
@@ -742,6 +741,7 @@ HdOSPRayRenderPass::ProcessLights()
             lights.push_back(l.second->GetOSPLight());
         }
     }
+
 
     float glToPTLightIntensityMultiplier = 1.f;
     if (_eyeLight || _keyLight || _fillLight || _backLight)

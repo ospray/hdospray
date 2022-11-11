@@ -133,12 +133,18 @@ protected:
     void _ProcessUsdPreviewSurfaceNode(HdMaterialNode node);
     // parse texture node params and set them to appropriate map_ texture var
     void _ProcessTextureNode(HdMaterialNode node, TfToken textureName);
+    // parse texture transformation node params and set rotation, translation, and scale
+    void _ProcessTransform2dNode(HdMaterialNode node, TfToken textureName);
 
     struct HdOSPRayTexture {
         std::string file;
         enum class WrapType { NONE, BLACK, CLAMP, REPEAT, MIRROR };
         WrapType wrapS, wrapT;
         GfVec4f scale { 1.0f };
+        GfVec2f xfm_translation;
+        GfVec2f xfm_scale;
+        float xfm_rotation;
+        bool hasXfm {false};
         enum class ColorType { NONE, RGBA, RGB, R, G, B, A };
         ColorType type;
         opp::Texture ospTexture { nullptr };
@@ -156,20 +162,12 @@ protected:
     TfToken type;
     bool hasPtex { false };
 
-    HdOSPRayTexture map_diffuseColor;
-    HdOSPRayTexture map_diffuse;
-    HdOSPRayTexture map_emissiveColor;
-    HdOSPRayTexture map_specularColor;
-    HdOSPRayTexture map_specular;
-    HdOSPRayTexture map_metallic;
-    HdOSPRayTexture map_roughness;
-    HdOSPRayTexture map_coat;
-    HdOSPRayTexture map_coatRoughness;
-    HdOSPRayTexture map_ior;
-    HdOSPRayTexture map_opacity;
-    HdOSPRayTexture map_normal;
-    HdOSPRayTexture map_displacement;
+    bool _transformTexCoords { false };
+    float _rotation { 0.f };
+    GfVec2f _scale;
+    GfVec2f _translation;
 
+    std::map<TfToken, HdOSPRayTexture> _textures;
     opp::Material _ospMaterial;
 };
 
