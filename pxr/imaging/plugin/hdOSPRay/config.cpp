@@ -80,7 +80,7 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_FORCE_QUADRANGULATE, 0,
         "OSPRay force Quadrangulate meshes for debug");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_INTERACTIVE_TARGET_FPS, int(HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS),
-        "set interactive scaling to match target fps when interacting");
+        "set interactive scaling to match target fps when interacting.  0 Disables interactive scaling.");
 
 HdOSPRayConfig::HdOSPRayConfig()
 {

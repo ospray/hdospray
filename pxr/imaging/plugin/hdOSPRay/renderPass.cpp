@@ -157,6 +157,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     float updateInteractiveFrameBufferScale = _interactiveFrameBufferScale;
     bool interactiveFramebufferDirty = false;
     bool frameBufferDirty = false;
+    if (!_interactiveEnabled)
+        _interacting = false;
 
     HdRenderPassAovBindingVector aovBindings
            = renderPassState->GetAovBindings();
@@ -314,27 +316,21 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (_currentFrame.isValid() && !aovDirty) {
-        if (frameBufferDirty || (_pendingResetImage && !_interacting)) {
+        if (_interactiveEnabled && (frameBufferDirty || (_pendingResetImage && _interactiveEnabled))) {
             // framebuffer dirty or start interactive mode.
             // cancel rendered frame and display old frame if valid
             _currentFrame.osprayFrame.cancel();
-            if (_previousFrame.isValid() && !frameBufferDirty)
-                DisplayRenderBuffer(_previousFrame);
             _currentFrame.osprayFrame.wait();
-            _interacting = true;
-            _renderer.setParam("maxPathLength", std::min(4, _maxDepth));
             _renderer.setParam("minContribution", 0.1f);
             _renderer.setParam("maxContribution", 3.0f);
-            _renderer.setParam("aoSamples", 0);
+            _renderer.setParam("maxPathLength", min(4, _maxDepth));
+            _renderer.setParam("aoSamples", (cameraDirty ? 0 : _aoSamples));
             _rendererDirty = true;
+            _interacting = true;
         } else {
-            // display previous ready frame until next one is ready
-            // set next frame as interactive or final
-            if (!_currentFrame.osprayFrame.isReady()) {
-                if (_previousFrame.isValid())
-                    DisplayRenderBuffer(_previousFrame);
+            // return until frame is ready
+            if (!_currentFrame.osprayFrame.isReady())
                 return;
-            }
             _currentFrame.osprayFrame.wait();
 
             opp::FrameBuffer frameBuffer = _frameBuffer;
@@ -427,7 +423,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             }
 
             DisplayRenderBuffer(_currentFrame);
-            _previousFrame = _currentFrame;
 
             // estimating scaling factor for interactive rendering based on
             // the current FPS and a given targetFPS
@@ -467,7 +462,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _currentFrame.resize(_width * _height);
         interactiveFramebufferDirty = true;
         _pendingResetImage = true;
-        _previousFrame = _currentFrame;
         aovDirty = true;
     }
 
@@ -498,7 +492,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _frameBuffer.commit();
     }
 
-    if (_interacting != cameraDirty) {
+    if ((_interacting != cameraDirty) && _interactiveEnabled) {
         _renderer.setParam("maxPathLength", (cameraDirty ? 4 : _maxDepth));
         _renderer.setParam("minContribution",
                            (cameraDirty ? 0.1f : _minContribution));
@@ -511,7 +505,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (cameraDirty) {
         _inverseViewMatrix = inverseViewMatrix;
         _inverseProjMatrix = inverseProjMatrix;
-        _interacting = true;
+        if (_interactiveEnabled)
+            _interacting = true;
         ProcessCamera(renderPassState);
     } else {
         _interacting = false;
@@ -854,6 +849,7 @@ HdOSPRayRenderPass::ProcessSettings()
     _interactiveTargetFPS = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->interactiveTargetFPS,
            _interactiveTargetFPS);
+    _interactiveEnabled = (_interactiveTargetFPS != 0);
 
     if (samplesToConvergence != _samplesToConvergence) {
         _samplesToConvergence = samplesToConvergence;

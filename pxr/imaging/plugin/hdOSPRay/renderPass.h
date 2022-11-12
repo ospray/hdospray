@@ -227,13 +227,13 @@ private:
     bool _rendererDirty {true};
 
     bool _interacting { true };
+    bool _interactiveEnabled { true }; // disabled by setting interactivetargetfps to 0
 
     int _lastRenderedModelVersion { -1 };
     int _lastRenderedLightVersion { -1 };
     int _lastSettingsVersion { -1 };
 
     RenderFrame _currentFrame;
-    RenderFrame _previousFrame;
 
     // The width of the viewport we're rendering into.
     unsigned int _width { 0 };
