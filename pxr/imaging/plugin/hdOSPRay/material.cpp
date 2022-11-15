@@ -217,6 +217,7 @@ void
 HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
 {
     bool isPtex = node.identifier == HdOSPRayMaterialTokens->HwPtexTexture_1;
+    bool isUdim = false;
 
     if (_textures.find(textureName) == _textures.end())
         _textures[textureName] = HdOSPRayTexture();
@@ -228,14 +229,25 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
             || name == HdOSPRayMaterialTokens->infoFilename) {
             SdfAssetPath const& path = value.Get<SdfAssetPath>();
             texture.file = path.GetResolvedPath();
+            isUdim = TfStringContains(texture.file, "<UDIM>");
             if (isPtex) {
                 hasPtex = true;
                 texture.isPtex = true;
 #ifdef HDOSPRAY_PLUGIN_PTEX
                 texture.ospTexture = LoadPtexTexture(texture.file);
 #endif
-            } else
-                texture.ospTexture = LoadOIIOTexture2D(texture.file);
+            } else if (isUdim) {
+                int numX, numY;
+                const auto& result = LoadUDIMTexture2D(texture.file, numX, numY);
+                texture.ospTexture = result.first;
+                texture.hasXfm = true;
+                texture.xfm_scale = {1.f/float(numX), 1.f/float(numY)};
+                //OSPRay scales around the center (0.5, 0.5).  translate texture from (0.5, 0.5) to (0,0)
+                texture.xfm_translation = {-(.5f - .5f/float(numX)), -(.5f - .5f/float(numY))};
+            } else {
+                const auto& result = LoadOIIOTexture2D(texture.file);
+                texture.ospTexture = result.first;
+            }
         } else if (name == HdOSPRayMaterialTokens->scale) {
             texture.scale = value.Get<GfVec4f>();
         } else if (name == HdOSPRayMaterialTokens->wrapS) {

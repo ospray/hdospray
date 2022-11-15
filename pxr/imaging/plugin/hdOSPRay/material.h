@@ -50,6 +50,7 @@ class HdOSPRayMaterial final : public HdMaterial {
 public:
     HdOSPRayMaterial(SdfPath const& id);
 
+    // TODO: free texture memory
     virtual ~HdOSPRayMaterial() = default;
 
     /// Synchronizes state from the delegate to this object.
@@ -141,9 +142,9 @@ protected:
         enum class WrapType { NONE, BLACK, CLAMP, REPEAT, MIRROR };
         WrapType wrapS, wrapT;
         GfVec4f scale { 1.0f };
-        GfVec2f xfm_translation;
-        GfVec2f xfm_scale;
-        float xfm_rotation;
+        GfVec2f xfm_translation {0.f, 0.f};
+        GfVec2f xfm_scale {1.f, 1.f};
+        float xfm_rotation {0.f};
         bool hasXfm {false};
         enum class ColorType { NONE, RGBA, RGB, R, G, B, A };
         ColorType type;
