@@ -87,11 +87,10 @@ HdOSPRaySphereLight::_PrepareOSPLight()
     _ospLight = opp::Light("sphere");
     _ospLight.setParam("position",
                        vec3f(position[0], position[1], position[2]));
-    if (_treatAsPoint) {
+    if (_treatAsPoint)
         _ospLight.setParam("radius", 0.0f);
-    } else {
+    else
         _ospLight.setParam("radius", _radius);
-    }
 
     // emission
     _ospLight.setParam("intensityQuantity", intensityQuantity);

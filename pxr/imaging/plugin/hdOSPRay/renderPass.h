@@ -258,6 +258,8 @@ private:
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared
     int _spp { HDOSPRAY_DEFAULT_SPP };
     bool _useDenoiser { false };
+    bool _useTonemapper { true };
+    bool _tonemapperDirty { true };
     bool _denoiserLoaded { false }; // did the module successfully load?
     bool _denoiserState { false };
     OSPPixelFilterTypes _pixelFilterType {

@@ -39,6 +39,7 @@ PXR_NAMESPACE_OPEN_SCOPE
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayLightTokens,
+    ((inputsIntensity,"inputs:intensity"))
     ((intensityQuantity,"inputs:ospray:intensityQuantity"))
     ((visibleToCamera,"ospray:visibleToCamera"))
     ((karmaVisibleToCamera,"karma:light:renderlightgeo"))
@@ -134,7 +135,10 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         auto intensityVal = sceneDelegate->GetLightParamValue(id, HdLightTokens->intensity);
         if (intensityVal.IsHolding<float>())
             _emissionParam.intensity = intensityVal.Get<float>();
-
+        // USD 22.08 not picking up inputs:intensity in HdLightTokens
+        auto intensityVal2 = sceneDelegate->GetLightParamValue(id, HdOSPRayLightTokens->inputsIntensity);
+        if (intensityVal2.IsHolding<float>())
+            _emissionParam.intensity = intensityVal2.Get<float>();
         VtValue normalize = sceneDelegate->GetLightParamValue(id, HdLightTokens->normalize);
         if(normalize.IsHolding<int>())
         {

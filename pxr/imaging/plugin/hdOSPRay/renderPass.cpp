@@ -244,6 +244,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
     _pendingSettingsUpdate = (_lastSettingsVersion != currentSettingsVersion);
 
+    if (_pendingSettingsUpdate) {
+        ProcessSettings();
+        _lastSettingsVersion = currentSettingsVersion;
+    }
+
     int currentModelVersion = _renderParam->GetModelVersion();
     if (_lastRenderedModelVersion != currentModelVersion) {
         _pendingModelUpdate = true;
@@ -480,16 +485,56 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _pendingResetImage = true;
     }
 
-    if (denoiserDirty) {
-        if (useDenoiser) {
-            _frameBuffer.setParam(
-                   "imageOperation",
-                   opp::CopiedData(opp::ImageOperation("denoiser")));
-        } else
-            _frameBuffer.removeParam("imageOperation");
+    if (_pendingResetImage || denoiserDirty || _tonemapperDirty || frameBufferDirty || interactiveFramebufferDirty) {
+        std::vector <opp::ImageOperation> iops;
+        if (useDenoiser && !_interacting) {
+            opp::ImageOperation denoiser("denoiser");
+            denoiser.commit();
+            iops.emplace_back(denoiser);
+        }
+        if (_useTonemapper) {
+            float exposure = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_exposure,
+                HdOSPRayConfig::GetInstance().tmp_exposure);
+            float contrast = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_contrast,
+                HdOSPRayConfig::GetInstance().tmp_contrast);
+            float shoulder = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_shoulder,
+                HdOSPRayConfig::GetInstance().tmp_shoulder);
+            float midIn = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_midIn,
+                HdOSPRayConfig::GetInstance().tmp_midIn);
+            float midOut = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_midOut,
+                HdOSPRayConfig::GetInstance().tmp_midOut);
+            float hdrMax = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_hdrMax,
+                HdOSPRayConfig::GetInstance().tmp_hdrMax);
+            bool acesColor = renderDelegate->GetRenderSetting<bool>(
+                HdOSPRayRenderSettingsTokens->tmp_acesColor,
+                HdOSPRayConfig::GetInstance().tmp_acesColor);
+            opp::ImageOperation tonemapper("tonemapper");
+            tonemapper.setParam("exposure", exposure);
+            tonemapper.setParam("contrast", HdOSPRayConfig::GetInstance().tmp_contrast);
+            tonemapper.setParam("shoulder", HdOSPRayConfig::GetInstance().tmp_shoulder);
+            tonemapper.setParam("midIn", HdOSPRayConfig::GetInstance().tmp_midIn);
+            tonemapper.setParam("midOut", HdOSPRayConfig::GetInstance().tmp_midOut);
+            tonemapper.setParam("hdrMax", HdOSPRayConfig::GetInstance().tmp_hdrMax);
+            tonemapper.setParam("acesColor", HdOSPRayConfig::GetInstance().tmp_acesColor);
+            tonemapper.commit();
+            iops.emplace_back(tonemapper);
+        }
+        opp::FrameBuffer frameBuffer = _frameBuffer;
+        if (_interacting)
+            frameBuffer = _interactiveFrameBuffer;
+        if (!iops.empty()){
+            frameBuffer.setParam("imageOperation", opp::CopiedData(iops));
+        }else
+            frameBuffer.removeParam("imageOperation");
 
         _denoiserState = useDenoiser;
-        _frameBuffer.commit();
+        frameBuffer.commit();
     }
 
     if ((_interacting != cameraDirty) && _interactiveEnabled) {
@@ -539,14 +584,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _currentFrameBufferScale = 1.0f;
     }
 
-    if (_pendingSettingsUpdate) {
-        ProcessSettings();
-    }
-    // XXX: Add clip planes support.
-
-    if (_pendingModelUpdate) {
+    if (_pendingModelUpdate)
         ProcessInstances();
-    }
 
     // add lights
     if (_pendingLightUpdate) {
@@ -732,11 +771,9 @@ HdOSPRayRenderPass::ProcessLights()
 
     // push scene lights
     for (auto l : _renderParam->GetHdOSPRayLights()) {
-        if (l.second->IsVisible()) {
+        if (l.second->IsVisible())
             lights.push_back(l.second->GetOSPLight());
-        }
     }
-
 
     float glToPTLightIntensityMultiplier = 1.f;
     if (_eyeLight || _keyLight || _fillLight || _backLight)
@@ -845,6 +882,9 @@ HdOSPRayRenderPass::ProcessSettings()
            HdOSPRayRenderSettingsTokens->minContribution, _minContribution);
     int maxContribution = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->maxContribution, _maxContribution);
+    bool useTonemapper = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->tmp_enabled,
+           HdOSPRayConfig::GetInstance().tmp_enabled);
 
     _interactiveTargetFPS = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->interactiveTargetFPS,
@@ -862,7 +902,8 @@ HdOSPRayRenderPass::ProcessSettings()
         || lSamples != _lightSamples || minContribution != _minContribution
         || _maxContribution != maxContribution
         || pixelFilterType != _pixelFilterType
-        || russianRouletteStartDepth != _russianRouletteStartDepth) {
+        || russianRouletteStartDepth != _russianRouletteStartDepth
+        || useTonemapper != _useTonemapper) {
         _spp = spp;
         _aoSamples = aoSamples;
         _maxDepth = maxDepth;
@@ -873,6 +914,8 @@ HdOSPRayRenderPass::ProcessSettings()
         _aoIntensity = aoIntensity;
         _aoRadius = aoRadius;
         _pixelFilterType = pixelFilterType;
+        _useTonemapper = useTonemapper;
+        _tonemapperDirty = true;
         _renderer.setParam("pixelSamples", _spp);
         _renderer.setParam("lightSamples", _lightSamples);
         _renderer.setParam("aoSamples", _aoSamples);

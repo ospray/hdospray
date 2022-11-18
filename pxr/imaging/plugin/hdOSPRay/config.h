@@ -35,16 +35,24 @@ namespace opp = ospray::cpp;
 #include <string>
 #include <vector>
 
-#define HDOSPRAY_DEFAULT_SPP_TO_CONVERGE 1024
+#define HDOSPRAY_DEFAULT_SPP_TO_CONVERGE 128
 #define HDOSPRAY_DEFAULT_SPP 1
 #define HDOSPRAY_DEFAULT_MAX_DEPTH 16
 #define HDOSPRAY_DEFAULT_RR_START_DEPTH 1
 #define HDOSPRAY_DEFAULT_MIN_CONTRIBUTION 0.01f
-#define HDOSPRAY_DEFAULT_MAX_CONTRIBUTION 10.0f
-#define HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS 10.0f
+#define HDOSPRAY_DEFAULT_MAX_CONTRIBUTION 100.0f
+#define HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS 30.0f
 #define HDOSPRAY_DEFAULT_AO_RADIUS 0.5f
 #define HDOSPRAY_DEFAULT_AO_SAMPLES 1
 #define HDOSPRAY_DEFAULT_AO_INTENSITY 1.0f
+#define HDOSPRAY_DEFAULT_TMP_ENABLED true
+#define HDOSPRAY_DEFAULT_TMP_EXPOSURE 1.0f
+#define HDOSPRAY_DEFAULT_TMP_CONTRAST 1.1759f
+#define HDOSPRAY_DEFAULT_TMP_SHOULDER 0.9746f
+#define HDOSPRAY_DEFAULT_TMP_HDRMAX 6.3704f
+#define HDOSPRAY_DEFAULT_TMP_MIDIN 0.18f
+#define HDOSPRAY_DEFAULT_TMP_MIDOUT 0.18f
+#define HDOSPRAY_DEFAULT_TMP_ACESCOLOR false
 
 PXR_NAMESPACE_OPEN_SCOPE
 
@@ -190,6 +198,18 @@ public:
     ///
     /// Override with *HDOSPRAY_BACK_LIGHT*.
     bool backLight { false };
+
+    /// Tonemapper parameters
+    ///
+    /// Override with HDOSPRAY_TMP_*
+    bool tmp_enabled { HDOSPRAY_DEFAULT_TMP_ENABLED };
+    float tmp_exposure { HDOSPRAY_DEFAULT_TMP_EXPOSURE };
+    float tmp_contrast { HDOSPRAY_DEFAULT_TMP_CONTRAST };
+    float tmp_shoulder { HDOSPRAY_DEFAULT_TMP_SHOULDER };
+    float tmp_hdrMax { HDOSPRAY_DEFAULT_TMP_HDRMAX };
+    float tmp_midIn { HDOSPRAY_DEFAULT_TMP_MIDIN };
+    float tmp_midOut { HDOSPRAY_DEFAULT_TMP_MIDOUT };
+    bool tmp_acesColor { HDOSPRAY_DEFAULT_TMP_ACESCOLOR };
 
     // meshes populate global instances.  These are then committed by the
     // renderPass into a scene.

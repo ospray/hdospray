@@ -189,6 +189,46 @@ HdOSPRayRenderDelegate::_Initialize()
     _settingDescriptors.push_back(
            { "backLight", HdOSPRayRenderSettingsTokens->backLight,
              VtValue(bool(HdOSPRayConfig::GetInstance().backLight)) });
+    _settingDescriptors.push_back(
+           { "tmp_enabled",
+             HdOSPRayRenderSettingsTokens->tmp_enabled,
+             VtValue(bool(
+                    HdOSPRayConfig::GetInstance().tmp_enabled)) });
+    _settingDescriptors.push_back(
+           { "tmp_exposure",
+             HdOSPRayRenderSettingsTokens->tmp_exposure,
+             VtValue(float(
+                    HdOSPRayConfig::GetInstance().tmp_exposure)) });
+    _settingDescriptors.push_back(
+           { "tmp_contrast",
+             HdOSPRayRenderSettingsTokens->tmp_contrast,
+             VtValue(float(
+                    HdOSPRayConfig::GetInstance().tmp_contrast)) });
+    _settingDescriptors.push_back(
+           { "tmp_shoulder",
+             HdOSPRayRenderSettingsTokens->tmp_shoulder,
+             VtValue(float(
+                    HdOSPRayConfig::GetInstance().tmp_shoulder)) });
+    _settingDescriptors.push_back(
+           { "tmp_midIn",
+             HdOSPRayRenderSettingsTokens->tmp_midIn,
+             VtValue(float(
+                    HdOSPRayConfig::GetInstance().tmp_midIn)) });
+    _settingDescriptors.push_back(
+           { "tmp_midOut",
+             HdOSPRayRenderSettingsTokens->tmp_midOut,
+             VtValue(float(
+                    HdOSPRayConfig::GetInstance().tmp_midOut)) });
+    _settingDescriptors.push_back(
+           { "tmp_hdrMax",
+             HdOSPRayRenderSettingsTokens->tmp_hdrMax,
+             VtValue(float(
+                    HdOSPRayConfig::GetInstance().tmp_hdrMax)) });
+    _settingDescriptors.push_back(
+           { "tmp_acesColor",
+             HdOSPRayRenderSettingsTokens->tmp_acesColor,
+             VtValue(bool(
+                    HdOSPRayConfig::GetInstance().tmp_acesColor)) });
     _PopulateDefaultSettings(_settingDescriptors);
 }
 

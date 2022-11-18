@@ -45,7 +45,9 @@ PXR_NAMESPACE_OPEN_SCOPE
            aoIntensity)(samplesToConvergence)(ambientLight)(eyeLight)(         \
            keyLight)(fillLight)(backLight)(pathTracer)(                        \
            staticDirectionalLights)(minContribution)(maxContribution)(         \
-           interactiveTargetFPS)(useTextureGammaCorrection)
+           interactiveTargetFPS)(useTextureGammaCorrection)                    \
+           (tmp_exposure)(tmp_enabled)(tmp_contrast)(tmp_shoulder)(tmp_midIn)  \
+           (tmp_midOut)(tmp_hdrMax)(tmp_acesColor)
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
                          HDOSPRAY_RENDER_SETTINGS_TOKENS);
