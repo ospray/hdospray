@@ -516,12 +516,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                 HdOSPRayConfig::GetInstance().tmp_acesColor);
             opp::ImageOperation tonemapper("tonemapper");
             tonemapper.setParam("exposure", exposure);
-            tonemapper.setParam("contrast", HdOSPRayConfig::GetInstance().tmp_contrast);
-            tonemapper.setParam("shoulder", HdOSPRayConfig::GetInstance().tmp_shoulder);
-            tonemapper.setParam("midIn", HdOSPRayConfig::GetInstance().tmp_midIn);
-            tonemapper.setParam("midOut", HdOSPRayConfig::GetInstance().tmp_midOut);
-            tonemapper.setParam("hdrMax", HdOSPRayConfig::GetInstance().tmp_hdrMax);
-            tonemapper.setParam("acesColor", HdOSPRayConfig::GetInstance().tmp_acesColor);
+            tonemapper.setParam("contrast", contrast);
+            tonemapper.setParam("shoulder", shoulder);
+            tonemapper.setParam("midIn", midIn);
+            tonemapper.setParam("midOut", midOut);
+            tonemapper.setParam("hdrMax", hdrMax);
+            tonemapper.setParam("acesColor", acesColor);
             tonemapper.commit();
             iops.emplace_back(tonemapper);
         }
@@ -835,7 +835,7 @@ HdOSPRayRenderPass::ProcessLights()
     if (_ambientLight || lights.empty()) {
         auto ambient = opp::Light("ambient");
         ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
-        ambient.setParam("intensity", glToPTLightIntensityMultiplier);
+        ambient.setParam("intensity", glToPTLightIntensityMultiplier*0.5f);
         ambient.setParam("visible", false);
         ambient.commit();
         lights.push_back(ambient);

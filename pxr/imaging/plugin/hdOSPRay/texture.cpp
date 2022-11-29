@@ -77,7 +77,7 @@ LoadPtexTexture(std::string file)
 
 // creates 2d osptexture from file, does not commit
 std::pair<opp::Texture, char*>
-LoadOIIOTexture2D(std::string file, bool nearestFilter)
+LoadOIIOTexture2D(std::string file, bool nearestFilter, bool complement)
 {
     auto in = ImageInput::open(file.c_str());
     if (!in) {
@@ -101,15 +101,6 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter)
 #if OIIO_VERSION < 10903
     ImageInput::destroy(in);
 #endif
-
-    // flip image (because OSPRay's textures have the origin at the lower left
-    // corner)
-    for (int y = 0; y < size.y / 2; y++) {
-        char* src = &data[y * stride];
-        char* dest = &data[(size.y - 1 - y) * stride];
-        for (size_t x = 0; x < stride; x++)
-            std::swap(src[x], dest[x]);
-    }
     OSPTextureFormat format = osprayTextureFormat(depth, channels);
 
     OSPDataType dataType = OSP_UNKNOWN;
@@ -132,6 +123,22 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter)
         throw std::runtime_error("hdOSPRay::LoadOIIOTexture2D: \
                                          Unknown texture format");
     }
+
+    // flip image (because OSPRay's textures have the origin at the lower left
+    // corner)
+    // compute complement if enabled
+    for (int y = 0; y < size.y / 2; y++) {
+        char* src = &data[y * stride];
+        char* dest = &data[(size.y - 1 - y) * stride];
+        for (size_t x = 0; x < stride; x++)
+            std::swap(src[x], dest[x]);
+    }
+    if (complement && (format == OSP_TEXTURE_R32F)) {
+        float* tex = (float*)data;
+        for(size_t i = 0; i < size.x * size.y; i++)
+            tex[i] = 1.f - tex[i];
+    }
+
     opp::SharedData ospData = opp::SharedData(data, dataType, size);
     ospData.commit();
 
@@ -225,7 +232,7 @@ struct UDIMTileDesc {
 
 // creates 2d osptexture from file, does not commit
 std::pair<opp::Texture, char*>
-LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter)
+LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter, bool complement)
 {
     auto udimTiles = _FindUdimTiles(file);
     std::vector<UDIMTileDesc> udimTileDescs;
@@ -262,7 +269,8 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter)
         }
         texelSize = texelSizeCurrent;
         const size_t stride = size.x * channels * depth;
-        char* data = (char*)malloc(sizeof(char) * size.y * stride);
+        const size_t dataSize = sizeof(char) * size.y * stride;
+        char* data = (char*)malloc(dataSize);
         dataStride = stride;
 
         in->read_image(hdr ? TypeDesc::FLOAT : TypeDesc::UINT8, data);
@@ -338,6 +346,11 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter)
         for(int y = 0; y < tile.size.y; y++) {
             size_t start = tileIndex * texelSize;
             size_t end = (tileIndex + tile.size.x) * texelSize;
+            if (complement && (udimDataType == OSP_FLOAT)) {
+                float* tex = (float*)(tile.data + start);
+                for (int i =0; i < tile.size.x; i++)
+                    tex[i] = 1.f - tex[i];
+            }
             std::copy(tile.data + start, tile.data + end,
                 data + dataIndex * texelSize);
             tileIndex += tile.size.x;

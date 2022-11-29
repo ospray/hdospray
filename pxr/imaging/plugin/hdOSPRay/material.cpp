@@ -238,14 +238,16 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken textureName)
 #endif
             } else if (isUdim) {
                 int numX, numY;
-                const auto& result = LoadUDIMTexture2D(texture.file, numX, numY);
+                const auto& result = LoadUDIMTexture2D(texture.file, numX, numY, false,
+                   (textureName == HdOSPRayMaterialTokens->opacity));
                 texture.ospTexture = result.first;
                 texture.hasXfm = true;
                 texture.xfm_scale = {1.f/float(numX), 1.f/float(numY)};
                 //OSPRay scales around the center (0.5, 0.5).  translate texture from (0.5, 0.5) to (0,0)
                 texture.xfm_translation = {-(.5f - .5f/float(numX)), -(.5f - .5f/float(numY))};
             } else {
-                const auto& result = LoadOIIOTexture2D(texture.file);
+                const auto& result = LoadOIIOTexture2D(texture.file, false,
+                    (textureName == HdOSPRayMaterialTokens->opacity));
                 texture.ospTexture = result.first;
             }
         } else if (name == HdOSPRayMaterialTokens->scale) {
@@ -326,12 +328,12 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
 {
     opp::Material ospMaterial
            = opp::Material(rendererType.c_str(), "principled");
-    ospMaterial.setParam("ior", ior);
     ospMaterial.setParam(
            "baseColor",
            vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
     bool hasMetallicTex = false;
     bool hasRoughnessTex = false;
+    bool hasOpacityTex = false;
     // texture maps
     for (const auto& [key, value] : _textures) {
         if (!value.ospTexture)
@@ -345,8 +347,11 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
         } else if (key == HdOSPRayMaterialTokens->roughness) {
             name = "map_roughness";
             hasRoughnessTex = true;
-        } else if (key == HdOSPRayMaterialTokens->opacity)
-            name = "map_opacity";
+        }
+        else if (key == HdOSPRayMaterialTokens->opacity) {
+            name = "map_transmission";
+            hasOpacityTex = true;
+        }
 
         if (name != "") {
             ospMaterial.setParam(name.c_str(), value.ospTexture);
@@ -369,7 +374,8 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     ospMaterial.setParam("coat", coat);
     ospMaterial.setParam("coatRoughness", coatRoughness);
     ospMaterial.setParam("ior", ior);
-    ospMaterial.setParam("transmission", 1.0f - opacity);
+    ospMaterial.setParam("transmission",
+                        (hasOpacityTex ? 1.0f : 1.0f - opacity));
     ospMaterial.setParam("thin", true);
     ospMaterial.commit();
 

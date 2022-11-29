@@ -43,16 +43,20 @@ opp::Texture LoadPtexTexture(std::string file);
 /// @brief  Load OIIO Texture
 /// @param filename
 /// @param nearestFilter or interpolation
+/// @param compute 1.f-val.  float only.
 /// @return OSPRay texture object, data pointer
-std::pair<opp::Texture, char*> LoadOIIOTexture2D(std::string file, bool nearestFilter = false);
+std::pair<opp::Texture, char*> LoadOIIOTexture2D(std::string file, bool nearestFilter = false,
+    bool complement = false);
 
 /// @brief
 /// @param filename
 /// @param number of udim tile columns
 /// @param number of udim tile rows
 /// @param use nearestFilter or interpolation
+/// @param compute 1.f-val.  float only.
 /// @return OSPRay texture object, data pointer
-std::pair<opp::Texture, char*> LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter = false);
+std::pair<opp::Texture, char*> LoadUDIMTexture2D(std::string file, int& numX,
+    int& numY, bool nearestFilter = false, bool complement = false);
 
 PXR_NAMESPACE_CLOSE_SCOPE
 
