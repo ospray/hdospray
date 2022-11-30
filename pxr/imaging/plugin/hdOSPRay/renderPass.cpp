@@ -321,7 +321,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     if (_currentFrame.isValid() && !aovDirty) {
-        if (_interactiveEnabled && (frameBufferDirty || (_pendingResetImage && _interactiveEnabled))) {
+        if (_interactiveEnabled && (frameBufferDirty || _pendingResetImage)) {
             // framebuffer dirty or start interactive mode.
             // cancel rendered frame and display old frame if valid
             _currentFrame.osprayFrame.cancel();
