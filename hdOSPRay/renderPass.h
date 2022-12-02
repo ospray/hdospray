@@ -224,10 +224,12 @@ private:
     float _interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
 
     opp::Renderer _renderer;
-    bool _rendererDirty {true};
+    bool _rendererDirty { true };
 
     bool _interacting { true };
-    bool _interactiveEnabled { true }; // disabled by setting interactivetargetfps to 0
+    bool _interactiveEnabled {
+        true
+    }; // disabled by setting interactivetargetfps to 0
 
     int _lastRenderedModelVersion { -1 };
     int _lastRenderedLightVersion { -1 };

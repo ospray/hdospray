@@ -51,7 +51,7 @@ else()
 	FIND_PACKAGE(pxr CONFIG REQUIRED)
 endif()
 
-add_subdirectory(pxr/imaging/plugin/hdOSPRay)
+add_subdirectory(hdOSPRay)
 
 option(ENABLE_TESTING "build testing suite" OFF)
 

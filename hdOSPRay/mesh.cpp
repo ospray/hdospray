@@ -393,7 +393,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
         if (doRefine && !_points.empty()) {
             _ospMesh = _CreateOSPRaySubdivMesh();
-
         }
         _refined = doRefine;
     }
@@ -423,10 +422,10 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         if (!_refined) {
             if (useQuads) {
                 _meshUtil->ComputeQuadIndices(&_quadIndices,
-                                            &_quadPrimitiveParams);
+                                              &_quadPrimitiveParams);
             } else {
                 _meshUtil->ComputeTriangleIndices(&_triangulatedIndices,
-                                                &_trianglePrimitiveParams);
+                                                  &_trianglePrimitiveParams);
             }
 
             if ((_quadIndices.empty() && _triangulatedIndices.empty())
@@ -458,13 +457,13 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             VtVec3fArray& normals = _normals;
             if (!_computedNormals.empty())
                 normals = _computedNormals;
-            opp::SharedData normalsData
-                = opp::SharedData(normals.cdata(), OSP_VEC3F, normals.size());
+            opp::SharedData normalsData = opp::SharedData(
+                   normals.cdata(), OSP_VEC3F, normals.size());
             normalsData.commit();
             if (_normalsInterpolation == HdInterpolationFaceVarying)
                 _ospMesh.setParam("normal", normalsData);
             else if ((_normalsInterpolation == HdInterpolationVarying)
-                    || (_normalsInterpolation == HdInterpolationVertex))
+                     || (_normalsInterpolation == HdInterpolationVertex))
                 _ospMesh.setParam("vertex.normal", normalsData);
         }
 
@@ -474,12 +473,12 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             if (!_computedColors.empty())
                 colors = _computedColors;
             opp::SharedData colorsData
-                = opp::SharedData(colors.cdata(), OSP_VEC3F, colors.size());
+                   = opp::SharedData(colors.cdata(), OSP_VEC3F, colors.size());
             colorsData.commit();
             if (_colorsInterpolation == HdInterpolationFaceVarying)
                 _ospMesh.setParam("color", colorsData);
             else if ((_colorsInterpolation == HdInterpolationVarying)
-                || (_colorsInterpolation == HdInterpolationVertex))
+                     || (_colorsInterpolation == HdInterpolationVertex))
                 _ospMesh.setParam("vertex.color", colorsData);
         }
 
@@ -488,12 +487,12 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             if (!_computedTexcoords.empty())
                 texcoords = _computedTexcoords;
             opp::SharedData texcoordsData = opp::SharedData(
-                texcoords.cdata(), OSP_VEC2F, texcoords.size());
+                   texcoords.cdata(), OSP_VEC2F, texcoords.size());
             texcoordsData.commit();
             if (_texcoordsInterpolation == HdInterpolationFaceVarying)
                 _ospMesh.setParam("texcoord", texcoordsData);
             else if (_texcoordsInterpolation == HdInterpolationVertex
-                    || _texcoordsInterpolation == HdInterpolationVarying) {
+                     || _texcoordsInterpolation == HdInterpolationVarying) {
                 _ospMesh.setParam("vertex.texcoord", texcoordsData);
             }
         }
@@ -537,7 +536,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _geometricModel->setParam("material", ospMaterial);
         _geometricModel->setParam("id", (unsigned int)GetPrimId());
         _ospMesh.commit();
-        if (_colorsInterpolation == HdInterpolationUniform && !_computedColors.empty()) {
+        if (_colorsInterpolation == HdInterpolationUniform
+            && !_computedColors.empty()) {
             std::vector<vec4f> colors(_computedColors.size());
             for (int i = 0; i < _computedColors.size(); i++) {
                 const auto& c = _computedColors[i];
@@ -545,7 +545,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             }
             _geometricModel->setParam("color", opp::CopiedData(colors));
         }
-        if (_colorsInterpolation == HdInterpolationConstant && !_computedColors.empty()) {
+        if (_colorsInterpolation == HdInterpolationConstant
+            && !_computedColors.empty()) {
             _geometricModel->setParam(
                    "color",
                    vec4f(_colors[0][0], _colors[0][1], _colors[0][2], 1.f));
@@ -702,7 +703,6 @@ HdOSPRayMesh::_CreateOSPRayMesh(const VtVec2fArray& texcoords,
     verticesData.commit();
     ospMesh.setParam("vertex.position", verticesData);
 
-
     ospMesh.setParam("id", (unsigned int)GetPrimId());
     // ospMesh.commit();
     return ospMesh;
@@ -741,14 +741,15 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     vertices.commit();
     mesh.setParam("vertex.position", vertices);
     if (numFaceVertices > 0) {
-        opp::SharedData faces = opp::SharedData(
-            _topology.GetFaceVertexCounts().data(), OSP_UINT, numFaceVertices);
+        opp::SharedData faces
+               = opp::SharedData(_topology.GetFaceVertexCounts().data(),
+                                 OSP_UINT, numFaceVertices);
         faces.commit();
         mesh.setParam("face", faces);
     }
     if (numIndices > 0) {
         opp::SharedData indices = opp::SharedData(
-            _topology.GetFaceVertexIndices().data(), OSP_UINT, numIndices);
+               _topology.GetFaceVertexIndices().data(), OSP_UINT, numIndices);
         indices.commit();
         // // TODO: need to handle subivion types correctly
         mesh.setParam("index", indices);
@@ -867,7 +868,8 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     //     if (success && quadPrimvar.IsHolding<VtVec2fArray>()) {
     //         std::cout << "setting computedtexcoords to fv subdiv\n";
     //         _computedTexcoords = quadPrimvar.Get<VtVec2fArray>();
-    //         std::cout << "computedtexcoords size: " << _computedTexcoords.size() << std::endl;
+    //         std::cout << "computedtexcoords size: " <<
+    //         _computedTexcoords.size() << std::endl;
     //     } else {
     //         TF_CODING_ERROR("ERROR: could not quadrangulate "
     //                         "face-varying data\n");
@@ -881,8 +883,8 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     //         }
     // }
 
-    // std::cout << "computedtexcoords size2: " << _computedTexcoords.size() << std::endl;
-    // if (_computedTexcoords.size() > 1) {
+    // std::cout << "computedtexcoords size2: " << _computedTexcoords.size() <<
+    // std::endl; if (_computedTexcoords.size() > 1) {
     //     opp::SharedData texcoordsData = opp::SharedData(
     //            _texcoords.cdata(), OSP_VEC2F, _texcoords.size());
     //     texcoordsData.commit();

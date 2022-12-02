@@ -91,8 +91,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter, bool complement)
     const bool hdr = spec.format.size() > 1;
     int depth = hdr ? 4 : 1;
     const size_t stride = size.x * channels * depth;
-    char* data
-           = (char*)malloc(sizeof(char) * size.y * stride);
+    char* data = (char*)malloc(sizeof(char) * size.y * stride);
 
     in->read_image(hdr ? TypeDesc::FLOAT : TypeDesc::UINT8, data);
     in->close();
@@ -133,7 +132,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter, bool complement)
     }
     if (complement && (format == OSP_TEXTURE_R32F)) {
         float* tex = (float*)data;
-        for(size_t i = 0; i < size.x * size.y; i++)
+        for (size_t i = 0; i < size.x * size.y; i++)
             tex[i] = 1.f - tex[i];
     }
 
@@ -156,9 +155,8 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter, bool complement)
 
 // Split a udim file path such as /someDir/myFile.<UDIM>.exr into a
 // prefix (/someDir/myFile.) and suffix (.exr).
-static
-std::pair<std::string, std::string>
-_SplitUdim(const std::string &path)
+static std::pair<std::string, std::string>
+_SplitUdim(const std::string& path)
 {
     static const std::string pattern("<UDIM>");
 
@@ -189,19 +187,17 @@ _SplitUdim(const std::string &path)
 // because that part of the resolution will be done by the scene delegate
 // for us already.
 //
-static
-std::vector<std::tuple<int, TfToken>>
-_FindUdimTiles(const std::string &filePath)
+static std::vector<std::tuple<int, TfToken>>
+_FindUdimTiles(const std::string& filePath)
 {
     std::vector<std::tuple<int, TfToken>> result;
 
     // Get prefix and suffix from udim pattern.
-    const std::pair<std::string, std::string>
-        splitPath = _SplitUdim(filePath);
+    const std::pair<std::string, std::string> splitPath = _SplitUdim(filePath);
     if (splitPath.first.empty() && splitPath.second.empty()) {
-        TF_WARN("Expected udim pattern but got '%s'.",
-            filePath.c_str());
-        std::cout << "udim patter empty " << splitPath.first << " : " << splitPath.second << std::endl;
+        TF_WARN("Expected udim pattern but got '%s'.", filePath.c_str());
+        std::cout << "udim patter empty " << splitPath.first << " : "
+                  << splitPath.second << std::endl;
         return result;
     }
 
@@ -210,9 +206,8 @@ _FindUdimTiles(const std::string &filePath)
     for (int i = 1001; i < 1100; i++) {
         // Add integer between prefix and suffix and see whether
         // the tile exists by consulting the resolver.
-        const std::string resolvedPath =
-            resolver.Resolve(
-                splitPath.first + std::to_string(i) + splitPath.second);
+        const std::string resolvedPath = resolver.Resolve(
+               splitPath.first + std::to_string(i) + splitPath.second);
         if (!resolvedPath.empty()) {
             // Record pair in result.
             result.emplace_back(i - 1001, resolvedPath);
@@ -223,20 +218,21 @@ _FindUdimTiles(const std::string &filePath)
 }
 
 struct UDIMTileDesc {
-    char* data {nullptr};
-    vec2i size {0,0};
-    int offset {-1};
+    char* data { nullptr };
+    vec2i size { 0, 0 };
+    int offset { -1 };
 };
 
 // creates 2d osptexture from file, does not commit
 std::pair<opp::Texture, char*>
-LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter, bool complement)
+LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
+                  bool complement)
 {
     auto udimTiles = _FindUdimTiles(file);
     std::vector<UDIMTileDesc> udimTileDescs;
-    vec2i totalSize {0, 0};
-    vec2i numTiles {0, 0};
-    numTiles = {0, 0};
+    vec2i totalSize { 0, 0 };
+    vec2i numTiles { 0, 0 };
+    numTiles = { 0, 0 };
     OSPDataType udimDataType = OSP_UNKNOWN;
     size_t dataStride = 0;
     size_t texelSize = 0;
@@ -262,7 +258,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter, bo
         int texelSizeCurrent = channels * depth;
         if ((texelSize != 0) && (texelSize != texelSizeCurrent)) {
             std::cerr << "UDIM::texel sizes do not match\n";
-            //TODO: cleanup mem
+            // TODO: cleanup mem
             return std::pair<opp::Texture, char*>(nullptr, nullptr);
         }
         texelSize = texelSizeCurrent;
@@ -296,7 +292,8 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter, bo
             dataType = OSP_VEC4F;
         } else if ((format == OSP_TEXTURE_R8) || (format == OSP_TEXTURE_L8)) {
             dataType = OSP_UCHAR;
-        } else if ((format == OSP_TEXTURE_RGB8) || (format == OSP_TEXTURE_SRGB)) {
+        } else if ((format == OSP_TEXTURE_RGB8)
+                   || (format == OSP_TEXTURE_SRGB)) {
             dataType = OSP_VEC3UC;
         } else if (format == OSP_TEXTURE_RGBA8 || format == OSP_TEXTURE_SRGBA) {
             dataType = OSP_VEC4UC;
@@ -319,7 +316,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter, bo
         desc.data = data;
         desc.offset = std::get<0>(tile);
         int tileX = ((desc.offset % 10) + 1);
-        int tileY = (desc.offset/10 + 1);
+        int tileY = (desc.offset / 10 + 1);
         int totalX = size.x * tileX;
         int totalY = size.y * tileY;
         numTiles.x = std::max(numTiles.x, tileX);
@@ -335,26 +332,25 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter, bo
     char* data = (char*)malloc(sizeof(char) * dataSize);
 
     // copy tile to main texture
-    for(auto tile : udimTileDescs) {
+    for (auto tile : udimTileDescs) {
         vec2i startTexels;
         startTexels.x = tile.size.x * (tile.offset % 10);
         startTexels.y = tile.size.y * (tile.offset / 10);
         size_t dataIndex = startTexels.y * totalSize.x + startTexels.x;
         size_t tileIndex = 0;
-        for(int y = 0; y < tile.size.y; y++) {
+        for (int y = 0; y < tile.size.y; y++) {
             size_t start = tileIndex * texelSize;
             size_t end = (tileIndex + tile.size.x) * texelSize;
             if (complement && (udimDataType == OSP_FLOAT)) {
                 float* tex = (float*)(tile.data + start);
-                for (int i =0; i < tile.size.x; i++)
+                for (int i = 0; i < tile.size.x; i++)
                     tex[i] = 1.f - tex[i];
             }
             std::copy(tile.data + start, tile.data + end,
-                data + dataIndex * texelSize);
+                      data + dataIndex * texelSize);
             tileIndex += tile.size.x;
             dataIndex += totalSize.x;
         }
-
     }
 
     // create ospray texture object from data

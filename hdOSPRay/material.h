@@ -25,12 +25,12 @@
 #ifndef HDOSPRAY_MATERIAL_H
 #define HDOSPRAY_MATERIAL_H
 
-#include <pxr/pxr.h>
 #include "pxr/imaging/hd/material.h"
 #include "pxr/imaging/hd/sceneDelegate.h"
 #include <pxr/base/gf/vec2f.h>
-#include <pxr/base/gf/vec4f.h>
 #include <pxr/base/gf/vec3f.h>
+#include <pxr/base/gf/vec4f.h>
+#include <pxr/pxr.h>
 
 #include <ospray/ospray_cpp.h>
 #include <ospray/ospray_cpp/ext/rkcommon.h>
@@ -134,7 +134,8 @@ protected:
     void _ProcessUsdPreviewSurfaceNode(HdMaterialNode node);
     // parse texture node params and set them to appropriate map_ texture var
     void _ProcessTextureNode(HdMaterialNode node, TfToken textureName);
-    // parse texture transformation node params and set rotation, translation, and scale
+    // parse texture transformation node params and set rotation, translation,
+    // and scale
     void _ProcessTransform2dNode(HdMaterialNode node, TfToken textureName);
 
     struct HdOSPRayTexture {
@@ -142,10 +143,10 @@ protected:
         enum class WrapType { NONE, BLACK, CLAMP, REPEAT, MIRROR };
         WrapType wrapS, wrapT;
         GfVec4f scale { 1.0f };
-        GfVec2f xfm_translation {0.f, 0.f};
-        GfVec2f xfm_scale {1.f, 1.f};
-        float xfm_rotation {0.f};
-        bool hasXfm {false};
+        GfVec2f xfm_translation { 0.f, 0.f };
+        GfVec2f xfm_scale { 1.f, 1.f };
+        float xfm_rotation { 0.f };
+        bool hasXfm { false };
         enum class ColorType { NONE, RGBA, RGB, R, G, B, A };
         ColorType type;
         opp::Texture ospTexture { nullptr };

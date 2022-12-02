@@ -282,7 +282,7 @@ private:
     // Cached scene data. VtArrays are reference counted, so as long as we
     // only call const accessors keeping them around doesn't incur a buffer
     // copy.
-    HdMeshUtil* _meshUtil {nullptr};
+    HdMeshUtil* _meshUtil { nullptr };
     HdMeshTopology _topology;
     GfMatrix4f _transform;
     VtVec3fArray _points;

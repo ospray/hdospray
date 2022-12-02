@@ -1,2 +1,2 @@
 #/bin/bash
-find . -iname *.h -o -iname *.c -o -iname *.cpp -o -iname *.hpp     | xargs clang-format -style=file -i -fallback-style=none
+clang-format -style=file -i -fallback-style=none $(git ls-files *.c *.cpp *.h *.hpp)

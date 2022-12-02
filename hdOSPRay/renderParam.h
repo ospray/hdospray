@@ -146,6 +146,4 @@ private:
     std::atomic<int> _lightVersion { 1 };
 };
 
-
-
 #endif // HDOSPRAY_RENDER_PARAM_H

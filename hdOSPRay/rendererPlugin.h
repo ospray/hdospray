@@ -66,6 +66,4 @@ private:
     HdOSPRayRendererPlugin& operator=(const HdOSPRayRendererPlugin&) = delete;
 };
 
-
-
 #endif // HDOSPRAY_RENDERER_PLUGIN_H

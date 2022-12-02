@@ -1,7 +1,7 @@
 News, Updates, and Announcements
 ================================
 
-- Sep 20, 2022: Version v0.11.0
+- Dec 2, 2022: Version v0.11.0
 
       - Texture Transforms
       - UDIM textures

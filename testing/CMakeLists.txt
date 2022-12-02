@@ -80,7 +80,7 @@ set_property(TEST ${name}
 PROPERTY ENVIRONMENT HDOSPRAY_SAMPLES_TO_CONVERGENCE=8)
 
 add_test(NAME ${name}_diff
-    COMMAND ${CMAKE_SOURCE_DIR}/scripts/run_gitlab/compare.sh generated_images/${name}.png golden_images/${name}.png)
+    COMMAND ${CMAKE_SOURCE_DIR}/scripts/run_ci/compare.sh generated_images/${name}.png golden_images/${name}.png)
 set_property(TEST ${name}_diff
 PROPERTY ENVIRONMENT HDOSPRAY_SAMPLES_TO_CONVERGENCE=8)
 endfunction()

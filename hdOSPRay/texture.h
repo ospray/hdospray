@@ -45,8 +45,9 @@ opp::Texture LoadPtexTexture(std::string file);
 /// @param nearestFilter or interpolation
 /// @param compute 1.f-val.  float only.
 /// @return OSPRay texture object, data pointer
-std::pair<opp::Texture, char*> LoadOIIOTexture2D(std::string file, bool nearestFilter = false,
-    bool complement = false);
+std::pair<opp::Texture, char*> LoadOIIOTexture2D(std::string file,
+                                                 bool nearestFilter = false,
+                                                 bool complement = false);
 
 /// @brief
 /// @param filename
@@ -56,6 +57,8 @@ std::pair<opp::Texture, char*> LoadOIIOTexture2D(std::string file, bool nearestF
 /// @param compute 1.f-val.  float only.
 /// @return OSPRay texture object, data pointer
 std::pair<opp::Texture, char*> LoadUDIMTexture2D(std::string file, int& numX,
-    int& numY, bool nearestFilter = false, bool complement = false);
+                                                 int& numY,
+                                                 bool nearestFilter = false,
+                                                 bool complement = false);
 
 #endif
