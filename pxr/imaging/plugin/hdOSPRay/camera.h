@@ -8,7 +8,7 @@
 #include <pxr/imaging/hd/camera.h>
 #include <pxr/pxr.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 class HdOSPRayCamera final : public HdCamera {
 public:
@@ -46,5 +46,3 @@ protected:
     float _focalLength { 0.f };
     float _focusDistance { 0.f };
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE

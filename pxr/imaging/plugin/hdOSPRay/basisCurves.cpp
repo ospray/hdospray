@@ -41,8 +41,6 @@
 
 using namespace rkcommon::math;
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayTokens,
@@ -438,5 +436,3 @@ HdOSPRayBasisCurves::AddOSPInstances(
                             _ospInstances.end());
     }
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

@@ -36,8 +36,6 @@
 
 using namespace rkcommon::math;
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 HdOSPRayDistantLight::HdOSPRayDistantLight(SdfPath const& id)
     : HdOSPRayLight(id)
 {
@@ -92,5 +90,3 @@ HdOSPRayDistantLight::_PrepareOSPLight()
     _ospLight.setParam("visible", _cameraVisibility);
     _ospLight.commit();
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

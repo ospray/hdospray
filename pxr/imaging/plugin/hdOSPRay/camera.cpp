@@ -4,8 +4,6 @@
 #include "camera.h"
 #include <pxr/imaging/hd/tokens.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 HdOSPRayCamera::HdOSPRayCamera(SdfPath const& id)
     : HdCamera(id)
 {
@@ -41,5 +39,3 @@ HdOSPRayCamera::Sync(HdSceneDelegate* sceneDelegate,
     if (focusDistance.IsHolding<float>())
         _focusDistance = focusDistance.Get<float>();
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

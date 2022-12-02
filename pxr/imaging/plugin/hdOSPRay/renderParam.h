@@ -36,7 +36,7 @@
 
 namespace opp = ospray::cpp;
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 ///
 /// \class HdOSPRayRenderParam
@@ -146,6 +146,6 @@ private:
     std::atomic<int> _lightVersion { 1 };
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+
 
 #endif // HDOSPRAY_RENDER_PARAM_H

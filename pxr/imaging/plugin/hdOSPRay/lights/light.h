@@ -24,8 +24,6 @@
 #ifndef HDOSPRAY_LIGHT_H
 #define HDOSPRAY_LIGHT_H
 
-#include <pxr/imaging/hd/light.h>
-#include <pxr/imaging/hd/version.h>
 #include <pxr/pxr.h>
 
 #include <pxr/base/gf/matrix4d.h>
@@ -33,6 +31,9 @@
 #include <pxr/base/tf/staticTokens.h>
 #include <pxr/base/vt/dictionary.h>
 #include <pxr/base/vt/value.h>
+#include <pxr/imaging/hd/light.h>
+#include <pxr/imaging/hd/sceneDelegate.h>
+#include <pxr/imaging/hd/version.h>
 
 #include <vector>
 
@@ -41,9 +42,8 @@
 
 namespace opp = ospray::cpp;
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
-class HdSceneDelegate;
 class HdOSPRayRenderParam;
 
 /// \class HdOSPRayLight
@@ -138,7 +138,5 @@ protected:
     // reference to the equivalent OSPLight
     opp::Light _ospLight;
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

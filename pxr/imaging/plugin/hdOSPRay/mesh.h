@@ -44,10 +44,9 @@
 
 namespace opp = ospray::cpp;
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 class HdStDrawItem;
-class HdMeshUtil;
 class HdOSPRayRenderParam;
 
 // class HdOSPRayPrototypeContext;
@@ -353,7 +352,5 @@ private:
     HdOSPRayMesh(const HdOSPRayMesh&) = delete;
     HdOSPRayMesh& operator=(const HdOSPRayMesh&) = delete;
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // HDOSPRAY_MESH_H

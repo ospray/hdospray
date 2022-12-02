@@ -37,7 +37,7 @@
 
 namespace opp = ospray::cpp;
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 typedef std::shared_ptr<class HdStTextureResource> HdStTextureResourceSharedPtr;
 
@@ -171,7 +171,5 @@ protected:
     std::map<TfToken, HdOSPRayTexture> _textures;
     opp::Material _ospMaterial;
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // HDOSPRAY_MATERIAL_H

@@ -37,7 +37,7 @@
 
 namespace opp = ospray::cpp;
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 #define HDOSPRAY_RENDER_SETTINGS_TOKENS                                        \
     (ambientOcclusionSamples)(samplesPerFrame)(lightSamples)(useDenoiser)(     \
@@ -278,7 +278,5 @@ private:
     // passed to prims during Sync().
     std::shared_ptr<HdOSPRayRenderParam> _renderParam;
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // HDOSPRAY_RENDER_DELEGATE_H

@@ -30,9 +30,7 @@
 
 #include <pxr/base/gf/matrix4f.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
-
-class HdRprim;
+PXR_NAMESPACE_USING_DIRECTIVE
 
 /// \class HdOSPRayPrototypeContext
 ///
@@ -54,7 +52,5 @@ struct HdOSPRayInstanceContext {
     GfMatrix4f objectToWorldMatrix;
     /// The scene the prototype geometry lives in, for passing to
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // HDOSPRAY_CONTEXT_H

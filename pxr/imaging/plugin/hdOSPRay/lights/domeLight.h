@@ -25,7 +25,8 @@
 #define HDOSPRAY_DOMELIGHT_H
 
 #include "light.h"
-PXR_NAMESPACE_OPEN_SCOPE
+
+PXR_NAMESPACE_USING_DIRECTIVE
 
 /// \class HdOSPRayDomeLight
 ///
@@ -48,7 +49,5 @@ private:
     // path to the lat/long texture file
     std::string _textureFile;
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

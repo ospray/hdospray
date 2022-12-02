@@ -27,7 +27,7 @@
 #include <pxr/imaging/hd/rendererPlugin.h>
 #include <pxr/pxr.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 ///
 /// \class HdOSPRayRendererPlugin
@@ -66,6 +66,6 @@ private:
     HdOSPRayRendererPlugin& operator=(const HdOSPRayRendererPlugin&) = delete;
 };
 
-PXR_NAMESPACE_CLOSE_SCOPE
+
 
 #endif // HDOSPRAY_RENDERER_PLUGIN_H

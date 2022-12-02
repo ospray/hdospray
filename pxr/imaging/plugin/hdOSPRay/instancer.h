@@ -34,7 +34,7 @@
 
 #include <mutex>
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 /// \class HdOSPRayInstancer
 ///
@@ -109,7 +109,5 @@ private:
     // interpreted at consumption time (here, in ComputeInstanceTransforms).
     TfHashMap<TfToken, HdVtBufferSource*, TfToken::HashFunctor> _primvarMap;
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // HDOSPRAY_INSTANCER_H

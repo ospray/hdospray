@@ -33,7 +33,7 @@ namespace opp = ospray::cpp;
 
 #include <string>
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 OSPTextureFormat osprayTextureFormat(int depth, int channels,
                                      bool preferLinear = false);
@@ -57,7 +57,5 @@ std::pair<opp::Texture, char*> LoadOIIOTexture2D(std::string file, bool nearestF
 /// @return OSPRay texture object, data pointer
 std::pair<opp::Texture, char*> LoadUDIMTexture2D(std::string file, int& numX,
     int& numY, bool nearestFilter = false, bool complement = false);
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

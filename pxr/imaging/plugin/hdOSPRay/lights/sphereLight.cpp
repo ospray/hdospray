@@ -33,8 +33,6 @@
 
 using namespace rkcommon::math;
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 TF_DEFINE_PRIVATE_TOKENS(HdOSPRaySphereLightTokens, (treatAsPoint));
 
 HdOSPRaySphereLight::HdOSPRaySphereLight(SdfPath const& id)
@@ -102,5 +100,3 @@ HdOSPRaySphereLight::_PrepareOSPLight()
     _ospLight.setParam("visible", _cameraVisibility);
     _ospLight.commit();
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

@@ -37,8 +37,6 @@ using namespace rkcommon::math;
 
 OIIO_NAMESPACE_USING
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 OSPTextureFormat
 osprayTextureFormat(int depth, int channels, bool preferLinear)
 {
@@ -373,6 +371,3 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter, bo
 
     return std::pair<opp::Texture, char*>(ospTexture, data);
 }
-
-
-PXR_NAMESPACE_CLOSE_SCOPE

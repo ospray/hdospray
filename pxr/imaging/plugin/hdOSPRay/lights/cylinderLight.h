@@ -26,7 +26,7 @@
 
 #include "light.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 /// \class HdOSPRayCylinderLight
 ///
@@ -48,7 +48,5 @@ private:
     float _radius { 1.f };
     float _length { 1.f };
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

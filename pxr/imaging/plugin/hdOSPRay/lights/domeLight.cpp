@@ -38,8 +38,6 @@
 
 using namespace rkcommon::math;
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 HdOSPRayDomeLight::HdOSPRayDomeLight(SdfPath const& id)
     : HdOSPRayLight(id)
 {
@@ -102,5 +100,3 @@ HdOSPRayDomeLight::_PrepareOSPLight()
         _ospLight.commit();
     }
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

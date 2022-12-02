@@ -39,7 +39,7 @@
 
 namespace opp = ospray::cpp;
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 class HdOSPRayRenderParam;
 
@@ -102,7 +102,5 @@ private:
     GfVec4f _singleColor { .5f, .5f, .5f, 1.f };
     bool _populated { false };
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

@@ -25,7 +25,8 @@
 #define HDOSPRAY_DISKLIGHT_H
 
 #include "light.h"
-PXR_NAMESPACE_OPEN_SCOPE
+
+PXR_NAMESPACE_USING_DIRECTIVE
 
 /// \class HdOSPRayDiskLight
 ///
@@ -53,7 +54,5 @@ private:
     // Note: not supported by OSPRay yet
     std::string _textureFile;
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

@@ -54,7 +54,7 @@ namespace opp = ospray::cpp;
 #define HDOSPRAY_DEFAULT_TMP_MIDOUT 0.18f
 #define HDOSPRAY_DEFAULT_TMP_ACESCOLOR false
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 /// \class HdOSPRayConfig
 ///
@@ -227,7 +227,5 @@ private:
 
     friend class TfSingleton<HdOSPRayConfig>;
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // HDOSPRAY_CONFIG_H

@@ -43,7 +43,7 @@ namespace opp = ospray::cpp;
 
 using namespace rkcommon::math;
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 TF_DEBUG_CODES(OSP_RP);
 TF_DEBUG_CODES(OSP_FPS);
 
@@ -284,7 +284,5 @@ private:
     float _aoRadius { HDOSPRAY_DEFAULT_AO_RADIUS };
     float _aoIntensity { HDOSPRAY_DEFAULT_AO_INTENSITY };
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif // HDOSPRAY_RENDER_PASS_H

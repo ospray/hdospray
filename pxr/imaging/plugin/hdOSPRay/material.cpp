@@ -45,8 +45,6 @@ using namespace rkcommon::math;
 
 OIIO_NAMESPACE_USING
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayMaterialTokens,
@@ -447,5 +445,3 @@ HdOSPRayMaterial::CreateScivisMaterial(std::string rendererType)
     ospMaterial.commit();
     return ospMaterial;
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

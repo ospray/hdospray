@@ -25,7 +25,8 @@
 #define HDOSPRAY_SPHERELIGHT_H
 
 #include "light.h"
-PXR_NAMESPACE_OPEN_SCOPE
+
+PXR_NAMESPACE_USING_DIRECTIVE
 
 /// \class HdOSPRaySphereLight
 ///
@@ -49,7 +50,5 @@ private:
     // if the sphere light should be treated as a virtual point light
     bool _treatAsPoint { false };
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

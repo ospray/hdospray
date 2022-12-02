@@ -28,8 +28,6 @@
 
 #include <iostream>
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 // Instantiate the config singleton.
 TF_INSTANTIATE_SINGLETON(HdOSPRayConfig);
 
@@ -132,5 +130,3 @@ HdOSPRayConfig::GetInstance()
 {
     return TfSingleton<HdOSPRayConfig>::GetInstance();
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

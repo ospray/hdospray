@@ -27,14 +27,11 @@
 #include "../renderParam.h"
 #include <pxr/imaging/hd/perfLog.h>
 #include <pxr/imaging/hd/rprimCollection.h>
-#include <pxr/imaging/hd/sceneDelegate.h>
 
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/usd/usdLux/blackbody.h>
 
 #include <iostream>
-
-PXR_NAMESPACE_OPEN_SCOPE
 
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
@@ -226,5 +223,3 @@ HdOSPRayLight::GetInitialDirtyBitsMask() const
     // the Transform and Params for now.
     return AllDirty;
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

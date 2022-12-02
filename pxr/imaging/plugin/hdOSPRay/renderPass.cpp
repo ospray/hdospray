@@ -46,7 +46,7 @@
 
 using namespace rkcommon::math;
 
-PXR_NAMESPACE_OPEN_SCOPE
+PXR_NAMESPACE_USING_DIRECTIVE
 
 inline float
 rad(float deg)
@@ -1038,4 +1038,4 @@ HdOSPRayRenderPass::_ComputeClearColor(VtValue const& clearValue)
     }
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+

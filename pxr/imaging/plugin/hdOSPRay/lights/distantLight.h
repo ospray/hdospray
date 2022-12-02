@@ -25,7 +25,8 @@
 #define HDOSPRAY_DISTANTLIGHT_H
 
 #include "light.h"
-PXR_NAMESPACE_OPEN_SCOPE
+
+PXR_NAMESPACE_USING_DIRECTIVE
 
 /// \class HdOSPRayDistantLight
 ///
@@ -48,7 +49,5 @@ private:
     // 0.53 degrees is equivalent to the diameter of the sun
     float _angle { 0.53f };
 };
-
-PXR_NAMESPACE_CLOSE_SCOPE
 
 #endif

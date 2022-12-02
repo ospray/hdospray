@@ -51,8 +51,6 @@
 
 #include <iostream>
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 TF_DEFINE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
                         HDOSPRAY_RENDER_SETTINGS_TOKENS);
 
@@ -472,4 +470,4 @@ HdOSPRayRenderDelegate::GetRenderSettingDescriptors() const
     return _settingDescriptors;
 }
 
-PXR_NAMESPACE_CLOSE_SCOPE
+

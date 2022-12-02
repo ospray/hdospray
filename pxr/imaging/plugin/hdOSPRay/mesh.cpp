@@ -39,8 +39,6 @@
 
 using namespace rkcommon::math;
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
     HdOSPRayTokens,
@@ -900,5 +898,3 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
 
     return mesh;
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

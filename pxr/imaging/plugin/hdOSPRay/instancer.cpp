@@ -36,8 +36,6 @@
 
 #include <iostream>
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 // Define local tokens for the names of the primvars the instancer
 // consumes.
 // XXX: These should be hydra tokens...
@@ -254,5 +252,3 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const& prototypeId)
     }
     return final;
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

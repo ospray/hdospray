@@ -23,8 +23,6 @@
 //
 #include "sampler.h"
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 bool
 HdOSPRayBufferSampler::Sample(int index, void* value,
                               HdTupleType dataType) const
@@ -51,5 +49,3 @@ HdOSPRayBufferSampler::Sample(int index, void* value,
 
     return true;
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE

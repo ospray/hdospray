@@ -26,8 +26,6 @@
 
 #include <tbb/parallel_for.h>
 
-PXR_NAMESPACE_OPEN_SCOPE
-
 HdOSPRayRenderBuffer::HdOSPRayRenderBuffer(SdfPath const& id)
     : HdRenderBuffer(id)
     , _width(0)
@@ -290,5 +288,3 @@ HdOSPRayRenderBuffer::Resolve()
         }
     }
 }
-
-PXR_NAMESPACE_CLOSE_SCOPE
