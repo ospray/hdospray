@@ -1,6 +1,14 @@
 News, Updates, and Announcements
 ================================
 
+- Sep 20, 2022: Version v0.11.0
+
+      - Texture Transforms
+      - UDIM textures
+      - Tonemapper settings
+      - Interactive rendering updates
+      - Bug fixes
+
 - Sep 20, 2022: Version v0.10.1
 
       - USD 22.08 support. 21.08 is still default in superbuild for houdini. 
