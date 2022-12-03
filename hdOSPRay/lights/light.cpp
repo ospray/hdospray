@@ -61,7 +61,6 @@ HdOSPRayLight::Finalize(HdRenderParam* renderParam)
     ospRenderParam->RemoveHdOSPRayLight(GetId());
 }
 
-/* virtual */
 void
 HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
                     HdDirtyBits* dirtyBits)
@@ -77,17 +76,9 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         return;
     }
 
-    // Pull top-level OSPRay state out of the render param.
     HdOSPRayRenderParam* ospRenderParam
            = static_cast<HdOSPRayRenderParam*>(renderParam);
-    // OSPRenderer renderer = ospRenderParam->GetOSPRayRenderer();
 
-    // HdOSPRaySphereLight communicates to the scene graph and caches all
-    // interesting values within this class. Later on Get() is called from
-    // TaskState (RenderPass) to perform aggregation/pre-computation,
-    // in order to make the shader execution efficient.
-
-    // Change tracking
     HdDirtyBits bits = *dirtyBits;
 
     // Extrating the transformation/positioning of the light source in the scene
@@ -214,12 +205,8 @@ HdOSPRayLight::_PopulateOSPLight(HdOSPRayRenderParam* ospRenderParam) const
     ospRenderParam->AddHdOSPRayLight(GetId(), this);
 }
 
-/* virtual */
 HdDirtyBits
 HdOSPRayLight::GetInitialDirtyBitsMask() const
 {
-    // In the case of regular lights we want to sync all dirty bits, but
-    // for area lights coming from the scenegraph we just want to extract
-    // the Transform and Params for now.
     return AllDirty;
 }

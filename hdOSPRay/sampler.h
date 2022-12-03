@@ -87,41 +87,19 @@ TYPE_HELPER(GfMatrix4f, HdTypeFloatMat4)
 TYPE_HELPER(GfMatrix4d, HdTypeDoubleMat4)
 #undef TYPE_HELPER
 
-/// \class HdOSPRayBufferSampler
-///
-/// A utility class that knows how to sample an element from a type-tagged
-/// buffer (like HdVtBufferSource).
-///
-/// This class provides templated accessors to let the caller directly get the
-/// final sample type; it also does bounds checks and type checks.
-///
 class HdOSPRayBufferSampler {
 public:
-    /// The constructor takes a reference to a buffer source. The data is
-    /// owned externally; the caller is responsible for ensuring the buffer
-    /// is alive while Sample() is being called.
-    /// \param buffer The buffer being sampled.
     HdOSPRayBufferSampler(HdVtBufferSource const& buffer)
         : _buffer(buffer)
     {
     }
 
-    /// Sample the buffer at element index \p index, and write the sample to
-    /// \p value. Interpret \p value as having arity \p numComponents, each of
-    /// type \p componentType. These parameters may not match the datatype
-    /// declaration of the underlying buffer, in which case Sample returns
-    /// false. Sample also returns false if \p index is out of bounds.
-    ///
-    /// For example, to sample data as GfVec3, \p dataType would be
-    /// HdTupleType { HdTypeFloatVec3, 1 }.
-    ///
-    /// \param index The element index to sample.
-    /// \param value The memory to write the value to (only written on success).
-    /// \param dataType The HdTupleType describing element values.
-    /// \return True if the value was successfully sampled.
+    /// \param index index of element to sample
+    /// \param value output data ptr
+    /// \param dataType
+    /// \return True on success
     bool Sample(int index, void* value, HdTupleType dataType) const;
 
-    // Convenient, templated frontend for Sample().
     template <typename T>
     bool Sample(int index, T* value) const
     {

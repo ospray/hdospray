@@ -93,8 +93,6 @@ HdOSPRayConfig::HdOSPRayConfig()
             TfGetEnvSetting(HDOSPRAY_LIGHT_SAMPLES));
     interactiveTargetFPS = TfGetEnvSetting(HDOSPRAY_INTERACTIVE_TARGET_FPS);
 
-    cameraLightIntensity = (std::max(100,
-            TfGetEnvSetting(HDOSPRAY_CAMERA_LIGHT_INTENSITY)) / 100.0f);
     usePathTracing =TfGetEnvSetting(HDOSPRAY_USE_PATH_TRACING);
     initArgs =TfGetEnvSetting(HDOSPRAY_INIT_ARGS);
     useDenoiser = bool(TfGetEnvSetting(HDOSPRAY_USE_DENOISER) == 1);
@@ -112,8 +110,6 @@ HdOSPRayConfig::HdOSPRayConfig()
             <<    samplesToConvergence    << "\n"
             << "  ambientOcclusionSamples    = "
             <<    ambientOcclusionSamples << "\n"
-            << "  cameraLightIntensity      = "
-            <<    cameraLightIntensity   << "\n"
             << "  minContribution      = "
             <<    minContribution   << "\n"
             << "  maxContribution      = "

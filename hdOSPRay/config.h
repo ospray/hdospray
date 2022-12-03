@@ -58,49 +58,32 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 /// \class HdOSPRayConfig
 ///
-/// This class is a singleton, holding configuration parameters for HdOSPRay.
-/// Everything is provided with a default, but can be overridden using
-/// environment variables before launching a hydra process.
-///
-/// Many of the parameters can be used to control quality/performance
-/// tradeoffs, or to alter how HdOSPRay takes advantage of parallelism.
-///
-/// At startup, this class will print config parameters if
-/// *HDOSPRAY_PRINT_CONFIGURATION* is true. Integer values greater than zero
-/// are considered "true".
+///  Singletone class controlling settings for HdOSPRay.
+///  settings can be controlled through USD settings or env vars of
+///  the syntax HDOSPRAY_
 ///
 class HdOSPRayConfig {
 public:
     /// \brief Return the configuration singleton.
     static const HdOSPRayConfig& GetInstance();
 
-    /// How many samples does each pixel get per frame?
+    /// Samples per frame.  May be modified by interactive updates.
     ///
     /// Override with *HDOSPRAY_SAMPLES_PER_FRAME*.
     unsigned int samplesPerFrame { HDOSPRAY_DEFAULT_SPP };
 
-    /// How many samples do we need before a pixel is considered
-    /// converged?
-    ///
     /// Override with *HDOSPRAY_SAMPLES_TO_CONVERGENCE*.
     unsigned int samplesToConvergence { HDOSPRAY_DEFAULT_SPP_TO_CONVERGE };
 
-    /// How many light samples are performed at a path vertex?
+    /// Number of light samples
     /// A value of -1 means that all light are sampled.
     /// Override with *HDOSPRAY_LIGHT_SAMPLES*.
     unsigned int lightSamples;
 
-    /// How many ambient occlusion rays should we generate per
-    /// camera ray?
+    /// Number of AO samples.  Only affects scivis renderer.
     ///
     /// Override with *HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES*.
     unsigned int ambientOcclusionSamples;
-
-    /// What should the intensity of the camera light be, specified as a
-    /// percent of <1, 1, 1>.  For example, 300 would be <3, 3, 3>.
-    ///
-    /// Override with *HDOSPRAY_CAMERA_LIGHT_INTENSITY*.
-    float cameraLightIntensity;
 
     ///  Whether OSPRay uses path tracing or scivis renderer.
     ///
@@ -112,7 +95,7 @@ public:
     /// Override with *HDOSPRAY_USE_DENOISER*.
     bool useDenoiser { true };
 
-    /// The type of pixel filter used by OSPRay
+    /// The type of pixel filter used by OSPRay.  See OSPRay docs for list.
     ///
     /// Override with *HDOSPRAY_PIXELFILTER_TYPE*.
     OSPPixelFilterTypes pixelFilterType;
@@ -130,7 +113,7 @@ public:
     /// Override with *HDOSPRAY_INIT_ARGS*.
     std::string initArgs;
 
-    ///  Whether OSPRay forces quad meshes for debug
+    ///  Force Quad meshes
     ///
     /// Override with *HDOSPRAY_FORCE_QUADRANGULATE*.
     bool forceQuadrangulate;
@@ -155,6 +138,7 @@ public:
     /// Override with *HDOSPRAY_MAX_CONTRIBUTION*.
     float maxContribution { HDOSPRAY_DEFAULT_MAX_CONTRIBUTION };
 
+    /// Override with *HDOSPRAY_INTERACTIVE_TARGET_FPS*.
     float interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
 
     ///  Ao rays maximum distance
@@ -166,8 +150,6 @@ public:
     ///
     /// Override with *HDOSPRAY_AO_INTENSITY*.
     float aoIntensity { HDOSPRAY_DEFAULT_AO_INTENSITY };
-
-    float aoSamples { HDOSPRAY_DEFAULT_AO_SAMPLES };
 
     ///  Use an ambient light
     ///
@@ -216,9 +198,7 @@ public:
     std::vector<opp::Geometry> ospInstances;
 
 private:
-    // The constructor initializes the config variables with their
-    // default or environment-provided override, and optionally prints
-    // them.
+    // populates variables with env vars
     HdOSPRayConfig();
     ~HdOSPRayConfig() = default;
 

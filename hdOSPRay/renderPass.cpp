@@ -105,7 +105,6 @@ HdOSPRayRenderPass::~HdOSPRayRenderPass()
 void
 HdOSPRayRenderPass::ResetImage()
 {
-    // Set a flag to clear the sample buffer the next time Execute() is called.
     _pendingResetImage = true;
 }
 
@@ -119,7 +118,7 @@ HdOSPRayRenderPass::IsConverged() const
 void
 HdOSPRayRenderPass::_MarkCollectionDirty()
 {
-    // If the drawable collection changes, we should reset the sample buffer.
+    // redraw on next execute
     _pendingResetImage = true;
     _pendingModelUpdate = true;
 }
@@ -183,6 +182,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (aovDirty) {
         _hasColor = _hasDepth = _hasCameraDepth = _hasNormal = _hasPrimId
                = _hasInstId = false;
+        // determine which aovs we need to fill
         for (int aovIndex = 0; aovIndex < aovBindings.size(); aovIndex++) {
             auto name = HdParsedAovToken(aovBindings[aovIndex].aovName).name;
             if (name == HdAovTokens->color) {
@@ -203,15 +203,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             frameBufferDirty = true;
         }
 
-        // Determine whether we need to update the renderer AOV bindings.
-        //
-        // It's possible for the passed in bindings to be empty, but that's
-        // never a legal state for the renderer, so if that's the case we add
-        // a color and depth aov.
-        //
-        // If the renderer AOV bindings are empty, force a bindings update so
-        // that we always get a chance to add color/depth on the first time
-        // through.
+        // update aov buffer maps.  if no aov buffers are specified, create a color aov
         HdRenderPassAovBindingVector aovBindings
                = renderPassState->GetAovBindings();
         if (_aovBindings != aovBindings || _aovBindings.empty()) {
@@ -236,12 +228,10 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
            = renderPassState->GetWorldToViewMatrix().GetInverse();
     auto inverseProjMatrix
            = renderPassState->GetProjectionMatrix().GetInverse();
-
-    // if the camera has changed
     bool cameraDirty = (inverseViewMatrix != _inverseViewMatrix
                         || inverseProjMatrix != _inverseProjMatrix);
 
-    // if we need to update the settings (rendering or lights)
+    // changes to renderer settings
     int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
     _pendingSettingsUpdate = (_lastSettingsVersion != currentSettingsVersion);
 
@@ -250,6 +240,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _lastSettingsVersion = currentSettingsVersion;
     }
 
+    // dirty scene mesh representation
     int currentModelVersion = _renderParam->GetModelVersion();
     if (_lastRenderedModelVersion != currentModelVersion) {
         _pendingModelUpdate = true;
@@ -257,6 +248,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         cameraDirty = true;
     }
 
+    // dirty lights
     int currentLightVersion = _renderParam->GetLightVersion();
     if (_lastRenderedLightVersion != currentLightVersion) {
         _pendingLightUpdate = true;
@@ -265,7 +257,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     // if we need to recommit the world
-    // bool worldDirty = _pendingModelUpdate || _pendingLightUpdate;
     bool worldDirty = _pendingModelUpdate;
     bool lightsDirty = _pendingLightUpdate;
 
@@ -280,16 +271,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _width = dataWindow.GetWidth();
         _height = dataWindow.GetHeight();
 
+        // if using a preframing version of USD, or if aovs are missing, create buffers
 #if PXR_VERSION > 2011
         if (!renderPassState->GetFraming().IsValid())
 #endif
         {
-            // Support clients that do not use the new framing API
-            // and do not use AOVs.
-            //
-            // Note that we do not support the case of using the
-            // new camera framing API without using AOVs.
-            //
             if (_hasColor)
                 _colorBuffer.Allocate(GfVec3i(_width, _height, 1),
                                       HdFormatFloat32Vec4,
@@ -321,6 +307,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         }
     }
 
+    // display finished frames or return until ready, setup interactive frame
     if (_currentFrame.isValid() && !aovDirty) {
         if (_interactiveEnabled && (frameBufferDirty || _pendingResetImage)) {
             // framebuffer dirty or start interactive mode.
@@ -490,6 +477,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _pendingResetImage = true;
     }
 
+    // setup image operations on frame
     if (_pendingResetImage || denoiserDirty || _tonemapperDirty
         || frameBufferDirty || interactiveFramebufferDirty) {
         std::vector<opp::ImageOperation> iops;
@@ -543,6 +531,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         frameBuffer.commit();
     }
 
+    // setup renderer params
     if ((_interacting != cameraDirty) && _interactiveEnabled) {
         _renderer.setParam("maxPathLength", (cameraDirty ? 4 : _maxDepth));
         _renderer.setParam("minContribution",
@@ -553,6 +542,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _rendererDirty = true;
     }
 
+    // setup camera
     if (cameraDirty) {
         _inverseViewMatrix = inverseViewMatrix;
         _inverseProjMatrix = inverseProjMatrix;
@@ -590,15 +580,17 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _currentFrameBufferScale = 1.0f;
     }
 
+    // add mesh instances to world
     if (_pendingModelUpdate)
         ProcessInstances();
 
-    // add lights
+    // add lights to world
     if (_pendingLightUpdate) {
         ProcessLights();
         lightsDirty = true;
     }
 
+    // world commit to prepare render
     if (_world && (worldDirty || lightsDirty)) {
         _world.commit();
     }
@@ -619,8 +611,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (_interacting)
         frameBuffer = _interactiveFrameBuffer;
 
+    // Render the frame.  Display will occur in subsequent execute calls
     if (!IsConverged()) {
-        // Render the frame
         _currentFrame.osprayFrame
                = frameBuffer.renderFrame(_renderer, _camera, _world);
         if (!_interacting)
@@ -1008,7 +1000,6 @@ HdOSPRayRenderPass::SetAovBindings(
     }
 }
 
-/* static */
 GfVec4f
 HdOSPRayRenderPass::_ComputeClearColor(VtValue const& clearValue)
 {

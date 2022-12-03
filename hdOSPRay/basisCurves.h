@@ -58,10 +58,6 @@ public:
 
     virtual HdDirtyBits GetInitialDirtyBitsMask() const override;
 
-    /// Release any resources this class is holding onto: in this case,
-    /// destroy the geometry object in the ospray scene graph.
-    ///   \param renderParam An HdOSPRayRenderParam object containing top-level
-    ///                      ospray state.
     virtual void Finalize(HdRenderParam* renderParam) override
     {
     }
@@ -74,9 +70,6 @@ protected:
 
     virtual HdDirtyBits _PropagateDirtyBits(HdDirtyBits bits) const override;
 
-    // Populate _primvarSourceMap (our local cache of primvar data) based on
-    // scene data. Primvars will be turned into samplers in _PopulateRtMesh,
-    // through the help of the _CreatePrimvarSampler() method.
     void _UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                                HdDirtyBits dirtyBits);
 

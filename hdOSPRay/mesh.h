@@ -49,91 +49,32 @@ PXR_NAMESPACE_USING_DIRECTIVE
 class HdStDrawItem;
 class HdOSPRayRenderParam;
 
-// class HdOSPRayPrototypeContext;
-// class HdOSPRayInstanceContext;
-
 /// \class HdOSPRayMesh
 ///
-/// An HdOSPRay representation of a subdivision surface or poly-mesh object.
-/// This class is an example of a hydra Rprim, or renderable object, and it
-/// gets created on a call to HdRenderIndex::InsertRprim() with a type of
-/// HdPrimTypeTokens->mesh.
-///
-/// The prim object's main function is to bridge the scene description and the
-/// renderable representation. The Hydra image generation algorithm will call
-/// HdRenderIndex::SyncAll() before any drawing; this, in turn, will call
-/// Sync() for each mesh with new data.
-///
-/// Sync() is passed a set of dirtyBits, indicating which scene buffers are
-/// dirty. It uses these to pull all of the new scene data and constructs
-/// updated ospray geometry objects.  Rebuilding the acceleration datastructures
-/// is deferred to HdOSPRayRenderDelegate::CommitResources(), which runs after
-/// all prims have been updated. After running Sync() for each prim and
-/// HdOSPRayRenderDelegate::CommitResources(), the scene should be ready for
-/// rendering via ray queries.
-///
-/// An rprim's state is lazily populated in Sync(); matching this, Finalize()
-/// does the heavy work of releasing state (such as handles into the top-level
-/// ospray scene), so that object population and existence aren't tied to
-/// each other.
+/// hdOSPRay RPrim object
+/// - supports tri and quad meshes, as well as subd and curves.
 ///
 class HdOSPRayMesh final : public HdMesh {
 public:
     HF_MALLOC_TAG_NEW("new HdOSPRayMesh");
 
-    /// HdOSPRayMesh constructor.
-    ///   \param id The scene-graph path to this mesh.
-    ///   \param instancerId If specified, the HdOSPRayInstancer at this id uses
-    ///                      this mesh as a prototype.
+    ///   \param id scenegraph path
+    ///   \param instancerId
+    ///
     HdOSPRayMesh(SdfPath const& id, SdfPath const& instancerId = SdfPath());
 
-    /// HdOSPRayMesh destructor.
-    /// (Note: OSPRay resources are released in Finalize()).
+    /// OSPRay resources released in Finalize
     virtual ~HdOSPRayMesh();
 
-    /// Inform the scene graph which state needs to be downloaded in the
-    /// first Sync() call: in this case, topology and points data to build
-    /// the geometry object in the ospray scene graph.
-    ///   \return The initial dirty state this mesh wants to query.
     virtual HdDirtyBits GetInitialDirtyBitsMask() const override;
 
-    /// Release any resources this class is holding onto: in this case,
-    /// destroy the geometry object in the ospray scene graph.
-    ///   \param renderParam An HdOSPRayRenderParam object containing top-level
-    ///                      ospray state.
     virtual void Finalize(HdRenderParam* renderParam) override;
 
-    /// Pull invalidated scene data and prepare/update the renderable
-    /// representation.
-    ///
-    /// This function is told which scene data to pull through the
-    /// dirtyBits parameter. The first time it's called, dirtyBits comes
-    /// from _GetInitialDirtyBits(), which provides initial dirty state,
-    /// but after that it's driven by invalidation tracking in the scene
-    /// delegate.
-    ///
-    /// The contract for this function is that the prim can only pull on scene
-    /// delegate buffers that are marked dirty. Scene delegates can and do
-    /// implement just-in-time data schemes that mean that pulling on clean
-    /// data will be at best incorrect, and at worst a crash.
-    ///
-    /// This function is called in parallel from worker threads, so it needs
-    /// to be threadsafe; calls into HdSceneDelegate are ok.
-    ///
-    /// Reprs are used by hydra for controlling per-item draw settings like
-    /// flat/smooth shaded, wireframe, refined, etc.
-    ///   \param sceneDelegate The data source for this geometry item.
-    ///   \param renderParam An HdOSPRayRenderParam object containing top-level
-    ///                      ospray state.
-    ///   \param dirtyBits A specifier for which scene data has changed.
-    ///   \param reprName A specifier for which representation to draw with.
-    ///   \param forcedRepr A specifier for how to resolve reprName opinions.
-    ///
     virtual void Sync(HdSceneDelegate* sceneDelegate,
                       HdRenderParam* renderParam, HdDirtyBits* dirtyBits,
                       TfToken const& reprToken) override;
 
-    /// Add generated instances from sync function to the instance list for
+    /// Add generated instances from sync function to the instanceList for
     /// rendering
     void AddOSPInstances(std::vector<opp::Instance>& instanceList) const;
 
@@ -141,31 +82,8 @@ protected:
     bool _UseQuadIndices(const HdRenderIndex& renderIndex,
                          HdMeshTopology const& topology) const;
 
-    // This callback from Rprim gives the prim an opportunity to set
-    // additional dirty bits based on those already set.  This is done
-    // before the dirty bits are passed to the scene delegate, so can be
-    // used to communicate that extra information is needed by the prim to
-    // process the changes.
-    //
-    // The return value is the new set of dirty bits, which replaces the bits
-    // passed in.
-    //
-    // See HdRprim::PropagateRprimDirtyBits()
     virtual HdDirtyBits _PropagateDirtyBits(HdDirtyBits bits) const override;
 
-    // Initialize the given representation of this Rprim.
-    // This is called prior to syncing the prim, the first time the repr
-    // is used.
-    //
-    // reprName is the name of the repr to initalize.  HdRprim has already
-    // resolved the reprName to its final value.
-    //
-    // dirtyBits is an in/out value.  It is initialized to the dirty bits
-    // from the change tracker.  InitRepr can then set additional dirty bits
-    // if additional data is required from the scene delegate when this
-    // repr is synced.  InitRepr occurs before dirty bit propagation.
-    //
-    // See HdRprim::InitRepr()
     virtual void _InitRepr(TfToken const& reprToken,
                            HdDirtyBits* dirtyBits) override;
 
@@ -181,9 +99,6 @@ private:
                           HdMeshReprDesc const& desc,
                           HdOSPRayRenderParam* renderParam);
 
-    // Populate _primvarSourceMap (our local cache of primvar data) based on
-    // scene data. Primvars will be turned into samplers in _PopulateRtMesh,
-    // through the help of the _CreatePrimvarSampler() method.
     void _UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                                HdDirtyBits dirtyBits);
 
@@ -194,13 +109,11 @@ private:
                                     const VtVec3fArray& colors, bool refined,
                                     bool useQuads);
 
-    /// Compute primvar array of type "type" for the specified interpolation
-    /// mode.
     ///  \param meshUtil
     ///  \param useQuads
-    ///  \param primvars the specified primvar array, ie _texcoords
-    ///  \param computedPrimvars the output primvar array
-    ///  \param name HdToken speficying the primvar
+    ///  \param primvars input
+    ///  \param computedPrimvars output
+    ///  \param name token of primvar
     ///  \param interpolation facevarying, vertexvarying, uniform, or constant
     template <class type>
     void _ComputePrimvars(HdMeshUtil& meshUtil, bool useQuads, type& primvars,
@@ -270,28 +183,23 @@ private:
 
     bool _populated { false };
 
-    // Every HdOSPRayMesh is treated as instanced; if there's no instancer,
-    // the prototype has a single identity istance.
     opp::Geometry _ospMesh;
     opp::GeometricModel* _geometricModel;
     std::vector<opp::GeometricModel> _geomSubsetModels;
     // Each instance of the mesh in the top-level scene is stored in
-    // _ospInstances.
+    // _ospInstances. This gets queried by the renderpass.
     std::vector<opp::Instance> _ospInstances;
 
-    // Cached scene data. VtArrays are reference counted, so as long as we
-    // only call const accessors keeping them around doesn't incur a buffer
-    // copy.
     HdMeshUtil* _meshUtil { nullptr };
     HdMeshTopology _topology;
     GfMatrix4f _transform;
     VtVec3fArray _points;
     VtVec2fArray _texcoords;
-    VtVec2fArray _computedTexcoords; // triangulated / quadrangulated primvars
+    VtVec2fArray _computedTexcoords; // triangulated
     VtVec3fArray _normals;
-    VtVec3fArray _computedNormals; // triangulated / quadrangulated primvars
+    VtVec3fArray _computedNormals; // triangulated
     VtVec3fArray _colors;
-    VtVec3fArray _computedColors; // triangulated / quadrangulated primvars
+    VtVec3fArray _computedColors; // triangulated
     GfVec4f _singleColor { .5f, .5f, .5f, 1.f };
     HdInterpolation _texcoordsInterpolation;
     HdInterpolation _colorsInterpolation;
@@ -300,13 +208,6 @@ private:
     TfToken _colorsPrimVarName;
     TfToken _normalsPrimVarName;
 
-    // Derived scene data:
-    // - _triangulatedIndices holds a triangulation of the source topology,
-    //   which can have faces of arbitrary arity.
-    // - _trianglePrimitiveParams holds a mapping from triangle index (in
-    //   the triangulated topology) to authored face index.
-    // - _computedNormals holds per-vertex normals computed as an average of
-    //   adjacent face normals.
     VtVec3iArray _triangulatedIndices;
     VtIntArray _trianglePrimitiveParams;
 
@@ -321,11 +222,6 @@ private:
     VtIntArray _quadPrimitiveParams;
 #endif
 
-    // Derived scene data. Hd_VertexAdjacency is an acceleration datastructure
-    // for computing per-vertex smooth normals. _adjacencyValid indicates
-    // whether the datastructure has been rebuilt with the latest topology,
-    // and _normalsValid indicates whether _computedNormals has been
-    // recomputed with the latest points data.
     Hd_VertexAdjacency _adjacency;
     bool _adjacencyValid;
     bool _normalsValid;
@@ -337,16 +233,6 @@ private:
     HdCullStyle _cullStyle;
     int _tessellationRate { 32 };
     std::mutex _mutex;
-
-    // A local cache of primvar scene data. "data" is a copy-on-write handle to
-    // the actual primvar buffer, and "interpolation" is the interpolation mode
-    // to be used. This cache is used in _PopulateRtMesh to populate the
-    // primvar sampler map in the prototype context, which is used for shading.
-    struct PrimvarSource {
-        VtValue data;
-        HdInterpolation interpolation;
-    };
-    TfHashMap<TfToken, PrimvarSource, TfToken::HashFunctor> _primvarSourceMap;
 
     // This class does not support copying.
     HdOSPRayMesh(const HdOSPRayMesh&) = delete;

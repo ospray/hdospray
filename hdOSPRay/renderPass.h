@@ -50,37 +50,23 @@ TF_DEBUG_CODES(OSP_FPS);
 class HdOSPRayRenderParam;
 
 /// \class HdOSPRayRenderPass
-///
-/// HdRenderPass represents a single render iteration, rendering a view of the
-/// scene (the HdRprimCollection) for a specific viewer (the camera/viewport
-/// parameters in HdRenderPassState) to the current draw target.
-///
-/// This class does so by raycasting into the OSPRay scene.
-///
 class HdOSPRayRenderPass final : public HdRenderPass {
 public:
-    /// Renderpass constructor.
-    ///   \param index The render index containing scene data to render.
-    ///   \param collection The initial rprim collection for this renderpass.
-    ///   \param scene The OSPRay scene to raycast into.
     HdOSPRayRenderPass(HdRenderIndex* index,
                        HdRprimCollection const& collection,
                        opp::Renderer renderer,
                        std::shared_ptr<HdOSPRayRenderParam> renderParam);
 
-    /// Renderpass destructor.
     virtual ~HdOSPRayRenderPass();
 
-    // -----------------------------------------------------------------------
-    // HdRenderPass API
 
-    /// Clear the sample buffer (when scene or camera changes).
+    /// Mark the frame as dirty for next pass
     virtual void ResetImage();
 
-    /// Determine whether the sample buffer has enough samples.
-    ///   \return True if the image has enough samples to be considered final.
+    /// Converged based on samples per pixel and samples to convergence settings
     virtual bool IsConverged() const override;
 
+    // manages ospray state and buffers of a frame
     struct RenderFrame {
         opp::Future osprayFrame;
         unsigned int width { 0 };
@@ -119,29 +105,20 @@ public:
 
     virtual void DisplayRenderBuffer(RenderFrame& renderFrame);
 
-    /// Set the aov bindings to use for rendering.
-    ///   \param aovBindings A list of aov bindings.
     void SetAovBindings(HdRenderPassAovBindingVector const& aovBindings);
 
-    /// Get the aov bindings being used for rendering.
-    ///   \return the current aov bindings.
     HdRenderPassAovBindingVector const& GetAovBindings() const
     {
         return _aovBindings;
     }
 
 protected:
-    // -----------------------------------------------------------------------
-    // HdRenderPass API
-
-    /// Draw the scene with the bound renderpass state.
-    ///   \param renderPassState Input parameters (including viewer parameters)
-    ///                          for this renderpass.
-    ///   \param renderTags Which rendertags should be drawn this pass.
+    /// Draw and/or display the scene
+    /// rendering is asyncronous, will need to be called repeatedly until isconverged
     virtual void _Execute(HdRenderPassStateSharedPtr const& renderPassState,
                           TfTokenVector const& renderTags) override;
 
-    /// Update internal tracking to reflect a dirty collection.
+    // override interal dirty call
     virtual void _MarkCollectionDirty() override;
 
     virtual void
@@ -151,24 +128,23 @@ protected:
     virtual void ProcessInstances();
 
 private:
-    // -----------------------------------------------------------------------
-    // Internal API
-
-    // Specify a new viewport size for the sample buffer. Note: the caller
-    // should also call ResetImage().
-    void _ResizeSampleBuffer(unsigned int width, unsigned int height);
-
+    /// @brief  helper function to write data into a renderbuffer
+    /// @tparam T data type, eg vec3f
+    /// @param ospRenderBuffer 
+    /// @param renderFrame
+    /// @param data  source data
+    /// @param numElements  number of type T elements to write
     template <class T>
     void _writeRenderBuffer(HdOSPRayRenderBuffer* ospRenderBuffer,
-                            RenderFrame& renderBuffer, T* data, int numElements)
+                            RenderFrame& renderFrame, T* data, int numElements)
     {
         int aovWidth = ospRenderBuffer->GetWidth();
         int aovHeight = ospRenderBuffer->GetHeight();
-        if (aovWidth >= renderBuffer.width
-            && aovHeight >= renderBuffer.height) {
+        if (aovWidth >= renderFrame.width
+            && aovHeight >= renderFrame.height) {
             ospRenderBuffer->Map();
-            float xscale = float(renderBuffer.width) / float(aovWidth);
-            float yscale = float(renderBuffer.height) / float(aovHeight);
+            float xscale = float(renderFrame.width) / float(aovWidth);
+            float yscale = float(renderFrame.height) / float(aovHeight);
             tbb::parallel_for(
                    tbb::blocked_range<int>(0, aovWidth * aovHeight),
                    [&](tbb::blocked_range<int> r) {
@@ -179,7 +155,7 @@ private:
                            int is = i * yscale;
                            ospRenderBuffer->Write(
                                   GfVec3i(i, j, 1), numElements,
-                                  &(data[(js * renderBuffer.width + is)
+                                  &(data[(js * renderFrame.width + is)
                                          * numElements]));
                        }
                    });
@@ -191,8 +167,6 @@ private:
     // Return the clear color to use for the given VtValue
     static GfVec4f _ComputeClearColor(VtValue const& clearValue);
 
-    // The sample buffer is cleared in Execute(), so this flag records whether
-    // ResetImage() has been called since the last Execute().
     bool _pendingResetImage { true };
     bool _pendingModelUpdate { true };
     bool _pendingLightUpdate { true };
@@ -200,8 +174,6 @@ private:
 
     opp::FrameBuffer _frameBuffer;
     opp::FrameBuffer _interactiveFrameBuffer;
-    // The pixels written to. Like viewport in OpenGL,
-    // but coordinates are y-Down.
     GfRect2i _dataWindow;
     HdRenderPassAovBindingVector _aovBindings;
     HdParsedAovTokenVector _aovNames;
@@ -237,19 +209,17 @@ private:
 
     RenderFrame _currentFrame;
 
-    // The width of the viewport we're rendering into.
+    // viewport width
     unsigned int _width { 0 };
-    // The height of the viewport we're rendering into.
+    // viewport height
     unsigned int _height { 0 };
 
     opp::Camera _camera;
 
-    // The inverse view matrix: camera space to world space.
+    // camera space to world space
     GfMatrix4d _inverseViewMatrix;
-    // The inverse projection matrix: NDC space to camera space.
     GfMatrix4d _inverseProjMatrix;
 
-    // The color of a ray miss.
     GfVec4f _clearColor;
 
     std::shared_ptr<HdOSPRayRenderParam> _renderParam;

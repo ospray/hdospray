@@ -36,9 +36,6 @@
 
 #include <iostream>
 
-// Define local tokens for the names of the primvars the instancer
-// consumes.
-// XXX: These should be hydra tokens...
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
     _tokens,
@@ -93,14 +90,9 @@ HdOSPRayInstancer::_SyncPrimvars()
            = GetDelegate()->GetRenderIndex().GetChangeTracker();
     SdfPath const& id = GetId();
 
-    // Use the double-checked locking pattern to check if this instancer's
-    // primvars are dirty.
     int dirtyBits = changeTracker.GetInstancerDirtyBits(id);
     if (HdChangeTracker::IsAnyPrimvarDirty(dirtyBits, id)) {
         std::lock_guard<std::mutex> lock(_instanceLock);
-
-        // If this instancer has dirty primvars, get the list of
-        // primvar names and then cache each one.
 
         TfTokenVector primvarNames;
         HdPrimvarDescriptorVector primvars
@@ -119,7 +111,6 @@ HdOSPRayInstancer::_SyncPrimvars()
             }
         }
 
-        // Mark the instancer as clean
         changeTracker.MarkInstancerClean(id);
     }
 }
@@ -156,13 +147,6 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const& prototypeId)
     HD_TRACE_FUNCTION();
     HF_MALLOC_TAG_FUNCTION();
 
-    // The transforms for this level of instancer are computed by:
-    // foreach(index : indices) {
-    //     instancerTransform * translate(index) * rotate(index) *
-    //     scale(index) * instanceTransform(index)
-    // }
-    // If any transform isn't provided, it's assumed to be the identity.
-
     GfMatrix4d instancerTransform
            = GetDelegate()->GetInstancerTransform(GetId());
     VtIntArray instanceIndices
@@ -173,7 +157,7 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const& prototypeId)
         transforms[i] = instancerTransform;
     }
 
-    // "translate" holds a translation vector for each index.
+    // translate
     if (_primvarMap.count(_tokens->translate) > 0) {
         HdOSPRayBufferSampler sampler(*_primvarMap[_tokens->translate]);
         for (size_t i = 0; i < instanceIndices.size(); ++i) {
@@ -186,7 +170,7 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const& prototypeId)
         }
     }
 
-    // "rotate" holds a quaternion in <real, i, j, k> format for each index.
+    // rotate by quaternion
     if (_primvarMap.count(_tokens->rotate) > 0) {
         HdOSPRayBufferSampler sampler(*_primvarMap[_tokens->rotate]);
         for (size_t i = 0; i < instanceIndices.size(); ++i) {
@@ -200,7 +184,7 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const& prototypeId)
         }
     }
 
-    // "scale" holds an axis-aligned scale vector for each index.
+    // scale
     if (_primvarMap.count(_tokens->scale) > 0) {
         HdOSPRayBufferSampler sampler(*_primvarMap[_tokens->scale]);
         for (size_t i = 0; i < instanceIndices.size(); ++i) {
@@ -213,7 +197,7 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const& prototypeId)
         }
     }
 
-    // "instanceTransform" holds a 4x4 transform matrix for each index.
+    // transform
     if (_primvarMap.count(_tokens->instanceTransform) > 0) {
         HdOSPRayBufferSampler sampler(*_primvarMap[_tokens->instanceTransform]);
         for (size_t i = 0; i < instanceIndices.size(); ++i) {
@@ -234,11 +218,7 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const& prototypeId)
         return transforms;
     }
 
-    // The transforms taking nesting into account are computed by:
-    // parentTransforms = parentInstancer->ComputeInstanceTransforms(GetId())
-    // foreach (parentXf : parentTransforms, xf : transforms) {
-    //     parentXf * xf
-    // }
+    // compute nested transforms of the form parent * local
     VtMatrix4dArray parentTransforms
            = static_cast<HdOSPRayInstancer*>(parentInstancer)
                     ->ComputeInstanceTransforms(GetId());

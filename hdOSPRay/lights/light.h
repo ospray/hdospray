@@ -48,21 +48,17 @@ class HdOSPRayRenderParam;
 
 /// \class HdOSPRayLight
 ///
-/// the base class for wrapping USDLuxLights to an OSPRay light source.
+///  Base class for implementing an OSPRay HdLight
 ///
 class HdOSPRayLight : public HdLight {
 public:
     HdOSPRayLight(SdfPath const& id);
     virtual ~HdOSPRayLight();
 
-    /// Synchronizes state from the delegate to this object.
     virtual void Sync(HdSceneDelegate* sceneDelegate,
                       HdRenderParam* renderParam,
                       HdDirtyBits* dirtyBits) override;
 
-    // Returns the minimal set of dirty bits to place in the
-    /// change tracker for use in the first sync of this prim.
-    /// Typically this would be all dirty bits.
     virtual HdDirtyBits GetInitialDirtyBitsMask() const override;
 
     void Finalize(HdRenderParam* renderParam) override;

@@ -41,9 +41,8 @@ PXR_NAMESPACE_USING_DIRECTIVE
 ///
 /// \class HdOSPRayRenderParam
 ///
-/// The render delegate can create an object of type HdRenderParam, to pass
-/// to each prim during Sync(). HdOSPRay uses this class to pass
-/// OSPRay state around.
+/// Created by a render delegate to pass OSPRay specific state between 
+/// different objects.
 ///
 class HdOSPRayRenderParam final : public HdRenderParam {
 public:

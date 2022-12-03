@@ -27,7 +27,7 @@
 #include "renderDelegate.h"
 #include <pxr/imaging/hd/rendererPluginRegistry.h>
 
-// Register the OSPRay plugin with the renderer plugin system.
+// Register OSPRay plugin with USD
 TF_REGISTRY_FUNCTION(TfType)
 {
     HdRendererPluginRegistry::Define<HdOSPRayRendererPlugin>();
@@ -36,14 +36,13 @@ TF_REGISTRY_FUNCTION(TfType)
 HdRenderDelegate*
 HdOSPRayRendererPlugin::CreateRenderDelegate()
 {
-    // Check plugin against pxr version
+    // Check supported pxr version
 #if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION < 20
     error This version of HdOSPRay is configured to built against USD v0 .20.x
-           or v0 .21.x
+           to v0 .22.x
 #endif
 
-           int ac
-           = 1;
+    int ac = 1;
     std::string initArgs = HdOSPRayConfig::GetInstance().initArgs;
     std::stringstream ss(initArgs);
     std::string arg;
@@ -84,7 +83,7 @@ HdOSPRayRendererPlugin::CreateRenderDelegate()
         ospDeviceCommit(device);
     }
     if (ospGetCurrentDevice() == nullptr) {
-        // user most likely specified bad arguments, retry without them
+        // bad user arguments, init with empty arguments instead
         ac = 1;
         ospInit(&ac, av);
     }
@@ -103,7 +102,5 @@ HdOSPRayRendererPlugin::DeleteRenderDelegate(HdRenderDelegate* renderDelegate)
 bool
 HdOSPRayRendererPlugin::IsSupported() const
 {
-    // Nothing more to check for now, we assume if the plugin loads correctly
-    // it is supported.
     return true;
 }

@@ -31,37 +31,19 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 ///
 /// \class HdOSPRayRendererPlugin
-///
-/// A registered child of HdRendererPlugin, this is the class that gets
-/// loaded when a hydra application asks to draw with a certain renderer.
-/// It supports rendering via creation/destruction of renderer-specific
-/// classes. The render delegate is the hydra-facing entrypoint into the
-/// renderer; it's responsible for creating specialized implementations of hydra
-/// prims (which translate scene data into drawable representations) and hydra
-/// renderpasses (which draw the scene to the framebuffer).
-///
 class HdOSPRayRendererPlugin final : public HdRendererPlugin {
 public:
     HdOSPRayRendererPlugin() = default;
     virtual ~HdOSPRayRendererPlugin() = default;
 
-    /// Construct a new render delegate of type HdOSPRayRenderDelegate.
-    /// OSPRay render delegates own the OSPRay scene object, so a new render
-    /// delegate should be created for each instance of HdRenderIndex.
-    ///   \return A new HdOSPRayRenderDelegate object.
     virtual HdRenderDelegate* CreateRenderDelegate() override;
 
-    /// Destroy a render delegate created by this class's CreateRenderDelegate.
-    ///   \param renderDelegate The render delegate to delete.
     virtual void
     DeleteRenderDelegate(HdRenderDelegate* renderDelegate) override;
 
-    /// Checks to see if the OSPRay plugin is supported on the running system
-    ///
     virtual bool IsSupported() const override;
 
 private:
-    // This class does not support copying.
     HdOSPRayRendererPlugin(const HdOSPRayRendererPlugin&) = delete;
     HdOSPRayRendererPlugin& operator=(const HdOSPRayRendererPlugin&) = delete;
 };

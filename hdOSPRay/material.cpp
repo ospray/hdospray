@@ -85,7 +85,6 @@ HdOSPRayMaterial::HdOSPRayMaterial(SdfPath const& id)
     diffuseColor = GfVec3f(1, 1, 1);
 }
 
-/// Synchronizes state from the delegate to this object.
 void
 HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
                        HdRenderParam* renderParam, HdDirtyBits* dirtyBits)
@@ -95,15 +94,15 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
 
     TF_UNUSED(renderParam);
 
+    // if material dirty, update
     if (*dirtyBits & HdMaterial::DirtyResource) {
-        // update material
+        //  find material network
         VtValue networkMapResource
                = sceneDelegate->GetMaterialResource(GetId());
         HdMaterialNetworkMap networkMap
                = networkMapResource.Get<HdMaterialNetworkMap>();
         HdMaterialNetwork matNetwork;
 
-        // get material network from network map
         TF_FOR_ALL (itr, networkMap.map) {
             auto& network = itr->second;
             TF_FOR_ALL (node, network.nodes) {
@@ -113,14 +112,16 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
             }
         }
 
+        // process each material node based on type
         TF_FOR_ALL (node, matNetwork.nodes) {
             if (node->identifier == HdOSPRayMaterialTokens->UsdPreviewSurface)
                 _ProcessUsdPreviewSurfaceNode(*node);
             else if (node->identifier == HdOSPRayMaterialTokens->UsdUVTexture
                      || node->identifier
                             == HdOSPRayMaterialTokens->HwPtexTexture_1) {
+                // texture node found
 
-                // find texture inputs and outputs
+                // determine if texture is actively used
                 auto relationships = matNetwork.relationships;
                 auto relationship = std::find_if(
                        relationships.begin(), relationships.end(),
@@ -128,34 +129,34 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
                            return rel.inputId == node->path;
                        });
                 if (relationship == relationships.end()) {
-                    continue; // node isn't actually used
+                    continue; // ignore unused texture
                 }
 
                 TfToken texNameToken = relationship->outputName;
                 _ProcessTextureNode(*node, texNameToken);
             } else if (node->identifier
                        == HdOSPRayMaterialTokens->UsdTransform2d) {
+                // calculate transform2d to be used on a texture
                 auto relationships = matNetwork.relationships;
-                // find uvtexture that this transform applies to
                 auto relationship = std::find_if(
                        relationships.begin(), relationships.end(),
                        [&node](HdMaterialRelationship const& rel) {
                            return rel.inputId == node->path;
                        });
                 if (relationship == relationships.end()) {
-                    continue; // node isn't actually used
+                    continue; // skip unused nodes
                 }
 
                 TfToken texNameToken = relationship->outputName;
 
-                // find uvtextures parameter binding (diffuseColor, etc)
+                // node is used, find what param it representds, ie diffuseColor
                 auto relationship2 = std::find_if(
                        relationships.begin(), relationships.end(),
                        [&relationship](HdMaterialRelationship const& rel) {
                            return rel.inputId == relationship->outputId;
                        });
                 if (relationship2 == relationships.end()) {
-                    continue; // node isn't actually used
+                    continue; // skip unused nodes
                 }
                 _ProcessTransform2dNode(*node, relationship2->outputName);
             }
@@ -273,7 +274,6 @@ void
 HdOSPRayMaterial::_ProcessTransform2dNode(HdMaterialNode node,
                                           TfToken textureName)
 {
-    // TODO: Carson: these should be per texture not per material
     if (_textures.find(textureName) == _textures.end())
         _textures[textureName] = HdOSPRayTexture();
     HdOSPRayTexture& texture = _textures[textureName];
@@ -317,8 +317,6 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
         ospMaterial.setParam("roughness", 0.25f);
     } else {
         ospMaterial = opp::Material(rendererType.c_str(), "obj");
-        // Carson: apparently colors are actually stored as a single color value
-        // for entire object
         ospMaterial.setParam("ns", 10.f);
         ospMaterial.setParam("ks", vec3f(0.2f, 0.2f, 0.2f));
         ospMaterial.setParam("kd", vec3f(color[0], color[1], color[2]));
@@ -339,7 +337,7 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
     bool hasMetallicTex = false;
     bool hasRoughnessTex = false;
     bool hasOpacityTex = false;
-    // texture maps
+    // set texture maps
     for (const auto& [key, value] : _textures) {
         if (!value.ospTexture)
             continue;
@@ -374,7 +372,7 @@ HdOSPRayMaterial::CreatePrincipledMaterial(std::string rendererType)
         }
     }
 
-    // params
+    // set material params
     ospMaterial.setParam("metallic", (hasMetallicTex ? 1.0f : metallic));
     ospMaterial.setParam("roughness", (hasRoughnessTex ? 1.0f : roughness));
     ospMaterial.setParam("coat", coat);
@@ -438,8 +436,6 @@ opp::Material
 HdOSPRayMaterial::CreateScivisMaterial(std::string rendererType)
 {
     opp::Material ospMaterial = opp::Material(rendererType.c_str(), "obj");
-    // Carson: apparently colors are actually stored as a single color value
-    // for entire object
     ospMaterial.setParam("ns", 10.f);
     ospMaterial.setParam("ks", vec3f(0.2f, 0.2f, 0.2f));
     ospMaterial.setParam(

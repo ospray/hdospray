@@ -95,7 +95,6 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
                           HdDirtyBits* dirtyBits, TfToken const& reprToken)
 {
 
-    // Pull top-level OSPRay state out of the render param.
     HdOSPRayRenderParam* ospRenderParam
            = static_cast<HdOSPRayRenderParam*>(renderParam);
     opp::Renderer renderer = ospRenderParam->GetOSPRayRenderer();
@@ -140,14 +139,8 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
 
 #if HD_API_VERSION < 36
 #else
-    // First, update our own instancer data.
     _UpdateInstancer(delegate, dirtyBits);
 
-    // Make sure we call sync on parent instancers.
-    // XXX: In theory, this should be done automatically by the render index.
-    // At the moment, it's done by rprim-reference.  The helper function on
-    // HdInstancer needs to use a mutex to guard access, if there are actually
-    // updates pending, so this might be a contention point.
     HdInstancer::_SyncInstancerAndParents(delegate->GetRenderIndex(),
                                           GetInstancerId());
 #endif
@@ -169,13 +162,10 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
             group.setParam("geometry", opp::CopiedData(_geometricModels));
             group.commit();
 
-            // TODO: CARSON: reform instancer for ospray2
             _ospInstances.reserve(newSize);
             for (size_t i = 0; i < newSize; i++) {
-                // Create the new instance.
                 opp::Instance instance(group);
 
-                // Combine the local transform and the instance transform.
                 GfMatrix4f matf = _xfm * GfMatrix4f(transforms[i]);
                 float* xfmf = matf.GetArray();
                 affine3f xfm(vec3f(xfmf[0], xfmf[1], xfmf[2]),
@@ -186,15 +176,11 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
                 instance.commit();
                 _ospInstances.push_back(instance);
             }
-        }
-        // Otherwise, create our single instance (if necessary) and update
-        // the transform (if necessary).
-        else {
+        } else {
             opp::Group group;
             group.setParam("geometry", opp::CopiedData(_geometricModels));
             group.commit();
             opp::Instance instance(group);
-            // TODO: do we need to check for a local transform as well?
             GfMatrix4f matf = _xfm;
             float* xfmf = matf.GetArray();
             affine3f xfm(vec3f(xfmf[0], xfmf[1], xfmf[2]),
@@ -209,7 +195,6 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
         ospRenderParam->UpdateModelVersion();
     }
 
-    // Clean all dirty bits.
     *dirtyBits &= ~HdChangeTracker::AllSceneDirtyBits;
 }
 
@@ -220,23 +205,12 @@ HdOSPRayBasisCurves::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
     HD_TRACE_FUNCTION();
     SdfPath const& id = GetId();
 
-    // Update _primvarSourceMap, our local cache of raw primvar data.
-    // This function pulls data from the scene delegate, but defers processing.
-    //
-    // While iterating primvars, we skip "points" (vertex positions) because
-    // the points primvar is processed by _PopulateMesh. We only call
-    // GetPrimvar on primvars that have been marked dirty.
-    //
-    // Currently, hydra doesn't have a good way of communicating changes in
-    // the set of primvars, so we only ever add and update to the primvar set.
-
     HdPrimvarDescriptorVector primvars;
     for (size_t i = 0; i < HdInterpolationCount; ++i) {
         HdInterpolation interp = static_cast<HdInterpolation>(i);
         primvars = GetPrimvarDescriptors(sceneDelegate, interp);
         for (HdPrimvarDescriptor const& pv : primvars) {
             const auto value = sceneDelegate->Get(id, pv.name);
-            // Points are handled outside _UpdatePrimvarSources
             if (pv.name == HdTokens->points) {
                 if ((dirtyBits & HdChangeTracker::DirtyPoints)
                     && value.IsHolding<VtVec3fArray>()) {
@@ -252,19 +226,16 @@ HdOSPRayBasisCurves::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                 continue;
             }
 
-            if (pv.name == "widths") {
+            if (pv.name == HdTokens->widths) {
                 if (dirtyBits & HdChangeTracker::DirtyWidths) {
-                    // auto value = sceneDelegate->Get(id, HdTokens->widths);
                     if (value.IsHolding<VtFloatArray>())
                         _widths = value.Get<VtFloatArray>();
                 }
                 continue;
             }
 
-            // TODO: need to find a better way to identify the primvar for
-            // the texture coordinates
-            // texcoords
-            if ((pv.name == "Texture_uv" || pv.name == "st")
+            if ((pv.role == HdPrimvarRoleTokens->textureCoordinate
+                 || pv.name == HdOSPRayTokens->st)
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdOSPRayTokens->st)) {
                 if (value.IsHolding<VtVec2fArray>()) {
@@ -273,12 +244,9 @@ HdOSPRayBasisCurves::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                 continue;
             }
 
-            if (pv.name == "displayColor"
+            if (pv.name == HdTokens->displayColor
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdTokens->displayColor)) {
-                // Create 4 component displayColor/opacity array for OSPRay
-                // XXX OSPRay currently expects 4 component color array.
-                // XXX Extend OSPRay to support separate RGB/Opacity arrays
                 if (value.IsHolding<VtVec3fArray>()) {
                     const VtVec3fArray& colors = value.Get<VtVec3fArray>();
                     _colors.resize(colors.size());
@@ -298,11 +266,9 @@ HdOSPRayBasisCurves::_UpdatePrimvarSources(HdSceneDelegate* sceneDelegate,
                 continue;
             }
 
-            if (pv.name == "displayOpacity"
+            if (pv.name == HdTokens->displayOpacity
                 && HdChangeTracker::IsPrimvarDirty(dirtyBits, id,
                                                    HdTokens->displayOpacity)) {
-                // XXX assuming displayOpacity can't exist without
-                // displayColor and/or have a different size
                 if (value.IsHolding<VtFloatArray>()) {
                     const VtFloatArray& opacities = value.Get<VtFloatArray>();
                     if (_colors.size() < opacities.size())
@@ -353,7 +319,7 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
     }
 
     auto type = _topology.GetCurveType();
-    if (type != HdTokens->cubic) // TODO: support hdTokens->linear
+    if (type != HdTokens->cubic) // TODO: linear
         TF_RUNTIME_ERROR("hdosp::basisCurves - Curve type not supported");
     auto basis = _topology.GetCurveBasis();
     const bool hasIndices = !_indices.empty();
@@ -407,11 +373,11 @@ HdOSPRayBasisCurves::_UpdateOSPRayRepr(HdSceneDelegate* sceneDelegate,
         if (material && material->GetOSPRayMaterial()) {
             ospMaterial = material->GetOSPRayMaterial();
         } else {
-            // Create new ospMaterial
+            // no material, create a new one
             ospMaterial = HdOSPRayMaterial::CreateDefaultMaterial(_singleColor);
         }
 
-        // Create new OSP Mesh
+        // Create OSPRay model
         auto gm = opp::GeometricModel(geometry);
 
         gm.setParam("material", ospMaterial);

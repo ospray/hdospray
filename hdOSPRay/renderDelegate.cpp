@@ -106,19 +106,14 @@ HdOSPRayRenderDelegate::_Initialize()
     else
         _renderer = opp::Renderer("scivis");
 
-    // Store top-level OSPRay objects inside a render param that can be
-    // passed to prims during Sync().
     _renderParam = std::make_shared<HdOSPRayRenderParam>(_renderer);
 
-    // Initialize one resource registry for all OSPRay plugins
     std::lock_guard<std::mutex> guard(_mutexResourceRegistry);
 
     if (_counterResourceRegistry.fetch_add(1) == 0) {
         _resourceRegistry.reset(new HdResourceRegistry());
     }
 
-    // Initialize the settings and settings descriptors.
-    // _settingDescriptors.resize(11);
     _settingDescriptors.push_back(
            { "Samples per frame", HdOSPRayRenderSettingsTokens->samplesPerFrame,
              VtValue(int(HdOSPRayConfig::GetInstance().samplesPerFrame)) });
@@ -216,7 +211,6 @@ HdOSPRayRenderDelegate::_Initialize()
 
 HdOSPRayRenderDelegate::~HdOSPRayRenderDelegate()
 {
-    // Clean the resource registry only when it is the last OSPRay delegate
     std::lock_guard<std::mutex> guard(_mutexResourceRegistry);
 
     if (_counterResourceRegistry.fetch_sub(1) == 1) {
@@ -235,8 +229,6 @@ HdOSPRayRenderDelegate::GetRenderParam() const
 void
 HdOSPRayRenderDelegate::CommitResources(HdChangeTracker* tracker)
 {
-    // CommitResources() is called after prim sync has finished, but before any
-    // tasks (such as draw tasks) have run.
     auto& rp = _renderParam;
     const auto modelVersion = rp->GetModelVersion();
     if (modelVersion > _lastCommittedModelVersion) {
@@ -413,8 +405,6 @@ HdOSPRayRenderDelegate::CreateSprim(TfToken const& typeId,
 HdSprim*
 HdOSPRayRenderDelegate::CreateFallbackSprim(TfToken const& typeId)
 {
-    // For fallback sprims, create objects with an empty scene path.
-    // They'll use default values and won't be updated by a scene delegate.
     return CreateSprim(typeId, SdfPath::EmptyPath());
 }
 
