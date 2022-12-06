@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-webpages := $(addprefix www/, $(addsuffix .html, index news documentation gallery downloads legal))
+webpages := $(addprefix www/, $(addsuffix .html, index news documentation downloads legal))
 process_version := $(addprefix tmp/, $(addsuffix .md, readme_head))
 
 PANDOC := pandoc
@@ -52,7 +52,6 @@ www/stylesheet.css: stylesheet.css
 
 www/index.html: teaser.html overview.md
 www/news.html: news.md
-www/gallery.html: gallery.md
 www/downloads.html: compilation.md
 www/legal.html: legal.md
 www/documentation.html: compilation.md documentation.md 
@@ -64,7 +63,7 @@ www/documentation.html: compilation.md documentation.md
 # also works around pandoc #5121, should be fixed in v2.5.1
 convert_nbsp_width = sed -e 's@\\ @ @g' -e 's/" style="width:/" width="/g' -e "s@^</figure>@\0\n\n@"
 
-../README.md: readme_head.md overview.md gallery.md compilation.md documentation.md news.md
+../README.md: readme_head.md overview.md compilation.md documentation.md news.md
 	$(PANDOC) --from markdown --to=gfm --verbose --output $@ $+
 
 #html $+ | $(PANDOC) --from=html --to=markdown-raw_html-native_divs --output $@

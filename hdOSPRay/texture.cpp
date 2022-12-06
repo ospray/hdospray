@@ -150,66 +150,37 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter, bool complement)
     return std::pair<opp::Texture, char*>(ospTexture, data);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Udim texture
+struct UDIMTileDesc {
+    char* data { nullptr };
+    vec2i size { 0, 0 };
+    int offset { -1 };
+};
 
-// Split a udim file path such as /someDir/myFile.<UDIM>.exr into a
-// prefix (/someDir/myFile.) and suffix (.exr).
-static std::pair<std::string, std::string>
-_SplitUdim(const std::string& path)
-{
-    static const std::string pattern("<UDIM>");
-
-    const std::string::size_type pos = path.find(pattern);
-
-    if (pos != std::string::npos) {
-        return { path.substr(0, pos), path.substr(pos + pattern.size()) };
-    }
-
-    return { std::string(), std::string() };
-}
-
-// Find all udim tiles for a given udim file path /someDir/myFile.<UDIM>.exr as
-// pairs, e.g., (0, /someDir/myFile.1001.exr), ...
-//
-// The scene delegate is assumed to already have resolved the asset path with
-// the <UDIM> pattern to a "file path" with the <UDIM> pattern as above.
-// This function will replace <UDIM> by different integers and check whether
-// the "file" exists using an ArGetResolver.
-//
-// Note that the ArGetResolver is still needed, for, e.g., usdz file
-// where the path we get from the scene delegate is
-// /someDir/myFile.usdz[myImage.<UDIM>.EXR] and we need to use the
-// ArGetResolver to check whether, e.g., myImage.1001.EXR exists in
-// the zip file /someDir/myFile.usdz by calling
-// resolver.Resolve(/someDir/myFile.usdz[myImage.1001.EXR]).
-// However, we don't need to bind, e.g., the usd stage's resolver context
-// because that part of the resolution will be done by the scene delegate
-// for us already.
-//
+/// UDIM helper, splits udim filepath into individual tile files
+/// @param filePath Udim filepath of form ...<UDIM>...  
+/// @result computes pairs of form <tile id, texture file>
 static std::vector<std::tuple<int, TfToken>>
-_FindUdimTiles(const std::string& filePath)
+_ParseUDIMTiles(const std::string& filePath)
 {
     std::vector<std::tuple<int, TfToken>> result;
 
-    // Get prefix and suffix from udim pattern.
-    const std::pair<std::string, std::string> splitPath = _SplitUdim(filePath);
+    // split filesnames to get prefix and suffix of form ....<UDIM>...
+    auto splitPath = std::make_pair(std::string(), std::string());
+    const std::string::size_type pos = filePath.find("<UDIM>");
+    if (pos != std::string::npos)
+        splitPath = std::make_pair(filePath.substr(0, pos), filePath.substr(pos + 6));
     if (splitPath.first.empty() && splitPath.second.empty()) {
-        TF_WARN("Expected udim pattern but got '%s'.", filePath.c_str());
-        std::cout << "udim patter empty " << splitPath.first << " : "
-                  << splitPath.second << std::endl;
+        TF_WARN("Broken Udim pattern '%s'.", filePath.c_str());
         return result;
     }
 
     ArResolver& resolver = ArGetResolver();
 
+    // add file names to result
     for (int i = 1001; i < 1100; i++) {
-        // Add integer between prefix and suffix and see whether
-        // the tile exists by consulting the resolver.
         const std::string resolvedPath = resolver.Resolve(
                splitPath.first + std::to_string(i) + splitPath.second);
         if (!resolvedPath.empty()) {
-            // Record pair in result.
             result.emplace_back(i - 1001, resolvedPath);
         }
     }
@@ -217,18 +188,12 @@ _FindUdimTiles(const std::string& filePath)
     return result;
 }
 
-struct UDIMTileDesc {
-    char* data { nullptr };
-    vec2i size { 0, 0 };
-    int offset { -1 };
-};
-
 // creates 2d osptexture from file, does not commit
 std::pair<opp::Texture, char*>
 LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
                   bool complement)
 {
-    auto udimTiles = _FindUdimTiles(file);
+    auto udimTiles = _ParseUDIMTiles(file);
     std::vector<UDIMTileDesc> udimTileDescs;
     vec2i totalSize { 0, 0 };
     vec2i numTiles { 0, 0 };
@@ -238,7 +203,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
     size_t texelSize = 0;
     OSPTextureFormat format = OSP_TEXTURE_FORMAT_INVALID;
 
-    // load tile data
+    // load tile data  TODO: parallelize
     for (auto tile : udimTiles) {
         std::string file = std::get<1>(tile);
         auto in = ImageInput::open(file.c_str());
