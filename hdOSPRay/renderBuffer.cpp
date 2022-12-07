@@ -1,3 +1,6 @@
+// Copyright 2019 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 //
 // Copyright 2018 Pixar
 //
@@ -21,6 +24,7 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+
 #include "renderBuffer.h"
 #include <pxr/base/gf/half.h>
 
@@ -44,12 +48,9 @@ HdOSPRayRenderBuffer::~HdOSPRayRenderBuffer()
 {
 }
 
-/*virtual*/
 void
 HdOSPRayRenderBuffer::_Deallocate()
 {
-    // If the buffer is mapped while we're doing this, there's not a great
-    // recovery path...
     TF_VERIFY(!IsMapped());
 
     _width = 0;
@@ -64,14 +65,12 @@ HdOSPRayRenderBuffer::_Deallocate()
     _converged.store(false);
 }
 
-/*static*/
 size_t
 HdOSPRayRenderBuffer::_GetBufferSize(GfVec2i const& dims, HdFormat format)
 {
     return dims[0] * dims[1] * HdDataSizeOfFormat(format);
 }
 
-/*static*/
 HdFormat
 HdOSPRayRenderBuffer::_GetSampleFormat(HdFormat format)
 {
@@ -103,7 +102,6 @@ HdOSPRayRenderBuffer::_GetSampleFormat(HdFormat format)
     return HdFormatInvalid;
 }
 
-/*virtual*/
 bool
 HdOSPRayRenderBuffer::Allocate(GfVec3i const& dimensions, HdFormat format,
                                bool multiSampled)
@@ -244,13 +242,9 @@ HdOSPRayRenderBuffer::Clear(size_t numComponents, int const* value)
     }
 }
 
-/*virtual*/
 void
 HdOSPRayRenderBuffer::Resolve()
 {
-    // Resolve the image buffer: find the average value per pixel by
-    // dividing the summed value by the number of samples.
-
     if (!_multiSampled || _sampleCount.size() != _width * _height) {
         return;
     }
@@ -263,7 +257,6 @@ HdOSPRayRenderBuffer::Resolve()
     for (unsigned int i = 0; i < _width * _height; ++i) {
 
         int sampleCount = _sampleCount[i];
-        // Skip pixels with no samples.
         if (sampleCount == 0) {
             continue;
         }

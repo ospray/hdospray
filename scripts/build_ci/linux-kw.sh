@@ -1,5 +1,5 @@
 #!/bin/bash -x
-## Copyright 2015-2021 Intel Corporation
+## Copyright 2019 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
 pacman -Syu --noconfirm

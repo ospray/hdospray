@@ -1,5 +1,8 @@
+// Copyright 2019 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 //
-// Copyright 2021 Intel
+// Copyright 2017 Pixar
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in

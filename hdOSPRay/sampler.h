@@ -1,5 +1,8 @@
+// Copyright 2019 Intel Corporation
+// SPDX-License-Identifier: Apache-2.0
+
 //
-// Copyright 2021 Intel
+// Copyright 2016 Pixar
 //
 // Licensed under the Apache License, Version 2.0 (the "Apache License")
 // with the following modification; you may not use this file except in
@@ -21,8 +24,8 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
-#ifndef HDOSPRAY_SAMPLER_H
-#define HDOSPRAY_SAMPLER_H
+
+#pragma once
 
 #include <cstddef>
 #include <pxr/pxr.h>
@@ -110,5 +113,3 @@ public:
 private:
     HdVtBufferSource const& _buffer;
 };
-
-#endif // HDOSPRAY_SAMPLER_H
