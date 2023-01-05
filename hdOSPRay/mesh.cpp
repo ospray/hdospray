@@ -266,7 +266,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     }
 
     if (HdChangeTracker::IsDisplayStyleDirty(*dirtyBits, id)) {
-        if (doRefine) {  // set subdiv rate
+        if (doRefine) { // set subdiv rate
             _tessellationRate = (1 << _topology.GetRefineLevel());
             if (_tessellationRate == 1) {
                 _tessellationRate++;
@@ -302,7 +302,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _normalsValid = false;
     }
     // calculate new smooth normals
-    if (_normals.empty() && _smoothNormals && !_normalsValid && !doRefine) { 
+    if (_normals.empty() && _smoothNormals && !_normalsValid && !doRefine) {
         _normals = Hd_SmoothNormals::ComputeSmoothNormals(
                &_adjacency, _points.size(), _points.cdata());
         _normalsValid = true;

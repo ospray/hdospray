@@ -20,7 +20,7 @@ PXR_NAMESPACE_USING_DIRECTIVE
 ///
 /// \class HdOSPRayRenderParam
 ///
-/// Created by a render delegate to pass OSPRay specific state between 
+/// Created by a render delegate to pass OSPRay specific state between
 /// different objects.
 ///
 class HdOSPRayRenderParam final : public HdRenderParam {

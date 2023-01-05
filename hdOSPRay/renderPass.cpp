@@ -191,7 +191,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             frameBufferDirty = true;
         }
 
-        // update aov buffer maps.  if no aov buffers are specified, create a color aov
+        // update aov buffer maps.  if no aov buffers are specified, create a
+        // color aov
         HdRenderPassAovBindingVector aovBindings
                = renderPassState->GetAovBindings();
         if (_aovBindings != aovBindings || _aovBindings.empty()) {
@@ -250,7 +251,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _width = dataWindow.GetWidth();
         _height = dataWindow.GetHeight();
 
-        // if using a preframing version of USD, or if aovs are missing, create buffers
+        // if using a preframing version of USD, or if aovs are missing, create
+        // buffers
 #if PXR_VERSION > 2011
         if (!renderPassState->GetFraming().IsValid())
 #endif

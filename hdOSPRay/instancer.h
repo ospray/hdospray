@@ -26,7 +26,9 @@ public:
 
     ~HdOSPRayInstancer();
 
-    virtual void Finalize(HdRenderParam* renderParam) override {}
+    virtual void Finalize(HdRenderParam* renderParam) override
+    {
+    }
 
 #if HD_API_VERSION > 35
     void Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
@@ -44,6 +46,6 @@ private:
 
     std::mutex _instanceLock;
 
-    //map of primvar name to data buffer
+    // map of primvar name to data buffer
     TfHashMap<TfToken, HdVtBufferSource*, TfToken::HashFunctor> _primvarMap;
 };
