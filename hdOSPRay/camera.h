@@ -3,10 +3,10 @@
 
 #pragma once
 
-#include "renderParam.h"
-#include <memory>
 #include <pxr/imaging/hd/camera.h>
 #include <pxr/pxr.h>
+#include <memory>
+#include "renderParam.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

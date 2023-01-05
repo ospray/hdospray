@@ -111,8 +111,9 @@ private:
                 if (success && quadPrimvar.IsHolding<type>()) {
                     computedPrimvars = quadPrimvar.Get<type>();
                 } else {
-                    TF_CODING_ERROR("ERROR: could not quadrangulate "
-                                    "face-varying data\n");
+                    TF_CODING_ERROR(
+                           "ERROR: could not quadrangulate "
+                           "face-varying data\n");
                 }
             } else if (interpolation == HdInterpolationVarying
                        || interpolation == HdInterpolationVertex) {
@@ -139,8 +140,9 @@ private:
                 if (success && triangulatedPrimvar.IsHolding<type>()) {
                     computedPrimvars = triangulatedPrimvar.Get<type>();
                 } else {
-                    TF_CODING_ERROR("ERROR: could not triangulate "
-                                    "face-varying data\n");
+                    TF_CODING_ERROR(
+                           "ERROR: could not triangulate "
+                           "face-varying data\n");
                 }
             } else if (interpolation == HdInterpolationVarying
                        || interpolation == HdInterpolationVertex) {

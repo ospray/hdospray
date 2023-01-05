@@ -53,8 +53,9 @@ LoadPtexTexture(std::string file)
 }
 
 // creates 2d osptexture from file, does not commit
-std::pair<opp::Texture, unsigned char*> LoadOIIOTexture2D(
-    std::string file, std::string channelsStr, bool nearestFilter, bool complement)
+std::pair<opp::Texture, unsigned char*>
+LoadOIIOTexture2D(std::string file, std::string channelsStr, bool nearestFilter,
+                  bool complement)
 {
     auto in = ImageInput::open(file.c_str());
     if (!in) {
@@ -70,7 +71,8 @@ std::pair<opp::Texture, unsigned char*> LoadOIIOTexture2D(
     const bool hdr = spec.format.size() > 1;
     int depth = hdr ? 4 : 1;
     const size_t stride = size.x * channels * depth;
-    unsigned char* data = (unsigned char*)malloc(sizeof(char) * size.y * stride);
+    unsigned char* data
+           = (unsigned char*)malloc(sizeof(char) * size.y * stride);
     unsigned char* outData = nullptr; // if using channel subset
 
     in->read_image(hdr ? TypeDesc::FLOAT : TypeDesc::UINT8, data);
@@ -79,7 +81,8 @@ std::pair<opp::Texture, unsigned char*> LoadOIIOTexture2D(
     ImageInput::destroy(in);
 #endif
 
-    const int outChannels = channelsStr.empty() ? channels : channelsStr.length();
+    const int outChannels
+           = channelsStr.empty() ? channels : channelsStr.length();
     int outDepth = depth;
     if (outChannels == 1)
         outDepth = 4; // convert to float
@@ -91,7 +94,8 @@ std::pair<opp::Texture, unsigned char*> LoadOIIOTexture2D(
     if (channels == 4 && channelsStr == "a")
         channelOffset = 3;
     if (outChannels != channels || outDepth != depth) {
-        outData = (unsigned char *)malloc(sizeof(char) * size.y * size.x * outChannels * outDepth);
+        outData = (unsigned char*)malloc(sizeof(char) * size.y * size.x
+                                         * outChannels * outDepth);
     }
 
     OSPTextureFormat format = osprayTextureFormat(outDepth, outChannels);
@@ -113,7 +117,8 @@ std::pair<opp::Texture, unsigned char*> LoadOIIOTexture2D(
         std::cout << "Texture: file: " << file << "\tdepth: " << depth
                   << "\tchannels: " << channels << "\format: " << format
                   << std::endl;
-        throw std::runtime_error("hdOSPRay::LoadOIIOTexture2D: \
+        throw std::runtime_error(
+               "hdOSPRay::LoadOIIOTexture2D: \
                                          Unknown texture format");
     }
 
@@ -139,22 +144,23 @@ std::pair<opp::Texture, unsigned char*> LoadOIIOTexture2D(
         const size_t offsetBytes = channelOffset * depth;
         const size_t inBytes = depth * channels;
         const size_t outBytes = outDepth * outChannels;
-        unsigned char *in = (unsigned char*)data + offsetBytes;
-        unsigned char *out = outData;
+        unsigned char* in = (unsigned char*)data + offsetBytes;
+        unsigned char* out = outData;
         for (size_t i = 0; i < size.x * size.y; i++) {
-        if (outDepth == depth)
-            std::copy(in, in + outBytes, out);
-        else { // assume conversion to float
-            float* vals = (float*)out;
-            for(int j = 0; j < outChannels; j++)
-            vals[j] = float(in[j]) / 256.f;
-        }
-        in += inBytes;
-        out += outBytes;
+            if (outDepth == depth)
+                std::copy(in, in + outBytes, out);
+            else { // assume conversion to float
+                float* vals = (float*)out;
+                for (int j = 0; j < outChannels; j++)
+                    vals[j] = float(in[j]) / 256.f;
+            }
+            in += inBytes;
+            out += outBytes;
         }
     }
 
-    opp::SharedData ospData = opp::SharedData(outData ? outData : data, dataType, size);
+    opp::SharedData ospData
+           = opp::SharedData(outData ? outData : data, dataType, size);
     ospData.commit();
 
     opp::Texture ospTexture = opp::Texture("texture2d");
@@ -175,7 +181,7 @@ struct UDIMTileDesc {
 };
 
 /// UDIM helper, splits udim filepath into individual tile files
-/// @param filePath Udim filepath of form ...<UDIM>...  
+/// @param filePath Udim filepath of form ...<UDIM>...
 /// @result computes pairs of form <tile id, texture file>
 static std::vector<std::tuple<int, TfToken>>
 _ParseUDIMTiles(const std::string& filePath)
@@ -186,7 +192,8 @@ _ParseUDIMTiles(const std::string& filePath)
     auto splitPath = std::make_pair(std::string(), std::string());
     const std::string::size_type pos = filePath.find("<UDIM>");
     if (pos != std::string::npos)
-        splitPath = std::make_pair(filePath.substr(0, pos), filePath.substr(pos + 6));
+        splitPath = std::make_pair(filePath.substr(0, pos),
+                                   filePath.substr(pos + 6));
     if (splitPath.first.empty() && splitPath.second.empty()) {
         TF_WARN("Broken Udim pattern '%s'.", filePath.c_str());
         return result;
@@ -284,7 +291,8 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
             std::cout << "Texture: file: " << file << "\tdepth: " << depth
                       << "\tchannels: " << channels << "\format: " << format
                       << std::endl;
-            throw std::runtime_error("hdOSPRay::texture::LoadTexture2D: \
+            throw std::runtime_error(
+                   "hdOSPRay::texture::LoadTexture2D: \
                                          Unknown texture format");
         }
         if ((udimDataType != OSP_UNKNOWN) && udimDataType != dataType) {

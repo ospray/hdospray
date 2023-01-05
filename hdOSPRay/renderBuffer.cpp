@@ -109,10 +109,11 @@ HdOSPRayRenderBuffer::Allocate(GfVec3i const& dimensions, HdFormat format,
     _Deallocate();
 
     if (dimensions[2] != 1) {
-        TF_WARN("Render buffer allocated with dims <%d, %d, %d> and"
-                " format %s; depth must be 1!",
-                dimensions[0], dimensions[1], dimensions[2],
-                TfEnum::GetName(format).c_str());
+        TF_WARN(
+               "Render buffer allocated with dims <%d, %d, %d> and"
+               " format %s; depth must be 1!",
+               dimensions[0], dimensions[1], dimensions[2],
+               TfEnum::GetName(format).c_str());
         return false;
     }
 

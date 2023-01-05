@@ -3,12 +3,12 @@
 
 #pragma once
 
-#include "pxr/imaging/hd/material.h"
-#include "pxr/imaging/hd/sceneDelegate.h"
 #include <pxr/base/gf/vec2f.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4f.h>
 #include <pxr/pxr.h>
+#include "pxr/imaging/hd/material.h"
+#include "pxr/imaging/hd/sceneDelegate.h"
 
 #include <ospray/ospray_cpp.h>
 #include <ospray/ospray_cpp/ext/rkcommon.h>
@@ -112,7 +112,7 @@ protected:
     void _ProcessUsdPreviewSurfaceNode(HdMaterialNode node);
     // parse texture node params and set them to appropriate map_ texture var
     void _ProcessTextureNode(HdMaterialNode node, TfToken inputName,
-        TfToken outputName);
+                             TfToken outputName);
     // parse texture transformation node params and set rotation, translation,
     // and scale
     void _ProcessTransform2dNode(HdMaterialNode node, TfToken textureName);

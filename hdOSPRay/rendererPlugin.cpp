@@ -3,9 +3,9 @@
 
 #include "rendererPlugin.h"
 
+#include <pxr/imaging/hd/rendererPluginRegistry.h>
 #include "config.h"
 #include "renderDelegate.h"
-#include <pxr/imaging/hd/rendererPluginRegistry.h>
 
 // Register OSPRay plugin with USD
 TF_REGISTRY_FUNCTION(TfType)
@@ -18,11 +18,12 @@ HdOSPRayRendererPlugin::CreateRenderDelegate()
 {
     // Check supported pxr version
 #if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION < 20
-    error This version of HdOSPRay is configured to built against USD v0 .20.x
-           to v0 .22.x
+    error This version of HdOSPRay is configured to built against USD
+           v0 .20.x to v0 .22.x
 #endif
 
-    int ac = 1;
+           int ac
+           = 1;
     std::string initArgs = HdOSPRayConfig::GetInstance().initArgs;
     std::stringstream ss(initArgs);
     std::string arg;

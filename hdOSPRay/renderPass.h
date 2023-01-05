@@ -5,11 +5,11 @@
 
 #include "renderBuffer.h"
 
-#include "pxr/base/gf/rect2i.h"
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/tf/debug.h>
 #include <pxr/imaging/hd/renderPass.h>
 #include <pxr/pxr.h>
+#include "pxr/base/gf/rect2i.h"
 
 #include <ospray/ospray_cpp.h>
 #include <ospray/ospray_cpp/ext/rkcommon.h>
@@ -37,7 +37,6 @@ public:
                        std::shared_ptr<HdOSPRayRenderParam> renderParam);
 
     virtual ~HdOSPRayRenderPass();
-
 
     /// Mark the frame as dirty for next pass
     virtual void ResetImage();
@@ -93,7 +92,8 @@ public:
 
 protected:
     /// Draw and/or display the scene
-    /// rendering is asyncronous, will need to be called repeatedly until isconverged
+    /// rendering is asyncronous, will need to be called repeatedly until
+    /// isconverged
     virtual void _Execute(HdRenderPassStateSharedPtr const& renderPassState,
                           TfTokenVector const& renderTags) override;
 
@@ -109,7 +109,7 @@ protected:
 private:
     /// @brief  helper function to write data into a renderbuffer
     /// @tparam T data type, eg vec3f
-    /// @param ospRenderBuffer 
+    /// @param ospRenderBuffer
     /// @param renderFrame
     /// @param data  source data
     /// @param numElements  number of type T elements to write
@@ -119,8 +119,7 @@ private:
     {
         int aovWidth = ospRenderBuffer->GetWidth();
         int aovHeight = ospRenderBuffer->GetHeight();
-        if (aovWidth >= renderFrame.width
-            && aovHeight >= renderFrame.height) {
+        if (aovWidth >= renderFrame.width && aovHeight >= renderFrame.height) {
             ospRenderBuffer->Map();
             float xscale = float(renderFrame.width) / float(aovWidth);
             float yscale = float(renderFrame.height) / float(aovHeight);

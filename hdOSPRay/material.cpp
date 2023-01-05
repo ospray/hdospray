@@ -195,8 +195,8 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
 }
 
 void
-HdOSPRayMaterial::_ProcessTextureNode(
-    HdMaterialNode node, TfToken inputName, TfToken outputName)
+HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken inputName,
+                                      TfToken outputName)
 {
     bool isPtex = node.identifier == HdOSPRayMaterialTokens->HwPtexTexture_1;
     bool isUdim = false;
@@ -235,20 +235,19 @@ HdOSPRayMaterial::_ProcessTextureNode(
         } else if (isUdim) {
             int numX, numY;
             const auto& result = LoadUDIMTexture2D(
-                    texture.file, numX, numY, false,
-                    (outputName == HdOSPRayMaterialTokens->opacity));
+                   texture.file, numX, numY, false,
+                   (outputName == HdOSPRayMaterialTokens->opacity));
             texture.ospTexture = result.first;
             texture.hasXfm = true;
             texture.xfm_scale = { 1.f / float(numX), 1.f / float(numY) };
             // OSPRay scales around the center (0.5, 0.5).  translate
             // texture from (0.5, 0.5) to (0,0)
-            texture.xfm_translation = { -(.5f - .5f / float(numX)),
-                                        -(.5f - .5f / float(numY)) };
+            texture.xfm_translation
+                   = { -(.5f - .5f / float(numX)), -(.5f - .5f / float(numY)) };
         } else {
-            const auto& result = LoadOIIOTexture2D(texture.file,
-                inputName.GetString(),
-                false,
-                (outputName == HdOSPRayMaterialTokens->opacity));
+            const auto& result = LoadOIIOTexture2D(
+                   texture.file, inputName.GetString(), false,
+                   (outputName == HdOSPRayMaterialTokens->opacity));
             texture.ospTexture = result.first;
         }
     }
