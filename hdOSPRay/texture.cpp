@@ -53,13 +53,13 @@ LoadPtexTexture(std::string file)
 }
 
 // creates 2d osptexture from file, does not commit
-std::pair<opp::Texture, char*>
-LoadOIIOTexture2D(std::string file, bool nearestFilter, bool complement)
+std::pair<opp::Texture, unsigned char*> LoadOIIOTexture2D(
+    std::string file, std::string channelsStr, bool nearestFilter, bool complement)
 {
     auto in = ImageInput::open(file.c_str());
     if (!in) {
         std::cerr << "#osp: failed to load texture '" + file + "'" << std::endl;
-        return std::pair<opp::Texture, char*>(nullptr, nullptr);
+        return std::pair<opp::Texture, unsigned char*>(nullptr, nullptr);
     }
 
     const ImageSpec& spec = in->spec();
@@ -70,14 +70,31 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter, bool complement)
     const bool hdr = spec.format.size() > 1;
     int depth = hdr ? 4 : 1;
     const size_t stride = size.x * channels * depth;
-    char* data = (char*)malloc(sizeof(char) * size.y * stride);
+    unsigned char* data = (unsigned char*)malloc(sizeof(char) * size.y * stride);
+    unsigned char* outData = nullptr; // if using channel subset
 
     in->read_image(hdr ? TypeDesc::FLOAT : TypeDesc::UINT8, data);
     in->close();
 #if OIIO_VERSION < 10903
     ImageInput::destroy(in);
 #endif
-    OSPTextureFormat format = osprayTextureFormat(depth, channels);
+
+    const int outChannels = channelsStr.empty() ? channels : channelsStr.length();
+    int outDepth = depth;
+    if (outChannels == 1)
+        outDepth = 4; // convert to float
+    int channelOffset = 0;
+    if (channelsStr == "g")
+        channelOffset = 1;
+    if (channelsStr == "b")
+        channelOffset = 2;
+    if (channels == 4 && channelsStr == "a")
+        channelOffset = 3;
+    if (outChannels != channels || outDepth != depth) {
+        outData = (unsigned char *)malloc(sizeof(char) * size.y * size.x * outChannels * outDepth);
+    }
+
+    OSPTextureFormat format = osprayTextureFormat(outDepth, outChannels);
 
     OSPDataType dataType = OSP_UNKNOWN;
     if (format == OSP_TEXTURE_R32F)
@@ -104,8 +121,8 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter, bool complement)
     // corner)
     // compute complement if enabled
     for (int y = 0; y < size.y / 2; y++) {
-        char* src = &data[y * stride];
-        char* dest = &data[(size.y - 1 - y) * stride];
+        unsigned char* src = &data[y * stride];
+        unsigned char* dest = &data[(size.y - 1 - y) * stride];
         for (size_t x = 0; x < stride; x++)
             std::swap(src[x], dest[x]);
     }
@@ -114,8 +131,30 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter, bool complement)
         for (size_t i = 0; i < size.x * size.y; i++)
             tex[i] = 1.f - tex[i];
     }
+    // convert to outchannels if needed.
+    // supported:
+    // rgba, rgba to: rgb, r, g, b, or a
+    if (outData) {
+        const size_t outStride = size.x * outChannels * outDepth;
+        const size_t offsetBytes = channelOffset * depth;
+        const size_t inBytes = depth * channels;
+        const size_t outBytes = outDepth * outChannels;
+        unsigned char *in = (unsigned char*)data + offsetBytes;
+        unsigned char *out = outData;
+        for (size_t i = 0; i < size.x * size.y; i++) {
+        if (outDepth == depth)
+            std::copy(in, in + outBytes, out);
+        else { // assume conversion to float
+            float* vals = (float*)out;
+            for(int j = 0; j < outChannels; j++)
+            vals[j] = float(in[j]) / 256.f;
+        }
+        in += inBytes;
+        out += outBytes;
+        }
+    }
 
-    opp::SharedData ospData = opp::SharedData(data, dataType, size);
+    opp::SharedData ospData = opp::SharedData(outData ? outData : data, dataType, size);
     ospData.commit();
 
     opp::Texture ospTexture = opp::Texture("texture2d");
@@ -126,7 +165,7 @@ LoadOIIOTexture2D(std::string file, bool nearestFilter, bool complement)
     ospTexture.setParam("data", ospData);
     ospTexture.commit();
 
-    return std::pair<opp::Texture, char*>(ospTexture, data);
+    return std::pair<opp::Texture, unsigned char*>(ospTexture, data);
 }
 
 struct UDIMTileDesc {

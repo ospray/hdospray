@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <pxr/base/tf/debug.h>
 #include <pxr/base/tf/singleton.h>
 #include <pxr/pxr.h>
 
@@ -34,6 +35,8 @@ namespace opp = ospray::cpp;
 #define HDOSPRAY_DEFAULT_TMP_ACESCOLOR false
 
 PXR_NAMESPACE_USING_DIRECTIVE
+
+TF_DEBUG_CODES(OSP);
 
 /// \class HdOSPRayConfig
 ///

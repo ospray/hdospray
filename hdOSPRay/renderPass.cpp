@@ -128,6 +128,15 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     TF_DEBUG_MSG(OSP_RP, "ospRP::Execute\n");
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
 
+    // changes to renderer settings
+    int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
+    _pendingSettingsUpdate = (_lastSettingsVersion != currentSettingsVersion);
+
+    if (_pendingSettingsUpdate) {
+        ProcessSettings();
+        _lastSettingsVersion = currentSettingsVersion;
+    }
+
     if (!HdOSPRayConfig::GetInstance().usePathTracing) {
         _interactiveFrameBufferScale = 1.0f;
     }
@@ -201,7 +210,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _pendingResetImage = true;
     }
     bool useDenoiser = _denoiserLoaded && _useDenoiser
-           && (_numSamplesAccumulated >= _denoiserSPPThreshold);
+           && ((_numSamplesAccumulated + _spp) >= _denoiserSPPThreshold);
     bool denoiserDirty = (useDenoiser != _denoiserState);
     auto inverseViewMatrix
            = renderPassState->GetWorldToViewMatrix().GetInverse();
@@ -209,15 +218,6 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
            = renderPassState->GetProjectionMatrix().GetInverse();
     bool cameraDirty = (inverseViewMatrix != _inverseViewMatrix
                         || inverseProjMatrix != _inverseProjMatrix);
-
-    // changes to renderer settings
-    int currentSettingsVersion = renderDelegate->GetRenderSettingsVersion();
-    _pendingSettingsUpdate = (_lastSettingsVersion != currentSettingsVersion);
-
-    if (_pendingSettingsUpdate) {
-        ProcessSettings();
-        _lastSettingsVersion = currentSettingsVersion;
-    }
 
     // dirty scene mesh representation
     int currentModelVersion = _renderParam->GetModelVersion();
@@ -830,6 +830,7 @@ void
 HdOSPRayRenderPass::ProcessSettings()
 {
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
+
     int samplesToConvergence = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->samplesToConvergence,
            _samplesToConvergence);
