@@ -276,8 +276,9 @@ renderer.*
     
         - Texture Transforms
         - UDIM textures
+        - Texture channel masks
         - Tonemapper settings
-        - Interactive rendering updates
+        - Interactive rendering reworked
         - Bug fixes
 
   - Sep 20, 2022: Version v0.10.1
