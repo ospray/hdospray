@@ -111,7 +111,8 @@ protected:
     // fill in material parameters based on usdPreviewSurface node
     void _ProcessUsdPreviewSurfaceNode(HdMaterialNode node);
     // parse texture node params and set them to appropriate map_ texture var
-    void _ProcessTextureNode(HdMaterialNode node, TfToken textureName);
+    void _ProcessTextureNode(HdMaterialNode node, TfToken inputName,
+        TfToken outputName);
     // parse texture transformation node params and set rotation, translation,
     // and scale
     void _ProcessTransform2dNode(HdMaterialNode node, TfToken textureName);

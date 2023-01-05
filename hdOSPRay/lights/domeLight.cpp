@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "domeLight.h"
+#include "../config.h"
 #include "../texture.h"
 
 #include <pxr/imaging/hd/perfLog.h>
@@ -37,6 +38,9 @@ HdOSPRayDomeLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
                id, HdLightTokens->textureFile);
         if (v.IsHolding<SdfAssetPath>()) {
             _textureFile = v.UncheckedGet<SdfAssetPath>().GetResolvedPath();
+            if (_textureFile.empty())
+                _textureFile = v.UncheckedGet<SdfAssetPath>().GetAssetPath();
+            TF_DEBUG_MSG(OSP, "osp:: dome light %s\n", _textureFile.c_str());
         }
     }
 }
