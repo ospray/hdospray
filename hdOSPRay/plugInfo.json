@@ -9,6 +9,14 @@
                         ],
                         "displayName": "OSPRay",
                         "priority": 99
+                    },
+                    "HdOSPRayDiscoveryPlugin" : {
+                        "bases": ["NdrDiscoveryPlugin"],
+                        "displayName": "hdOSPRay Discovery"
+                    },
+                    "HdOSPRayParserPlugin" : {
+                        "bases": ["NdrParserPlugin"],
+                        "displayName": "hdOSPRay Node Parser"
                     }
                 }
             },

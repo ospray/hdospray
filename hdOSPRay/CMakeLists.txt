@@ -19,6 +19,8 @@ endfunction()
 
 add_library(hdOSPRay SHARED
     config.cpp
+    discovery.cpp
+    parser.cpp
     instancer.cpp
     mesh.cpp
     camera.cpp

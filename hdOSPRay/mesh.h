@@ -158,7 +158,7 @@ private:
                 computedPrimvars.resize(1);
                 computedPrimvars[0] = primvars[0];
             } else
-                TF_CODING_ERROR("HdOSPRayMesh: unsupported interpolation mode");
+                TF_WARN("HdOSPRayMesh: unsupported interpolation mode");
         }
     }
 

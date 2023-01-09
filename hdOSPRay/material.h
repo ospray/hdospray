@@ -58,13 +58,15 @@ public:
     // static OSPMaterial CreateDiffuseMaterial(GfVec4f color);
 
     /// Create a default material based on the renderer type specified in config
-    opp::Material CreatePrincipledMaterial(std::string renderType);
+    void UpdatePrincipledMaterial(std::string renderType);
+    void UpdateCarPaintMaterial();
+    void UpdateLuminousMaterial();
 
     /// Create a default material based on the renderer type specified in config
-    opp::Material CreateSimpleMaterial(std::string renderType);
+    void UpdateSimpleMaterial(std::string renderType);
 
     /// Create a default material based on the renderer type specified in config
-    opp::Material CreateScivisMaterial(std::string renderType);
+    void UpdateScivisMaterial(std::string renderType);
 
     /// Summary flag. Returns true if the material is bound to one or more
     /// textures and any of those textures is a ptex texture.
@@ -110,6 +112,9 @@ protected:
     void _UpdateOSPRayMaterial();
     // fill in material parameters based on usdPreviewSurface node
     void _ProcessUsdPreviewSurfaceNode(HdMaterialNode node);
+    void _ProcessOspPrincipledNode(HdMaterialNode node);
+    void _ProcessOspCarPaintNode(HdMaterialNode node);
+    void _ProcessOspLuminousNode(HdMaterialNode node);
     // parse texture node params and set them to appropriate map_ texture var
     void _ProcessTextureNode(HdMaterialNode node, TfToken inputName,
                              TfToken outputName);
@@ -132,14 +137,50 @@ protected:
         bool isPtex { false };
     };
 
-    GfVec3f diffuseColor { 0.18f, 0.18f, 0.18f };
+    enum MaterialTypes { preview = 0, principled, carPaint, luminous};
+    MaterialTypes _type { MaterialTypes::preview };
+
+    GfVec3f diffuseColor { 0.18f, 0.18f, 0.18f }; // also baseColor
+    GfVec4f fallback { 0.f, 0.f, 0.f, 1.f };
+    GfVec3f edgeColor { 0.18f, 0.18f, 0.18f };
     GfVec3f specularColor { 0.0f, 0.0f, 0.0f };
     float metallic { 0.f };
+    float diffuse { 1.f };
+    float specular { 1.f };
+
+    float intensity { 1.f }; // luminous intensity
     float roughness { 0.5f };
-    float coatRoughness { 0.01f };
+    float normalScale { 1.f }; // normal map scale
+    // float transmission { 0.f };  // 1.f - opacity
+    GfVec3f transmissionColor { 1.0f, 1.0f, 1.0f };
+    float transmissionDepth { 1.f };
+    float anisotropy { 0.f };
+    float rotation { 0.f };
+    // float baseNormal { 1.f };
+    GfVec3f flakeColor { 1.f, 1.f, 1.f };
+    float flakeDensity { 0.f };
+    float flakeScale { 100.0f };
+    float flakeSpread { 0.3f };
+    float flakeJitter { 0.75f };
+    float flakeRoughness { 0.3f };
+    bool thin { false };
+    float thickness { 1.f };
+    float backlight { 0.f };
     float coat { 0.f };
-    float ior { 1.5f };
-    float opacity { 1.f };
+    float coatIor;
+    GfVec3f coatColor { 1.f, 1.f, 1.f };
+    float coatThickness { 1.f };
+    float coatRoughness { 0.01f };
+    float coatNormal { 1.f };
+    GfVec3f flipflopColor { 1.f, 1.f, 1.f };
+    float flipflopFalloff { 1.f };
+    float ior { 1.0f };
+    float opacity { 1.f }; // 1.f - transmission
+    float sheen { 1.f };
+    GfVec3f sheenColor { 1.f, 1.f, 1.f };
+    float sheenTint { 0.f };
+    float sheenRoughness { 0.2f };
+    float cutoutOpacity { 1.f };
     TfToken type;
     bool hasPtex { false };
 
@@ -147,6 +188,7 @@ protected:
     float _rotation { 0.f };
     GfVec2f _scale;
     GfVec2f _translation;
+    bool _typeDirty { true };
 
     std::map<TfToken, HdOSPRayTexture> _textures;
     opp::Material _ospMaterial;

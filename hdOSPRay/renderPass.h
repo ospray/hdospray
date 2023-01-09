@@ -139,7 +139,7 @@ private:
                    });
             ospRenderBuffer->Unmap();
         } else
-            TF_CODING_ERROR("ERROR: displayrenderbuffer size out of sync\n");
+            TF_WARN("displayrenderbuffer size out of sync");
     };
 
     // Return the clear color to use for the given VtValue

@@ -31,7 +31,7 @@ PXR_NAMESPACE_USING_DIRECTIVE
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
                          HDOSPRAY_RENDER_SETTINGS_TOKENS);
 
-#define HDOSPRAY_TOKENS (ospray)(glslfx)(OSPRayPrincipledSurface)
+#define HDOSPRAY_TOKENS (ospray)(glslfx)(OSPRayPrincipledSurface)(osp)
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayTokens, HDOSPRAY_API, HDOSPRAY_TOKENS);
 
