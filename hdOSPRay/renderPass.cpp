@@ -57,6 +57,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _instIdBuffer(SdfPath::EmptyPath())
 {
     _world = opp::World();
+    _world.setParam("dynamicScene", true);
     _camera = opp::Camera("perspective");
     _renderer.setParam("backgroundColor",
                        vec4f(_clearColor[0], _clearColor[1], _clearColor[2],
@@ -217,7 +218,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
     bool useDenoiser = _denoiserLoaded && _useDenoiser
            && ((_numSamplesAccumulated + _spp) >= _denoiserSPPThreshold);
-    bool denoiserDirty = (useDenoiser != _denoiserState);
+    _denoiserDirty = (useDenoiser != _denoiserState);
     auto inverseViewMatrix
            = renderPassState->GetWorldToViewMatrix().GetInverse();
     auto inverseProjMatrix
@@ -230,6 +231,12 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (_lastRenderedModelVersion != currentModelVersion) {
         _pendingModelUpdate = true;
         _lastRenderedModelVersion = currentModelVersion;
+        cameraDirty = true;
+    }
+
+    int currentMaterialVersion = _renderParam->GetMaterialVersion();
+    if (_lastRenderedMaterialVersion != currentMaterialVersion) {
+        _lastRenderedMaterialVersion = currentMaterialVersion;
         cameraDirty = true;
     }
 
@@ -312,13 +319,11 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                         // convert depth to clip space
                         double pm[4][4];
                         renderPassState->GetProjectionMatrix().Get(pm);
-                        auto vm = renderPassState->GetWorldToViewMatrix();
-                        const float m1 = -pm[2][2];
-                        const float m2 = -pm[3][2];
-                        const float far = (2.f * m2) / (2.f * m1 - 2.f);
-                        const float near = ((m1 - 1.f) * near) / (m1 + 1.f);
+                        const float m1 = pm[2][2];
+                        const float m2 = pm[3][2];
+                        const float near = m2 / (m1 - 1.f);
+                        const float far = m2 / (m1 + 1.f);
                         const float diff = (far - near);
-                        bool valid = false;
                         tbb::parallel_for(
                                 tbb::blocked_range<int>(0, frameSize),
                                 [&](tbb::blocked_range<int> r) {

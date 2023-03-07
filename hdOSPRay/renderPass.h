@@ -181,13 +181,14 @@ private:
     opp::Renderer _renderer;
     bool _rendererDirty { true };
 
-    bool _interacting { true };
+    bool _interacting { false };
     bool _interactiveEnabled {
         true
     }; // disabled by setting interactivetargetfps to 0
 
     int _lastRenderedModelVersion { -1 };
     int _lastRenderedLightVersion { -1 };
+    int _lastRenderedMaterialVersion { -1 };
     int _lastSettingsVersion { -1 };
 
     RenderFrame _currentFrame;

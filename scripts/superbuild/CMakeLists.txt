@@ -27,6 +27,13 @@ project(hdospray_superbuild)
 include(ExternalProject)
 include(GNUInstallDirs)
 
+macro(external_install NAME)
+  ExternalProject_Get_property(${NAME} BINARY_DIR)
+  set(binDir ${BINARY_DIR})
+  set(projectInfo ${binDir} "${NAME}" "ALL" "/")
+  set(depProjectInfo ${depProjectInfo} ${projectInfo})
+endmacro()
+
 option(USE_PYTHON "enable python support" ON)
 option(USE_PYTHON2 "if USE_PYTHON enabled, use python2 instead of python3" OFF)
 
@@ -34,8 +41,8 @@ set(HDSUPER_USD_VERSION "v23.02" CACHE STRING "git tag of usd")
 set(HDSUPER_USDSUPER_TAG "release-23.02" CACHE STRING "git tag of usd superbuild")
 set(HDSUPER_USDSUPER_URL "https://github.com/carsonbrownlee/USD_superbuild.git"
   CACHE STRING "url of usd superbuild git")
-option(OSPRAY_USE_GIT OFF)
-option(OSPRAY_USE_EXTERNAL OFF)
+option(HDSUPER_OSPRAY_USE_GIT OFF)
+option(HDSUPER_OSPRAY_USE_EXTERNAL OFF)
 if (HDSUPER_OSPRAY_USE_EXTERNAL)
   set(HDSUPER_OSPRAY_EXTERNAL_DIR "" CACHE PATH "location of external ospray install")
 else()
@@ -71,8 +78,7 @@ set(INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
 
 set(USD_DEPENDENCIES "")
 
-set(USD_ARGS ""
-)
+set(USD_ARGS "")
 
 if (BUILD_USD)
   include(ep_usd)
@@ -82,7 +88,7 @@ if (BUILD_OSPRAY)
 endif()
 
 set(OSPRAY_INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
-if (OSPRAY_USE_EXTERNAL)
+if (HDSUOPER_OSPRAY_USE_EXTERNAL)
   set(OSPRAY_INSTALL_DIR ${OSPRAY_EXTERNAL_DIR})
 endif()
 
@@ -116,38 +122,51 @@ if (BUILD_HDOSPRAY)
       -DUSE_HOUDINI_USD=${HDSUPER_USE_HOUDINI}
       -DHoudini_DIR=${HDSUPER_HOUDINI_DIR}
       -DHDOSPRAY_ENABLE_DENOISER=${HDSUPER_USE_DENOISER}
+    DEPENDS ${EP_USD_SUPER} ${EP_OSPRAY}
   )
   ExternalProject_Add_StepDependencies(${EP_HDOSPRAY}
-        configure ${EP_USD} ${EP_OSPRAY}
+        configure ${EP_USD_SUPER} ${EP_OSPRAY}
       )
 
-endif()
+  ###############################################################################
+  #########          Create Setup Script                         ################
+  ###############################################################################
 
-###############################################################################
-#########          Create Setup Script                         ################
-###############################################################################
-
-set(LD_EXPORT "LD_LIBRARY_PATH")
-if (APPLE)
-  set(LD_EXPORT "DYLD_LIBRARY_PATH")
-endif()
+  set(LD_EXPORT "LD_LIBRARY_PATH")
+  if (APPLE)
+    set(LD_EXPORT "DYLD_LIBRARY_PATH")
+  endif()
 
 
-if (HDSUPER_USE_HOUDINI)
-  FILE(WRITE ${CMAKE_INSTALL_PREFIX}/setup_hdospray.sh 
-  "export HDOSPRAY_ROOT=${CMAKE_INSTALL_PREFIX}\n"
-  "export ${LD_EXPORT}=\${HDOSPRAY_ROOT}/lib:\${LD_LIBRARY_PATH}\n"
-  "cd ${HDSUPER_HOUDINI_DIR}/../../\n"
-  "source houdini_setup_bash\n"
-  "cd -\n"
-  "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
-  )
-else()
-  FILE(WRITE ${CMAKE_INSTALL_PREFIX}/setup_hdospray.sh 
-  "export HDOSPRAY_ROOT=${CMAKE_INSTALL_PREFIX}\n"
-  "export ${LD_EXPORT}=\${HDOSPRAY_ROOT}/lib:\${LD_LIBRARY_PATH}\n"
-  "export PYTHONPATH=\${HDOSPRAY_ROOT}/lib/python:\${PYTHONPATH}\n"
-  "export PATH=\${HDOSPRAY_ROOT}/bin:\${PATH}\n"
-  "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
-  )
-endif()
+  if (HDSUPER_USE_HOUDINI)
+    FILE(WRITE ${CMAKE_INSTALL_PREFIX}/setup_hdospray.sh
+    "export HDOSPRAY_ROOT=${CMAKE_INSTALL_PREFIX}\n"
+    "export ${LD_EXPORT}=\${HDOSPRAY_ROOT}/lib:\${LD_LIBRARY_PATH}\n"
+    "cd ${HDSUPER_HOUDINI_DIR}/../../\n"
+    "source houdini_setup_bash\n"
+    "cd -\n"
+    "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
+    )
+  else()
+    FILE(WRITE ${CMAKE_INSTALL_PREFIX}/setup_hdospray.sh
+    "export HDOSPRAY_ROOT=${CMAKE_INSTALL_PREFIX}\n"
+    "export ${LD_EXPORT}=\${HDOSPRAY_ROOT}/lib:\${LD_LIBRARY_PATH}\n"
+    "export PYTHONPATH=\${HDOSPRAY_ROOT}/lib/python:\${PYTHONPATH}\n"
+    "export PATH=\${HDOSPRAY_ROOT}/bin:\${PATH}\n"
+    "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
+    )
+  endif()
+
+  ExternalProject_Get_property(hdOSPRay BINARY_DIR)
+  set(hdOSPRayBinaryDir ${BINARY_DIR})
+  # build directory; name; components; destination dir in package
+  set(hdOSPRayProjectInfo ${hdOSPRayBinaryDir} "hdOSPRay" "ALL" "/")
+  set(depProjectInfo ${depProjectInfo} ${hdOSPRayProjectInfo})
+  message("cpack projects: " ${depProjectInfo})
+  set(CPACK_INSTALL_CMAKE_PROJECTS ${depProjectInfo})
+
+endif(BUILD_HDOSPRAY)
+
+set(CPACK_PROJECT_NAME ${PROJECT_NAME})
+set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+include(CPack)

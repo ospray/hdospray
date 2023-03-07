@@ -1,7 +1,11 @@
-# Copyright 2019 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 PROJECT(hdOSPRayPlugin)
+
+set(HDOSPRAY_VERSION_MAJOR 0)
+set(HDOSPRAY_VERSION_MINOR 11)
+set(HDOSPRAY_VERSION_PATCH 0)
+set(HDOSPRAY_VERSION ${HDOSPRAY_VERSION_MAJOR}.${HDOSPRAY_VERSION_MINOR}.${HDOSPRAY_VERSION_PATCH})
 
 if (WIN32)
     cmake_minimum_required(VERSION 3.1.1)
@@ -20,7 +24,9 @@ if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     endif()
 endif()
 
-set(CMAKE_MODULE_PATH  ${CMAKE_SOURCE_DIR}/cmake/modules)
+set(CMAKE_MODULE_PATH
+    ${CMAKE_SOURCE_DIR}/cmake
+    ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 option(USE_HOUDINI_USD "use Houdini USD" OFF)
                       
@@ -37,3 +43,5 @@ option(ENABLE_TESTING "build testing suite" OFF)
 if (ENABLE_TESTING)
     add_subdirectory(testing)
 endif()
+
+include(CPack)

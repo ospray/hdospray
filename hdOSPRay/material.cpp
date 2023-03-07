@@ -210,7 +210,7 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
 
         _UpdateOSPRayMaterial();
 
-        ospRenderParam->UpdateModelVersion();
+        ospRenderParam->UpdateMaterialVersion();
         *dirtyBits = Clean;
     }
 }
@@ -278,6 +278,8 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
             opacity = value.Get<float>();
         }
     }
+    // set transmissionColor to diffuseColor for usdpreviewsurface as there is no way to set it
+    transmissionColor = diffuseColor;
 }
 
 void

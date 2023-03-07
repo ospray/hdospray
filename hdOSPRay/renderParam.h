@@ -56,6 +56,16 @@ public:
         return _lightVersion.load();
     }
 
+    void UpdateMaterialVersion()
+    {
+        _materialVersion++;
+    }
+
+    int GetMaterialVersion()
+    {
+        return _materialVersion.load();
+    }
+
     // thread safe.  Lights added to scene and released by renderPass.
     void AddHdOSPRayLight(const SdfPath& id, const HdOSPRayLight* hdOsprayLight)
     {
@@ -124,4 +134,5 @@ private:
     /// A version counters for edits to scene (e.g., models or lights).
     std::atomic<int> _modelVersion { 1 };
     std::atomic<int> _lightVersion { 1 };
+    std::atomic<int> _materialVersion { 1 };
 };

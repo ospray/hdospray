@@ -38,3 +38,6 @@ ExternalProject_Add(${COMPONENT_NAME}
 )
 
 set(ISPC_PATH "${COMPONENT_PATH}/bin/ispc${CMAKE_EXECUTABLE_SUFFIX}")
+
+
+external_install(ispc)

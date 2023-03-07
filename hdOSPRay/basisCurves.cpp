@@ -47,11 +47,8 @@ HdOSPRayBasisCurves::GetInitialDirtyBitsMask() const
            | HdChangeTracker::DirtyRepr | HdChangeTracker::DirtyMaterialId
            | HdChangeTracker::DirtyTopology | HdChangeTracker::DirtyTransform
            | HdChangeTracker::DirtyVisibility | HdChangeTracker::DirtyWidths
-           | HdChangeTracker::DirtyComputationPrimvarDesc;
-
-    if (!GetInstancerId().IsEmpty()) {
-        mask |= HdChangeTracker::DirtyInstancer;
-    }
+           | HdChangeTracker::DirtyComputationPrimvarDesc
+           | HdChangeTracker::DirtyInstancer;
 
     return (HdDirtyBits)mask;
 }
@@ -165,7 +162,7 @@ HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
                          vec3f(xfmf[4], xfmf[5], xfmf[6]),
                          vec3f(xfmf[8], xfmf[9], xfmf[10]),
                          vec3f(xfmf[12], xfmf[13], xfmf[14]));
-            instance.setParam("xfm", xfm);
+            instance.setParam("transform", xfm);
             instance.commit();
             _ospInstances.push_back(instance);
         }

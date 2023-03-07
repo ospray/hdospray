@@ -44,3 +44,5 @@ string(REPLACE ";" "|" CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}")
 if (DOWNLOAD_TBB)
   ExternalProject_Add_StepDependencies(${COMPONENT_NAME} configure tbb)
 endif()
+
+external_install(rkcommon)

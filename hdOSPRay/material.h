@@ -167,7 +167,7 @@ protected:
     float thickness { 1.f };
     float backlight { 0.f };
     float coat { 0.f };
-    float coatIor;
+    float coatIor { 1.5f };
     GfVec3f coatColor { 1.f, 1.f, 1.f };
     float coatThickness { 1.f };
     float coatRoughness { 0.01f };

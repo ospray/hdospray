@@ -54,7 +54,7 @@ LoadPtexTexture(std::string file)
 
 // creates 2d osptexture from file, does not commit
 std::pair<opp::Texture, unsigned char*>
-LoadOIIOTexture2D(std::string file, std::string channelsStr, bool nearestFilter,
+LoadOIIOTexture2D(const std::string file, const std::string channelsStr, bool nearestFilter,
                   bool complement)
 {
     auto in = ImageInput::open(file.c_str());
@@ -117,6 +117,8 @@ LoadOIIOTexture2D(std::string file, std::string channelsStr, bool nearestFilter,
         std::cout << "Texture: file: " << file << "\tdepth: " << depth
                   << "\tchannels: " << channels << "\format: " << format
                   << std::endl;
+        free(outData);
+        outData = nullptr;
         throw std::runtime_error(
                "hdOSPRay::LoadOIIOTexture2D: \
                                          Unknown texture format");
@@ -140,7 +142,6 @@ LoadOIIOTexture2D(std::string file, std::string channelsStr, bool nearestFilter,
     // supported:
     // rgba, rgba to: rgb, r, g, b, or a
     if (outData) {
-        const size_t outStride = size.x * outChannels * outDepth;
         const size_t offsetBytes = channelOffset * depth;
         const size_t inBytes = depth * channels;
         const size_t outBytes = outDepth * outChannels;
@@ -162,6 +163,11 @@ LoadOIIOTexture2D(std::string file, std::string channelsStr, bool nearestFilter,
     opp::SharedData ospData
            = opp::SharedData(outData ? outData : data, dataType, size);
     ospData.commit();
+    // free the unused data
+    if (outData)
+        free(data);
+    else
+        free(outData);
 
     opp::Texture ospTexture = opp::Texture("texture2d");
     ospTexture.setParam("format", format);
@@ -230,7 +236,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
 
     // load tile data  TODO: parallelize
     for (auto tile : udimTiles) {
-        std::string file = std::get<1>(tile);
+        const std::string file = std::get<1>(tile);
         auto in = ImageInput::open(file.c_str());
         if (!in) {
             std::cerr << "#osp: failed to load texture '" + file + "'"
@@ -297,7 +303,12 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
         }
         if ((udimDataType != OSP_UNKNOWN) && udimDataType != dataType) {
             std::cerr << "UDIM has inconsisntent data types\n";
-            delete data;
+            for (auto t : udimTileDescs) {
+                free(t.data);
+                t.data = nullptr;
+            }
+            free(data);
+            data = nullptr;
             return std::pair<opp::Texture, char*>(nullptr, nullptr);
         }
         udimDataType = dataType;

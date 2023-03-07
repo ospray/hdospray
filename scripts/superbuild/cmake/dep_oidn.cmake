@@ -77,3 +77,4 @@ endif()
 list(APPEND CMAKE_PREFIX_PATH ${COMPONENT_PATH})
 string(REPLACE ";" "|" CMAKE_PREFIX_PATH "${CMAKE_PREFIX_PATH}")
 
+external_install(oidn)

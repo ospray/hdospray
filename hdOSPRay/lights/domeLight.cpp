@@ -22,6 +22,7 @@ using namespace rkcommon::math;
 HdOSPRayDomeLight::HdOSPRayDomeLight(SdfPath const& id)
     : HdOSPRayLight(id)
 {
+    _cameraVisibility = true;
 }
 
 HdOSPRayDomeLight::~HdOSPRayDomeLight()

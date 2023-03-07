@@ -312,6 +312,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id, HdTokens->points)
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
+        newMesh = true;
 
         if (!_refined) {
             if (useQuads) {
@@ -463,8 +464,9 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 #endif
 
     if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || isTransformDirty) {
-        _ospInstances.clear();
         if (!GetInstancerId().IsEmpty()) {
+            //TODO: reuse instances for instancer?
+            _ospInstances.clear();
             HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
             HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
             VtMatrix4dArray transforms
@@ -494,8 +496,14 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                 _ospInstances.push_back(instance);
             }
         } else {
+            if (newMesh)
+                _ospInstances.clear();
             opp::Group group;
-            opp::Instance instance(group);
+            opp::Instance instance;
+            if (newMesh)
+                instance = opp::Instance(group);
+            else
+                instance = _ospInstances.back();
             GfMatrix4f matf = _transform;
             float* xfmf = matf.GetArray();
             affine3f xfm(vec3f(xfmf[0], xfmf[1], xfmf[2]),
@@ -506,15 +514,16 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             instance.setParam("id", (unsigned int)0);
             instance.commit();
 
-            if (_geomSubsetModels.size()) {
-                group.setParam("geometry", opp::CopiedData(_geomSubsetModels));
-            } else {
-                if (_geometricModel)
-                    group.setParam("geometry", opp::CopiedData(*_geometricModel));
+            if (newMesh) {
+                if (_geomSubsetModels.size()) {
+                    group.setParam("geometry", opp::CopiedData(_geomSubsetModels));
+                } else {
+                    if (_geometricModel)
+                        group.setParam("geometry", opp::CopiedData(*_geometricModel));
+                }
+                group.commit();
+                _ospInstances.push_back(instance);
             }
-
-            group.commit();
-            _ospInstances.push_back(instance);
         }
         renderParam->UpdateModelVersion();
     }

@@ -51,3 +51,5 @@ ExternalProject_Add_StepDependencies(${COMPONENT_NAME}
     embree
     $<$<BOOL:${DOWNLOAD_ISPC}>:ispc>
 )
+
+external_install(openvkl)

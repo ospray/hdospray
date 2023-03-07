@@ -25,7 +25,7 @@ opp::Texture LoadPtexTexture(std::string file);
 /// @param compute 1.f-val.  float only.
 /// @return OSPRay texture object, data pointer
 std::pair<opp::Texture, unsigned char*>
-LoadOIIOTexture2D(std::string file, std::string channels = "",
+LoadOIIOTexture2D(const std::string file, const std::string channels = "",
                   bool nearestFilter = false, bool complement = false);
 
 /// @brief

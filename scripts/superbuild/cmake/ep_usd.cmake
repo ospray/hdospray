@@ -1,12 +1,22 @@
-SET(EP_USD "USD")
-  ExternalProject_Add (
-    ${EP_USD}
+option(BUILD_TBB "" ON)
+option(BUILD_TIFF "" OFF)
+option(BUILD_PNG "" OFF)
+option(BUILD_JPEG "" OFF)
+option(BUILD_GLEW "" OFF)
+option(BUILD_OPENEXR "" ON)
+option(BUILD_PTEX "" ON)
+option(BUILD_BOOST "" ON)
+option(ENABLE_PTEX "enable ptex support in USD" ON)
 
-    PREFIX        ${EP_USD}
-    DOWNLOAD_DIR  ${EP_USD}
-    STAMP_DIR     ${EP_USD}/stamp
-    SOURCE_DIR    ${EP_USD}/source
-    BINARY_DIR    ${EP_USD}/build
+SET(EP_USD_SUPER "USD_Super")
+  ExternalProject_Add (
+    ${EP_USD_SUPER}
+
+    PREFIX        ${EP_USD_SUPER}
+    DOWNLOAD_DIR  ${EP_USD_SUPER}
+    STAMP_DIR     ${EP_USD_SUPER}/stamp
+    SOURCE_DIR    ${EP_USD_SUPER}/source
+    BINARY_DIR    ${EP_USD_SUPER}/build
     GIT_REPOSITORY ${HDSUPER_USDSUPER_URL}
     GIT_TAG       ${HDSUPER_USDSUPER_TAG}
     GIT_SHALLOW   OFF
@@ -19,12 +29,15 @@ SET(EP_USD "USD")
       -DBUILD_ALL_DEPS=OFF
       -DUSE_PYTHON=${USE_PYTHON}
       -DUSE_PYTHON2=OFF
-      -DBUILD_TBB=ON
-      -DBUILD_BOOST=ON
-      -DBUILD_GLEW=OFF
-      -DBUILD_PTEX=ON
-      -DBUILD_OPENEXR=ON
-      -DPXR_ENABLE_PTEX_SUPPORT=ON
+      -DBUILD_TBB=${BUILD_TBB}
+      -DBUILD_TIFF=${BUILD_TIFF}
+      -DBUILD_PNG=${BUILD_PNG}
+      -DBUILD_JPEG=${BUILD_JPEG}
+      -DBUILD_BOOST=${BUILD_BOOST}
+      -DBUILD_GLEW=${BUILD_GLEW}
+      -DBUILD_PTEX=${BUILD_PTEX}
+      -DBUILD_OPENEXR=${BUILD_OPENEXR}
+      -DPXR_ENABLE_PTEX_SUPPORT=${ENABLE_PTEX}
       -DBUILD_OPENSUBDIV=ON
       -DBUILD_HDF5=ON
       -DBUILD_OPENIMAGEIO=ON
@@ -32,8 +45,15 @@ SET(EP_USD "USD")
       -DUSD_VERSION=${HDSUPER_USD_VERSION}
     INSTALL_COMMAND ""
     BUILD_ALWAYS OFF
+    DEPENDS ${USD_DEPENDENCIES}
   )
 
-  ExternalProject_Add_StepDependencies(${EP_USD}
-        configure ${USD_DEPENDENCIES}
-      )
+#  ExternalProject_Add_StepDependencies(${EP_USD_SUPER}
+#        configure ${USD_DEPENDENCIES}
+#      )
+
+#ExternalProject_Get_property(USD BINARY_DIR)
+#set(binDir ${BINARY_DIR})
+#set(projectInfo ${binDir} "USD" "ALL" "/")
+#set(depProjectInfo ${depProjectInfo} ${projectInfo})
+external_install(USD_Super)
