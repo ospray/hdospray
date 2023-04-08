@@ -157,8 +157,11 @@ private:
                        && !primvars.empty()) {
                 computedPrimvars.resize(1);
                 computedPrimvars[0] = primvars[0];
-            } else
-                TF_WARN("HdOSPRayMesh: unsupported interpolation mode");
+            } else if (interpolation == HdInterpolationInstance) {
+                TF_WARN("HdOSPRayMesh: unsupported interpolation mode HdInterpolationInstance");
+            } else {
+                TF_WARN("HdOSPRayMesh: unknown interpolation mode");
+            }
         }
     }
 

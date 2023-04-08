@@ -469,7 +469,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             size_t newSize = transforms.size();
 
             opp::Group group;
-            group.setParam("geometry", opp::CopiedData(*_geometricModel));
+            if (_geometricModel)
+                group.setParam("geometry", opp::CopiedData(*_geometricModel));
             group.commit();
 
             _ospInstances.reserve(newSize);
@@ -551,9 +552,12 @@ HdOSPRayMesh::_CreateOSPRayMesh(const VtVec2fArray& texcoords,
     opp::Geometry ospMesh = opp::Geometry("mesh");
     if (!_refined) {
         if (useQuads) {
+            size_t numQuads = _quadIndices.size() / 4;
+            #if HD_API_VERSION < 44
+                        numQuads = _quadIndices.size();
+            #endif
             opp::SharedData indices = opp::SharedData(
-                   _quadIndices.cdata(), OSP_VEC4UI, _quadIndices.size());
-
+                   _quadIndices.cdata(), OSP_VEC4UI, numQuads);
             indices.commit();
             ospMesh.setParam("index", indices);
 
@@ -561,7 +565,6 @@ HdOSPRayMesh::_CreateOSPRayMesh(const VtVec2fArray& texcoords,
             opp::SharedData indices
                    = opp::SharedData(_triangulatedIndices.cdata(), OSP_VEC3UI,
                                      _triangulatedIndices.size());
-
             indices.commit();
             ospMesh.setParam("index", indices);
         }
