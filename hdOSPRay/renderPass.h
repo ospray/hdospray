@@ -23,8 +23,6 @@ namespace opp = ospray::cpp;
 using namespace rkcommon::math;
 
 PXR_NAMESPACE_USING_DIRECTIVE
-TF_DEBUG_CODES(OSP_RP);
-TF_DEBUG_CODES(OSP_FPS);
 
 class HdOSPRayRenderParam;
 

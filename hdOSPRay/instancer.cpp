@@ -11,6 +11,7 @@
 #include <pxr/base/gf/rotation.h>
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/base/gf/vec4f.h>
+#include <pxr/base/gf/quath.h>
 #include <pxr/base/tf/staticTokens.h>
 
 #include <iostream>
@@ -153,6 +154,15 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const& prototypeId)
     if (_primvarMap.count(_tokens->rotate) > 0) {
         HdOSPRayBufferSampler sampler(*_primvarMap[_tokens->rotate]);
         for (size_t i = 0; i < instanceIndices.size(); ++i) {
+#if HD_API_VERSION > 35
+            GfQuath quath;
+            if (sampler.Sample(instanceIndices[i], &quath)) {
+                GfMatrix4d rotateMat(1);
+                GfQuatd quat(quath.GetReal(), quath.GetImaginary());
+                rotateMat.SetRotate(quat);
+                transforms[i] = rotateMat * transforms[i];
+            }
+#else
             GfVec4f quat;
             if (sampler.Sample(instanceIndices[i], &quat)) {
                 GfMatrix4d rotateMat(1);
@@ -160,6 +170,7 @@ HdOSPRayInstancer::ComputeInstanceTransforms(SdfPath const& prototypeId)
                        quat[0], GfVec3d(quat[1], quat[2], quat[3]))));
                 transforms[i] = rotateMat * transforms[i];
             }
+#endif
         }
     }
 

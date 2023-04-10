@@ -125,7 +125,7 @@ void
 HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                              TfTokenVector const& renderTags)
 {
-    TF_DEBUG_MSG(OSP_RP, "ospRP::Execute\n");
+    TF_DEBUG_MSG(OSP, "ospRP::Execute\n");
     HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
 
     // changes to renderer settings
@@ -197,7 +197,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                = renderPassState->GetAovBindings();
         if (_aovBindings != aovBindings || _aovBindings.empty()) {
             if (aovBindings.size() == 0) {
-                TF_DEBUG_MSG(OSP_RP, "creating default color aov\n");
+                TF_DEBUG_MSG(OSP, "creating default color aov\n");
                 HdRenderPassAovBinding colorAov;
                 colorAov.aovName = HdAovTokens->color;
                 colorAov.renderBuffer = &_colorBuffer;
@@ -605,22 +605,22 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             ospRenderBuffer->SetConverged(true);
         }
     }
-    TF_DEBUG_MSG(OSP_RP, "ospRP::Execute done\n");
+    TF_DEBUG_MSG(OSP, "ospRP::Execute done\n");
 }
 
 void
 HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
 {
-    TF_DEBUG_MSG(OSP_RP, "ospray render time: %f\n",
+    TF_DEBUG_MSG(OSP, "ospray render time: %f\n",
                  renderBuffer.osprayFrame.duration());
     static TfStopwatch timer;
     timer.Stop();
     double time = timer.GetSeconds();
     timer.Reset();
     timer.Start();
-    TF_DEBUG_MSG(OSP_RP, "display timer: %f\n", time);
+    TF_DEBUG_MSG(OSP, "display timer: %f\n", time);
 
-    TF_DEBUG_MSG(OSP_RP, "displayRB %zu\n", _aovBindings.size());
+    TF_DEBUG_MSG(OSP, "displayRB %zu\n", _aovBindings.size());
 
     for (int aovIndex = 0; aovIndex < _aovBindings.size(); aovIndex++) {
         auto aovRenderBuffer = dynamic_cast<HdRenderBuffer*>(
@@ -678,14 +678,14 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
     avgTime += time;
     static int avgCounter = 0;
     if (++avgCounter >= 15) {
-        TF_DEBUG_MSG(OSP_FPS, "average fps: %f\n", avgTime / float(avgCounter));
+        TF_DEBUG_MSG(OSP, "average fps: %f\n", avgTime / float(avgCounter));
         avgTime = 0.f;
         avgCounter = 0;
     }
     timer.Stop();
     time = timer.GetSeconds();
     timer.Start();
-    TF_DEBUG_MSG(OSP_RP, "display duration: %f\n", time);
+    TF_DEBUG_MSG(OSP, "display duration: %f\n", time);
 }
 
 void
@@ -958,7 +958,7 @@ HdOSPRayRenderPass::ProcessInstances()
     for (auto hdOSPRayBasisCurves : _renderParam->GetHdOSPRayBasisCurves()) {
         hdOSPRayBasisCurves->AddOSPInstances(_oldInstances);
     }
-    TF_DEBUG_MSG(OSP_RP, "ospRP::process instances %zu\n",
+    TF_DEBUG_MSG(OSP, "ospRP::process instances %zu\n",
                  _oldInstances.size());
     if (!_oldInstances.empty()) {
         opp::CopiedData data = opp::CopiedData(

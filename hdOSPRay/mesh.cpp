@@ -354,11 +354,14 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             opp::SharedData normalsData = opp::SharedData(
                    normals.cdata(), OSP_VEC3F, normals.size());
             normalsData.commit();
-            if (_normalsInterpolation == HdInterpolationFaceVarying)
+            if (_normalsInterpolation == HdInterpolationFaceVarying) {
                 _ospMesh.setParam("normal", normalsData);
-            else if ((_normalsInterpolation == HdInterpolationVarying)
-                     || (_normalsInterpolation == HdInterpolationVertex))
+            } else if ((_normalsInterpolation == HdInterpolationVarying)
+                     || (_normalsInterpolation == HdInterpolationVertex)) {
                 _ospMesh.setParam("vertex.normal", normalsData);
+            } else {
+                TF_DEBUG_MSG(OSP, "osp::mesh unsupported normal interpolation");
+            }
         }
 
         if (!_colors.empty()) {
@@ -483,7 +486,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                              vec3f(xfmf[4], xfmf[5], xfmf[6]),
                              vec3f(xfmf[8], xfmf[9], xfmf[10]),
                              vec3f(xfmf[12], xfmf[13], xfmf[14]));
-                instance.setParam("xfm", xfm);
+                instance.setParam("transform", xfm);
                 instance.setParam("id", (unsigned int)i);
                 instance.commit();
                 _ospInstances.push_back(instance);
@@ -497,14 +500,15 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                          vec3f(xfmf[4], xfmf[5], xfmf[6]),
                          vec3f(xfmf[8], xfmf[9], xfmf[10]),
                          vec3f(xfmf[12], xfmf[13], xfmf[14]));
-            instance.setParam("xfm", xfm);
+            instance.setParam("transform", xfm);
             instance.setParam("id", (unsigned int)0);
             instance.commit();
 
             if (_geomSubsetModels.size()) {
                 group.setParam("geometry", opp::CopiedData(_geomSubsetModels));
             } else {
-                group.setParam("geometry", opp::CopiedData(*_geometricModel));
+                if (_geometricModel)
+                    group.setParam("geometry", opp::CopiedData(*_geometricModel));
             }
 
             group.commit();

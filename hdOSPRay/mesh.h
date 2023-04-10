@@ -185,9 +185,9 @@ private:
     VtVec3fArray _colors;
     VtVec3fArray _computedColors; // triangulated
     GfVec4f _singleColor { .5f, .5f, .5f, 1.f };
-    HdInterpolation _texcoordsInterpolation;
-    HdInterpolation _colorsInterpolation;
-    HdInterpolation _normalsInterpolation;
+    HdInterpolation _texcoordsInterpolation {HdInterpolationVertex};
+    HdInterpolation _colorsInterpolation {HdInterpolationVertex};
+    HdInterpolation _normalsInterpolation {HdInterpolationVarying};
     TfToken _texcoordsPrimVarName;
     TfToken _colorsPrimVarName;
     TfToken _normalsPrimVarName;

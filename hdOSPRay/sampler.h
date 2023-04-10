@@ -88,6 +88,7 @@ TYPE_HELPER(GfVec3d, HdTypeDoubleVec3)
 TYPE_HELPER(GfVec4d, HdTypeDoubleVec4)
 TYPE_HELPER(GfMatrix4f, HdTypeFloatMat4)
 TYPE_HELPER(GfMatrix4d, HdTypeDoubleMat4)
+TYPE_HELPER(GfQuath, HdTypeHalfFloatVec4)
 #undef TYPE_HELPER
 
 class HdOSPRayBufferSampler {
