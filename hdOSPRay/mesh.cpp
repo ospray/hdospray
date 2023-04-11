@@ -360,7 +360,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                      || (_normalsInterpolation == HdInterpolationVertex)) {
                 _ospMesh.setParam("vertex.normal", normalsData);
             } else {
-                TF_DEBUG_MSG(OSP, "osp::mesh unsupported normal interpolation");
+                TF_DEBUG_MSG(OSP, "osp::mesh unsupported normal interpolation mode");
             }
         }
 
@@ -391,6 +391,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             else if (_texcoordsInterpolation == HdInterpolationVertex
                      || _texcoordsInterpolation == HdInterpolationVarying) {
                 _ospMesh.setParam("vertex.texcoord", texcoordsData);
+            } else {
+                TF_DEBUG_MSG(OSP, "unsupported texcoord interpolation mode");
             }
         }
 

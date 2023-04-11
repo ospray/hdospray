@@ -461,7 +461,8 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken inputName,
         } else {
             const auto& result = LoadOIIOTexture2D(
                    texture.file, inputName.GetString(), false,
-                   (outputName == HdOSPRayMaterialTokens->opacity));
+                   (outputName == HdOSPRayMaterialTokens->opacity &&
+                    _type == MaterialTypes::preview));
             texture.ospTexture = result.first;
         }
     }
@@ -540,7 +541,8 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(std::string rendererType)
         if (!value.ospTexture)
             continue;
         std::string name = "";
-        if (key == HdOSPRayMaterialTokens->diffuseColor)
+        if (key == HdOSPRayMaterialTokens->diffuseColor ||
+            key == HdOSPRayMaterialTokens->baseColor)
             name = "map_baseColor";
         else if (key == HdOSPRayMaterialTokens->metallic) {
             name = "map_metallic";
@@ -549,6 +551,12 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(std::string rendererType)
             name = "map_roughness";
             hasRoughnessTex = true;
         } else if (key == HdOSPRayMaterialTokens->opacity) {
+            if (_type == MaterialTypes::preview) {
+                name = "map_transmission";
+                hasOpacityTex = true;
+            } else
+                name = "map_opacity";
+        } else if (key == HdOSPRayMaterialTokens->transmission) {
             name = "map_transmission";
             hasOpacityTex = true;
         }
