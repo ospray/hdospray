@@ -119,7 +119,11 @@ private:
                        || interpolation == HdInterpolationVertex) {
                 computedPrimvars = primvars;
             } else if (interpolation == HdInterpolationUniform) {
-                computedPrimvars.resize(_quadIndices.size());
+                size_t numQuads = _quadIndices.size() / 4;
+                #if HD_API_VERSION < 44
+                            numQuads = _quadIndices.size();
+                #endif
+                computedPrimvars.resize(numQuads);
                 for (size_t i = 0; i < computedPrimvars.size(); i++)
                     computedPrimvars[i] = primvars[i];
             } else if (interpolation == HdInterpolationConstant

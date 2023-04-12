@@ -60,8 +60,10 @@ public:
     void AddHdOSPRayLight(const SdfPath& id, const HdOSPRayLight* hdOsprayLight)
     {
         std::lock_guard<std::mutex> lock(_ospMutex);
-        _hdOSPRayLights[id] = hdOsprayLight;
-        UpdateLightVersion();
+        if (_hdOSPRayLights.find(id) == _hdOSPRayLights.end()) {
+            _hdOSPRayLights[id] = hdOsprayLight;
+            UpdateLightVersion();
+        }
     }
 
     void RemoveHdOSPRayLight(const SdfPath& id)

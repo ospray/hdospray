@@ -76,7 +76,11 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
         #endif
     }
 
-    _visibility = sceneDelegate->GetVisible(id);
+    bool visible = sceneDelegate->GetVisible(id);
+    bool visibilityDirty = (visible != _visibility);
+    if (visibilityDirty)
+        ospRenderParam->UpdateLightVersion();
+    _visibility = visible;
 
     // Extract common Lighting Params
     if (bits & DirtyParams) {
@@ -163,15 +167,16 @@ HdOSPRayLight::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
          _emissionParam.color[2] = pow(_emissionParam.color[2], 1.0f/2.2f);
     }
 
-
     // query light type specific parameters
     _LightSpecificSync(sceneDelegate, id, dirtyBits);
 
-    // generate the OSPLight source
-    _PrepareOSPLight();
+    if (bits & DirtyParams) {
+        // generate the OSPLight source
+        _PrepareOSPLight();
 
-    // populates the light source to the OSPRay renderer
-    _PopulateOSPLight(ospRenderParam);
+        // populates the light source to the OSPRay renderer
+        _PopulateOSPLight(ospRenderParam);
+    }
 
     // TODO: implement handling of shadow collections
 

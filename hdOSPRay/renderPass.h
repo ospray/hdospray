@@ -201,6 +201,8 @@ private:
     std::shared_ptr<HdOSPRayRenderParam> _renderParam;
 
     std::vector<opp::Instance> _oldInstances; // instances added to last model
+    opp::Group _lightsGroup;
+    opp::Instance _lightsInstance;
     opp::World _world = nullptr; // the last model created
 
     int _numSamplesAccumulated { 0 }; // number of rendered frames not cleared

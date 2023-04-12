@@ -64,7 +64,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
 #if HDOSPRAY_ENABLE_DENOISER
     _denoiserLoaded = (ospLoadModule("denoiser") == OSP_NO_ERROR);
     if (!_denoiserLoaded)
-        std::cout << "HDOSPRAY: WARNING: could not load denoiser module\n";
+        TF_WARN("osp: WARNING: could not load denoiser module");
 #endif
     _renderer.setParam("maxPathLength", _maxDepth);
     _renderer.setParam("roulettePathLength", _russianRouletteStartDepth);
@@ -75,6 +75,10 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("epsilon", 0.001f);
     _renderer.setParam("geometryLights", true);
     _rendererDirty = true;
+
+    _lightsGroup.commit();
+    _lightsInstance = opp::Instance(_lightsGroup);
+    _lightsInstance.commit();
 }
 
 HdOSPRayRenderPass::~HdOSPRayRenderPass()
@@ -166,6 +170,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         }
     }
 
+    // check for aov updates
     bool aovDirty = (_aovBindings != aovBindings || _aovBindings.empty());
     if (aovDirty) {
         _hasColor = _hasDepth = _hasCameraDepth = _hasNormal = _hasPrimId
@@ -573,6 +578,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
 
     // world commit to prepare render
     if (_world && (worldDirty || lightsDirty)) {
+        // Carson: world needs a lights only commit
+        //   you cannot just update the lights group
         _world.commit();
     }
 
@@ -822,9 +829,8 @@ HdOSPRayRenderPass::ProcessLights()
         ambient.commit();
         lights.push_back(ambient);
     }
-    if (_world) {
-        _world.setParam("light", opp::CopiedData(lights));
-    }
+    _lightsGroup.setParam("light", opp::CopiedData(lights));
+    _lightsGroup.commit();
     _pendingLightUpdate = false;
 }
 
@@ -958,6 +964,7 @@ HdOSPRayRenderPass::ProcessInstances()
     for (auto hdOSPRayBasisCurves : _renderParam->GetHdOSPRayBasisCurves()) {
         hdOSPRayBasisCurves->AddOSPInstances(_oldInstances);
     }
+    _oldInstances.emplace_back(_lightsInstance);
     TF_DEBUG_MSG(OSP, "ospRP::process instances %zu\n",
                  _oldInstances.size());
     if (!_oldInstances.empty()) {

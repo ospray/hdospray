@@ -62,7 +62,8 @@ HdOSPRaySphereLight::_PrepareOSPLight()
     // We could also consider scaling but is is not clear what to do
     // if the scaling i non-uniform
 
-    _ospLight = opp::Light("sphere");
+    if (!_ospLight)
+        _ospLight = opp::Light("sphere");
     _ospLight.setParam("position",
                        vec3f(position[0], position[1], position[2]));
     if (_treatAsPoint)
