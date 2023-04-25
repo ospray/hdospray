@@ -146,8 +146,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     }
 
     float updateInteractiveFrameBufferScale = _interactiveFrameBufferScale;
-    bool interactiveFramebufferDirty = false;
-    bool frameBufferDirty = false;
+    _frameBufferDirty = false;
+    _interactiveFrameBufferDirty = false;
     if (!_interactiveEnabled)
         _interacting = false;
 
@@ -193,7 +193,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
             } else if (name == HdAovTokens->instanceId) {
                 _hasInstId = true;
             }
-            frameBufferDirty = true;
+            _frameBufferDirty = true;
         }
 
         // update aov buffer maps.  if no aov buffers are specified, create a
@@ -246,276 +246,159 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     bool lightsDirty = _pendingLightUpdate;
 
     _pendingResetImage |= (_pendingModelUpdate || _pendingLightUpdate);
-    _pendingResetImage |= (frameBufferDirty || cameraDirty);
+    _pendingResetImage |= (_frameBufferDirty || cameraDirty);
 
     const GfRect2i dataWindow = _GetDataWindow(renderPassState);
 
     if (_dataWindow != dataWindow) {
         _dataWindow = dataWindow;
-        frameBufferDirty = true;
+        _frameBufferDirty = true;
         _width = dataWindow.GetWidth();
         _height = dataWindow.GetHeight();
-
-        // if using a preframing version of USD, or if aovs are missing, create
-        // buffers
-#if PXR_VERSION > 2011
-        if (!renderPassState->GetFraming().IsValid())
-#endif
-        {
-            if (_hasColor)
-                _colorBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                      HdFormatFloat32Vec4,
-                                      /*multiSampled=*/false);
-            if (_hasDepth)
-                _depthBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                      HdFormatFloat32,
-                                      /*multiSampled=*/false);
-            if (_hasCameraDepth)
-                _cameraDepthBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                            HdFormatFloat32,
-                                            /*multiSampled=*/false);
-            if (_hasNormal)
-                _normalBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                       HdFormatFloat32Vec3,
-                                       /*multiSampled=*/false);
-            if (_hasPrimId)
-                _primIdBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                       HdFormatInt32,
-                                       /*multiSampled=*/false);
-            if (_hasElementId)
-                _elementIdBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                          HdFormatInt32,
-                                          /*multiSampled=*/false);
-            if (_hasInstId)
-                _instIdBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                       HdFormatInt32,
-                                       /*multiSampled=*/false);
-        }
     }
 
     // display finished frames or return until ready, setup interactive frame
-    if (_currentFrame.isValid() && !aovDirty) {
-        if (_interactiveEnabled && (frameBufferDirty || _pendingResetImage)) {
-            // framebuffer dirty or start interactive mode.
-            // cancel rendered frame and display old frame if valid
+    // needs frame reset?
+    if ((_frameBufferDirty || _pendingResetImage || aovDirty)) {
+        // cancel rendering
+        if (_currentFrame.isValid()) {
             _currentFrame.osprayFrame.cancel();
             _currentFrame.osprayFrame.wait();
+        }
+        // if interactive scaling is used, set interactive mode
+        if (_interactiveEnabled) {
+            // framebuffer dirty or start interactive mode.
+            // cancel rendered frame and display old frame if valid
             _renderer.setParam("minContribution", 0.1f);
             _renderer.setParam("maxContribution", 3.0f);
             _renderer.setParam("maxPathLength", min(4, _maxDepth));
             _renderer.setParam("aoSamples", (cameraDirty ? 0 : _aoSamples));
             _rendererDirty = true;
             _interacting = true;
-        } else {
-            // return until frame is ready
-            if (!_currentFrame.osprayFrame.isReady())
-                return;
-            _currentFrame.osprayFrame.wait();
-
-            opp::FrameBuffer frameBuffer = _frameBuffer;
-            if (_interacting)
-                frameBuffer = _interactiveFrameBuffer;
-
-            // Resolve the image buffer: find the average color per pixel by
-            // dividing the summed color by the number of samples;
-            // and convert the image into a GL-compatible format.
-            int frameSize = _currentFrame.width * _currentFrame.height;
-            if (_hasColor) {
-                vec4f* rgba
-                       = static_cast<vec4f*>(frameBuffer.map(OSP_FB_COLOR));
-                if (rgba)
-                    std::copy(rgba, rgba + frameSize,
-                              _currentFrame.colorBuffer.data());
-                frameBuffer.unmap(rgba);
-            }
-            if (_numSamplesAccumulated == 0 || _pendingResetImage) {
-                if (_hasDepth || _hasCameraDepth) { // clip space depth
-                    float* depth
-                           = static_cast<float*>(frameBuffer.map(OSP_FB_DEPTH));
-                    if (depth) {
-                        if (_hasCameraDepth) {
-                            std::copy(depth, depth + frameSize,
-                                      _currentFrame.cameraDepthBuffer.data());
-                        }
-                        if (_hasDepth) {
-                            // convert depth to clip space
-                            double pm[4][4];
-                            renderPassState->GetProjectionMatrix().Get(pm);
-                            auto vm = renderPassState->GetWorldToViewMatrix();
-                            const float m1 = -pm[2][2];
-                            const float m2 = -pm[3][2];
-                            const float far = (2.f * m2) / (2.f * m1 - 2.f);
-                            const float near = ((m1 - 1.f) * near) / (m1 + 1.f);
-                            const float diff = (far - near);
-                            bool valid = false;
-                            tbb::parallel_for(
-                                   tbb::blocked_range<int>(0, frameSize),
-                                   [&](tbb::blocked_range<int> r) {
-                                       for (int i = r.begin(); i < r.end();
-                                            ++i) {
-                                           float& d = depth[i];
-                                           d = clamp((d - near) / diff, 0.f,
-                                                     1.f);
-                                       }
-                                   });
-
-                            std::copy(depth, depth + frameSize,
-                                      _currentFrame.depthBuffer.data());
-                        }
-                    }
-                    frameBuffer.unmap(depth);
-                }
-
-                if (_hasNormal) {
-                    vec3f* normal = static_cast<vec3f*>(
-                           frameBuffer.map(OSP_FB_NORMAL));
-                    if (normal)
-                        std::copy(normal, normal + frameSize,
-                                  _currentFrame.normalBuffer.data());
-                    frameBuffer.unmap(normal);
-                }
-
-                if (_hasPrimId) {
-                    unsigned int* primId = static_cast<unsigned int*>(
-                           frameBuffer.map(OSP_FB_ID_OBJECT));
-                    if (primId)
-                        std::copy(primId, primId + frameSize,
-                                  _currentFrame.primIdBuffer.data());
-                    frameBuffer.unmap(primId);
-                }
-
-                if (_hasElementId) {
-                    unsigned int* geomId = static_cast<unsigned int*>(
-                           frameBuffer.map(OSP_FB_ID_PRIMITIVE));
-                    if (geomId)
-                        std::copy(geomId, geomId + frameSize,
-                                  _currentFrame.elementIdBuffer.data());
-                    frameBuffer.unmap(geomId);
-                }
-
-                if (_hasInstId) {
-                    unsigned int* instId = static_cast<unsigned int*>(
-                           frameBuffer.map(OSP_FB_ID_INSTANCE));
-                    if (instId)
-                        std::copy(instId, instId + frameSize,
-                                  _currentFrame.instIdBuffer.data());
-                    frameBuffer.unmap(instId);
-                }
-            }
-
-            DisplayRenderBuffer(_currentFrame);
-
-            // estimating scaling factor for interactive rendering based on
-            // the current FPS and a given targetFPS
-            float frameDuration = _currentFrame.Duration();
-            float currentFPS = 1.0f / frameDuration;
-            float scaleChange = std::sqrt(_interactiveTargetFPS / currentFPS);
-            updateInteractiveFrameBufferScale
-                   = std::max(1.0f, _currentFrameBufferScale * scaleChange);
-            updateInteractiveFrameBufferScale
-                   = std::min(updateInteractiveFrameBufferScale, 5.0f);
-            updateInteractiveFrameBufferScale = 0.125f
-                   * std::ceil(updateInteractiveFrameBufferScale / 0.125f);
-            if (_interacting
-                && updateInteractiveFrameBufferScale
-                       != _currentFrameBufferScale) {
-                interactiveFramebufferDirty = true;
-                _interactiveFrameBufferScale
-                       = updateInteractiveFrameBufferScale;
-            }
         }
-    }
+    // wait until frame is ready or display rendered frame
+    } else {
+        // return until frame is ready
+        if (!_currentFrame.osprayFrame.isReady())
+            return;
+        _currentFrame.osprayFrame.wait();
 
-    if (frameBufferDirty) {
-        _frameBuffer = opp::FrameBuffer(
-               (int)_width, (int)_height, OSP_FB_RGBA32F,
-               (_hasColor ? OSP_FB_COLOR : 0)
-                      | (_hasDepth || _hasCameraDepth ? OSP_FB_DEPTH : 0)
-                      | (_hasNormal ? OSP_FB_NORMAL : 0)
-                      | (_hasElementId ? OSP_FB_ID_PRIMITIVE : 0)
-                      | (_hasPrimId ? OSP_FB_ID_OBJECT : 0)
-                      | (_hasInstId ? OSP_FB_ID_INSTANCE : 0) | OSP_FB_ACCUM |
-#if HDOSPRAY_ENABLE_DENOISER
-                      OSP_FB_ALBEDO | OSP_FB_VARIANCE | OSP_FB_NORMAL
-                      | OSP_FB_DEPTH |
-#endif
-                      0);
-        _frameBuffer.commit();
-        _currentFrame.resize(_width * _height);
-        interactiveFramebufferDirty = true;
-        _pendingResetImage = true;
-        aovDirty = true;
-    }
-
-    if (interactiveFramebufferDirty) {
-        _interactiveFrameBuffer = opp::FrameBuffer(
-               (int)(float(_width) / _interactiveFrameBufferScale),
-               (int)(float(_height) / _interactiveFrameBufferScale),
-               OSP_FB_RGBA32F,
-               (_hasColor ? OSP_FB_COLOR : 0)
-                      | (_hasDepth || _hasCameraDepth ? OSP_FB_DEPTH : 0)
-                      | (_hasNormal ? OSP_FB_NORMAL : 0)
-                      | (_hasElementId ? OSP_FB_ID_PRIMITIVE : 0)
-                      | (_hasPrimId ? OSP_FB_ID_OBJECT : 0)
-                      | (_hasInstId ? OSP_FB_ID_INSTANCE : 0));
-        _interactiveFrameBuffer.commit();
-        interactiveFramebufferDirty = false;
-        _pendingResetImage = true;
-    }
-
-    // setup image operations on frame
-    if (_pendingResetImage || denoiserDirty || _tonemapperDirty
-        || frameBufferDirty || interactiveFramebufferDirty) {
-        std::vector<opp::ImageOperation> iops;
-        if (useDenoiser && !_interacting) {
-            opp::ImageOperation denoiser("denoiser");
-            denoiser.commit();
-            iops.emplace_back(denoiser);
-        }
-        if (_useTonemapper) {
-            float exposure = renderDelegate->GetRenderSetting<float>(
-                   HdOSPRayRenderSettingsTokens->tmp_exposure,
-                   HdOSPRayConfig::GetInstance().tmp_exposure);
-            float contrast = renderDelegate->GetRenderSetting<float>(
-                   HdOSPRayRenderSettingsTokens->tmp_contrast,
-                   HdOSPRayConfig::GetInstance().tmp_contrast);
-            float shoulder = renderDelegate->GetRenderSetting<float>(
-                   HdOSPRayRenderSettingsTokens->tmp_shoulder,
-                   HdOSPRayConfig::GetInstance().tmp_shoulder);
-            float midIn = renderDelegate->GetRenderSetting<float>(
-                   HdOSPRayRenderSettingsTokens->tmp_midIn,
-                   HdOSPRayConfig::GetInstance().tmp_midIn);
-            float midOut = renderDelegate->GetRenderSetting<float>(
-                   HdOSPRayRenderSettingsTokens->tmp_midOut,
-                   HdOSPRayConfig::GetInstance().tmp_midOut);
-            float hdrMax = renderDelegate->GetRenderSetting<float>(
-                   HdOSPRayRenderSettingsTokens->tmp_hdrMax,
-                   HdOSPRayConfig::GetInstance().tmp_hdrMax);
-            bool acesColor = renderDelegate->GetRenderSetting<bool>(
-                   HdOSPRayRenderSettingsTokens->tmp_acesColor,
-                   HdOSPRayConfig::GetInstance().tmp_acesColor);
-            opp::ImageOperation tonemapper("tonemapper");
-            tonemapper.setParam("exposure", exposure);
-            tonemapper.setParam("contrast", contrast);
-            tonemapper.setParam("shoulder", shoulder);
-            tonemapper.setParam("midIn", midIn);
-            tonemapper.setParam("midOut", midOut);
-            tonemapper.setParam("hdrMax", hdrMax);
-            tonemapper.setParam("acesColor", acesColor);
-            tonemapper.commit();
-            iops.emplace_back(tonemapper);
-        }
         opp::FrameBuffer frameBuffer = _frameBuffer;
         if (_interacting)
             frameBuffer = _interactiveFrameBuffer;
-        if (!iops.empty()) {
-            frameBuffer.setParam("imageOperation", opp::CopiedData(iops));
-        } else
-            frameBuffer.removeParam("imageOperation");
 
-        _denoiserState = useDenoiser;
-        frameBuffer.commit();
+        // Resolve the image buffer: find the average color per pixel by
+        // dividing the summed color by the number of samples;
+        // and convert the image into a GL-compatible format.
+        int frameSize = _currentFrame.width * _currentFrame.height;
+        if (_hasColor) {
+            vec4f* rgba
+                    = static_cast<vec4f*>(frameBuffer.map(OSP_FB_COLOR));
+            if (rgba)
+                std::copy(rgba, rgba + frameSize,
+                            _currentFrame.colorBuffer.data());
+            frameBuffer.unmap(rgba);
+        }
+        if (_numSamplesAccumulated == 0 || _pendingResetImage) {
+            if (_hasDepth || _hasCameraDepth) { // clip space depth
+                float* depth
+                        = static_cast<float*>(frameBuffer.map(OSP_FB_DEPTH));
+                if (depth) {
+                    if (_hasCameraDepth) {
+                        std::copy(depth, depth + frameSize,
+                                    _currentFrame.cameraDepthBuffer.data());
+                    }
+                    if (_hasDepth) {
+                        // convert depth to clip space
+                        double pm[4][4];
+                        renderPassState->GetProjectionMatrix().Get(pm);
+                        auto vm = renderPassState->GetWorldToViewMatrix();
+                        const float m1 = -pm[2][2];
+                        const float m2 = -pm[3][2];
+                        const float far = (2.f * m2) / (2.f * m1 - 2.f);
+                        const float near = ((m1 - 1.f) * near) / (m1 + 1.f);
+                        const float diff = (far - near);
+                        bool valid = false;
+                        tbb::parallel_for(
+                                tbb::blocked_range<int>(0, frameSize),
+                                [&](tbb::blocked_range<int> r) {
+                                    for (int i = r.begin(); i < r.end();
+                                        ++i) {
+                                        float& d = depth[i];
+                                        d = clamp((d - near) / diff, 0.f,
+                                                    1.f);
+                                    }
+                                });
+
+                        std::copy(depth, depth + frameSize,
+                                    _currentFrame.depthBuffer.data());
+                    }
+                }
+                frameBuffer.unmap(depth);
+            }
+
+            if (_hasNormal) {
+                vec3f* normal = static_cast<vec3f*>(
+                        frameBuffer.map(OSP_FB_NORMAL));
+                if (normal)
+                    std::copy(normal, normal + frameSize,
+                                _currentFrame.normalBuffer.data());
+                frameBuffer.unmap(normal);
+            }
+
+            if (_hasPrimId) {
+                unsigned int* primId = static_cast<unsigned int*>(
+                        frameBuffer.map(OSP_FB_ID_OBJECT));
+                if (primId)
+                    std::copy(primId, primId + frameSize,
+                                _currentFrame.primIdBuffer.data());
+                frameBuffer.unmap(primId);
+            }
+
+            if (_hasElementId) {
+                unsigned int* geomId = static_cast<unsigned int*>(
+                        frameBuffer.map(OSP_FB_ID_PRIMITIVE));
+                if (geomId)
+                    std::copy(geomId, geomId + frameSize,
+                                _currentFrame.elementIdBuffer.data());
+                frameBuffer.unmap(geomId);
+            }
+
+            if (_hasInstId) {
+                unsigned int* instId = static_cast<unsigned int*>(
+                        frameBuffer.map(OSP_FB_ID_INSTANCE));
+                if (instId)
+                    std::copy(instId, instId + frameSize,
+                                _currentFrame.instIdBuffer.data());
+                frameBuffer.unmap(instId);
+            }
+        }
+
+        DisplayRenderBuffer(_currentFrame);
+
+        // estimating scaling factor for interactive rendering based on
+        // the current FPS and a given targetFPS
+        float frameDuration = _currentFrame.Duration();
+        float currentFPS = 1.0f / frameDuration;
+        float scaleChange = std::sqrt(_interactiveTargetFPS / currentFPS);
+        updateInteractiveFrameBufferScale
+                = std::max(1.0f, _currentFrameBufferScale * scaleChange);
+        updateInteractiveFrameBufferScale
+                = std::min(updateInteractiveFrameBufferScale, 5.0f);
+        updateInteractiveFrameBufferScale = 0.125f
+                * std::ceil(updateInteractiveFrameBufferScale / 0.125f);
+        if (_interacting
+            && updateInteractiveFrameBufferScale
+                    != _currentFrameBufferScale) {
+            _interactiveFrameBufferDirty = true;
+            _interactiveFrameBufferScale
+                    = updateInteractiveFrameBufferScale;
+        }
     }
+
+    // setup for rendering the frame
+
+    _UpdateFrameBuffer(useDenoiser, renderPassState);
 
     // setup renderer params
     if ((_interacting != cameraDirty) && _interactiveEnabled) {
@@ -1017,4 +900,138 @@ HdOSPRayRenderPass::_ComputeClearColor(VtValue const& clearValue)
     default:
         return GfVec4f(0.0f, 0.0f, 0.0f, 1.0f);
     }
+}
+
+void HdOSPRayRenderPass::_UpdateFrameBuffer(bool useDenoiser, HdRenderPassStateSharedPtr const& renderPassState)
+{
+    if (_frameBufferDirty) {
+        _frameBuffer = opp::FrameBuffer(
+            (int)_width, (int)_height, OSP_FB_RGBA32F,
+            (_hasColor ? OSP_FB_COLOR : 0)
+                    | (_hasDepth || _hasCameraDepth ? OSP_FB_DEPTH : 0)
+                    | (_hasNormal ? OSP_FB_NORMAL : 0)
+                    | (_hasElementId ? OSP_FB_ID_PRIMITIVE : 0)
+                    | (_hasPrimId ? OSP_FB_ID_OBJECT : 0)
+                    | (_hasInstId ? OSP_FB_ID_INSTANCE : 0) | OSP_FB_ACCUM |
+#if HDOSPRAY_ENABLE_DENOISER
+                    OSP_FB_ALBEDO | OSP_FB_VARIANCE | OSP_FB_NORMAL
+                    | OSP_FB_DEPTH |
+#endif
+                    0);
+        _frameBuffer.commit();
+        _currentFrame.resize(_width * _height);
+
+        // if using a preframing version of USD, or if aovs are missing, create
+        // buffers
+#if PXR_VERSION > 2011
+        if (!renderPassState->GetFraming().IsValid())
+#endif
+        {
+            if (_hasColor)
+                _colorBuffer.Allocate(GfVec3i(_width, _height, 1),
+                                    HdFormatFloat32Vec4,
+                                    /*multiSampled=*/false);
+            if (_hasDepth)
+                _depthBuffer.Allocate(GfVec3i(_width, _height, 1),
+                                    HdFormatFloat32,
+                                    /*multiSampled=*/false);
+            if (_hasCameraDepth)
+                _cameraDepthBuffer.Allocate(GfVec3i(_width, _height, 1),
+                                            HdFormatFloat32,
+                                            /*multiSampled=*/false);
+            if (_hasNormal)
+                _normalBuffer.Allocate(GfVec3i(_width, _height, 1),
+                                    HdFormatFloat32Vec3,
+                                    /*multiSampled=*/false);
+            if (_hasPrimId)
+                _primIdBuffer.Allocate(GfVec3i(_width, _height, 1),
+                                    HdFormatInt32,
+                                    /*multiSampled=*/false);
+            if (_hasElementId)
+                _elementIdBuffer.Allocate(GfVec3i(_width, _height, 1),
+                                        HdFormatInt32,
+                                        /*multiSampled=*/false);
+            if (_hasInstId)
+                _instIdBuffer.Allocate(GfVec3i(_width, _height, 1),
+                                    HdFormatInt32,
+                                    /*multiSampled=*/false);
+        }
+        _interactiveFrameBufferDirty = true;
+        _pendingResetImage = true;
+        _aovDirty = true;
+    }
+
+    if (_interactiveEnabled && _interactiveFrameBufferDirty) {
+        _interactiveFrameBuffer = opp::FrameBuffer(
+            (int)(float(_width) / _interactiveFrameBufferScale),
+            (int)(float(_height) / _interactiveFrameBufferScale),
+            OSP_FB_RGBA32F,
+            (_hasColor ? OSP_FB_COLOR : 0)
+                    | (_hasDepth || _hasCameraDepth ? OSP_FB_DEPTH : 0)
+                    | (_hasNormal ? OSP_FB_NORMAL : 0)
+                    | (_hasElementId ? OSP_FB_ID_PRIMITIVE : 0)
+                    | (_hasPrimId ? OSP_FB_ID_OBJECT : 0)
+                    | (_hasInstId ? OSP_FB_ID_INSTANCE : 0));
+        _interactiveFrameBuffer.commit();
+        _interactiveFrameBufferDirty = false;
+        _pendingResetImage = true;
+    }
+
+    // setup image operations on frame
+    if (_pendingResetImage || _denoiserDirty || _tonemapperDirty
+        || _frameBufferDirty || _interactiveFrameBufferDirty) {
+        std::vector<opp::ImageOperation> iops;
+        if (useDenoiser && !_interacting) {
+            opp::ImageOperation denoiser("denoiser");
+            denoiser.commit();
+            iops.emplace_back(denoiser);
+        }
+        if (_useTonemapper) {
+            HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
+            float exposure = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_exposure,
+                HdOSPRayConfig::GetInstance().tmp_exposure);
+            float contrast = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_contrast,
+                HdOSPRayConfig::GetInstance().tmp_contrast);
+            float shoulder = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_shoulder,
+                HdOSPRayConfig::GetInstance().tmp_shoulder);
+            float midIn = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_midIn,
+                HdOSPRayConfig::GetInstance().tmp_midIn);
+            float midOut = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_midOut,
+                HdOSPRayConfig::GetInstance().tmp_midOut);
+            float hdrMax = renderDelegate->GetRenderSetting<float>(
+                HdOSPRayRenderSettingsTokens->tmp_hdrMax,
+                HdOSPRayConfig::GetInstance().tmp_hdrMax);
+            bool acesColor = renderDelegate->GetRenderSetting<bool>(
+                HdOSPRayRenderSettingsTokens->tmp_acesColor,
+                HdOSPRayConfig::GetInstance().tmp_acesColor);
+            opp::ImageOperation tonemapper("tonemapper");
+            tonemapper.setParam("exposure", exposure);
+            tonemapper.setParam("contrast", contrast);
+            tonemapper.setParam("shoulder", shoulder);
+            tonemapper.setParam("midIn", midIn);
+            tonemapper.setParam("midOut", midOut);
+            tonemapper.setParam("hdrMax", hdrMax);
+            tonemapper.setParam("acesColor", acesColor);
+            tonemapper.commit();
+            iops.emplace_back(tonemapper);
+        }
+        opp::FrameBuffer frameBuffer = _frameBuffer;
+        if (_interacting)
+            frameBuffer = _interactiveFrameBuffer;
+        if (!iops.empty()) {
+            frameBuffer.setParam("imageOperation", opp::CopiedData(iops));
+        } else
+            frameBuffer.removeParam("imageOperation");
+
+        _denoiserState = useDenoiser;
+        frameBuffer.commit();
+    }
+
+    _frameBufferDirty = false;
+    _interactiveFrameBufferDirty = false;
 }

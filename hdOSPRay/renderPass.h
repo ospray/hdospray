@@ -143,7 +143,14 @@ private:
     // Return the clear color to use for the given VtValue
     static GfVec4f _ComputeClearColor(VtValue const& clearValue);
 
+    // self allocate aovs if renderpassstate has invalid framing
+    void _UpdateFrameBuffer(bool useDenoiser, HdRenderPassStateSharedPtr const& renderPassState);
+
     bool _pendingResetImage { true };
+    bool _interactiveFrameBufferDirty {true};
+    bool _frameBufferDirty {true};
+    bool _denoiserDirty {true};
+    bool _aovDirty {true};
     bool _pendingModelUpdate { true };
     bool _pendingLightUpdate { true };
     bool _pendingSettingsUpdate { true };

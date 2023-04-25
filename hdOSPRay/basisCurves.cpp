@@ -73,7 +73,6 @@ void
 HdOSPRayBasisCurves::Sync(HdSceneDelegate* delegate, HdRenderParam* renderParam,
                           HdDirtyBits* dirtyBits, TfToken const& reprToken)
 {
-
     HdOSPRayRenderParam* ospRenderParam
            = static_cast<HdOSPRayRenderParam*>(renderParam);
     opp::Renderer renderer = ospRenderParam->GetOSPRayRenderer();

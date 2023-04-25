@@ -187,7 +187,8 @@ void
 HdOSPRayLight::_PopulateOSPLight(HdOSPRayRenderParam* ospRenderParam) const
 {
     // add the light source to the light list of the renderer
-    ospRenderParam->AddHdOSPRayLight(GetId(), this);
+    if (_ospLight)
+        ospRenderParam->AddHdOSPRayLight(GetId(), this);
 }
 
 HdDirtyBits

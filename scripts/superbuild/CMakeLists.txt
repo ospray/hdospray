@@ -30,8 +30,8 @@ include(GNUInstallDirs)
 option(USE_PYTHON "enable python support" ON)
 option(USE_PYTHON2 "if USE_PYTHON enabled, use python2 instead of python3" OFF)
 
-set(HDSUPER_USD_VERSION "v21.08" CACHE STRING "git tag of usd")
-set(HDSUPER_USDSUPER_TAG "release-21.08" CACHE STRING "git tag of usd superbuild")
+set(HDSUPER_USD_VERSION "v23.02" CACHE STRING "git tag of usd")
+set(HDSUPER_USDSUPER_TAG "release-23.02" CACHE STRING "git tag of usd superbuild")
 set(HDSUPER_USDSUPER_URL "https://github.com/carsonbrownlee/USD_superbuild.git"
   CACHE STRING "url of usd superbuild git")
 option(OSPRAY_USE_GIT OFF)
@@ -39,8 +39,8 @@ option(OSPRAY_USE_EXTERNAL OFF)
 if (HDSUPER_OSPRAY_USE_EXTERNAL)
   set(HDSUPER_OSPRAY_EXTERNAL_DIR "" CACHE PATH "location of external ospray install")
 else()
-  set(HDSUPER_OSPRAY_VERSION "v2.10.0" CACHE STRING "git tag of ospray")
-  set(HDSUPER_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.10.0.zip"
+  set(HDSUPER_OSPRAY_VERSION "v2.11.0" CACHE STRING "git tag of ospray")
+  set(HDSUPER_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.11.0.zip"
     CACHE STRING "url of ospray git")
 endif()
 option(HDSUPER_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
@@ -95,8 +95,8 @@ if (BUILD_HDOSPRAY)
     set(USD_ROOT_DIR ${EXTERNAL_USD_DIR})
   endif()
 
-  set(OSPRAY_VERSION "2.10.0" CACHE STRING "ospray library version")
-  set(RKCOMMON_VERSION "1.10.0" CACHE STRING "rkcommon library version")
+  set(OSPRAY_VERSION "2.11.0" CACHE STRING "ospray library version")
+  set(RKCOMMON_VERSION "1.11.0" CACHE STRING "rkcommon library version")
 
   ExternalProject_Add (
     ${EP_HDOSPRAY}
