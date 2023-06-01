@@ -66,14 +66,6 @@ else()
     ${PXR_LIBRARIES}
     )
 
-    # we need to find a way to figure out if OIIO is part of the USD package or not
-    if (TRUE)
-    find_package(OpenImageIO REQUIRED)
-    target_include_directories(hdOSPRay PUBLIC ${OIIO_INCLUDE_DIRS})
-    target_link_libraries(hdOSPRay PUBLIC
-      ${OIIO_LIBRARIES}
-      )
-    endif()
 endif()
 
 target_compile_definitions(hdOSPRay
@@ -90,8 +82,6 @@ set(PLUG_INFO_RESOURCE_PATH "resources")
 set(PLUG_INFO_ROOT "..")
 configure_file(plugInfo.json plugInfo.json @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/plugInfo.json" DESTINATION plugin/usd/hdOSPRay/resources)
-
-target_include_directories(hdOSPRay PUBLIC ${OIIO_INCLUDE_DIRS})
 
 # add ptex module to ospray libraries
 option(HDOSPRAY_PLUGIN_PTEX "build hdOSPRay with Ptex support" OFF)

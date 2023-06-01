@@ -461,7 +461,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken inputName,
             texture.xfm_translation
                    = { -(.5f - .5f / float(numX)), -(.5f - .5f / float(numY)) };
         } else {
-            const auto& result = LoadOIIOTexture2D(
+            const auto& result = LoadHioTexture2D(
                    texture.file, inputName.GetString(), false,
                    (outputName == HdOSPRayMaterialTokens->opacity &&
                     _type == MaterialTypes::preview));

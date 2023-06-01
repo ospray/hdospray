@@ -55,7 +55,7 @@ HdOSPRayDomeLight::_PrepareOSPLight()
     upDirection = _transform.Transform(upDirection);
     centerDirection = _transform.Transform(centerDirection);
 
-    const auto& result = LoadOIIOTexture2D(_textureFile);
+    const auto& result = LoadHioTexture2D(_textureFile);
     _hdriTexture = result.first;
 
     if (_hdriTexture) {

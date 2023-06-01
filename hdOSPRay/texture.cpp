@@ -5,6 +5,7 @@
 #include "config.h"
 
 #include <pxr/imaging/hd/tokens.h>
+#include <pxr/imaging/hio/image.h>
 #include <pxr/usd/ar/resolver.h>
 #include <pxr/usd/sdf/assetPath.h>
 
@@ -52,34 +53,68 @@ LoadPtexTexture(std::string file)
     return ospTexture;
 }
 
-// creates 2d osptexture from file, does not commit
 std::pair<opp::Texture, unsigned char*>
-LoadOIIOTexture2D(const std::string file, const std::string channelsStr, bool nearestFilter,
+LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nearestFilter,
                   bool complement)
 {
-    auto in = ImageInput::open(file.c_str());
-    if (!in) {
+    const auto image = HioImage::OpenForReading(file);
+    if (!image) {
         std::cerr << "#osp: failed to load texture '" + file + "'" << std::endl;
         return std::pair<opp::Texture, unsigned char*>(nullptr, nullptr);
     }
 
-    const ImageSpec& spec = in->spec();
+    HioImage::StorageSpec desc;
+    desc.format = image->GetFormat();
+    desc.width = image->GetWidth();
+    desc.height = image->GetHeight();
+    desc.depth = 1;
+    desc.flipped = true;
+
     vec2i size;
-    size.x = spec.width;
-    size.y = spec.height;
-    int channels = spec.nchannels;
-    const bool hdr = spec.format.size() > 1;
-    int depth = hdr ? 4 : 1;
-    const size_t stride = size.x * channels * depth;
+    size.x = desc.width;
+    size.y = desc.height;
+    const bool srgb = image->IsColorSpaceSRGB();
+    int depth = 1;
+    if (desc.format == HioFormatFloat16
+        || desc.format == HioFormatFloat16Vec2
+        || desc.format == HioFormatFloat16Vec3
+        || desc.format == HioFormatFloat16Vec4
+        || desc.format == HioFormatUInt16
+        || desc.format == HioFormatUInt16Vec2
+        || desc.format == HioFormatUInt16Vec3
+        || desc.format == HioFormatUInt16Vec4
+        || desc.format == HioFormatInt16
+        || desc.format == HioFormatInt16Vec2
+        || desc.format == HioFormatInt16Vec3
+        || desc.format == HioFormatInt16Vec4
+        )
+        depth = 2;
+    if (desc.format == HioFormatFloat32
+        || desc.format == HioFormatFloat32Vec2
+        || desc.format == HioFormatFloat32Vec3
+        || desc.format == HioFormatFloat32Vec4
+        || desc.format == HioFormatUInt32
+        || desc.format == HioFormatUInt32Vec2
+        || desc.format == HioFormatUInt32Vec3
+        || desc.format == HioFormatUInt32Vec4
+        || desc.format == HioFormatInt32
+        || desc.format == HioFormatInt32Vec2
+        || desc.format == HioFormatInt32Vec3
+        || desc.format == HioFormatInt32Vec4
+        )
+        depth = 4;
+    int channels = image->GetBytesPerPixel() / depth;
+    const size_t stride = size.x * image->GetBytesPerPixel() * depth;
     unsigned char* data
            = (unsigned char*)malloc(sizeof(char) * size.y * stride);
     unsigned char* outData = nullptr; // if using channel subset
+    desc.data = data;
 
-    in->read_image(hdr ? TypeDesc::FLOAT : TypeDesc::UINT8, data);
-    in->close();
-#if OIIO_VERSION < 10903
-    ImageInput::destroy(in);
-#endif
+    bool loaded = image->Read(desc);
+    if (!loaded) {
+        std::cerr << "#osp: failed to read texture '" + file + "'" << std::endl;
+        return std::pair<opp::Texture, unsigned char*>(nullptr, nullptr);
+    }
 
     const int outChannels
            = channelsStr.empty() ? channels : channelsStr.length();
@@ -98,7 +133,7 @@ LoadOIIOTexture2D(const std::string file, const std::string channelsStr, bool ne
                                          * outChannels * outDepth);
     }
 
-    OSPTextureFormat format = osprayTextureFormat(outDepth, outChannels);
+    OSPTextureFormat format = osprayTextureFormat(outDepth, outChannels, !srgb);
 
     OSPDataType dataType = OSP_UNKNOWN;
     if (format == OSP_TEXTURE_R32F)
@@ -124,15 +159,6 @@ LoadOIIOTexture2D(const std::string file, const std::string channelsStr, bool ne
                                          Unknown texture format");
     }
 
-    // flip image (because OSPRay's textures have the origin at the lower left
-    // corner)
-    // compute complement if enabled
-    for (int y = 0; y < size.y / 2; y++) {
-        unsigned char* src = &data[y * stride];
-        unsigned char* dest = &data[(size.y - 1 - y) * stride];
-        for (size_t x = 0; x < stride; x++)
-            std::swap(src[x], dest[x]);
-    }
     if (complement && (format == OSP_TEXTURE_R32F)) {
         float* tex = (float*)data;
         for (size_t i = 0; i < size.x * size.y; i++)
@@ -237,20 +263,52 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
     // load tile data  TODO: parallelize
     for (auto tile : udimTiles) {
         const std::string file = std::get<1>(tile);
-        auto in = ImageInput::open(file.c_str());
-        if (!in) {
-            std::cerr << "#osp: failed to load texture '" + file + "'"
-                      << std::endl;
+        const auto image = HioImage::OpenForReading(file);
+        if (!image) {
+            std::cerr << "#osp: failed to load texture '" + file + "'" << std::endl;
             return std::pair<opp::Texture, char*>(nullptr, nullptr);
         }
 
-        const ImageSpec& spec = in->spec();
+        HioImage::StorageSpec desc;
+        desc.format = image->GetFormat();
+        desc.width = image->GetWidth();
+        desc.height = image->GetHeight();
+        desc.depth = 1;
+        desc.flipped = true;
         vec2i size;
-        size.x = spec.width;
-        size.y = spec.height;
-        int channels = spec.nchannels;
-        const bool hdr = spec.format.size() > 1;
-        int depth = hdr ? 4 : 1;
+        size.x = desc.width;
+        size.y = desc.height;
+        const bool srgb = image->IsColorSpaceSRGB();
+        int depth = 1;
+        if (desc.format == HioFormatFloat16
+            || desc.format == HioFormatFloat16Vec2
+            || desc.format == HioFormatFloat16Vec3
+            || desc.format == HioFormatFloat16Vec4
+            || desc.format == HioFormatUInt16
+            || desc.format == HioFormatUInt16Vec2
+            || desc.format == HioFormatUInt16Vec3
+            || desc.format == HioFormatUInt16Vec4
+            || desc.format == HioFormatInt16
+            || desc.format == HioFormatInt16Vec2
+            || desc.format == HioFormatInt16Vec3
+            || desc.format == HioFormatInt16Vec4
+            )
+            depth = 2;
+        if (desc.format == HioFormatFloat32
+            || desc.format == HioFormatFloat32Vec2
+            || desc.format == HioFormatFloat32Vec3
+            || desc.format == HioFormatFloat32Vec4
+            || desc.format == HioFormatUInt32
+            || desc.format == HioFormatUInt32Vec2
+            || desc.format == HioFormatUInt32Vec3
+            || desc.format == HioFormatUInt32Vec4
+            || desc.format == HioFormatInt32
+            || desc.format == HioFormatInt32Vec2
+            || desc.format == HioFormatInt32Vec3
+            || desc.format == HioFormatInt32Vec4
+            )
+        depth = 4;
+        int channels = image->GetBytesPerPixel() / depth;
         int texelSizeCurrent = channels * depth;
         if ((texelSize != 0) && (texelSize != texelSizeCurrent)) {
             std::cerr << "UDIM::texel sizes do not match\n";
@@ -261,23 +319,15 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
         const size_t stride = size.x * channels * depth;
         const size_t dataSize = sizeof(char) * size.y * stride;
         char* data = (char*)malloc(dataSize);
+        desc.data = data;
         dataStride = stride;
-
-        in->read_image(hdr ? TypeDesc::FLOAT : TypeDesc::UINT8, data);
-        in->close();
-#if OIIO_VERSION < 10903
-        ImageInput::destroy(in);
-#endif
-
-        // flip image (because OSPRay's textures have the origin at the lower
-        // left corner)
-        for (int y = 0; y < size.y / 2; y++) {
-            char* src = &data[y * stride];
-            char* dest = &data[(size.y - 1 - y) * stride];
-            for (size_t x = 0; x < stride; x++)
-                std::swap(src[x], dest[x]);
+        bool loaded = image->Read(desc);
+        if (!loaded) {
+            TF_WARN("#osp: failed to read texture '%'", file);
+            return std::pair<opp::Texture, char*>(nullptr, nullptr);
         }
-        format = osprayTextureFormat(depth, channels);
+
+        format = osprayTextureFormat(depth, channels, !srgb);
 
         OSPDataType dataType = OSP_UNKNOWN;
         if (format == OSP_TEXTURE_R32F) {
@@ -313,19 +363,19 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
         }
         udimDataType = dataType;
 
-        UDIMTileDesc desc;
-        desc.size = size;
-        desc.data = data;
-        desc.offset = std::get<0>(tile);
-        int tileX = ((desc.offset % 10) + 1);
-        int tileY = (desc.offset / 10 + 1);
+        UDIMTileDesc udesc;
+        udesc.size = size;
+        udesc.data = data;
+        udesc.offset = std::get<0>(tile);
+        int tileX = ((udesc.offset % 10) + 1);
+        int tileY = (udesc.offset / 10 + 1);
         int totalX = size.x * tileX;
         int totalY = size.y * tileY;
         numTiles.x = std::max(numTiles.x, tileX);
         numTiles.y = std::max(numTiles.y, tileY);
         totalSize.x = std::max(totalSize.x, totalX);
         totalSize.y = std::max(totalSize.y, totalY);
-        udimTileDescs.emplace_back(desc);
+        udimTileDescs.emplace_back(udesc);
     }
 
     numX = numTiles.x;

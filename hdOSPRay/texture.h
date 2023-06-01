@@ -19,13 +19,13 @@ OSPTextureFormat osprayTextureFormat(int depth, int channels,
 
 opp::Texture LoadPtexTexture(std::string file);
 
-/// @brief  Load OIIO Texture
+/// @brief  Load pxr Hio Texture
 /// @param filename
 /// @param nearestFilter or interpolation
 /// @param compute 1.f-val.  float only.
 /// @return OSPRay texture object, data pointer
 std::pair<opp::Texture, unsigned char*>
-LoadOIIOTexture2D(const std::string file, const std::string channels = "",
+LoadHioTexture2D(const std::string file, const std::string channels = "",
                   bool nearestFilter = false, bool complement = false);
 
 /// @brief
