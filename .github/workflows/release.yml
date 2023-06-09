@@ -29,6 +29,18 @@ jobs:
         scripts/release_ci/linux.sh
         ls build_release
 
+  release-windows:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
+    with:
+      force-delete: true    # guarantees .gitattributes are respected in working dir
+      runs-on: '["Windows", "build"]'
+      artifact-out: release-windows
+      artifact-path: "build_release/*.gz build_release/ospray*.msi"
+      cmd: |
+        scripts/release_ci/win.ps1
+        ls build_release
+
 ### SCAN JOBS ###
 
   static-analysis:

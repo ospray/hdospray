@@ -6,7 +6,7 @@ option(BUILD_GLEW "" OFF)
 option(BUILD_OPENEXR "" OFF)
 option(BUILD_PTEX "" OFF)
 option(BUILD_BOOST "" ON)
-option(ENABLE_PTEX "enable ptex support in USD" ON)
+option(ENABLE_PTEX "enable ptex support in USD" OFF)
 
 SET(EP_USD_SUPER "USD_Super")
   ExternalProject_Add (

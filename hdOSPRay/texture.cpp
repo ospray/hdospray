@@ -11,8 +11,6 @@
 
 #include <rkcommon/math/vec.h>
 
-#include <OpenImageIO/imageio.h>
-
 using namespace rkcommon::math;
 
 OIIO_NAMESPACE_USING
@@ -155,7 +153,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nea
         free(outData);
         outData = nullptr;
         throw std::runtime_error(
-               "hdOSPRay::LoadOIIOTexture2D: \
+               "hdOSPRay::LoadHioOTexture2D: \
                                          Unknown texture format");
     }
 
