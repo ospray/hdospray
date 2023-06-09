@@ -13,7 +13,6 @@
 #include "config.h"
 #include "context.h"
 
-#include <OpenImageIO/imageio.h>
 #include <pxr/imaging/hdSt/material.h>
 #include <pxr/imaging/hdSt/resourceRegistry.h>
 #include <pxr/imaging/hdSt/shaderCode.h>
@@ -22,8 +21,6 @@
 #include <ospray/ospray_cpp/ext/rkcommon.h>
 
 using namespace rkcommon::math;
-
-OIIO_NAMESPACE_USING
 
 // clang-format off
 TF_DEFINE_PRIVATE_TOKENS(
@@ -454,6 +451,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken inputName,
                    texture.file, numX, numY, false,
                    (outputName == HdOSPRayMaterialTokens->opacity));
             texture.ospTexture = result.first;
+            texture.data = result.second;
             texture.hasXfm = true;
             texture.xfm_scale = { 1.f / float(numX), 1.f / float(numY) };
             // OSPRay scales around the center (0.5, 0.5).  translate
@@ -466,6 +464,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken inputName,
                    (outputName == HdOSPRayMaterialTokens->opacity &&
                     _type == MaterialTypes::preview));
             texture.ospTexture = result.first;
+            texture.data = result.second;
         }
     }
 

@@ -13,8 +13,6 @@
 
 using namespace rkcommon::math;
 
-OIIO_NAMESPACE_USING
-
 OSPTextureFormat
 osprayTextureFormat(int depth, int channels, bool preferLinear)
 {
@@ -201,7 +199,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nea
     ospTexture.setParam("data", ospData);
     ospTexture.commit();
 
-    return std::pair<opp::Texture, unsigned char*>(ospTexture, data);
+    return std::pair<opp::Texture, unsigned char*>(ospTexture, outData ? outData : data);
 }
 
 struct UDIMTileDesc {

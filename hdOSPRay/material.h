@@ -122,7 +122,14 @@ protected:
     // and scale
     void _ProcessTransform2dNode(HdMaterialNode node, TfToken textureName);
 
-    struct HdOSPRayTexture {
+    class HdOSPRayTexture {
+    public:
+        HdOSPRayTexture() = default;
+        ~HdOSPRayTexture() {
+            if (data)
+                free(data);
+            data = nullptr;
+        }
         std::string file;
         enum class WrapType { NONE, BLACK, CLAMP, REPEAT, MIRROR };
         WrapType wrapS, wrapT;
@@ -135,6 +142,7 @@ protected:
         ColorType type;
         opp::Texture ospTexture { nullptr };
         bool isPtex { false };
+        void* data { nullptr };
     };
 
     enum MaterialTypes { preview = 0, principled, carPaint, luminous};
