@@ -58,6 +58,8 @@ option(HDSUPER_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
 
 set(BUILD_USD ON CACHE BOOL "Build USD" )
 option(BUILD_OSPRAY "Build OSPRay" ON)
+option(BUILD_OSPRAY_ISPC "Build OSPRay's ISPC" ON)
+option(BUILD_HDOSPRAY_ISPC "Build ISPC" OFF)
 option(BUILD_HDOSPRAY "Build HDOSPRAY" ON)
 set(DOWNLOAD_TBB ON CACHE BOOL "download and build tbb")
 set(TBB_PATH ${CMAKE_INSTALL_PREFIX} CACHE PATH "tbb root")
@@ -85,6 +87,11 @@ if (BUILD_USD)
 endif()
 if (BUILD_OSPRAY)
   include(ep_ospray)
+endif()
+
+if(BUILD_HDOSPRAY_ISPC)
+  set(HDOSPRAY_ISPC_VERSION 1.19.0)
+  include(dep_ispc)
 endif()
 
 set(OSPRAY_INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
@@ -122,7 +129,7 @@ if (BUILD_HDOSPRAY)
       -DHoudini_DIR=${HDSUPER_HOUDINI_DIR}
       -DHDOSPRAY_ENABLE_DENOISER=${HDSUPER_USE_DENOISER}
       -DHDOSPRAY_PLUGIN_PTEX=OFF
-    DEPENDS ${EP_USD_SUPER} ${EP_OSPRAY}
+    DEPENDS ${EP_USD_SUPER} ${EP_OSPRAY} ${EP_ISPC}
   )
   ExternalProject_Add_StepDependencies(${EP_HDOSPRAY}
         configure ${EP_USD_SUPER} ${EP_OSPRAY}
@@ -136,7 +143,6 @@ if (BUILD_HDOSPRAY)
   if (APPLE)
     set(LD_EXPORT "DYLD_LIBRARY_PATH")
   endif()
-
 
   if (HDSUPER_USE_HOUDINI)
     FILE(WRITE ${CMAKE_INSTALL_PREFIX}/setup_hdospray.sh

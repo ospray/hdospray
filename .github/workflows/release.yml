@@ -17,92 +17,107 @@ jobs:
 
 ### BUILD JOBS ###
 
-  release-linux:
+  # release-linux:
+  #   secrets: inherit
+  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
+  #   with:
+  #     force-delete: true    # guarantees .gitattributes are respected in working dir
+  #     image: hdospray/ubuntu:20.04-cb-hdospray23.02
+  #     artifact-out: release-linux
+  #     artifact-path: build_release/*.gz
+  #     cmd: |
+  #       scripts/release_ci/linux.sh
+  #       ls build_release
+  
+  release-osx-clang:
     secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/macos.yml@main
     with:
       force-delete: true    # guarantees .gitattributes are respected in working dir
-      image: hdospray/ubuntu:20.04-cb-hdospray23.02
-      artifact-out: release-linux
-      artifact-path: build_release/*.gz
+      runs-on: '[ "macOS", "sign", "x86_64" ]'
       cmd: |
-        scripts/release_ci/linux.sh
-        ls build_release
+        export CC=clang
+        export CXX=clang++
+        scripts/release_ci/macosx.sh
+#        $SIGN_FILE_MAC -o runtime -e scripts/release/ospray.entitlements build_release/ospray-*pkg
+#        scripts/release/macosx_notarization.sh build_release/ospray-*.pkg
+      #artifact-out: release-osx-clang
+      #artifact-path: "build_release/*.zip build_release/*.pkg"
 
-  release-windows:
-    secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
-    with:
-      force-delete: true    # guarantees .gitattributes are respected in working dir
-      runs-on: '["Windows", "build"]'
-      artifact-out: release-windows
-      artifact-path: "build_release/*.gz build_release/ospray*.msi"
-      cmd: |
-        scripts/release_ci/win.ps1
-        ls build_release
+  # release-windows:
+  #   secrets: inherit
+  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
+  #   with:
+  #     force-delete: true    # guarantees .gitattributes are respected in working dir
+  #     runs-on: '["Windows", "build"]'
+  #     artifact-out: release-windows
+  #     artifact-path: "build_release/*.gz build_release/ospray*.msi"
+  #     cmd: |
+  #       scripts/release_ci/win.ps1
+  #       ls build_release
 
 ### SCAN JOBS ###
 
-  static-analysis:
-    secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/static_analysis.yml@main
-    with:
-      image: hdospray/ubuntu:20.04-cb-hdospray23.02
-      project: hdospray
-      prebuild: |
-         set -x
-         cmake -L -S . -B build \
-           -D CMAKE_CXX_FLAGS="-std=c++17" \
-           -D pxr_DIR=/gitlab/USD-install \
-           -D ospray_DIR=/usr \
-           -D embree_DIR=/usr \
-           -D ospcommon_DIR=/usr \
-           -D openvkl_DIR=/usr \
-           -D PXR_BUILD_OPENIMAGEIO_PLUGIN=ON \
-           -D OIIO_BASE_DIR=/gitlab/USD-install \
-           -D HDOSPRAY_ENABLE_DENOISER=OFF \
-           -D CMAKE_INSTALL_PREFIX=/gitlab/USD-install \
-           -D GLEW_LIBRARY=/gitlab/USD-install/lib64/libGLEW.so \
-           -D GLEW_INCLUDE_DIR=/gitlab/USD-install/include \
-           -D PXR_ENABLE_PTEX_SUPPORT=OFF \
-           -D PXR_BUILD_USD_IMAGING=OFF \
-           -D PXR_BUILD_USDVIEW=OFF
-      build: cmake --build build -j64
+  # static-analysis:
+  #   secrets: inherit
+  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/static_analysis.yml@main
+  #   with:
+  #     image: hdospray/ubuntu:20.04-cb-hdospray23.02
+  #     project: hdospray
+  #     prebuild: |
+  #        set -x
+  #        cmake -L -S . -B build \
+  #          -D CMAKE_CXX_FLAGS="-std=c++17" \
+  #          -D pxr_DIR=/gitlab/USD-install \
+  #          -D ospray_DIR=/usr \
+  #          -D embree_DIR=/usr \
+  #          -D ospcommon_DIR=/usr \
+  #          -D openvkl_DIR=/usr \
+  #          -D PXR_BUILD_OPENIMAGEIO_PLUGIN=ON \
+  #          -D OIIO_BASE_DIR=/gitlab/USD-install \
+  #          -D HDOSPRAY_ENABLE_DENOISER=OFF \
+  #          -D CMAKE_INSTALL_PREFIX=/gitlab/USD-install \
+  #          -D GLEW_LIBRARY=/gitlab/USD-install/lib64/libGLEW.so \
+  #          -D GLEW_INCLUDE_DIR=/gitlab/USD-install/include \
+  #          -D PXR_ENABLE_PTEX_SUPPORT=OFF \
+  #          -D PXR_BUILD_USD_IMAGING=OFF \
+  #          -D PXR_BUILD_USDVIEW=OFF
+  #     build: cmake --build build -j64
 
-  debug:
-    needs:
-      - release-linux
-    secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
-    with:
-      image: hdospray/ubuntu:20.04-cb-hdospray23.02
-      artifact-in: release-linux
-      cmd: |
-         set -x
-         pwd
-         ls
-         ls build_release
+  # debug:
+  #   needs:
+  #     - release-linux
+  #   secrets: inherit
+  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
+  #   with:
+  #     image: hdospray/ubuntu:20.04-cb-hdospray23.02
+  #     artifact-in: release-linux
+  #     cmd: |
+  #        set -x
+  #        pwd
+  #        ls
+  #        ls build_release
 
-  binary-analysis:
-    needs:
-      - release-linux
-    secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/binary_analysis.yml@main
-    with:
-      project: hdospray
-      artifact-in-linux: release-linux
-      path: build_release/hdospray*gz
+  # binary-analysis:
+  #   needs:
+  #     - release-linux
+  #   secrets: inherit
+  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/binary_analysis.yml@main
+  #   with:
+  #     project: hdospray
+  #     artifact-in-linux: release-linux
+  #     path: build_release/hdospray*gz
 
-  antivirus-scan:
-    needs:
-      - release-linux
-    secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/antivirus_scan.yml@main
-    with:
-      project: hdospray
-      artifact-in-linux: release-linux
-      path: build_release/hdospray*
+  # antivirus-scan:
+  #   needs:
+  #     - release-linux
+  #   secrets: inherit
+  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/antivirus_scan.yml@main
+  #   with:
+  #     project: hdospray
+  #     artifact-in-linux: release-linux
+  #     path: build_release/hdospray*
 
-  snyk-scan:
-    secrets: inherit
-    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/snyk.yml@main
+  # snyk-scan:
+  #   secrets: inherit
+  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/snyk.yml@main
