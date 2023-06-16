@@ -319,7 +319,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
         dataStride = stride;
         bool loaded = image->Read(desc);
         if (!loaded) {
-            TF_WARN("#osp: failed to read texture '%'", file);
+            TF_WARN("#osp: failed to read texture '%'", file.c_str());
             return std::pair<opp::Texture, char*>(nullptr, nullptr);
         }
 

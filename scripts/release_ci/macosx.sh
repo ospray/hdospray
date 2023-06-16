@@ -41,7 +41,7 @@ export PATH=$PATH:$DEP_DIR/install/bin
   # ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/../ispc/
   # cmake -E copy_directory /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/../ispc/src/bin /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/bin
 
-  cmake $ROOT_DIR/scripts/superbuild/ -DBUILD_OSPRAY=ON -DBUILD_OSPRAY_ISPC=OFF -DBUILD_HDOSPRAY_ISPC=ON -DBUILD_HDOSPRAY=OFF -DBUILD_USD=OFF -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF . || exit 2
+  cmake $ROOT_DIR/scripts/superbuild/ -DBUILD_OSPRAY=ON -DBUILD_OSPRAY_ISPC=OFF -DBUILD_HDOSPRAY_ISPC=ON -DBUILD_HDOSPRAY=OFF -DBUILD_USD=ON -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF . || exit 2
   cmake --build . -j ${THREADS} || exit 2
   echo "libs:"
   ls install/lib

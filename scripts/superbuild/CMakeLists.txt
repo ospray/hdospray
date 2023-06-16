@@ -58,8 +58,8 @@ option(HDSUPER_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
 
 set(BUILD_USD ON CACHE BOOL "Build USD" )
 option(BUILD_OSPRAY "Build OSPRay" ON)
-option(BUILD_OSPRAY_ISPC "Build OSPRay's ISPC" ON)
-option(BUILD_HDOSPRAY_ISPC "Build ISPC" OFF)
+option(BUILD_OSPRAY_ISPC "Build OSPRay's ISPC" OFF)
+option(BUILD_HDOSPRAY_ISPC "Build ISPC" ON)
 option(BUILD_HDOSPRAY "Build HDOSPRAY" ON)
 set(DOWNLOAD_TBB ON CACHE BOOL "download and build tbb")
 set(TBB_PATH ${CMAKE_INSTALL_PREFIX} CACHE PATH "tbb root")
@@ -134,6 +134,7 @@ if (BUILD_HDOSPRAY)
   ExternalProject_Add_StepDependencies(${EP_HDOSPRAY}
         configure ${EP_USD_SUPER} ${EP_OSPRAY}
       )
+  set_property(TARGET ${EP_HDOSPRAY} PROPERTY CXX_STANDARD 14)
 
   ###############################################################################
   #########          Create Setup Script                         ################
