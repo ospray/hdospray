@@ -29,7 +29,7 @@ set(CMAKE_MODULE_PATH
     ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 option(USE_HOUDINI_USD "use Houdini USD" OFF)
-                      
+
 if(USE_HOUDINI_USD)
 	FIND_PACKAGE(Houdini CONFIG REQUIRED)
 else()

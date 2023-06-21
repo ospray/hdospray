@@ -419,7 +419,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                    = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
                           HdPrimTypeTokens->material, GetMaterialId()));
 
-        opp::Material ospMaterial;
+        opp::Material ospMaterial = nullptr;
 
         if (material && material->GetOSPRayMaterial()) {
             ospMaterial = material->GetOSPRayMaterial();

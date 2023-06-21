@@ -516,7 +516,7 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
         ospMaterial.setParam("baseColor", vec3f(color[0], color[1], color[2]));
         ospMaterial.setParam("ior", 1.5f);
         ospMaterial.setParam("metallic", 0.0f);
-        ospMaterial.setParam("roughness", 0.25f);
+        // note: setting roughness here crashing on mac
     } else {
         ospMaterial = opp::Material(rendererType.c_str(), "obj");
         ospMaterial.setParam("ns", 10.f);

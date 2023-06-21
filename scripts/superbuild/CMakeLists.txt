@@ -38,6 +38,8 @@ option(USE_PYTHON "enable python support" ON)
 option(USE_PYTHON2 "if USE_PYTHON enabled, use python2 instead of python3" OFF)
 
 set(HDSUPER_USD_VERSION "v23.02" CACHE STRING "git tag of usd")
+set(HDSUPER_PYTHON_EXECUTABLE "" CACHE PATH "python executable")
+set(HDSUPER_PYTHON_VERSION "" CACHE STRING "python version, eg 3.9")
 set(HDSUPER_USDSUPER_TAG "release-23.02" CACHE STRING "git tag of usd superbuild")
 set(HDSUPER_USDSUPER_URL "https://github.com/carsonbrownlee/USD_superbuild.git"
   CACHE STRING "url of usd superbuild git")
@@ -62,7 +64,7 @@ option(BUILD_OSPRAY_ISPC "Build OSPRay's ISPC" OFF)
 option(BUILD_HDOSPRAY_ISPC "Build ISPC" ON)
 option(BUILD_HDOSPRAY "Build HDOSPRAY" ON)
 set(DOWNLOAD_TBB ON CACHE BOOL "download and build tbb")
-set(TBB_PATH ${CMAKE_INSTALL_PREFIX} CACHE PATH "tbb root")
+set(TBB_PATH ${CMAKE_INSTALL_PREFIX}/tbb CACHE PATH "tbb root")
 
 option(HDSUPER_USE_HOUDINI "build against existing houdini USD")
 if (HDSUPER_USE_HOUDINI)

@@ -5,12 +5,26 @@ set(ARGS_OSPRAY_DOWNLOAD URL ${HDSUPER_OSPRAY_URL})
     GIT_TAG ${HDSUPER_OSPRAY_VERSION})
   endif()
 
-  set(ENV{TBB_DIR} ${INSTALL_PREFIX})
-  set(ENV{TBB_DIR} ${INSTALL_PREFIX}/lib/cmake/tbb)
+  set(ENV{TBB_DIR} ${CMAKE_INSTALL_PREFIX}/tbb)
+  set(ENV{TBB_ROOT} ${CMAKE_INSTALL_PREFIX}/tbb)
 
-  set(OSPRAY_INSTALL_COMMAND
-    COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different ${CMAKE_INSTALL_PREFIX}/ospray/lib ${CMAKE_INSTALL_PREFIX}/lib
-    )
+  # ospray needs different tbb version for build, but will break USD build
+  # this ugly piece of code copies all ospray libs into temp folder and renames tbb libs
+  if (WIN32)
+    set(OSPRAY_INSTALL_COMMAND "")
+  else()
+    set(OSPRAY_INSTALL_COMMAND
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/ospray/lib/ ${CMAKE_INSTALL_PREFIX}/ospray_tmp
+      COMMAND "${CMAKE_COMMAND}" -E rm -f ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
+      COMMAND "${CMAKE_COMMAND}" -E rm -f ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbbmalloc${CMAKE_SHARED_LIBRARY_SUFFIX}
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different ${CMAKE_INSTALL_PREFIX}/ospray/include/ ${CMAKE_INSTALL_PREFIX}/include
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different ${CMAKE_INSTALL_PREFIX}/oidn/include/ ${CMAKE_INSTALL_PREFIX}/include
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different ${CMAKE_INSTALL_PREFIX}/rkcommon/include/ ${CMAKE_INSTALL_PREFIX}/include
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different ${CMAKE_INSTALL_PREFIX}/ospray_tmp ${CMAKE_INSTALL_PREFIX}/lib
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/oidn/lib/ ${CMAKE_INSTALL_PREFIX}/lib
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/rkcommon/lib/ ${CMAKE_INSTALL_PREFIX}/lib
+      )
+  endif()
 
   message("BUILD ISPC? ${BUILD_OSPRAY_ISPC}")
   set(EP_OSPRAY "OSPRay")
@@ -36,9 +50,12 @@ set(ARGS_OSPRAY_DOWNLOAD URL ${HDSUPER_OSPRAY_URL})
       -DOSPRAY_ENABLE_MODULES=ON
       -DBUILD_OSPRAY_APPS=OFF
       -DBUILD_OIDN=${HDSUPER_USE_DENOISER}
-      -DBUILD_OIDN_FROM_SOURCE=${HDSUPER_USE_DENOISER}
-      -DTBB_PATH=${TBB_PATH}
-    INSTALL_COMMAND "" #${OSPRAY_INSTALL_COMMAND}
+      -DBUILD_OIDN_FROM_SOURCE=OFF
+      -DBUILD_EMBREE_FROM_SOURCE=OFF
+      -DTBB_PATH=/Users/cbrownle/git/build-hdospray-superbuild/install/tbb
+      -DEMBREE_TBB_ROOT=/Users/cbrownle/git/build-hdospray-superbuild/install/tbb
+      -DTBB_INCLUDE_DIR=/Users/cbrownle/git/build-hdospray-superbuild/install/tbb/include
+    INSTALL_COMMAND ${OSPRAY_INSTALL_COMMAND}
     DEPENDS ${EP_USD}
   )
 

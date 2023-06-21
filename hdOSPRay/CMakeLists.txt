@@ -1,7 +1,6 @@
 # Copyright 2019 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-
 # Add a relative target path to the HDOSPRAY_RPATH.
 function(_add_target_to_rpath CURRENT_RPATH target)  
   get_target_property(LIBRARY_FILE ${target} LOCATION)
@@ -15,7 +14,6 @@ function(_add_target_to_rpath CURRENT_RPATH target)
   )
   set (HDOSPRAY_RPATH "${CURRENT_RPATH}:$ORIGIN/${LIBRARY_PATH_REL}" PARENT_SCOPE)
 endfunction()
-
 
 add_library(hdOSPRay SHARED
     config.cpp
@@ -46,6 +44,8 @@ add_library(hdOSPRay SHARED
 
 find_package(ospray 2.5.0 REQUIRED)
 find_package(rkcommon 1.6.0 REQUIRED)
+
+set_property(TARGET hdOSPRay PROPERTY CXX_STANDARD 14)
 
 if(USE_HOUDINI_USD)
   # we build hdOSPRAy against the USD libraries shipped
