@@ -77,7 +77,7 @@ if [ ! -d "$DEP_DIR/install" ]
   rm -r *
   export MACOSX_DEPLOYMENT_TARGET=11.7
   cmake $ROOT_DIR/scripts/superbuild/ -DHDSUPER_PYTHON_VERSION=3.9 -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DBUILD_OSPRAY=ON -DBUILD_OSPRAY_ISPC=OFF -DBUILD_HDOSPRAY_ISPC=ON -DBUILD_HDOSPRAY=OFF -DBUILD_USD=ON -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF .
-  cmake --build . -j ${THREADS}
+  cmake --build . -j ${THREADS} || exit 2
 
   echo "install/lib:"
   ls install/lib
@@ -96,10 +96,6 @@ rm -rf *
 cmake .. -Dpxr_DIR=$USD_ROOT -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.11.0 -Drkcommon_DIR=$USD_ROOT/rkcommon/lib/cmake/rkcommon-1.11.0 -DOpenImageDenoise_DIR=$USD_ROOT/oidn/lib/cmake/OpenImageDenoise-1.4.3 -DTBB_DIR=$USD_ROOT/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release || exit 2
 cmake --build . -j ${THREADS} || exit 2
 
-# Setup environment for dependencies
-export CMAKE_PREFIX_PATH=$DEP_DIR
-
 # set release and installer settings
-
 # create installers
-#make -j $THREADS package || exit 2
+make -j $THREADS package || exit 2
