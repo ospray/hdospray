@@ -16,11 +16,12 @@ set(ARGS_OSPRAY_DOWNLOAD URL ${HDSUPER_OSPRAY_URL})
     set(OSPRAY_INSTALL_COMMAND
       COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/ospray/lib/ ${CMAKE_INSTALL_PREFIX}/ospray_tmp
       COMMAND "${CMAKE_COMMAND}" -E rm -f ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
-      COMMAND "${CMAKE_COMMAND}" -E rm -f ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbbmalloc${CMAKE_SHARED_LIBRARY_SUFFIX}
-      COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different ${CMAKE_INSTALL_PREFIX}/ospray/include/ ${CMAKE_INSTALL_PREFIX}/include
-      COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different ${CMAKE_INSTALL_PREFIX}/oidn/include/ ${CMAKE_INSTALL_PREFIX}/include
-      COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different ${CMAKE_INSTALL_PREFIX}/rkcommon/include/ ${CMAKE_INSTALL_PREFIX}/include
-      COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different ${CMAKE_INSTALL_PREFIX}/ospray_tmp ${CMAKE_INSTALL_PREFIX}/lib
+      COMMAND "${CMAKE_COMMAND}" -E rm -f ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbb.12.${CMAKE_SHARED_LIBRARY_SUFFIX}
+      COMMAND "${CMAKE_COMMAND}" -E rm -f ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbbmalloc.12.${CMAKE_SHARED_LIBRARY_SUFFIX}
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/ospray/include/ ${CMAKE_INSTALL_PREFIX}/include
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/oidn/include/ ${CMAKE_INSTALL_PREFIX}/include
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/rkcommon/include/ ${CMAKE_INSTALL_PREFIX}/include
+      COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/ospray_tmp ${CMAKE_INSTALL_PREFIX}/lib
       COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/oidn/lib/ ${CMAKE_INSTALL_PREFIX}/lib
       COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/rkcommon/lib/ ${CMAKE_INSTALL_PREFIX}/lib
       )
@@ -44,7 +45,6 @@ set(ARGS_OSPRAY_DOWNLOAD URL ${HDSUPER_OSPRAY_URL})
       -DCMAKE_INSTALL_PREFIX=${INSTALL_PREFIX}
       -DINSTALL_IN_SEPARATE_DIRECTORIES=ON
       -DDOWNLOAD_ISPC=${BUILD_OSPRAY_ISPC}
-      -DISPC_VERSION=1.19.0
       -DDOWNLOAD_TBB=ON
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
       -DOSPRAY_ENABLE_MODULES=ON
@@ -52,15 +52,11 @@ set(ARGS_OSPRAY_DOWNLOAD URL ${HDSUPER_OSPRAY_URL})
       -DBUILD_OIDN=${HDSUPER_USE_DENOISER}
       -DBUILD_OIDN_FROM_SOURCE=OFF
       -DBUILD_EMBREE_FROM_SOURCE=OFF
-      -DTBB_PATH=/Users/cbrownle/git/build-hdospray-superbuild/install/tbb
-      -DEMBREE_TBB_ROOT=/Users/cbrownle/git/build-hdospray-superbuild/install/tbb
-      -DTBB_INCLUDE_DIR=/Users/cbrownle/git/build-hdospray-superbuild/install/tbb/include
+      -DTBB_PATH=/home/cbrownle/git/build-hdospray/install/tbb
+      -DEMBREE_TBB_ROOT=/home/cbrownle/git/build-hdospray/install/tbb
+      -DTBB_INCLUDE_DIR=/home/cbrownle/git/build-hdospray/install/tbb/include
     INSTALL_COMMAND ${OSPRAY_INSTALL_COMMAND}
     DEPENDS ${EP_USD}
   )
-
-  #ExternalProject_Add_StepDependencies(${EP_OSPRAY}
-  #  configure USD
-  #)
 
 #external_install(OSPRay)

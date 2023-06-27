@@ -19,7 +19,12 @@ endif()
 
 set(ISPC_INSTALL_COMMAND
   COMMAND "${CMAKE_COMMAND}" -E copy_directory <SOURCE_DIR>/bin ${CMAKE_INSTALL_PREFIX}/bin
+  # make lib directories if they do not exist so copy command doesn't error out.  It uses either lib or lib64.
+  COMMAND "${CMAKE_COMMAND}" -E make_directory <SOURCE_DIR>/lib
+  COMMAND "${CMAKE_COMMAND}" -E make_directory <SOURCE_DIR>/lib64
   COMMAND "${CMAKE_COMMAND}" -E copy_directory <SOURCE_DIR>/lib ${CMAKE_INSTALL_PREFIX}/lib
+  COMMAND "${CMAKE_COMMAND}" -E copy_directory <SOURCE_DIR>/lib64 ${CMAKE_INSTALL_PREFIX}/lib
+  COMMAND "${CMAKE_COMMAND}" -E copy_directory <SOURCE_DIR>/lib64 ${CMAKE_INSTALL_PREFIX}/lib64
 )
 
 ExternalProject_Add(${EP_ISPC}

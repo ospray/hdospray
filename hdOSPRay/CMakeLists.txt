@@ -98,12 +98,6 @@ endif()
 # add OpenImageDenoise
 option(HDOSPRAY_ENABLE_DENOISER "build OSPRay plugin using OpenImageDenoise" OFF)
 if (HDOSPRAY_ENABLE_DENOISER)
-  find_package(OpenImageDenoise 1.2.1 CONFIG)
-  if (NOT TARGET OpenImageDenoise)
-    message(FATAL_ERROR "hdOSPRayPlugin requires OpenImageDenoise be installed")
-  endif()
-
-  target_link_libraries(hdOSPRay PUBLIC OpenImageDenoise)
   target_compile_definitions(hdOSPRay PUBLIC -DHDOSPRAY_ENABLE_DENOISER)
 endif()
 

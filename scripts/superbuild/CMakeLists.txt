@@ -48,8 +48,8 @@ option(HDSUPER_OSPRAY_USE_EXTERNAL OFF)
 if (HDSUPER_OSPRAY_USE_EXTERNAL)
   set(HDSUPER_OSPRAY_EXTERNAL_DIR "" CACHE PATH "location of external ospray install")
 else()
-  set(HDSUPER_OSPRAY_VERSION "v2.11.0" CACHE STRING "git tag of ospray")
-  set(HDSUPER_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.11.0.zip"
+  set(HDSUPER_OSPRAY_VERSION "v2.12.0" CACHE STRING "git tag of ospray")
+  set(HDSUPER_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.12.0.zip"
     CACHE STRING "url of ospray git")
 endif()
 option(HDSUPER_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
@@ -92,7 +92,7 @@ if (BUILD_OSPRAY)
 endif()
 
 if(BUILD_HDOSPRAY_ISPC)
-  set(HDOSPRAY_ISPC_VERSION 1.19.0)
+  set(HDOSPRAY_ISPC_VERSION 1.20.0)
   include(dep_ispc)
 endif()
 
@@ -110,7 +110,7 @@ if (BUILD_HDOSPRAY)
     set(USD_ROOT_DIR ${EXTERNAL_USD_DIR})
   endif()
 
-  set(OSPRAY_VERSION "2.11.0" CACHE STRING "ospray library version")
+  set(OSPRAY_VERSION "2.12.0" CACHE STRING "ospray library version")
   set(RKCOMMON_VERSION "1.11.0" CACHE STRING "rkcommon library version")
 
   ExternalProject_Add (
