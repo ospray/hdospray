@@ -39,8 +39,8 @@ jobs:
         export CC=clang
         export CXX=clang++
         scripts/release_ci/macosx.sh
-#        $SIGN_FILE_MAC -o runtime -e scripts/release/ospray.entitlements build_release/ospray-*pkg
-#        scripts/release/macosx_notarization.sh build_release/ospray-*.pkg
+        $SIGN_FILE_MAC -o runtime -e scripts/release/hdospray.entitlements build_release/*pkg
+        scripts/release/macosx_notarization.sh build_release/*.pkg
       artifact-out: release-osx-clang
       artifact-path: "build_release/*.gz build_release/*.pkg"
 
@@ -51,9 +51,10 @@ jobs:
   #     force-delete: true    # guarantees .gitattributes are respected in working dir
   #     runs-on: '["Windows", "build"]'
   #     artifact-out: release-windows
-  #     artifact-path: "build_release/*.gz build_release/ospray*.msi"
+  #     artifact-path: "build_release/*.gz build_release/hdospray*.msi"
   #     cmd: |
   #       scripts/release_ci/win.ps1
+  #       & $env:SIGN_FILE_WINDOWS hdospray*.msi
   #       ls build_release
 
 ### SCAN JOBS ###
