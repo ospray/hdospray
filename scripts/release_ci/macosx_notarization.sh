@@ -6,7 +6,7 @@ set -e # terminate if some error occurs
 
 PACKAGE=$1
 
-primary_bundle_id="com.intel.ospray"
+primary_bundle_id="com.intel.hdospray"
 user=$MACOS_NOTARIZATION_USER
 password=$MACOS_NOTARIZATION_PASSWORD
 

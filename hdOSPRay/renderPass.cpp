@@ -321,16 +321,16 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
                         renderPassState->GetProjectionMatrix().Get(pm);
                         const float m1 = pm[2][2];
                         const float m2 = pm[3][2];
-                        const float near = m2 / (m1 - 1.f);
-                        const float far = m2 / (m1 + 1.f);
-                        const float diff = (far - near);
+                        const float dnear = m2 / (m1 - 1.f);
+                        const float dfar = m2 / (m1 + 1.f);
+                        const float diff = (dfar - dnear);
                         tbb::parallel_for(
                                 tbb::blocked_range<int>(0, frameSize),
                                 [&](tbb::blocked_range<int> r) {
                                     for (int i = r.begin(); i < r.end();
                                         ++i) {
                                         float& d = depth[i];
-                                        d = clamp((d - near) / diff, 0.f,
+                                        d = clamp((d - dnear) / diff, 0.f,
                                                     1.f);
                                     }
                                 });

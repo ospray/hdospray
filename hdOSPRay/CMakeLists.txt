@@ -1,6 +1,8 @@
 # Copyright 2019 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+set(CMAKE_CXX_STANDARD 17)
+
 # Add a relative target path to the HDOSPRAY_RPATH.
 function(_add_target_to_rpath CURRENT_RPATH target)  
   get_target_property(LIBRARY_FILE ${target} LOCATION)
@@ -45,7 +47,7 @@ add_library(hdOSPRay SHARED
 find_package(ospray 2.5.0 REQUIRED)
 find_package(rkcommon 1.6.0 REQUIRED)
 
-set_property(TARGET hdOSPRay PROPERTY CXX_STANDARD 14)
+set_property(TARGET hdOSPRay PROPERTY CXX_STANDARD 17)
 
 if(USE_HOUDINI_USD)
   # we build hdOSPRAy against the USD libraries shipped
@@ -72,6 +74,8 @@ target_compile_definitions(hdOSPRay
   PRIVATE
   MFB_PACKAGE_NAME=hdOSPRay
   MFB_ALT_PACKAGE_NAME=hdOSPRay
+  NOMINMAX
+  $<$<CXX_COMPILER_ID:MSVC>:/MP /wd4244 /wd4305 /wd4996>
   )
 
 install(TARGETS hdOSPRay DESTINATION plugin/usd)

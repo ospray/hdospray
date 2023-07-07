@@ -1,17 +1,42 @@
 // Copyright 2019 Intel Corporation
 // SPDX-License-Identifier: Apache-2.0
 
+#if defined(WIN32)
+    #define WIN32_LEAN_AND_MEAN
+    #include <Windows.h>
+#endif
+
 #include "rendererPlugin.h"
 
 #include <pxr/imaging/hd/rendererPluginRegistry.h>
 #include "config.h"
 #include "renderDelegate.h"
 
+#ifdef WIN32
+// TF_REGISTER does not seem to work correctly for external plugins on Windows.
+// To get around this, we manually register the plugin with USD on library load
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+{
+    switch (ul_reason_for_call)
+    {
+    case DLL_PROCESS_ATTACH:
+    {
+        pxr::HdRendererPluginRegistry::Define<HdOSPRayRendererPlugin>();
+    }
+        break;
+    default:
+        break;
+    }
+    return TRUE;
+}
+#endif
+PXR_NAMESPACE_OPEN_SCOPE
 // Register OSPRay plugin with USD
 TF_REGISTRY_FUNCTION(TfType)
 {
     HdRendererPluginRegistry::Define<HdOSPRayRendererPlugin>();
 }
+PXR_NAMESPACE_CLOSE_SCOPE
 
 HdRenderDelegate*
 HdOSPRayRendererPlugin::CreateRenderDelegate()

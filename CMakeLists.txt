@@ -36,6 +36,11 @@ else()
 	FIND_PACKAGE(pxr CONFIG REQUIRED)
 endif()
 
+
+if(APPLE)
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+endif()
+
 add_subdirectory(hdOSPRay)
 
 option(ENABLE_TESTING "build testing suite" OFF)
@@ -44,4 +49,5 @@ if (ENABLE_TESTING)
     add_subdirectory(testing)
 endif()
 
+include(package)
 include(CPack)
