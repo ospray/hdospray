@@ -33,9 +33,13 @@ jobs:
    secrets: inherit
    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
    with:
+     runs-on: '[ "Windows", "build", "NAS" ]'
      cmd: |
        scripts/release_ci/win.ps1
+       & $env:SIGN_FILE_WINDOWS hdospray*.msi
        ls
+     artifact-out: release-windows
+     artifact-path: "build_release/hdospray*.zip build_release/hdospray*.msi"
 
   release-osx-clang:
    secrets: inherit
@@ -47,23 +51,10 @@ jobs:
        export CC=clang
        export CXX=clang++
        scripts/release_ci/macosx.sh
-       $SIGN_FILE_MAC -o runtime -e scripts/release/hdospray.entitlements build_release/*pkg
-       scripts/release/macosx_notarization.sh build_release/*.pkg
+       $SIGN_FILE_MAC -o runtime -e scripts/release_ci/hdospray.entitlements build_release/*pkg
+       scripts/release_ci/macosx_notarization.sh build_release/*.pkg
      artifact-out: release-osx-clang
-     artifact-path: "build_release/*.gz build_release/*.pkg"
-
-  #  release-windows:
-  #    secrets: inherit
-  #    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
-  #    with:
-  #      force-delete: true    # guarantees .gitattributes are respected in working dir
-  #      runs-on: '["Windows", "build"]'
-  #      artifact-out: release-windows
-  #      artifact-path: "build_release/*.gz build_release/hdospray*.msi"
-  #      cmd: |
-  #        scripts/release_ci/win.ps1
-  #        & $env:SIGN_FILE_WINDOWS hdospray*.msi
-  #        ls build_release
+     artifact-path: "build_release/*.zip build_release/*.pkg"
 
 ### SCAN JOBS ###
 
@@ -110,21 +101,29 @@ jobs:
   # binary-analysis:
   #   needs:
   #     - release-linux
+  #     - release-osx-clang
+  #     - release-windows
   #   secrets: inherit
   #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/binary_analysis.yml@main
   #   with:
   #     project: hdospray
   #     artifact-in-linux: release-linux
+  #     artifact-in-macos: release-osx-clang
+  #     artifact-in-windows: release-windows
   #     path: build_release/hdospray*gz
 
   # antivirus-scan:
   #   needs:
   #     - release-linux
+  #     - release-osx-clang
+  #     - release-windows
   #   secrets: inherit
   #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/antivirus_scan.yml@main
   #   with:
   #     project: hdospray
   #     artifact-in-linux: release-linux
+  #     artifact-in-macos: release-osx-clang
+  #     artifact-in-windows: release-windows
   #     path: build_release/hdospray*
 
   # snyk-scan:

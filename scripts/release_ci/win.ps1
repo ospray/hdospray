@@ -4,8 +4,6 @@
 echo "drives: "
  wmic logicaldisk get name
 echo "nassie:"
-#echo "N: "
-# dir N:
 echo "\"
  dir \
 echo "pwd:"
@@ -42,13 +40,12 @@ cmake -L `
   -D ospray_DIR="$DEP_DIR\ospray-2.12.0.x86_64.windows\lib\cmake\ospray-2.12.0" `
   -D pxr_DIR="$DEP_DIR\usd-23.02" `
   -D rkcommon_DIR="$DEP_DIR\rkcommon\lib\cmake\rkcommon-1.11.0" `
+  -D HDOSPRAY_INSTALL_DEPENDENCIES=ON `
+  -D HDOSPRAY_SIGN_FILE=$env:SIGN_FILE_WINDOWS `
   ..
 
 cmake --build . --config release -j 32
-#cmake --build . --config release -j 8 --target sign_files
 cmake --build . --config release -j 8 --target PACKAGE
-
-echo "wix.log:"
-type C:/GA/intel/001/_work/_temp/w/build_release/_CPack_Packages/win64/WIX/wix.log
+cpack -G ZIP -V
 
 exit $LASTEXITCODE

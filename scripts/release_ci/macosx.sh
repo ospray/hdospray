@@ -33,31 +33,7 @@ if [ ! -d "$DEP_DIR/install" ]
   then
   echo "building dependencies"
 
-  # ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/
-  # ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/
-  # ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/
   mkdir -p /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/bin
-  # ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/
-  # ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/../ispc/bin
-  # ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/../ispc/src/bin
-  # ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/../ispc/
-  # cmake -E copy_directory /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/../ispc/src/bin /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/bin
-  #/mnt/vol/home/visuser/NAS/packages/apps/usd/macos
-  #echo "/"
-  #ls /
-  #echo "/mnt"
-  #ls /mnt
-  #echo "/mnt/vol"
-  #ls /mnt/vol
-  #echo "env"
-  #env
-
-  #echo "libs:"
-  #ls install/lib
-  #echo "includes:"
-  #ls install/include
-  #echo "python:"
-  #ls /usr/local/bin
   sw_vers
   pip3.9 list
   echo "PATH:"
@@ -65,8 +41,6 @@ if [ ! -d "$DEP_DIR/install" ]
   echo "\n\n\nPYTHONPATH:"
   echo $PYTHONPATH
   export Python_ROOT_DIR="/usr/local/Frameworks/Python.framework/Versions/3.9"
-  # pip3.9 install PySide6 PyOpenGL numpy
-  #ls install/bin
   alias python=/usr/local/bin/python3.9
   alias python3=/usr/local/bin/python3.9
   python --version
@@ -93,9 +67,14 @@ mkdir -p build_release
 cd build_release
 # Clean out build directory to be sure we are doing a fresh build
 rm -rf *
-cmake .. -Dpxr_DIR=$USD_ROOT -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.11.0 -Drkcommon_DIR=$USD_ROOT/rkcommon/lib/cmake/rkcommon-1.11.0 -DOpenImageDenoise_DIR=$USD_ROOT/oidn/lib/cmake/OpenImageDenoise-1.4.3 -DTBB_DIR=$USD_ROOT/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release || exit 2
+cmake .. -Dpxr_DIR=$USD_ROOT -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.11.0 \
+         -Drkcommon_DIR=$USD_ROOT/rkcommon/lib/cmake/rkcommon-1.11.0 \
+         -DOpenImageDenoise_DIR=$USD_ROOT/oidn/lib/cmake/OpenImageDenoise-1.4.3 \
+         -DTBB_DIR=$USD_ROOT/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
+         -DHDOSPRAY_SIGN_FILE=$SIGN_FILE_MAC || exit 2
 cmake --build . -j ${THREADS} || exit 2
 
 # set release and installer settings
 # create installers
 make -j $THREADS package || exit 2
+cpack -G ZIP || exit 2

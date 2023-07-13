@@ -70,6 +70,8 @@ else()
 
 endif()
 
+hdospray_sign_target(hdOSPRay)
+
 target_compile_definitions(hdOSPRay
   PRIVATE
   MFB_PACKAGE_NAME=hdOSPRay

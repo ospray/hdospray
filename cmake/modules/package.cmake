@@ -67,7 +67,7 @@ set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/LICENSE.txt)
 #if (HDOSPRAY_ZIP_MODE)
 #  set(CPACK_MONOLITHIC_INSTALL ON)
 #else()
-  set(CPACK_COMPONENTS_ALL package_usd)
+#  set(CPACK_COMPONENTS_ALL package_usd)
 #endif()
 
 if (WIN32) # Windows specific settings

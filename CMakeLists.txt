@@ -40,7 +40,7 @@ if(APPLE)
   set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 endif()
 
-
+include(macros)
 add_subdirectory(hdOSPRay)
 include(package)
 
