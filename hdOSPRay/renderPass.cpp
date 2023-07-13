@@ -514,7 +514,6 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
     timer.Reset();
     timer.Start();
     TF_DEBUG_MSG(OSP, "display timer: %f\n", time);
-
     TF_DEBUG_MSG(OSP, "displayRB %zu\n", _aovBindings.size());
 
     for (int aovIndex = 0; aovIndex < _aovBindings.size(); aovIndex++) {
@@ -526,6 +525,14 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
             continue;
         ospRenderBuffer->Map();
         if (_aovNames[aovIndex].name == HdAovTokens->color) {
+            // ospray 2.12 + denoiser causing ghosting with 0 alphas, set alphas to 1
+            tbb::parallel_for(
+                   tbb::blocked_range<int>(0, renderBuffer.width * renderBuffer.height),
+                   [&](tbb::blocked_range<int> r) {
+                       for (int pIdx = r.begin(); pIdx < r.end(); ++pIdx) {
+                        renderBuffer.colorBuffer[pIdx].w = 1.f;
+                       }
+                   });
             _writeRenderBuffer<float>(ospRenderBuffer, renderBuffer,
                                       (float*)renderBuffer.colorBuffer.data(),
                                       4);

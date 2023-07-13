@@ -48,4 +48,7 @@ cmake --build . --config release -j 32
 #cmake --build . --config release -j 8 --target sign_files
 cmake --build . --config release -j 8 --target PACKAGE
 
+echo "wix.log:"
+type C:/GA/intel/001/_work/_temp/w/build_release/_CPack_Packages/win64/WIX/wix.log
+
 exit $LASTEXITCODE
