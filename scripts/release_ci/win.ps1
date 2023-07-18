@@ -1,6 +1,11 @@
 ## Copyright 2009 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
+pip3.8 install PyOpenGL
+pip3.8 install PySide2
+pip3.8 install numpy
+echo "pip3 show PyOpenGL:"
+pip3.8 show PyOpenGL
 echo "drives: "
  wmic logicaldisk get name
 echo "nassie:"
@@ -10,13 +15,31 @@ echo "pwd:"
 pwd
 
 $NAS = "\\vis-nassie.an.intel.com\NAS"
-$DEP_DIR = "$NAS\packages\apps\usd\win10"
+$NAS_DEP_DIR = "$NAS\packages\apps\usd\win10"
 $ROOT_DIR = pwd
+$DEP_DIR = "../hdospray_deps/usd-23.02"
+md $DEP_DIR
 
+echo "nas_dep_dir:"
+ls $NAS_DEP_DIR
 echo "dep_dir:"
 ls $DEP_DIR
 echo "ospray_dir:"
-ls $DEP_DIR\ospray-2.12.0.x86_64.windows\lib\cmake\ospray-2.12.0
+ls $NAS_DEP_DIR\ospray-2.12.0.x86_64.windows\lib\cmake\ospray-2.12.0
+echo "ls c:\\program files\\python38\\"
+ls "C:\Program Files"
+ls "C:\Program Files\Python38"
+#echo "ls C:\\Python39:"
+#ls C:\Python39
+#echo "ls C:\\Python39\\lib:"
+#ls C:\Python39\lib
+echo "ls C:\\Program Files\Python38\\lib\\site-packages:"
+ls "C:\Program Files\Python38\lib\site-packages"
+echo "ls ~/AppData: "
+ls ~\AppData
+#echo "ls ~/AppData/Local/Programs/Python:"
+#echo "ls ~/AppData/Roaming/Programs:"
+#ls ~/AppData/Roaming/Programs
 
 ## Build dependencies ##
 # Windows CI dependencies are prebuilt
@@ -37,15 +60,18 @@ dir
 #rm -r -fo *
 
 cmake -L `
-  -D ospray_DIR="$DEP_DIR\ospray-2.12.0.x86_64.windows\lib\cmake\ospray-2.12.0" `
-  -D pxr_DIR="$DEP_DIR\usd-23.02" `
-  -D rkcommon_DIR="$DEP_DIR\rkcommon\lib\cmake\rkcommon-1.11.0" `
+  -D ospray_DIR="$NAS_DEP_DIR\ospray-2.12.0.x86_64.windows\lib\cmake\ospray-2.12.0" `
+  -D pxr_DIR="$NAS_DEP_DIR\usd-23.02" `
+  -D rkcommon_DIR="$NAS_DEP_DIR\rkcommon\lib\cmake\rkcommon-1.11.0" `
   -D HDOSPRAY_INSTALL_DEPENDENCIES=ON `
+  -D HDOSPRAY_GENERATE_SETUP=ON `
+  -D HDOSPRAY_PYTHON_INSTALL_DIR="C:\Program Files\Python38" `
   -D HDOSPRAY_SIGN_FILE=$env:SIGN_FILE_WINDOWS `
+  -D PYTHON_VERSION=3.8 `
   ..
 
 cmake --build . --config release -j 32
-cmake --build . --config release -j 8 --target PACKAGE
-cpack -G ZIP -V
+cmake --build . --config release -j 32 --target PACKAGE
+cpack -G ZIP
 
 exit $LASTEXITCODE

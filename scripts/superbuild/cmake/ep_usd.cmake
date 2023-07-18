@@ -15,11 +15,11 @@ SET(EP_USD_SUPER "USD_Super")
     PREFIX        ${EP_USD_SUPER}
     DOWNLOAD_DIR  ${EP_USD_SUPER}
     STAMP_DIR     ${EP_USD_SUPER}/stamp
-    SOURCE_DIR    ${EP_USD_SUPER}/source
+    SOURCE_DIR    ${CMAKE_SOURCE_DIR}/../../usd-superbuild
     BINARY_DIR    ${EP_USD_SUPER}/build
-    GIT_REPOSITORY ${HDSUPER_USDSUPER_URL}
-    GIT_TAG       ${HDSUPER_USDSUPER_TAG}
-    GIT_SHALLOW   OFF
+ #   GIT_REPOSITORY ${HDSUPER_USDSUPER_URL}
+ #   GIT_TAG       ${HDSUPER_USDSUPER_TAG}
+ #   GIT_SHALLOW   OFF
 
     LIST_SEPARATOR | # Use the alternate list separator
     CMAKE_ARGS

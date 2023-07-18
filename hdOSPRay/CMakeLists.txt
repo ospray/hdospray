@@ -45,6 +45,7 @@ add_library(hdOSPRay SHARED
   )
 
 find_package(ospray 2.5.0 REQUIRED)
+message("hdospray ospray_root: ${OSPRAY_ROOT}")
 find_package(rkcommon 1.6.0 REQUIRED)
 
 set_property(TARGET hdOSPRay PROPERTY CXX_STANDARD 17)

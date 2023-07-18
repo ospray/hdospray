@@ -5,6 +5,16 @@
 set -x
 cmake --version
 
+echo "deps: "
+ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps
+echo "deps/usd-23.02/install: "
+ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install
+echo "deps/usd-23.02/install/ospray: "
+ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/ospray
+echo "deps/usd-23.02/install/ospray/bin: "
+ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/ospray/bin
+echo "done"
+
 #### Set variables for script ####
 
 ROOT_DIR=$PWD
@@ -28,8 +38,21 @@ mkdir -p $DEP_DIR
 cd $DEP_DIR
 export PATH=$PATH:$DEP_DIR/install/bin
 
+pip3.9 install PySide6
+pip3.9 install PySide6-Addons
+pip3.9 install PySide6-Essentials
+echo "which pyside6-uic:"
+which pyside6-uic
+pip3.9 show PySide6
+echo "site-packages:"
+ls /usr/local/lib/python3.9/site-packages
+echo "site-packages2:"
+ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages
+echo "libexec: "
+ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec
+
 # rebuild dependencies - clear install dir
-rm -r $DEP_DIR/install
+# rm -r $DEP_DIR/install
 
 #### Build dependencies ####
 if [ ! -d "$DEP_DIR/install" ]
@@ -58,9 +81,9 @@ if [ ! -d "$DEP_DIR/install" ]
     -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DBUILD_OSPRAY=ON \
     -DBUILD_OSPRAY_ISPC=ON -DBUILD_HDOSPRAY_ISPC=OFF -DBUILD_HDOSPRAY=OFF \
     -DBUILD_USD=ON -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF \
-    -DBUILD_BOOST=ON \
+    -DBUILD_BOOST=ON -DPYSIDE_BIN_DIR=/Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec \
     -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF .
-  #cmake --build . -j ${THREADS} || exit 2
+  cmake --build . -j ${THREADS} || exit 2
 
   echo "install/lib:"
   ls install/lib
@@ -72,19 +95,21 @@ cd $ROOT_DIR
 
 #### Build HdOSPRay ####
 
-#mkdir -p build_release
-#cd build_release
-# Clean out build directory to be sure we are doing a fresh build
-#rm -rf *
-#cmake .. -Dpxr_DIR=$USD_ROOT -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.12.0 \
-#         -Drkcommon_DIR=$USD_ROOT/rkcommon/lib/cmake/rkcommon-1.11.0 \
-#         -DOpenImageDenoise_DIR=$USD_ROOT/oidn/lib/cmake/OpenImageDenoise-1.4.3 \
-#         -DTBB_DIR=$USD_ROOT/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
-#         -D HDOSPRAY_INSTALL_DEPENDENCIES=ON \
-#         -DHDOSPRAY_SIGN_FILE=$SIGN_FILE_MAC || exit 2
-#cmake --build . -j ${THREADS} || exit 2
+mkdir -p build_release
+cd build_release
+ Clean out build directory to be sure we are doing a fresh build
+rm -rf *
+cmake .. -Dpxr_DIR=$USD_ROOT -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.12.0 \
+         -Drkcommon_DIR=$USD_ROOT/rkcommon/lib/cmake/rkcommon-1.11.0 \
+         -DOpenImageDenoise_DIR=$USD_ROOT/oidn/lib/cmake/OpenImageDenoise-1.4.3 \
+         -DTBB_DIR=$USD_ROOT/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
+         -D HDOSPRAY_INSTALL_DEPENDENCIES=ON \
+         -D HDOSPRAY_GENERATE_SETUP=ON \
+         -D HDOSPRAY_PYTHON_INSTALL_DIR=/Users/github-runner/Library/Python/3.9 \
+         -DHDOSPRAY_SIGN_FILE=$SIGN_FILE_MAC || exit 2
+cmake --build . -j ${THREADS} || exit 2
 
 # set release and installer settings
 # create installers
-#make -j $THREADS package || exit 2
-#cpack -G ZIP || exit 2
+make -j $THREADS package || exit 2
+cpack -G ZIP || exit 2

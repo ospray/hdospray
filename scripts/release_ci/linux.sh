@@ -7,14 +7,19 @@ cmake --version
 
 THREADS=`nproc`
 
+echo "pip packages: "
+ls /usr/local/lib/python3.8/dist-packages
+echo "pip3 show PyOpenGL:"
+pip3 show PyOpenGL
 export ROOT_DIR=$PWD
-mkdir -p $ROOT_DIR/../hdospray_deps
 DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.02
+mkdir -p $ROOT_DIR/../hdospray_deps
 mkdir -p $DEP_DIR
 ls $PWD
 export TBB_ROOT=$DEP_DIR
 export CMAKE_CXX_FLAGS="-std=c++17"
 
+rm -r $DEP_DIR/install
 if [ ! -d "$DEP_DIR/install" ]
 then
     mkdir -p $DEP_DIR/install
@@ -41,6 +46,8 @@ cmake -L \
   -D pxr_DIR="$DEP_DIR/install" \
   -D rkcommon_DIR="$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.11.0" \
   -D HDOSPRAY_INSTALL_DEPENDENCIES=ON \
+  -D HDOSPRAY_GENERATE_SETUP=ON \
+  -D HDOSPRAY_PYTHON_PACKAGES_DIR=/usr/local/lib/python3.8/dist-packages \
   -D CMAKE_INSTALL_PREFIX=$ROOT_DIR/build_release \
   ..
 

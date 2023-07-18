@@ -41,6 +41,10 @@ if(APPLE)
 endif()
 
 include(macros)
+
+find_package(ospray 2.5.0 REQUIRED)
+find_package(rkcommon 1.6.0 REQUIRED)
+
 add_subdirectory(hdOSPRay)
 include(package)
 
