@@ -8,12 +8,16 @@ cmake --version
 THREADS=`nproc`
 
 export ROOT_DIR=$PWD
+mkdir -p $ROOT_DIR/../hdospray_deps
+DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.02
+mkdir -p $DEP_DIR
 ls $PWD
-export TBB_ROOT=$PWD/install
+export TBB_ROOT=$DEP_DIR
 export CMAKE_CXX_FLAGS="-std=c++17"
 
-if [ ! -d "$ROOT_DIR/install" ]
+if [ ! -d "$DEP_DIR/install" ]
 then
+    mkdir -p $DEP_DIR/install
     mkdir -p build_deps
     cd build_deps
     cmake ../scripts/superbuild/ -DBUILD_HDOSPRAY=OFF \
@@ -21,21 +25,21 @@ then
         -DHDSUPER_OSPRAY_EXTERNAL_DIR=/usr/lib/cmake/ospray-2.12.0 \
         -DBUILD_OSPRAY=OFF -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=ON \
         -DBUILD_PNG=ON -DBUILD_JPEG=ON -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF \
-        -DCMAKE_INSTALL_PREFIX=$ROOT_DIR/install .
+        -DCMAKE_INSTALL_PREFIX=$DEP_DIR/install .
     cmake --build . -j ${THREADS}
 else
    echo "using cached dependencies"
 fi
 
-ls $ROOT_DIR/install
+ls $DEP_DIR
 
 cd $ROOT_DIR
 mkdir -p build_release
 cd build_release
 cmake -L \
-  -D ospray_DIR="$ROOT_DIR/install/lib/cmake/ospray-2.12.0" \
-  -D pxr_DIR="$ROOT_DIR/install" \
-  -D rkcommon_DIR="$ROOT_DIR/install/rkcommon/lib/cmake/rkcommon-1.11.0" \
+  -D ospray_DIR="$DEP_DIR/install/lib/cmake/ospray-2.12.0" \
+  -D pxr_DIR="$DEP_DIR/install" \
+  -D rkcommon_DIR="$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.11.0" \
   -D HDOSPRAY_INSTALL_DEPENDENCIES=ON \
   -D CMAKE_INSTALL_PREFIX=$ROOT_DIR/build_release \
   ..

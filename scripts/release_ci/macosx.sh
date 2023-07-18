@@ -28,6 +28,9 @@ mkdir -p $DEP_DIR
 cd $DEP_DIR
 export PATH=$PATH:$DEP_DIR/install/bin
 
+# rebuild dependencies - clear install dir
+rm -r $DEP_DIR/install
+
 #### Build dependencies ####
 if [ ! -d "$DEP_DIR/install" ]
   then
@@ -41,6 +44,7 @@ if [ ! -d "$DEP_DIR/install" ]
   echo "\n\n\nPYTHONPATH:"
   echo $PYTHONPATH
   export Python_ROOT_DIR="/usr/local/Frameworks/Python.framework/Versions/3.9"
+  export Python3_ROOT_DIR="/usr/local/Frameworks/Python.framework/Versions/3.9"
   alias python=/usr/local/bin/python3.9
   alias python3=/usr/local/bin/python3.9
   python --version
@@ -50,8 +54,13 @@ if [ ! -d "$DEP_DIR/install" ]
   cat USD_Super/build/source/boost/python-config.jam
   rm -r *
   export MACOSX_DEPLOYMENT_TARGET=11.7
-  cmake $ROOT_DIR/scripts/superbuild/ -DHDSUPER_PYTHON_VERSION=3.9 -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DBUILD_OSPRAY=ON -DBUILD_OSPRAY_ISPC=OFF -DBUILD_HDOSPRAY_ISPC=ON -DBUILD_HDOSPRAY=OFF -DBUILD_USD=ON -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF .
-  cmake --build . -j ${THREADS} || exit 2
+  cmake $ROOT_DIR/scripts/superbuild/ -DHDSUPER_PYTHON_VERSION=3.9 \
+    -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DBUILD_OSPRAY=ON \
+    -DBUILD_OSPRAY_ISPC=ON -DBUILD_HDOSPRAY_ISPC=OFF -DBUILD_HDOSPRAY=OFF \
+    -DBUILD_USD=ON -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF \
+    -DBUILD_BOOST=ON \
+    -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF .
+  #cmake --build . -j ${THREADS} || exit 2
 
   echo "install/lib:"
   ls install/lib
@@ -63,18 +72,19 @@ cd $ROOT_DIR
 
 #### Build HdOSPRay ####
 
-mkdir -p build_release
-cd build_release
+#mkdir -p build_release
+#cd build_release
 # Clean out build directory to be sure we are doing a fresh build
-rm -rf *
-cmake .. -Dpxr_DIR=$USD_ROOT -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.11.0 \
-         -Drkcommon_DIR=$USD_ROOT/rkcommon/lib/cmake/rkcommon-1.11.0 \
-         -DOpenImageDenoise_DIR=$USD_ROOT/oidn/lib/cmake/OpenImageDenoise-1.4.3 \
-         -DTBB_DIR=$USD_ROOT/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
-         -DHDOSPRAY_SIGN_FILE=$SIGN_FILE_MAC || exit 2
-cmake --build . -j ${THREADS} || exit 2
+#rm -rf *
+#cmake .. -Dpxr_DIR=$USD_ROOT -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.12.0 \
+#         -Drkcommon_DIR=$USD_ROOT/rkcommon/lib/cmake/rkcommon-1.11.0 \
+#         -DOpenImageDenoise_DIR=$USD_ROOT/oidn/lib/cmake/OpenImageDenoise-1.4.3 \
+#         -DTBB_DIR=$USD_ROOT/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
+#         -D HDOSPRAY_INSTALL_DEPENDENCIES=ON \
+#         -DHDOSPRAY_SIGN_FILE=$SIGN_FILE_MAC || exit 2
+#cmake --build . -j ${THREADS} || exit 2
 
 # set release and installer settings
 # create installers
-make -j $THREADS package || exit 2
-cpack -G ZIP || exit 2
+#make -j $THREADS package || exit 2
+#cpack -G ZIP || exit 2

@@ -6,6 +6,10 @@ message("include install dir: ${pxr_DIR}/include")
 message("cmake include install dir: ${CMAKE_INSTALL_INCLUDEDIR}")
 option(HDOSPRAY_INSTALL_DEPENDENCIES "copy usd and ospray files to install dir" OFF)
 if (HDOSPRAY_INSTALL_DEPENDENCIES)
+    find_package(PythonLibs)
+    message("python libs: " ${PYTHON_LIBRARIES})
+    install(FILES ${PYTHON_LIBRARIES}
+            DESTINATION .)
     if(NOT ${pxr_DIR} MATCHES ${CMAKE_INSTALL_PREFIX})
     message("pxr_DIR: ${pxr_DIR}")
         install(DIRECTORY ${pxr_DIR}/include
