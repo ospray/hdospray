@@ -9,6 +9,7 @@ THREADS=`nproc`
 
 echo "pip packages: "
 ls /usr/local/lib/python3.8/dist-packages
+pip3 install PyOpenGL==3.1.5 PySide2 numpy
 echo "pip3 show PyOpenGL:"
 pip3 show PyOpenGL
 export ROOT_DIR=$PWD

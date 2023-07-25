@@ -29,15 +29,15 @@ if (HDOSPRAY_INSTALL_DEPENDENCIES)
         file(GLOB pythonLibs ${PythonLibDir}/libpython*)
     endif()
     file(GLOB pythonBins ${PythonBinDir}/python*)
-    #message("installing python libs: ${pythonLibs}")
-    #message("found python executable: \"${Python_EXECUTABLE}\"")
-    #message("found python executable2: \"${PYTHON_EXECUTABLE}\"")
-    #message("python runtime: \"${Python_RUNTIME_LIBRARY_DIRS}\"")
-    #message("python include: \"${Python_INCLUDE_DIRS}\"")
-    #message("found python bins: ${pythonBins}")
-    #message("python pip packages: ${HDOSPRAY_PYTHON_PACKAGES_DIR}")
+    message("installing python libs: ${pythonLibs}")
+    message("found python executable: \"${Python_EXECUTABLE}\"")
+    message("found python executable2: \"${PYTHON_EXECUTABLE}\"")
+    message("python runtime: \"${Python_RUNTIME_LIBRARY_DIRS}\"")
+    message("python include: \"${Python_INCLUDE_DIRS}\"")
+    message("found python bins: ${pythonBins}")
     if (HDOSPRAY_PYTHON_PACKAGES_DIR) # pip packages directory
-        install(DIRECTORY ${HDOSPRAY_PYTHON_PACKAGES_DIR}
+        message("python pip packages: ${HDOSPRAY_PYTHON_PACKAGES_DIR}")
+        install(DIRECTORY ${HDOSPRAY_PYTHON_PACKAGES_DIR}/
                 USE_SOURCE_PERMISSIONS
                 DESTINATION ./python/site-packages
         )
@@ -49,7 +49,7 @@ if (HDOSPRAY_INSTALL_DEPENDENCIES)
     #    )
     #endif()
     if (HDOSPRAY_PYTHON_INSTALL_DIR)
-        message("installing python pip packages: ${HDOSPRAY_PYTHON_INSTALL_DIR}")
+        message("installing python directory: ${HDOSPRAY_PYTHON_INSTALL_DIR}")
         install(DIRECTORY ${HDOSPRAY_PYTHON_INSTALL_DIR}/
                 USE_SOURCE_PERMISSIONS
                 DESTINATION ./python
@@ -196,10 +196,23 @@ if (HDOSPRAY_GENERATE_SETUP)
             "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
             )
     else()
+        FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/run_usdview.sh
+            "#!/bin/bash"
+            "export HDOSPRAY_ROOT=$( cd -- \"\$( dirname -- \"\${BASH_SOURCE[0]}\" )\" && pwd )\n"
+            "source ${HDOSPRAY_ROOT}/setup_hdospray.sh"
+            "python ${HDOSPRAY_ROOT}/bin/usdview \$*"
+            )
+        #message("installing into: ${CMAKE_CURRENT_BINARY_DIR}")
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/run_usdview.sh
+            DESTINATION .
+            PERMISSIONS OWNER_EXECUTE OWNER_READ
+                        GROUP_EXECUTE GROUP_READ
+            )
         FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/setup_hdospray.sh
             "#!/bin/bash\n"
             "export HDOSPRAY_ROOT=$( cd -- \"\$( dirname -- \"\${BASH_SOURCE[0]}\" )\" && pwd )\n"
             "export ${LD_EXPORT}=\${HDOSPRAY_ROOT}/lib:\${${LD_EXPORT}}\n"
+            "export ${LD_EXPORT}=\${HDOSPRAY_ROOT}/python/lib:\${${LD_EXPORT}}\n"
             "export PYTHONPATH=\${HDOSPRAY_ROOT}/lib/python:\${PYTHONPATH}\n"
             "export PYTHONPATH=\${HDOSPRAY_ROOT}/python/lib:\${PYTHONPATH}\n"
             "export PYTHONPATH=\${HDOSPRAY_ROOT}/python/site-packages:\${PYTHONPATH}\n"
