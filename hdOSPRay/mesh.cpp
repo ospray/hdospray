@@ -568,6 +568,7 @@ HdOSPRayMesh::_CreateOSPRayMesh(const VtVec2fArray& texcoords,
     if (!_refined) {
         if (useQuads) {
             size_t numQuads = _quadIndices.size() / 4;
+            TF_DEBUG_MSG(OSP, "creating quad mesh of size: %zu\n", numQuads);
             #if HD_API_VERSION < 44
                         numQuads = _quadIndices.size();
             #endif
@@ -577,6 +578,7 @@ HdOSPRayMesh::_CreateOSPRayMesh(const VtVec2fArray& texcoords,
             ospMesh.setParam("index", indices);
 
         } else { // triangles
+            TF_DEBUG_MSG(OSP, "creating tri mesh of size: %zu\n", _triangulatedIndices.size()/3);
             opp::SharedData indices
                    = opp::SharedData(_triangulatedIndices.cdata(), OSP_VEC3UI,
                                      _triangulatedIndices.size());
@@ -628,6 +630,7 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
                                  OSP_UINT, numFaceVertices);
         faces.commit();
         mesh.setParam("face", faces);
+        TF_DEBUG_MSG(OSP, "creating subdiv mesh of size: %zu\n", _topology.GetFaceVertexCounts().size());
     }
     if (numIndices > 0) {
         opp::SharedData indices = opp::SharedData(

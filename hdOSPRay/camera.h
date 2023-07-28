@@ -44,5 +44,5 @@ protected:
     float _horizontalAperture { 20.955f };
     float _verticalAperture { 15.2908f };
     float _focalLength { 0.f };
-    float _focusDistance { 0.f };
+    float _focusDistance { 1.f };
 };

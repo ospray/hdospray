@@ -514,7 +514,7 @@ HdOSPRayRenderPass::DisplayRenderBuffer(RenderFrame& renderBuffer)
     timer.Reset();
     timer.Start();
     TF_DEBUG_MSG(OSP, "display timer: %f\n", time);
-    TF_DEBUG_MSG(OSP, "displayRB %zu\n", _aovBindings.size());
+    TF_DEBUG_MSG(OSP, "displayRB aov bindings %zu\n", _aovBindings.size());
 
     for (int aovIndex = 0; aovIndex < _aovBindings.size(); aovIndex++) {
         auto aovRenderBuffer = dynamic_cast<HdRenderBuffer*>(
@@ -625,13 +625,27 @@ HdOSPRayRenderPass::ProcessCamera(
 
     if (fStop > 0.f)
         aperture = focalLength / fStop / 2.f * .1f;
-    _camera.setParam("focusDistance", focusDistance);
-    _camera.setParam("apertureRadius", aperture);
+    // only set if apterture over epsilon. Ran into issues on windows setting DOF when 0.
+    if (aperture > 1.0e-5) {
+        _camera.setParam("focusDistance", focusDistance);
+        _camera.setParam("apertureRadius", aperture);
+    } else {
+        _camera.setParam("apertureRadius", 0.f);
+        _camera.setParam("focusDistance", 1.f);
+    }
     _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));
     _camera.setParam("direction", vec3f(dir[0], dir[1], dir[2]));
     _camera.setParam("up", vec3f(up[0], up[1], up[2]));
     _camera.setParam("fovy", fov);
     _camera.commit();
+
+    TF_DEBUG_MSG(OSP, "aspect: %f\n", aspect);
+    TF_DEBUG_MSG(OSP, "focusDistance: %f\n", focusDistance);
+    TF_DEBUG_MSG(OSP, "apertureRadius: %f\n", aperture);
+    TF_DEBUG_MSG(OSP, "position: %f %f %f\n", origin[0], origin[1], origin[2]);
+    TF_DEBUG_MSG(OSP, "direction: %f %f %f\n", dir[0], dir[1], dir[2]);
+    TF_DEBUG_MSG(OSP, "up: %f %f %f\n", up[0], up[1], up[2]);
+    TF_DEBUG_MSG(OSP, "fovy: %f\n", fov);
 }
 
 void
@@ -860,7 +874,7 @@ HdOSPRayRenderPass::ProcessInstances()
         hdOSPRayBasisCurves->AddOSPInstances(_oldInstances);
     }
     _oldInstances.emplace_back(_lightsInstance);
-    TF_DEBUG_MSG(OSP, "ospRP::process instances %zu\n",
+    TF_DEBUG_MSG(OSP, "ospRP::num instances %zu\n",
                  _oldInstances.size());
     if (!_oldInstances.empty()) {
         opp::CopiedData data = opp::CopiedData(
