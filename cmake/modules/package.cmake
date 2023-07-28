@@ -197,10 +197,10 @@ if (HDOSPRAY_GENERATE_SETUP)
             )
     else()
         FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/run_usdview.sh
-            "#!/bin/bash"
+            "#!/bin/bash\n"
             "export HDOSPRAY_ROOT=$( cd -- \"\$( dirname -- \"\${BASH_SOURCE[0]}\" )\" && pwd )\n"
-            "source ${HDOSPRAY_ROOT}/setup_hdospray.sh"
-            "python ${HDOSPRAY_ROOT}/bin/usdview \$*"
+            "source \${HDOSPRAY_ROOT}/setup_hdospray.sh\n"
+            "python \${HDOSPRAY_ROOT}/bin/usdview \$*"
             )
         #message("installing into: ${CMAKE_CURRENT_BINARY_DIR}")
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/run_usdview.sh
