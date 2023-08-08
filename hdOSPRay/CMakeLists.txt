@@ -44,13 +44,21 @@ add_library(hdOSPRay SHARED
     plugInfo.json
   )
 
-find_package(ospray 2.5.0 REQUIRED)
-message("hdospray ospray_root: ${OSPRAY_ROOT}")
-find_package(rkcommon 1.6.0 REQUIRED)
-
 set_property(TARGET hdOSPRay PROPERTY CXX_STANDARD 17)
 
 if(USE_HOUDINI_USD)
+  set(HOUDINI_LIB_DIR ${Houdini_DIR}/../../dsolib) 
+  set(HOUDINI_INCLUDE_DIR ${Houdini_DIR}/../include)
+  # houdini target does not include hio, so we create it ourselves
+  add_library(pxr_hio SHARED IMPORTED)
+  set_target_properties(pxr_hio PROPERTIES
+      IMPORTED_LOCATION "${HOUDINI_LIB_DIR}/libpxr_hio${CMAKE_SHARED_LIBRARY_SUFFIX}"
+      INTERFACE_INCLUDE_DIRECTORIES ${HOUDINI_INCLUDE_DIR})
+  if(WIN32)
+      set_target_properties(pxr_hio PROPERTIES
+          IMPORTED_IMPLIB "${HOUDINI_LIB_DIR}/libpxr_${targetName}.lib")
+  endif()
+
   # we build hdOSPRAy against the USD libraries shipped
   # with Houdini 
   target_link_libraries(hdOSPRay PUBLIC
@@ -58,6 +66,7 @@ if(USE_HOUDINI_USD)
     ospray::ospray_sdk
     rkcommon::rkcommon
     Houdini
+    pxr_hio
     )
 else()
   

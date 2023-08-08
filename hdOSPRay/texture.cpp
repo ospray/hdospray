@@ -55,7 +55,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nea
 {
     const auto image = HioImage::OpenForReading(file);
     if (!image) {
-        std::cerr << "#osp: failed to load texture '" + file + "'" << std::endl;
+        TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n", file.c_str());
         return std::pair<opp::Texture, unsigned char*>(nullptr, nullptr);
     }
 
