@@ -53,25 +53,32 @@ cd build_release
 
 echo "build_release dir:"
 pwd
+cp $NAS\packages\apps\usd\win10\houdini-19.5.6bs82\python39\libs/python39.lib .
 echo "ls dir"
 dir
+
+$env:Path += ";$NAS\packages\apps\usd\win10\houdini-19.5.6bs82\python39\libs"
+$env:LIB += ";$NAS\packages\apps\usd\win10\houdini-19.5.682\python39\libs"
+$env:LIBPATH += ";$NAS\packages\apps\usd\win10\houdini-19.5.682\python39\libs"
 
 # Clean out build directory to be sure we are doing a fresh build
 #rm -r -fo *
 
 cmake -L `
   -D ospray_DIR="$NAS_DEP_DIR\ospray-2.12.0.x86_64.windows\lib\cmake\ospray-2.12.0" `
-  -D pxr_DIR="$NAS_DEP_DIR\usd-23.02" `
+  -D Houdini_DIR="$NAS\packages\apps\usd\win10\houdini-19.5.682\toolkit\cmake" `
   -D rkcommon_DIR="$NAS_DEP_DIR\rkcommon\lib\cmake\rkcommon-1.11.0" `
-  -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON `
-  -D HDOSPRAY_GENERATE_SETUP=ON `
-  -D HDOSPRAY_PYTHON_INSTALL_DIR="C:\Program Files\Python38" `
+  -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=OFF `
+  -D HDOSPRAY_INSTALL_PYTHON_DEPENDENCIES=OFF `
+  -D HDOSPRAY_GENERATE_SETUP=OFF `
   -D HDOSPRAY_SIGN_FILE=$env:SIGN_FILE_WINDOWS `
-  -D PYTHON_VERSION=3.8 `
+  -D USE_HOUDINI_USD=ON `
   ..
+  #-D HDOSPRAY_PYTHON_INSTALL_DIR="C:\Program Files\Python38" `
+  #-D PYTHON_VERSION=3.8 `
 
 cmake --build . --config release -j 32
-cmake --build . --config release -j 32 --target PACKAGE
-cpack -G ZIP
+#cmake --build . --config release -j 32 --target PACKAGE
+#cpack -G ZIP
 
 exit $LASTEXITCODE

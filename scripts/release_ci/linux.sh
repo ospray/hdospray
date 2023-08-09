@@ -20,7 +20,7 @@ ls $PWD
 export TBB_ROOT=$DEP_DIR
 export CMAKE_CXX_FLAGS="-std=c++17"
 
-rm -r $DEP_DIR/install
+#rm -r $DEP_DIR/install
 if [ ! -d "$DEP_DIR/install" ]
 then
     mkdir -p $DEP_DIR/install
@@ -46,7 +46,7 @@ cmake -L \
   -D ospray_DIR="$DEP_DIR/install/lib/cmake/ospray-2.12.0" \
   -D pxr_DIR="$DEP_DIR/install" \
   -D rkcommon_DIR="$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.11.0" \
-  -D HDOSPRAY_INSTALL_DEPENDENCIES=ON \
+  -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
   -D HDOSPRAY_GENERATE_SETUP=ON \
   -D HDOSPRAY_PYTHON_PACKAGES_DIR=/usr/local/lib/python3.8/dist-packages \
   -D CMAKE_INSTALL_PREFIX=$ROOT_DIR/build_release \

@@ -5,6 +5,14 @@
 set -x
 cmake --version
 
+echo "NAS:"
+ls /NAS
+echo "/:"
+ls /
+
+echo "env:"
+env
+
 echo "deps: "
 ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps
 echo "deps/usd-23.02/install: "
@@ -34,61 +42,11 @@ if [ -z $CC ]; then
   export CXX=clang++
 fi
 
-mkdir -p $DEP_DIR
-cd $DEP_DIR
-export PATH=$PATH:$DEP_DIR/install/bin
-
-pip3.9 install PySide6
-pip3.9 install PySide6-Addons
-pip3.9 install PySide6-Essentials
-echo "which pyside6-uic:"
-which pyside6-uic
-pip3.9 show PySide6
-echo "site-packages:"
-ls /usr/local/lib/python3.9/site-packages
-echo "site-packages2:"
-ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages
-echo "libexec: "
-ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec
-
-# rebuild dependencies - clear install dir
-# rm -r $DEP_DIR/install
-
 #### Build dependencies ####
 if [ ! -d "$DEP_DIR/install" ]
   then
-  echo "building dependencies"
-
-  mkdir -p /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/bin
-  sw_vers
-  pip3.9 list
-  echo "PATH:"
-  echo $PATH
-  echo "\n\n\nPYTHONPATH:"
-  echo $PYTHONPATH
-  export Python_ROOT_DIR="/usr/local/Frameworks/Python.framework/Versions/3.9"
-  export Python3_ROOT_DIR="/usr/local/Frameworks/Python.framework/Versions/3.9"
-  alias python=/usr/local/bin/python3.9
-  alias python3=/usr/local/bin/python3.9
-  python --version
-  python3 --version
-  /usr/local/bin/python3.9 --version
-  echo "boostjam:"
-  cat USD_Super/build/source/boost/python-config.jam
-  rm -r *
-  export MACOSX_DEPLOYMENT_TARGET=11.7
-  cmake $ROOT_DIR/scripts/superbuild/ -DHDSUPER_PYTHON_VERSION=3.9 \
-    -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DBUILD_OSPRAY=ON \
-    -DBUILD_OSPRAY_ISPC=ON -DBUILD_HDOSPRAY_ISPC=OFF -DBUILD_HDOSPRAY=OFF \
-    -DBUILD_USD=ON -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF \
-    -DBUILD_BOOST=ON -DPYSIDE_BIN_DIR=/Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec \
-    -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF .
-  cmake --build . -j ${THREADS} || exit 2
-
-  echo "install/lib:"
-  ls install/lib
-else
-   echo "using cached dependencies"
+   echo "macosx houdini build requires regular release dependency build"
+   exit 2
 fi
 
 cd $ROOT_DIR
@@ -99,7 +57,9 @@ mkdir -p build_release
 cd build_release
  Clean out build directory to be sure we are doing a fresh build
 rm -rf *
-cmake .. -Dpxr_DIR=$USD_ROOT -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.12.0 \
+cmake .. -DHoudini_DIR=/NAS/packages/apps/usd/macos/houdini-19.5.682/toolkit/cmake \
+         -D USE_HOUDINI_USD=ON \
+         -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.12.0 \
          -Drkcommon_DIR=$USD_ROOT/rkcommon/lib/cmake/rkcommon-1.11.0 \
          -DOpenImageDenoise_DIR=$USD_ROOT/oidn/lib/cmake/OpenImageDenoise-1.4.3 \
          -DTBB_DIR=$USD_ROOT/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \

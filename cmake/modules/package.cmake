@@ -2,80 +2,80 @@
 ## SPDX-License-Identifier: Apache-2.0
 
 # packaging dependencies
-option(HDOSPRAY_INSTALL_DEPENDENCIES "copy usd and ospray files to install dir" OFF)
-if (HDOSPRAY_INSTALL_DEPENDENCIES)
-    #find_package(PythonLibs)
-    if (${PYTHON_VERSION})
-      find_package(Python ${PYTHON_VERSION} EXACT REQUIRED)
-    else()
-      find_package(Python 3.0 REQUIRED)
-    endif()
-    message("Python_LIBRARIES: ${Python_LIBRARIES}")
-    message("Python3_LIBRARIES: ${Python3_LIBRARIES}")
-    message("Python_EXECUTABLE: ${Python_EXECUTABLE}")
-    message("Python_EXECUTABLE: ${Python3_EXECUTABLE}")
-    message("Python_LIBRARY_DIRS: ${Python_LIBRARY_DIRS}")
-    message("Python_RUNTIME_LIBRARY_DIRS: ${Python_RUNTIME_LIBRARY_DIRS}")
-    set(PythonLib ${Python_LIBRARIES})
-    if(NOT PythonLib)
-        set(PythonLib ${Python3_LIBRARIES})
-    endif()
-    message("PythonLib: ${PythonLib}")
-    get_filename_component(PythonLibDir ${PythonLib} DIRECTORY)
-    get_filename_component(PythonBinDir ${Python_EXECUTABLE} DIRECTORY)
-    if (WIN32)
-        file(GLOB pythonLibs ${PythonLibDir}/python*)
-    else()
-        file(GLOB pythonLibs ${PythonLibDir}/libpython*)
-    endif()
-    file(GLOB pythonBins ${PythonBinDir}/python*)
-    message("installing python libs: ${pythonLibs}")
-    message("found python executable: \"${Python_EXECUTABLE}\"")
-    message("found python executable2: \"${PYTHON_EXECUTABLE}\"")
-    message("python runtime: \"${Python_RUNTIME_LIBRARY_DIRS}\"")
-    message("python include: \"${Python_INCLUDE_DIRS}\"")
-    message("found python bins: ${pythonBins}")
-    if (HDOSPRAY_PYTHON_PACKAGES_DIR) # pip packages directory
-        message("python pip packages: ${HDOSPRAY_PYTHON_PACKAGES_DIR}")
-        install(DIRECTORY ${HDOSPRAY_PYTHON_PACKAGES_DIR}/
-                USE_SOURCE_PERMISSIONS
-                DESTINATION ./python/site-packages
-        )
-    endif()
-    #if (NOT WIN32)
-    #    install(DIRECTORY /usr/lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}
-    #            USE_SOURCE_PERMISSIONS
-    #            DESTINATION ./python/lib/.
-    #    )
-    #endif()
-    if (HDOSPRAY_PYTHON_INSTALL_DIR)
-        message("installing python directory: ${HDOSPRAY_PYTHON_INSTALL_DIR}")
-        install(DIRECTORY ${HDOSPRAY_PYTHON_INSTALL_DIR}/
-                USE_SOURCE_PERMISSIONS
-                DESTINATION ./python
-        )
-    else()
-      install(FILES ${pythonLibs}
-            DESTINATION ./python/lib)
-      install(FILES ${pythonBins}
-            DESTINATION ./python/bin)
-    endif()
-    install(DIRECTORY ${pxr_DIR}/include
-            USE_SOURCE_PERMISSIONS
-            DESTINATION .
-    )
-    install(DIRECTORY ${pxr_DIR}/lib
-            USE_SOURCE_PERMISSIONS
-            DESTINATION .
-    )
-    install(DIRECTORY ${pxr_DIR}/bin
-            USE_SOURCE_PERMISSIONS
-            DESTINATION .
-    )
-    install(DIRECTORY ${pxr_DIR}/plugin
-            USE_SOURCE_PERMISSIONS
-            DESTINATION .
-    )
+option(HDOSPRAY_INSTALL_USD_DEPENDENCIES "copy usd files to install dir" OFF)
+option(HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES "copy ospray files to install dir" OFF)
+option(HDOSPRAY_INSTALL_PYTHON_DEPENDENCIES "copy python to install dir" OFF)
+if (HDOSPRAY_INSTALL_PYTHON_DEPENDENCIES)
+  #find_package(PythonLibs)
+  if (${PYTHON_VERSION})
+    find_package(Python ${PYTHON_VERSION} EXACT REQUIRED)
+  else()
+    find_package(Python 3.0 REQUIRED)
+  endif()
+  message("Python_LIBRARIES: ${Python_LIBRARIES}")
+  message("Python3_LIBRARIES: ${Python3_LIBRARIES}")
+  message("Python_EXECUTABLE: ${Python_EXECUTABLE}")
+  message("Python_EXECUTABLE: ${Python3_EXECUTABLE}")
+  message("Python_LIBRARY_DIRS: ${Python_LIBRARY_DIRS}")
+  message("Python_RUNTIME_LIBRARY_DIRS: ${Python_RUNTIME_LIBRARY_DIRS}")
+  set(PythonLib ${Python_LIBRARIES})
+  if(NOT PythonLib)
+      set(PythonLib ${Python3_LIBRARIES})
+  endif()
+  message("PythonLib: ${PythonLib}")
+  get_filename_component(PythonLibDir ${PythonLib} DIRECTORY)
+  get_filename_component(PythonBinDir ${Python_EXECUTABLE} DIRECTORY)
+  if (WIN32)
+      file(GLOB pythonLibs ${PythonLibDir}/python*)
+  else()
+      file(GLOB pythonLibs ${PythonLibDir}/libpython*)
+  endif()
+  file(GLOB pythonBins ${PythonBinDir}/python*)
+  message("installing python libs: ${pythonLibs}")
+  message("found python executable: \"${Python_EXECUTABLE}\"")
+  message("found python executable2: \"${PYTHON_EXECUTABLE}\"")
+  message("python runtime: \"${Python_RUNTIME_LIBRARY_DIRS}\"")
+  message("python include: \"${Python_INCLUDE_DIRS}\"")
+  message("found python bins: ${pythonBins}")
+  if (HDOSPRAY_PYTHON_PACKAGES_DIR) # pip packages directory
+      message("python pip packages: ${HDOSPRAY_PYTHON_PACKAGES_DIR}")
+      install(DIRECTORY ${HDOSPRAY_PYTHON_PACKAGES_DIR}/
+              USE_SOURCE_PERMISSIONS
+              DESTINATION ./python/site-packages
+      )
+  endif()
+  if (HDOSPRAY_PYTHON_INSTALL_DIR)
+      message("installing python directory: ${HDOSPRAY_PYTHON_INSTALL_DIR}")
+      install(DIRECTORY ${HDOSPRAY_PYTHON_INSTALL_DIR}/
+              USE_SOURCE_PERMISSIONS
+              DESTINATION ./python
+      )
+  else()
+    install(FILES ${pythonLibs}
+          DESTINATION ./python/lib)
+    install(FILES ${pythonBins}
+          DESTINATION ./python/bin)
+  endif()
+endif()
+if (HDOSPRAY_INSTALL_USD_DEPENDENCIES)
+  install(DIRECTORY ${pxr_DIR}/include
+          USE_SOURCE_PERMISSIONS
+          DESTINATION .
+  )
+  install(DIRECTORY ${pxr_DIR}/lib
+          USE_SOURCE_PERMISSIONS
+          DESTINATION .
+  )
+  install(DIRECTORY ${pxr_DIR}/bin
+          USE_SOURCE_PERMISSIONS
+          DESTINATION .
+  )
+  install(DIRECTORY ${pxr_DIR}/plugin
+          USE_SOURCE_PERMISSIONS
+          DESTINATION .
+  )
+endif()
+if (HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES)
     install(DIRECTORY ${OSPRAY_ROOT}/include
             USE_SOURCE_PERMISSIONS
             DESTINATION .
@@ -166,10 +166,6 @@ endif()
 
 option(HDOSPRAY_GENERATE_SETUP "generate setup file for hdospray" OFF)
 if (HDOSPRAY_GENERATE_SETUP)
-  set(LD_EXPORT "LD_LIBRARY_PATH")
-  if (APPLE)
-    set(LD_EXPORT "DYLD_LIBRARY_PATH")
-  endif()
   if (WIN32)
     FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/setup_hdospray.ps1
         "\$env:PYTHONPATH += \";\$PSScriptRoot\\lib\\python\"\n"
@@ -185,6 +181,10 @@ if (HDOSPRAY_GENERATE_SETUP)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/setup_hdospray.ps1
             DESTINATION .)
   else()
+    set(LD_EXPORT "LD_LIBRARY_PATH")
+    if (APPLE)
+      set(LD_EXPORT "DYLD_LIBRARY_PATH")
+    endif()
     if (HDSUPER_USE_HOUDINI)
         FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/setup_hdospray.sh
             "#!/bin/bash\n"
