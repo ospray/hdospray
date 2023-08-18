@@ -79,7 +79,6 @@ public:
         }
     };
 
-    virtual void DisplayRenderBuffer(RenderFrame& renderFrame);
 
     void SetAovBindings(HdRenderPassAovBindingVector const& aovBindings);
 
@@ -99,10 +98,12 @@ protected:
     virtual void _MarkCollectionDirty() override;
 
     virtual void
-    ProcessCamera(HdRenderPassStateSharedPtr const& renderPassState);
-    virtual void ProcessLights();
-    virtual void ProcessSettings();
-    virtual void ProcessInstances();
+    _ProcessCamera(HdRenderPassStateSharedPtr const& renderPassState);
+    virtual void _ProcessLights();
+    virtual void _ProcessSettings();
+    virtual void _ProcessInstances();
+    virtual void _CopyFrameBuffer(HdRenderPassStateSharedPtr const& renderPassState);
+    virtual void _DisplayRenderBuffer(RenderFrame& renderFrame);
 
 private:
     /// @brief  helper function to write data into a renderbuffer
@@ -176,6 +177,7 @@ private:
     bool _hasInstId { false };
     float _currentFrameBufferScale { 1.0f };
     float _interactiveFrameBufferScale { 2.0f };
+    float _newInteractiveFrameBufferScale { 2.0f }; // to be updated next new generation
     float _interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
 
     opp::Renderer _renderer;

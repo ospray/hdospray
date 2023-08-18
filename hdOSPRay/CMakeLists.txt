@@ -57,11 +57,7 @@ if(USE_HOUDINI_USD)
     set_target_properties(pxr_hio PROPERTIES
         IMPORTED_LOCATION "${HOUDINI_LIB_DIR}/libpxr_hio${CMAKE_SHARED_LIBRARY_SUFFIX}"
         INTERFACE_INCLUDE_DIRECTORIES ${HOUDINI_INCLUDE_DIR})
-    #if(WIN32)
-    #    set_target_properties(pxr_hio PROPERTIES
-    #        IMPORTED_IMPLIB "${HOUDINI_LIB_DIR}/libpxr_${targetName}.lib")
-    #endif()
-    set(HOUDINI_CUSTOM_TAGETS pxr_hio)
+    set(HOUDINI_CUSTOM_TARGETS pxr_hio)
   endif()
 
   # we build hdOSPRAy against the USD libraries shipped
