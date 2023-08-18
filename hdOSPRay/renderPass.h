@@ -201,6 +201,8 @@ private:
     unsigned int _height { 0 };
 
     opp::Camera _camera;
+    GfVec3f _cameraDir { 0.f, 0.f, -1.f };
+    GfVec3f _cameraOrigin { 0.f, 0.f, 1.f };
 
     // camera space to world space
     GfMatrix4d _inverseViewMatrix;

@@ -284,6 +284,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _CopyFrameBuffer(renderPassState);
 
         _DisplayRenderBuffer(_currentFrame);
+        _numSamplesAccumulated += std::max(1, _spp);
 
         // estimating scaling factor for interactive rendering based on
         // the current FPS and a given targetFPS
@@ -401,9 +402,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     if (!IsConverged()) {
         _currentFrame.osprayFrame
                = frameBuffer.renderFrame(_renderer, _camera, _world);
-        if (!_interacting)
-            _numSamplesAccumulated += std::max(1, _spp);
-        else {
+        if (_interacting) {
             _currentFrame.osprayFrame.wait();
             _CopyFrameBuffer(renderPassState);
             _DisplayRenderBuffer(_currentFrame);
@@ -446,7 +445,9 @@ HdOSPRayRenderPass::_DisplayRenderBuffer(RenderFrame& renderBuffer)
                    tbb::blocked_range<int>(0, renderBuffer.width * renderBuffer.height),
                    [&](tbb::blocked_range<int> r) {
                        for (int pIdx = r.begin(); pIdx < r.end(); ++pIdx) {
-                        renderBuffer.colorBuffer[pIdx].w = 1.f;
+                        // denoiser in ospray 2.12 causes alpha to go to 0
+                        if (_denoiserState)
+                            renderBuffer.colorBuffer[pIdx].w = 1.f;
                        }
                    });
             _writeRenderBuffer<float>(ospRenderBuffer, renderBuffer,
@@ -516,6 +517,8 @@ HdOSPRayRenderPass::_ProcessCamera(
     origin = _inverseViewMatrix.Transform(origin);
     dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
     up = _inverseViewMatrix.TransformDir(up).GetNormalized();
+    _cameraDir = dir;
+    _cameraOrigin = origin;
 
     float aspect = _width / float(_height);
     _camera.setParam("aspect", aspect);
@@ -872,21 +875,19 @@ void HdOSPRayRenderPass::_CopyFrameBuffer(HdRenderPassStateSharedPtr const& rend
                 }
                 if (_hasDepth) {
                     // convert depth to clip space
-                    double pm[4][4];
-                    renderPassState->GetProjectionMatrix().Get(pm);
-                    const float m1 = pm[2][2];
-                    const float m2 = pm[3][2];
-                    const float dnear = m2 / (m1 - 1.f);
-                    const float dfar = m2 / (m1 + 1.f);
-                    const float diff = (dfar - dnear);
+                    const auto viewMatrix = renderPassState->GetWorldToViewMatrix();
+                    const auto projMatrix = renderPassState->GetProjectionMatrix();
+
                     tbb::parallel_for(
                             tbb::blocked_range<int>(0, frameSize),
                             [&](tbb::blocked_range<int> r) {
                                 for (int i = r.begin(); i < r.end();
                                     ++i) {
                                     float& d = depth[i];
-                                    d = clamp((d - dnear) / diff, 0.f,
-                                                1.f);
+                                    auto v = GfVec3f(0.f, 0.f, _cameraOrigin[2] + d * _cameraDir[2]);
+                                    v = viewMatrix.Transform(v);
+                                    v = projMatrix.Transform(v);
+                                    d = (v[2] + 1.f) / 2.f;
                                 }
                             });
 
