@@ -146,23 +146,6 @@ HdOSPRayRenderDelegate::_Initialize()
            { "ambientLight", HdOSPRayRenderSettingsTokens->ambientLight,
              VtValue(bool(HdOSPRayConfig::GetInstance().ambientLight)) });
     _settingDescriptors.push_back(
-           { "staticDirectionalLights",
-             HdOSPRayRenderSettingsTokens->staticDirectionalLights,
-             VtValue(bool(
-                    HdOSPRayConfig::GetInstance().staticDirectionalLights)) });
-    _settingDescriptors.push_back(
-           { "eyeLight", HdOSPRayRenderSettingsTokens->eyeLight,
-             VtValue(bool(HdOSPRayConfig::GetInstance().eyeLight)) });
-    _settingDescriptors.push_back(
-           { "keyLight", HdOSPRayRenderSettingsTokens->keyLight,
-             VtValue(bool(HdOSPRayConfig::GetInstance().keyLight)) });
-    _settingDescriptors.push_back(
-           { "fillLight", HdOSPRayRenderSettingsTokens->fillLight,
-             VtValue(bool(HdOSPRayConfig::GetInstance().fillLight)) });
-    _settingDescriptors.push_back(
-           { "backLight", HdOSPRayRenderSettingsTokens->backLight,
-             VtValue(bool(HdOSPRayConfig::GetInstance().backLight)) });
-    _settingDescriptors.push_back(
            { "tmp_enabled", HdOSPRayRenderSettingsTokens->tmp_enabled,
              VtValue(bool(HdOSPRayConfig::GetInstance().tmp_enabled)) });
     _settingDescriptors.push_back(

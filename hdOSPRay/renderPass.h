@@ -233,10 +233,6 @@ private:
     int _lightSamples { -1 };
     bool _staticDirectionalLights { true };
     bool _ambientLight { true };
-    bool _eyeLight { true };
-    bool _keyLight { true };
-    bool _fillLight { true };
-    bool _backLight { true };
 
     int _maxDepth { HDOSPRAY_DEFAULT_MAX_DEPTH };
     int _russianRouletteStartDepth { HDOSPRAY_DEFAULT_RR_START_DEPTH };

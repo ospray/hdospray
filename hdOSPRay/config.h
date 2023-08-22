@@ -138,31 +138,6 @@ public:
     /// Override with *HDOSPRAY_AMBIENT_LIGHT*.
     bool ambientLight { false };
 
-    ///  Use an eye light
-    ///
-    /// Override with *HDOSPRAY_STATIC_DIRECTIONAL_LIGHTS*.
-    bool staticDirectionalLights { false };
-
-    ///  Use an eye light
-    ///
-    /// Override with *HDOSPRAY_EYE_LIGHT*.
-    bool eyeLight { false };
-
-    ///  Use a key light
-    ///
-    /// Override with *HDOSPRAY_KEY_LIGHT*.
-    bool keyLight { false };
-
-    ///  Use a fill light
-    ///
-    /// Override with *HDOSPRAY_FILL_LIGHT*.
-    bool fillLight { false };
-
-    ///  Use a back light
-    ///
-    /// Override with *HDOSPRAY_BACK_LIGHT*.
-    bool backLight { false };
-
     /// Tonemapper parameters
     ///
     /// Override with HDOSPRAY_TMP_*

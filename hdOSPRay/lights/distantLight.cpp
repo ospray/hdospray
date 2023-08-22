@@ -56,7 +56,8 @@ HdOSPRayDistantLight::_PrepareOSPLight()
         direction.Normalize();
     }
 
-    _ospLight = opp::Light("distant");
+    if (!_ospLight)
+        _ospLight = opp::Light("distant");
     // placement
     _ospLight.setParam("direction",
                        vec3f(direction[0], direction[1], direction[2]));

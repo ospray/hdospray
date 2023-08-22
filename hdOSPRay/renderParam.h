@@ -72,8 +72,8 @@ public:
         std::lock_guard<std::mutex> lock(_ospMutex);
         if (_hdOSPRayLights.find(id) == _hdOSPRayLights.end()) {
             _hdOSPRayLights[id] = hdOsprayLight;
-            UpdateLightVersion();
         }
+        UpdateLightVersion();
     }
 
     void RemoveHdOSPRayLight(const SdfPath& id)

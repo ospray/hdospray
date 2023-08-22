@@ -591,67 +591,10 @@ HdOSPRayRenderPass::_ProcessLights()
             lights.push_back(l.second->GetOSPLight());
     }
 
-    float glToPTLightIntensityMultiplier = 1.f;
-    if (_eyeLight || _keyLight || _fillLight || _backLight)
-        glToPTLightIntensityMultiplier /= 1.8f;
-
-    if (_eyeLight) {
-        auto eyeLight = opp::Light("distant");
-        eyeLight.setParam("color", vec3f(1.f, 232.f / 255.f, 166.f / 255.f));
-        eyeLight.setParam("direction",
-                          vec3f(dir_light[0], dir_light[1], dir_light[2]));
-        eyeLight.setParam("intensity", glToPTLightIntensityMultiplier);
-        eyeLight.setParam("visible", false);
-        eyeLight.commit();
-        lights.push_back(eyeLight);
-    }
-    const float angularDiameter = 4.5f;
-    if (_keyLight) {
-        auto keyLight = opp::Light("distant");
-        auto keyHorz = -1.0f / tan(rad(45.0f)) * right_light;
-        auto keyVert = 1.0f / tan(rad(70.0f)) * up_light;
-        auto lightDir = -(keyVert + keyHorz);
-        keyLight.setParam("color", vec3f(.8f, .8f, .8f));
-        keyLight.setParam("direction",
-                          vec3f(lightDir[0], lightDir[1], lightDir[2]));
-        keyLight.setParam("intensity", glToPTLightIntensityMultiplier * 1.3f);
-        keyLight.setParam("angularDiameter", angularDiameter);
-        keyLight.setParam("visible", false);
-        keyLight.commit();
-        lights.push_back(keyLight);
-    }
-    if (_fillLight) {
-        auto fillLight = opp::Light("distant");
-        auto fillHorz = 1.0f / tan(rad(30.0f)) * right_light;
-        auto fillVert = 1.0f / tan(rad(45.0f)) * up_light;
-        auto lightDir = (fillVert + fillHorz);
-        fillLight.setParam("color", vec3f(.6f, .6f, .6f));
-        fillLight.setParam("direction",
-                           vec3f(lightDir[0], lightDir[1], lightDir[2]));
-        fillLight.setParam("intensity", glToPTLightIntensityMultiplier);
-        fillLight.setParam("angularDiameter", angularDiameter);
-        fillLight.setParam("visible", false);
-        fillLight.commit();
-        lights.push_back(fillLight);
-    }
-    if (_backLight) {
-        auto backLight = opp::Light("distant");
-        auto backHorz = 1.0f / tan(rad(60.0f)) * right_light;
-        auto backVert = -1.0f / tan(rad(60.0f)) * up_light;
-        auto lightDir = (backHorz + backVert);
-        backLight.setParam("color", vec3f(.6f, .6f, .6f));
-        backLight.setParam("direction",
-                           vec3f(lightDir[0], lightDir[1], lightDir[2]));
-        backLight.setParam("intensity", glToPTLightIntensityMultiplier);
-        backLight.setParam("angularDiameter", angularDiameter);
-        backLight.setParam("visible", false);
-        backLight.commit();
-        lights.push_back(backLight);
-    }
     if (_ambientLight || lights.empty()) {
         auto ambient = opp::Light("ambient");
         ambient.setParam("color", vec3f(1.f, 1.f, 1.f));
-        ambient.setParam("intensity", glToPTLightIntensityMultiplier * 0.5f);
+        ambient.setParam("intensity", 0.9f);
         ambient.setParam("visible", false);
         ambient.commit();
         lights.push_back(ambient);
@@ -749,31 +692,10 @@ HdOSPRayRenderPass::_ProcessSettings()
 
     bool ambientLight = renderDelegate->GetRenderSetting<bool>(
            HdOSPRayRenderSettingsTokens->ambientLight, false);
-    // default static ospray directional lights
-    bool staticDirectionalLights = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->staticDirectionalLights, false);
-    // eye, key, fill, and back light are copied from USD GL (Storm)
-    // defaults.
-    bool eyeLight = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->eyeLight, false);
-    bool keyLight = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->keyLight, false);
-    bool fillLight = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->fillLight, false);
-    bool backLight = renderDelegate->GetRenderSetting<bool>(
-           HdOSPRayRenderSettingsTokens->backLight, false);
 
     // checks if the lighting in the scene changed
-    if (ambientLight != _ambientLight
-        || staticDirectionalLights != _staticDirectionalLights
-        || eyeLight != _eyeLight || keyLight != _keyLight
-        || fillLight != _fillLight || backLight != _backLight) {
+    if (ambientLight != _ambientLight) {
         _ambientLight = ambientLight;
-        _staticDirectionalLights = staticDirectionalLights;
-        _eyeLight = eyeLight;
-        _keyLight = keyLight;
-        _fillLight = fillLight;
-        _backLight = backLight;
         _pendingLightUpdate = true;
         _pendingResetImage = true;
     }
