@@ -26,11 +26,16 @@ then
     exit 2
 fi
 
+echo "ospray install dirs: "
+ls $DEP_DIR/install/ospray/lib
+ls $DEP_DIR/install/ospray/bin
+ls $DEP_DIR/install/ospray/include
+
 cd $ROOT_DIR
 mkdir -p build_release
 cd build_release
 cmake -L \
-  -D ospray_DIR="$DEP_DIR/install/lib/cmake/ospray-2.12.0" \
+  -D ospray_DIR="$DEP_DIR/install/ospray/lib/cmake/ospray-2.12.0" \
   -D rkcommon_DIR="$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.11.0" \
   -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
   -D HDOSPRAY_GENERATE_SETUP=ON \

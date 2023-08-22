@@ -4,7 +4,7 @@
 set(CMAKE_CXX_STANDARD 17)
 
 # Add a relative target path to the HDOSPRAY_RPATH.
-function(_add_target_to_rpath CURRENT_RPATH target)  
+function(_add_target_to_rpath CURRENT_RPATH target)
   get_target_property(LIBRARY_FILE ${target} LOCATION)
 
   get_filename_component(LIBRARY_PATH ${LIBRARY_FILE} DIRECTORY)
@@ -16,6 +16,19 @@ function(_add_target_to_rpath CURRENT_RPATH target)
   )
   set (HDOSPRAY_RPATH "${CURRENT_RPATH}:$ORIGIN/${LIBRARY_PATH_REL}" PARENT_SCOPE)
 endfunction()
+
+find_package(ospray 2.11.0 REQUIRED)
+find_package(rkcommon 1.11.0 REQUIRED)
+
+option(USE_HOUDINI_USD "use Houdini USD" OFF)
+
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+if(USE_HOUDINI_USD)
+  include(houdini)
+else()
+	FIND_PACKAGE(pxr CONFIG REQUIRED)
+endif()
 
 add_library(hdOSPRay SHARED
     config.cpp
@@ -47,21 +60,6 @@ add_library(hdOSPRay SHARED
 set_property(TARGET hdOSPRay PROPERTY CXX_STANDARD 17)
 
 if(USE_HOUDINI_USD)
-  # houdini target on linux does not include hio, so we create it ourselves
-  if (WIN32)
-  elseif (APPLE)
-  else ()
-    set(HOUDINI_LIB_DIR ${Houdini_DIR}/../../dsolib) 
-    set(HOUDINI_INCLUDE_DIR ${Houdini_DIR}/../include)
-    add_library(pxr_hio SHARED IMPORTED)
-    set_target_properties(pxr_hio PROPERTIES
-        IMPORTED_LOCATION "${HOUDINI_LIB_DIR}/libpxr_hio${CMAKE_SHARED_LIBRARY_SUFFIX}"
-        INTERFACE_INCLUDE_DIRECTORIES ${HOUDINI_INCLUDE_DIR})
-    set(HOUDINI_CUSTOM_TARGETS pxr_hio)
-  endif()
-
-  # we build hdOSPRAy against the USD libraries shipped
-  # with Houdini 
   target_link_libraries(hdOSPRay PUBLIC
     ospray::ospray
     ospray::ospray_sdk
@@ -70,7 +68,6 @@ if(USE_HOUDINI_USD)
     ${HOUDINI_CUSTOM_TARGETS}
     )
 else()
-  
   target_include_directories(hdOSPRay PUBLIC ${PXR_INCLUDE_DIRS})
   target_link_libraries(hdOSPRay PUBLIC
     ospray::ospray
@@ -78,7 +75,6 @@ else()
     rkcommon::rkcommon
     ${PXR_LIBRARIES}
     )
-
 endif()
 
 hdospray_sign_target(hdOSPRay)

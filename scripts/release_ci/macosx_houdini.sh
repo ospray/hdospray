@@ -26,10 +26,11 @@ echo "done"
 #### Set variables for script ####
 
 ROOT_DIR=$PWD
-DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.02
+DEP_DIR=$ROOT_DIR/../hdospray_deps
 THREADS=`sysctl -n hw.logicalcpu`
 #USD_ROOT=$STORAGE_PATH/packages/apps/usd/macos/build-hdospray-superbuild
-USD_ROOT=$DEP_DIR/install
+USD_ROOT=$DEP_DIR/usd-23.02/install
+HOUDINI_ROOT=$DEP_DIR/houdini-19.5.682
 
 echo $PWD
 
@@ -43,10 +44,15 @@ if [ -z $CC ]; then
 fi
 
 #### Build dependencies ####
-if [ ! -d "$DEP_DIR/install" ]
+if [ ! -d "$USD_ROOT" ]
   then
    echo "macosx houdini build requires regular release dependency build"
    exit 2
+fi
+
+if [ ! -d "$HOUDINI_ROOT" ]
+  then
+    cp -r /NAS/packages/apps/usd/macos/houdini-19.5.682 $HOUDINI_ROOT
 fi
 
 cd $ROOT_DIR
@@ -57,7 +63,7 @@ mkdir -p build_release
 cd build_release
  Clean out build directory to be sure we are doing a fresh build
 rm -rf *
-cmake .. -DHoudini_DIR=/NAS/packages/apps/usd/macos/houdini-19.5.682/toolkit/cmake \
+cmake .. -D Houdini_DIR=$HOUDINI_ROOT \
          -D USE_HOUDINI_USD=ON \
          -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.12.0 \
          -Drkcommon_DIR=$USD_ROOT/rkcommon/lib/cmake/rkcommon-1.11.0 \

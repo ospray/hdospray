@@ -1,6 +1,8 @@
 ## Copyright 2009 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
+set(OSPRAY_ROOT ${ospray_DIR}/../../../)
+
 # packaging dependencies
 option(HDOSPRAY_INSTALL_USD_DEPENDENCIES "copy usd files to install dir" OFF)
 option(HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES "copy ospray files to install dir" OFF)
@@ -76,6 +78,7 @@ if (HDOSPRAY_INSTALL_USD_DEPENDENCIES)
   )
 endif()
 if (HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES)
+  message("installing ospray_root: ${OSPRAY_ROOT}")
     install(DIRECTORY ${OSPRAY_ROOT}/include
             USE_SOURCE_PERMISSIONS
             DESTINATION .
