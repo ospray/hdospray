@@ -37,7 +37,8 @@ cd build_release
 cmake -L \
   -D ospray_DIR="$DEP_DIR/install/ospray/lib/cmake/ospray-2.12.0" \
   -D rkcommon_DIR="$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.11.0" \
-  -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
+  -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=OFF \
+  -D HDOSPRAY_INSTALL_USD_DEPENDENCIES=ON \
   -D HDOSPRAY_GENERATE_SETUP=ON \
   -D CMAKE_INSTALL_PREFIX=$ROOT_DIR/build_release \
   -D USE_HOUDINI_USD=ON \
