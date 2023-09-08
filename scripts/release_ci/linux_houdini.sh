@@ -35,10 +35,10 @@ cd $ROOT_DIR
 mkdir -p build_release
 cd build_release
 cmake -L \
-  -D ospray_DIR="$DEP_DIR/install/ospray/lib/cmake/ospray-2.12.0" \
+  -D ospray_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-2.12.0.x86_64.linux/lib/cmake/ospray-2.12.0" \
   -D rkcommon_DIR="$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.11.0" \
-  -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=OFF \
-  -D HDOSPRAY_INSTALL_USD_DEPENDENCIES=ON \
+  -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
+  -D HDOSPRAY_INSTALL_USD_DEPENDENCIES=OFF \
   -D HDOSPRAY_GENERATE_SETUP=ON \
   -D CMAKE_INSTALL_PREFIX=$ROOT_DIR/build_release \
   -D USE_HOUDINI_USD=ON \

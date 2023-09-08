@@ -199,18 +199,20 @@ if (HDOSPRAY_GENERATE_SETUP)
             "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
             )
     else()
-        FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/run_usdview.sh
-            "#!/bin/bash\n"
-            "export HDOSPRAY_ROOT=$( cd -- \"\$( dirname -- \"\${BASH_SOURCE[0]}\" )\" && pwd )\n"
-            "source \${HDOSPRAY_ROOT}/setup_hdospray.sh\n"
-            "python \${HDOSPRAY_ROOT}/bin/usdview \$*"
-            )
-        #message("installing into: ${CMAKE_CURRENT_BINARY_DIR}")
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/run_usdview.sh
-            DESTINATION .
-            PERMISSIONS OWNER_EXECUTE OWNER_READ
-                        GROUP_EXECUTE GROUP_READ
-            )
+        if (HDOSPRAY_INSTALL_USD_DEPENDENCIES)
+          FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/run_usdview.sh
+              "#!/bin/bash\n"
+              "export HDOSPRAY_ROOT=$( cd -- \"\$( dirname -- \"\${BASH_SOURCE[0]}\" )\" && pwd )\n"
+              "source \${HDOSPRAY_ROOT}/setup_hdospray.sh\n"
+              "python \${HDOSPRAY_ROOT}/bin/usdview \$*"
+              )
+          #message("installing into: ${CMAKE_CURRENT_BINARY_DIR}")
+          install(FILES ${CMAKE_CURRENT_BINARY_DIR}/run_usdview.sh
+              DESTINATION .
+              PERMISSIONS OWNER_EXECUTE OWNER_READ
+                          GROUP_EXECUTE GROUP_READ
+              )
+        endif()
         FILE(WRITE ${CMAKE_CURRENT_BINARY_DIR}/setup_hdospray.sh
             "#!/bin/bash\n"
             "export HDOSPRAY_ROOT=$( cd -- \"\$( dirname -- \"\${BASH_SOURCE[0]}\" )\" && pwd )\n"

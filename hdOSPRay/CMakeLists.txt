@@ -17,8 +17,10 @@ function(_add_target_to_rpath CURRENT_RPATH target)
   set (HDOSPRAY_RPATH "${CURRENT_RPATH}:$ORIGIN/${LIBRARY_PATH_REL}" PARENT_SCOPE)
 endfunction()
 
-find_package(ospray 2.11.0 REQUIRED)
-find_package(rkcommon 1.11.0 REQUIRED)
+find_package(ospray 2.11.0 REQUIRED
+  PATHS ${ospray_DIR})
+find_package(rkcommon 1.11.0 REQUIRED
+  PATHS ${rkcommon_DIR})
 
 option(USE_HOUDINI_USD "use Houdini USD" OFF)
 
