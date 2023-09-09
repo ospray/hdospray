@@ -50,10 +50,16 @@ if [ ! -d "$USD_ROOT" ]
    exit 2
 fi
 
+rm -rf $HOUDINI_ROOT
 if [ ! -d "$HOUDINI_ROOT" ]
   then
     cp -r /NAS/packages/apps/usd/macos/houdini-19.5.682 $HOUDINI_ROOT
 fi
+# houdini framework seems to reference incorrect library locations
+ln -s $HOUDINI_ROOT/Libraries $HOUDINI_ROOT/Frameworks/Houdini.framework/Versions/19.5/Libraries
+
+echo "houdini_root:"
+ls $HOUDINI_ROOT
 
 cd $ROOT_DIR
 
@@ -61,9 +67,9 @@ cd $ROOT_DIR
 
 mkdir -p build_release
 cd build_release
- Clean out build directory to be sure we are doing a fresh build
+# Clean out build directory to be sure we are doing a fresh build
 rm -rf *
-cmake .. -D Houdini_DIR=$HOUDINI_ROOT \
+cmake .. -D Houdini_DIR=$HOUDINI_ROOT/Resources/toolkit/cmake/ \
          -D USE_HOUDINI_USD=ON \
          -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.12.0 \
          -Drkcommon_DIR=$USD_ROOT/rkcommon/lib/cmake/rkcommon-1.11.0 \
@@ -73,9 +79,11 @@ cmake .. -D Houdini_DIR=$HOUDINI_ROOT \
          -D HDOSPRAY_GENERATE_SETUP=ON \
          -D HDOSPRAY_PYTHON_INSTALL_DIR=/Users/github-runner/Library/Python/3.9 \
          -DHDOSPRAY_SIGN_FILE=$SIGN_FILE_MAC || exit 2
-cmake --build . -j ${THREADS} || exit 2
 
 # set release and installer settings
 # create installers
 make -j $THREADS package || exit 2
-cpack -G ZIP || exit 2
+cmake -L -D HDOSPRAY_ZIP_MODE=ON .
+make -j $THREADS package || exit 2
+# make -j $THREADS package || exit 2
+# cpack -G ZIP || exit 2

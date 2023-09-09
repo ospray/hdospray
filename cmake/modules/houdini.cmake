@@ -1,9 +1,13 @@
 
 find_package(Houdini CONFIG REQUIRED
-    PATH_SUFFIXES toolkit/cmake)
+    PATH_SUFFIXES toolkit/cmake
+                  Resources/toolkit/cmake/)
 message("Houdini_DIR: ${Houdini_DIR}")
 
 set(Houdini_ROOT ${Houdini_DIR}/../../)
+if (APPLE)
+    set(Houdini_ROOT ${Houdini_DIR}/../../..)
+endif()
 # we build hdOSPRAy against Houdinis USD
 
 if (WIN32)
@@ -87,6 +91,85 @@ if (WIN32)
     target_link_libraries(tf INTERFACE ${BOOST_PYTHON_LIB})
     target_link_libraries(vt INTERFACE ${BOOST_PYTHON_LIB})
 elseif (APPLE)
+    set(Python_ROOT_DIR  ${Houdini_ROOT}/python39)
+    set(Python3_ROOT_DIR  ${Houdini_ROOT}/python39)
+    find_package(PythonLibs 3.9 REQUIRED)
+    set(HOUDINI_CUSTOM_TARGETS ${PYTHON_LIBRARIES} ${HOUDINI_CUSTOM_TARGETS})
+    message("Houdini PYTHON_LIBRARIES: ${PYTHON_LIBRARIES}")
+    #set (HOUDINI_IMPLIB_DIR "${Houdini_ROOT}/custom/houdini/dsolib")
+    # houdini target on windows missing usd targets, so we create them
+    set(HOUDINI_LIB_DIR ${Houdini_ROOT}/Libraries)
+    set(HOUDINI_INCLUDE_DIR ${Houdini_ROOT}/Resources/toolkit/include)
+    find_file(
+        BOOST_PYTHON_LIB
+        "libhboost_python39-mt-x64.dylib"
+        PATHS ${Houdini_ROOT}/
+        PATH_SUFFIXES
+        "Libraries"
+    )
+    foreach(usdLib
+        arch
+        ar
+        cameraUtil
+        garch
+        gf
+        glf
+        hdMtlx
+        hd
+        hdSt
+        hdx
+        hf
+        hgiGL
+        hgiInterop
+        hgi
+        hio
+        js
+        kind
+        ndr
+        pcp
+        plug
+        pxOsd
+        sdf
+        sdr
+        tf
+        trace
+        usdAppUtils
+        #usdBakeMtlx
+        usdGeom
+        usdHydra
+        usdImagingGL
+        usdImaging
+        usdLux
+        usdMedia
+        #usdMtlx
+        usdPhysics
+        usdRender
+        usdRiImaging
+        usdRi
+        usdShade
+        usdSkelImaging
+        usdSkel
+        usd
+        usdUI
+        usdUtils
+        usdviewq
+        usdVolImaging
+        usdVol
+        vt
+        work
+        )
+
+        add_library(${usdLib} SHARED IMPORTED)
+        set_target_properties(${usdLib} PROPERTIES
+            IMPORTED_LOCATION "${HOUDINI_LIB_DIR}/libpxr_${usdLib}${CMAKE_SHARED_LIBRARY_SUFFIX}"
+            INTERFACE_INCLUDE_DIRECTORIES ${HOUDINI_INCLUDE_DIR})
+#        set_target_properties(${usdLib} PROPERTIES
+#            IMPORTED_IMPLIB "${HOUDINI_IMPLIB_DIR}/libpxr_${usdLib}.lib")
+        set(HOUDINI_CUSTOM_TARGETS ${usdLib} ${HOUDINI_CUSTOM_TARGETS})
+    endforeach()
+    # linking errors without adding boost_python to some usd targets
+    target_link_libraries(tf INTERFACE ${BOOST_PYTHON_LIB})
+    target_link_libraries(vt INTERFACE ${BOOST_PYTHON_LIB})
 else ()
     set(HOUDINI_LIB_DIR ${Houdini_ROOT}/dsolib)
     set(HOUDINI_INCLUDE_DIR "${Houdini_ROOT}/toolkit/include")

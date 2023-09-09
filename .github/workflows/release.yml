@@ -53,17 +53,17 @@ jobs:
   #     artifact-out: release-windows
   #     artifact-path: "build_release/hdospray*.zip build_release/hdospray*.msi"
 
-  # release-windows-houdini:
-  #   secrets: inherit
-  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
-  #   with:
-  #     runs-on: '[ "Windows", "build", "NAS" ]'
-  #     cmd: |
-  #       scripts/release_ci/win_houdini.ps1
-  #       & $env:SIGN_FILE_WINDOWS hdospray*.msi
-  #       & ls
-  #     artifact-out: release-windows-houdini
-  #     artifact-path: "build_release/hdospray*.zip build_release/hdospray*.msi"
+  release-windows-houdini:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
+    with:
+      runs-on: '[ "Windows", "build", "NAS" ]'
+      cmd: |
+        scripts/release_ci/win_houdini.ps1
+        & $env:SIGN_FILE_WINDOWS hdospray*.msi
+        & ls
+      artifact-out: release-windows-houdini
+      artifact-path: "build_release/hdospray*.zip build_release/hdospray*.msi"
 
   # release-osx-clang:
   #   secrets: inherit
@@ -80,76 +80,76 @@ jobs:
   #     artifact-out: release-osx-clang
   #     artifact-path: "build_release/*.zip build_release/*.pkg"
 
-  # release-osx-clang-houdini:
-  #   secrets: inherit
-  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/macos.yml@main
-  #   with:
-  #     force-delete: true    # guarantees .gitattributes are respected in working dir
-  #     runs-on: '[ "macOS", "sign", "x86_64" ]'
-  #     cmd: |
-  #       export CC=clang
-  #       export CXX=clang++
-  #       scripts/release_ci/macosx_houdini.sh
-  #       $SIGN_FILE_MAC -o runtime -e scripts/release_ci/hdospray.entitlements build_release/*pkg
-  #       scripts/release_ci/macosx_notarization.sh build_release/*.pkg
-  #     artifact-out: release-osx-clang-houdini
-  #     artifact-path: "build_release/*.zip build_release/*.pkg"
+  release-osx-clang-houdini:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/macos.yml@main
+    with:
+      force-delete: true    # guarantees .gitattributes are respected in working dir
+      runs-on: '[ "macOS", "sign", "x86_64" ]'
+      cmd: |
+        export CC=clang
+        export CXX=clang++
+        scripts/release_ci/macosx_houdini.sh
+        $SIGN_FILE_MAC -o runtime -e scripts/release_ci/hdospray.entitlements build_release/*pkg
+        #scripts/release_ci/macosx_notarization.sh build_release/*.pkg
+      artifact-out: release-osx-clang-houdini
+      artifact-path: "build_release/*.zip build_release/*.pkg"
 
   ### SCAN JOBS ###
 
-  # static-analysis:
-  #   secrets: inherit
-  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/static_analysis.yml@main
-  #   with:
-  #     image: hdospray/ubuntu:20.04-cb-hdospray23.02
-  #     project: hdospray
-  #     prebuild: |
-  #       set -x
-  #       cmake -L -S . -B build \
-  #         -D CMAKE_CXX_FLAGS="-std=c++17" \
-  #         -D pxr_DIR=/gitlab/USD-install \
-  #         -D ospray_DIR=/usr \
-  #         -D embree_DIR=/usr \
-  #         -D ospcommon_DIR=/usr \
-  #         -D openvkl_DIR=/usr \
-  #         -D PXR_BUILD_OPENIMAGEIO_PLUGIN=ON \
-  #         -D OIIO_BASE_DIR=/gitlab/USD-install \
-  #         -D HDOSPRAY_ENABLE_DENOISER=OFF \
-  #         -D CMAKE_INSTALL_PREFIX=/gitlab/USD-install \
-  #         -D GLEW_LIBRARY=/gitlab/USD-install/lib64/libGLEW.so \
-  #         -D GLEW_INCLUDE_DIR=/gitlab/USD-install/include \
-  #         -D PXR_ENABLE_PTEX_SUPPORT=OFF \
-  #         -D PXR_BUILD_USD_IMAGING=OFF \
-  #         -D PXR_BUILD_USDVIEW=OFF
-  #     build: cmake --build build -j64
+  static-analysis:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/static_analysis.yml@main
+    with:
+      image: hdospray/ubuntu:20.04-cb-hdospray23.02
+      project: hdospray
+      prebuild: |
+        set -x
+        cmake -L -S . -B build \
+          -D CMAKE_CXX_FLAGS="-std=c++17" \
+          -D pxr_DIR=/gitlab/USD-install \
+          -D ospray_DIR=/usr \
+          -D embree_DIR=/usr \
+          -D ospcommon_DIR=/usr \
+          -D openvkl_DIR=/usr \
+          -D PXR_BUILD_OPENIMAGEIO_PLUGIN=ON \
+          -D OIIO_BASE_DIR=/gitlab/USD-install \
+          -D HDOSPRAY_ENABLE_DENOISER=OFF \
+          -D CMAKE_INSTALL_PREFIX=/gitlab/USD-install \
+          -D GLEW_LIBRARY=/gitlab/USD-install/lib64/libGLEW.so \
+          -D GLEW_INCLUDE_DIR=/gitlab/USD-install/include \
+          -D PXR_ENABLE_PTEX_SUPPORT=OFF \
+          -D PXR_BUILD_USD_IMAGING=OFF \
+          -D PXR_BUILD_USDVIEW=OFF
+      build: cmake --build build -j64
 
-  # binary-analysis:
-  #   needs:
-  #     - release-linux-houdini
-  #     # - release-osx-clang-houdini
-  #     - release-windows-houdini
-  #   secrets: inherit
-  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/binary_analysis.yml@main
-  #   with:
-  #     project: hdospray
-  #     artifact-in-linux: release-linux-houdini
-  #     # artifact-in-macos: release-osx-clang-houdini
-  #     artifact-in-windows: release-windows-houdini
-  #     path: build_release/hdospray*
+  binary-analysis:
+    needs:
+      - release-linux-houdini
+      - release-osx-clang-houdini
+      - release-windows-houdini
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/binary_analysis.yml@main
+    with:
+      project: hdospray
+      artifact-in-linux: release-linux-houdini
+      artifact-in-macos: release-osx-clang-houdini
+      artifact-in-windows: release-windows-houdini
+      path: build_release/hdospray*
 
-  # antivirus-scan:
-  #   needs:
-  #     - release-linux
-  #     - release-osx-clang
-  #     - release-windows
-  #   secrets: inherit
-  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/antivirus_scan.yml@main
-  #   with:
-  #     project: hdospray
-  #     artifact-in-linux: release-linux
-  #     artifact-in-macos: release-osx-clang
-  #     artifact-in-windows: release-windows
-  #     path: build_release/hdospray*
+  antivirus-scan:
+    needs:
+      - release-linux-houdini
+      - release-osx-clang-houdini
+      - release-windows-houdini
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/antivirus_scan.yml@main
+    with:
+      project: hdospray
+      artifact-in-linux: release-linux-houdini
+      artifact-in-macos: release-osx-clang-houdini
+      artifact-in-windows: release-windows-houdini
+      path: build_release/hdospray*
 
   # snyk-scan:
   #   secrets: inherit

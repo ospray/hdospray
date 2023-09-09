@@ -110,19 +110,13 @@ endif()
 set(CPACK_PACKAGE_VERSION_MAJOR ${OSPRAY_VERSION_MAJOR})
 set(CPACK_PACKAGE_VERSION_MINOR ${OSPRAY_VERSION_MINOR})
 set(CPACK_PACKAGE_VERSION_PATCH ${OSPRAY_VERSION_PATCH})
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OSPRay: A Ray Tracing Based Rendering Engine for High-Fidelity Visualization")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "OSPRay for Hydra is a RenderDelegate plugin for USD")
 set(CPACK_PACKAGE_VENDOR "Intel Corporation")
-set(CPACK_PACKAGE_CONTACT ospray@googlegroups.com)
+set(CPACK_PACKAGE_CONTACT https://github.com/ospray/hdospray)
 
 # point to readme and license files
 set(CPACK_RESOURCE_FILE_README ${PROJECT_SOURCE_DIR}/README.md)
 set(CPACK_RESOURCE_FILE_LICENSE ${PROJECT_SOURCE_DIR}/LICENSE.txt)
-
-#if (HDOSPRAY_ZIP_MODE)
-#  set(CPACK_MONOLITHIC_INSTALL ON)
-#else()
-#  set(CPACK_COMPONENTS_ALL package_usd)
-#endif()
 
 if (WIN32) # Windows specific settings
 
