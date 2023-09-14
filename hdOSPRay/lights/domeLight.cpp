@@ -57,6 +57,7 @@ HdOSPRayDomeLight::_PrepareOSPLight()
 
     const auto& result = LoadHioTexture2D(_textureFile);
     _hdriTexture = result.first;
+    _textureData = result.second;
 
     if (_hdriTexture) {
         _ospLight = opp::Light("hdri");

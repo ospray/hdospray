@@ -8,9 +8,10 @@
 #include <ospray/ospray_cpp.h>
 #include <ospray/ospray_cpp/ext/rkcommon.h>
 
-namespace opp = ospray::cpp;
-
 #include <string>
+#include <stdint.h>
+
+namespace opp = ospray::cpp;
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -24,7 +25,7 @@ opp::Texture LoadPtexTexture(std::string file);
 /// @param nearestFilter or interpolation
 /// @param compute 1.f-val.  float only.
 /// @return OSPRay texture object, data pointer
-std::pair<opp::Texture, unsigned char*>
+std::pair<opp::Texture, std::shared_ptr<uint8_t[]> >
 LoadHioTexture2D(const std::string file, const std::string channels = "",
                   bool nearestFilter = false, bool complement = false);
 
@@ -35,7 +36,7 @@ LoadHioTexture2D(const std::string file, const std::string channels = "",
 /// @param use nearestFilter or interpolation
 /// @param compute 1.f-val.  float only.
 /// @return OSPRay texture object, data pointer
-std::pair<opp::Texture, char*> LoadUDIMTexture2D(std::string file, int& numX,
+std::pair<opp::Texture, std::shared_ptr<uint8_t[]> > LoadUDIMTexture2D(std::string file, int& numX,
                                                  int& numY,
                                                  bool nearestFilter = false,
                                                  bool complement = false);

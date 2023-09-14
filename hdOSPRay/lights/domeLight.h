@@ -27,4 +27,5 @@ private:
     opp::Texture _hdriTexture;
     // path to the lat/long texture file
     std::string _textureFile;
+    std::shared_ptr<uint8_t[]> _textureData;
 };
