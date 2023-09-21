@@ -22,8 +22,18 @@ ls $HOUDINI_DIR/toolkit/cmake
 
 if [ ! -d "$DEP_DIR/install" ]
 then
-    echo "houdini release build requires regular build cache"
-    exit 2
+    mkdir -p $DEP_DIR/install
+    mkdir -p build_deps
+    cd build_deps
+    cmake ../scripts/superbuild/ -DBUILD_HDOSPRAY=OFF \
+        -DHDSUPER_OSPRAY_USE_EXTERNAL=ON \
+        -DHDSUPER_OSPRAY_EXTERNAL_DIR=/usr/lib/cmake/ospray-2.12.0 \
+        -DBUILD_OSPRAY=OFF -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=ON \
+        -DBUILD_PNG=ON -DBUILD_JPEG=ON -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF \
+        -DCMAKE_INSTALL_PREFIX=$DEP_DIR/install .
+    cmake --build . -j ${THREADS}
+else
+   echo "using cached dependencies"
 fi
 
 echo "ospray install dirs: "

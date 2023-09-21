@@ -55,11 +55,9 @@ HdOSPRayDomeLight::_PrepareOSPLight()
     upDirection = _transform.Transform(upDirection);
     centerDirection = _transform.Transform(centerDirection);
 
-    const auto& result = LoadHioTexture2D(_textureFile);
-    _hdriTexture = result.first;
-    _textureData = result.second;
+    _hdriTexture = LoadHioTexture2D(_textureFile);
 
-    if (_hdriTexture) {
+    if (_hdriTexture.ospTexture) {
         _ospLight = opp::Light("hdri");
         // placement
         _ospLight.setParam(
@@ -68,7 +66,7 @@ HdOSPRayDomeLight::_PrepareOSPLight()
                            vec3f(centerDirection[0], centerDirection[1],
                                  centerDirection[2]));
         // emission
-        _ospLight.setParam("map", _hdriTexture);
+        _ospLight.setParam("map", _hdriTexture.ospTexture);
         _ospLight.setParam("color",
                            vec3f(_emissionParam.color[0],
                                  _emissionParam.color[1],

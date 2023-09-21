@@ -450,8 +450,8 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken inputName,
             const auto& result = LoadUDIMTexture2D(
                    texture.file, numX, numY, false,
                    (outputName == HdOSPRayMaterialTokens->opacity));
-            texture.ospTexture = result.first;
-            texture.data = result.second;
+            texture.ospTexture = result.ospTexture;
+            texture.data = result.data;
             texture.hasXfm = true;
             texture.xfm_scale = { 1.f / float(numX), 1.f / float(numY) };
             // OSPRay scales around the center (0.5, 0.5).  translate
@@ -463,8 +463,8 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken inputName,
                    texture.file, inputName.GetString(), false,
                    (outputName == HdOSPRayMaterialTokens->opacity &&
                     _type == MaterialTypes::preview));
-            texture.ospTexture = result.first;
-            texture.data = result.second;
+            texture.ospTexture = result.ospTexture;
+            texture.data = result.data;
         }
     }
 

@@ -29,7 +29,8 @@ ROOT_DIR=$PWD
 DEP_DIR=$ROOT_DIR/../hdospray_deps
 THREADS=`sysctl -n hw.logicalcpu`
 #USD_ROOT=$STORAGE_PATH/packages/apps/usd/macos/build-hdospray-superbuild
-USD_ROOT=$DEP_DIR/usd-23.02/install
+USD_ROOT=$DEP_DIR/usd-23.02
+OSPRAY_ROOT=$DEP_DIR/ospray-2.12.0
 HOUDINI_ROOT=$DEP_DIR/houdini-19.5.682
 
 echo $PWD
@@ -44,13 +45,48 @@ if [ -z $CC ]; then
 fi
 
 #### Build dependencies ####
-if [ ! -d "$USD_ROOT" ]
+rm -r $OSPRAY_ROOT/*
+if [ ! -d "$OSPRAY_ROOT/install" ]
   then
-   echo "macosx houdini build requires regular release dependency build"
-   exit 2
+    echo "building dependencies"
+    pip3.9 install PySide6
+    pip3.9 install PySide6-Addons
+    pip3.9 install PySide6-Essentials
+    echo "which pyside6-uic:"
+    which pyside6-uic
+    pip3.9 show PySide6
+    echo "site-packages:"
+    ls /usr/local/lib/python3.9/site-packages
+    echo "site-packages2:"
+    ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages
+    echo "libexec: "
+    ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec
+    mkdir -p $OSPRAY_ROOT/install/bin
+    cd $OSPRAY_ROOT
+    export Python_ROOT_DIR="/usr/local/Frameworks/Python.framework/Versions/3.9"
+    export Python3_ROOT_DIR="/usr/local/Frameworks/Python.framework/Versions/3.9"
+    alias python=/usr/local/bin/python3.9
+    alias python3=/usr/local/bin/python3.9
+    export MACOSX_DEPLOYMENT_TARGET=11.7
+    cmake $ROOT_DIR/scripts/superbuild/ -DHDSUPER_PYTHON_VERSION=3.9 \
+      -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DBUILD_OSPRAY=ON \
+      -DBUILD_OSPRAY_ISPC=ON -DBUILD_HDOSPRAY_ISPC=OFF -DBUILD_HDOSPRAY=OFF \
+      -DBUILD_USD=OFF -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF \
+      -DBUILD_BOOST=OFF -DPYSIDE_BIN_DIR=/Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec \
+      -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF -DCMAKE_INSTALL_PREFIX=$OSPRAY_ROOT/install .
+    cmake --build . -j ${THREADS} || (rm -r install ; exit 2)
+    make install -j ${THREADS}
+    echo "dep dir: "
+    ls $OSPRAY_ROOT
+    echo "dep dir ospray: "
+    ls $OSPRAY_ROOT/OSPRay
+    echo "dep install dir: "
+    ls $OSPRAY_ROOT/install
+    echo "dependency build completed"
+    cd $ROOT_DIR
 fi
 
-rm -rf $HOUDINI_ROOT
+#rm -rf $HOUDINI_ROOT
 if [ ! -d "$HOUDINI_ROOT" ]
   then
     cp -r /NAS/packages/apps/usd/macos/houdini-19.5.682 $HOUDINI_ROOT
@@ -71,10 +107,10 @@ cd build_release
 rm -rf *
 cmake .. -D Houdini_DIR=$HOUDINI_ROOT/Resources/toolkit/cmake/ \
          -D USE_HOUDINI_USD=ON \
-         -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.12.0 \
-         -Drkcommon_DIR=$USD_ROOT/rkcommon/lib/cmake/rkcommon-1.11.0 \
-         -DOpenImageDenoise_DIR=$USD_ROOT/oidn/lib/cmake/OpenImageDenoise-1.4.3 \
-         -DTBB_DIR=$USD_ROOT/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
+         -Dospray_DIR=$OSPRAY_ROOT/install/ospray/lib/cmake/ospray-2.12.0 \
+         -Drkcommon_DIR=$OSPRAY_ROOT/install/rkcommon/lib/cmake/rkcommon-1.11.0 \
+         -DOpenImageDenoise_DIR=$OSPRAY_ROOT/install/oidn/lib/cmake/OpenImageDenoise-1.4.3 \
+         -DTBB_DIR=$OSPRAY_ROOT/install/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
          -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
          -D HDOSPRAY_GENERATE_SETUP=ON \
          -D HDOSPRAY_PYTHON_INSTALL_DIR=/Users/github-runner/Library/Python/3.9 \

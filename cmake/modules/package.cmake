@@ -217,7 +217,7 @@ if (HDOSPRAY_GENERATE_SETUP)
             "export PYTHONPATH=\${HDOSPRAY_ROOT}/python/site-packages:\${PYTHONPATH}\n"
             "export PATH=\${HDOSPRAY_ROOT}/bin:\${PATH}\n"
             "export PATH=\${HDOSPRAY_ROOT}/python/bin:\${PATH}\n"
-            "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
+            "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATH_NAME}\n"
             )
     endif()
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/setup_hdospray.sh

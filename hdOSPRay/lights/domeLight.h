@@ -4,6 +4,7 @@
 #pragma once
 
 #include "light.h"
+#include "../texture.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 
@@ -24,8 +25,7 @@ protected:
 
 private:
     // the loaded texture
-    opp::Texture _hdriTexture;
+    HdOSPRayTexture _hdriTexture;
     // path to the lat/long texture file
     std::string _textureFile;
-    std::shared_ptr<uint8_t[]> _textureData;
 };

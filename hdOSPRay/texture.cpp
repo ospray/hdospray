@@ -49,14 +49,14 @@ LoadPtexTexture(std::string file)
     return ospTexture;
 }
 
-std::pair<opp::Texture, std::shared_ptr<uint8_t[]> >
+HdOSPRayTexture
 LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nearestFilter,
                   bool complement)
 {
     const auto image = HioImage::OpenForReading(file);
     if (!image) {
         TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n", file.c_str());
-        return std::pair<opp::Texture, std::shared_ptr<uint8_t[]> >(nullptr, nullptr);
+        return HdOSPRayTexture();
     }
 
     HioImage::StorageSpec desc;
@@ -108,7 +108,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nea
     bool loaded = image->Read(desc);
     if (!loaded) {
         TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n", file.c_str());
-        return std::pair<opp::Texture, std::shared_ptr<uint8_t[]> >(nullptr, nullptr);
+        return HdOSPRayTexture();
     }
 
     const int outChannels
@@ -191,13 +191,13 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nea
     ospTexture.setParam("data", ospData);
     ospTexture.commit();
 
-    auto dataPtr = std::shared_ptr<uint8_t[]>(data);
-    auto outDataPtr = std::shared_ptr<uint8_t[]>(outData);
-    return std::pair<opp::Texture, std::shared_ptr<uint8_t[]> >(ospTexture, outData ? outDataPtr : dataPtr);
+    auto dataPtr = std::shared_ptr<uint8_t>(data, std::default_delete<uint8_t[]>());
+    auto outDataPtr = std::shared_ptr<uint8_t>(outData, std::default_delete<uint8_t[]>());
+    return HdOSPRayTexture(ospTexture, outData ? outDataPtr : dataPtr);
 }
 
 struct UDIMTileDesc {
-    std::shared_ptr<uint8_t[]> data;
+    uint8_t* data;
     vec2i size { 0, 0 };
     int offset { -1 };
 };
@@ -236,7 +236,7 @@ _ParseUDIMTiles(const std::string& filePath)
 }
 
 // creates 2d osptexture from file, does not commit
-std::pair<opp::Texture, std::shared_ptr<uint8_t[]> >
+HdOSPRayTexture
 LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
                   bool complement)
 {
@@ -256,7 +256,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
         const auto image = HioImage::OpenForReading(file);
         if (!image) {
             TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n", file.c_str());
-            return std::pair<opp::Texture, std::shared_ptr<uint8_t[]> >(nullptr, nullptr);
+            return HdOSPRayTexture();
         }
 
         HioImage::StorageSpec desc;
@@ -303,18 +303,18 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
         if ((texelSize != 0) && (texelSize != texelSizeCurrent)) {
             TF_WARN("#osp: UDIM::texel sizes do not match");
             // TODO: cleanup mem
-            return std::pair<opp::Texture, std::shared_ptr<uint8_t[]> >(nullptr, nullptr);
+            return HdOSPRayTexture();
         }
         texelSize = texelSizeCurrent;
         const size_t stride = size.x * channels * depth;
         const size_t dataSize = sizeof(char) * size.y * stride;
-        std::shared_ptr<uint8_t[]> data(new uint8_t(dataSize));
-        desc.data = data.get();
+        auto* data = new uint8_t[dataSize];
+        desc.data = data;
         dataStride = stride;
         bool loaded = image->Read(desc);
         if (!loaded) {
             TF_WARN("#osp: failed to read texture '%s'", file.c_str());
-            return std::pair<opp::Texture, std::shared_ptr<uint8_t[]> >(nullptr, nullptr);
+            return HdOSPRayTexture();
         }
 
         format = osprayTextureFormat(depth, channels, !srgb);
@@ -343,7 +343,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
         }
         if ((udimDataType != OSP_UNKNOWN) && udimDataType != dataType) {
             TF_WARN("UDIM has inconsisntent data types");
-            return std::pair<opp::Texture, std::shared_ptr<uint8_t[]> >(nullptr, nullptr);
+            return HdOSPRayTexture();
         }
         udimDataType = dataType;
 
@@ -365,7 +365,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
     numX = numTiles.x;
     numY = numTiles.y;
     size_t dataSize = totalSize.x * totalSize.y * texelSize;
-    std::shared_ptr<uint8_t[]> data(new uint8_t(sizeof(char) * dataSize));
+    auto* data = new uint8_t[sizeof(uint8_t) * dataSize];
 
     // copy tile to main texture
     for (auto tile : udimTileDescs) {
@@ -378,19 +378,19 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
             size_t start = tileIndex * texelSize;
             size_t end = (tileIndex + tile.size.x) * texelSize;
             if (complement && (udimDataType == OSP_FLOAT)) {
-                float* tex = (float*)(tile.data.get() + start);
+                float* tex = (float*)(tile.data + start);
                 for (int i = 0; i < tile.size.x; i++)
                     tex[i] = 1.f - tex[i];
             }
-            std::copy(tile.data.get() + start, tile.data.get() + end,
-                      data.get() + dataIndex * texelSize);
+            std::copy(tile.data + start, tile.data + end,
+                      data + dataIndex * texelSize);
             tileIndex += tile.size.x;
             dataIndex += totalSize.x;
         }
     }
 
     // create ospray texture object from data
-    opp::SharedData ospData = opp::SharedData(data.get(), udimDataType, totalSize);
+    opp::SharedData ospData = opp::SharedData(data, udimDataType, totalSize);
     ospData.commit();
 
     opp::Texture ospTexture = opp::Texture("texture2d");
@@ -401,5 +401,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
     ospTexture.setParam("data", ospData);
     ospTexture.commit();
 
-    return std::pair<opp::Texture, std::shared_ptr<uint8_t[]> >(ospTexture, data);
+    auto dataPtr = std::shared_ptr<uint8_t>(data, std::default_delete<uint8_t[]>());
+
+    return HdOSPRayTexture(ospTexture, dataPtr);
 }

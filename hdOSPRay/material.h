@@ -13,6 +13,8 @@
 #include <ospray/ospray_cpp.h>
 #include <ospray/ospray_cpp/ext/rkcommon.h>
 
+#include "texture.h"
+
 namespace opp = ospray::cpp;
 
 PXR_NAMESPACE_USING_DIRECTIVE
@@ -121,25 +123,6 @@ protected:
     // parse texture transformation node params and set rotation, translation,
     // and scale
     void _ProcessTransform2dNode(HdMaterialNode node, TfToken textureName);
-
-    class HdOSPRayTexture {
-    public:
-        HdOSPRayTexture() = default;
-        ~HdOSPRayTexture() = default;
-        std::string file;
-        enum class WrapType { NONE, BLACK, CLAMP, REPEAT, MIRROR };
-        WrapType wrapS, wrapT;
-        GfVec4f scale { 1.0f };
-        GfVec2f xfm_translation { 0.f, 0.f };
-        GfVec2f xfm_scale { 1.f, 1.f };
-        float xfm_rotation { 0.f };
-        bool hasXfm { false };
-        enum class ColorType { NONE, RGBA, RGB, R, G, B, A };
-        ColorType type;
-        opp::Texture ospTexture { nullptr };
-        bool isPtex { false };
-        std::shared_ptr<uint8_t[]> data;
-    };
 
     enum MaterialTypes { preview = 0, principled, carPaint, luminous};
     MaterialTypes _type { MaterialTypes::preview };

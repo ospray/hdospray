@@ -43,6 +43,7 @@ pip3.9 install PySide6-Addons
 pip3.9 install PySide6-Essentials
 echo "which pyside6-uic:"
 which pyside6-uic
+which uic
 pip3.9 show PySide6
 echo "site-packages:"
 ls /usr/local/lib/python3.9/site-packages
@@ -50,6 +51,8 @@ echo "site-packages2:"
 ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages
 echo "libexec: "
 ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec
+ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt
+ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6
 
 # rebuild dependencies - clear install dir
 # rm -r $DEP_DIR/install
@@ -58,24 +61,11 @@ ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/l
 if [ ! -d "$DEP_DIR/install" ]
   then
   echo "building dependencies"
-
-  mkdir -p /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/bin
-  sw_vers
-  pip3.9 list
-  echo "PATH:"
-  echo $PATH
-  echo "\n\n\nPYTHONPATH:"
-  echo $PYTHONPATH
+  mkdir -p $USD_ROOT/install/bin
   export Python_ROOT_DIR="/usr/local/Frameworks/Python.framework/Versions/3.9"
   export Python3_ROOT_DIR="/usr/local/Frameworks/Python.framework/Versions/3.9"
   alias python=/usr/local/bin/python3.9
   alias python3=/usr/local/bin/python3.9
-  python --version
-  python3 --version
-  /usr/local/bin/python3.9 --version
-  echo "boostjam:"
-  cat USD_Super/build/source/boost/python-config.jam
-  rm -r *
   export MACOSX_DEPLOYMENT_TARGET=11.7
   cmake $ROOT_DIR/scripts/superbuild/ -DHDSUPER_PYTHON_VERSION=3.9 \
     -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DBUILD_OSPRAY=ON \
