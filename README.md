@@ -272,7 +272,18 @@ renderer.*
 
 # News, Updates, and Announcements
 
-  - Dec 2, 2022: Version v0.11.0
+  - Sep 27, 2023: Version v1.0.0
+    
+        - USD 23.02 support
+        - Depth buffer transform to non-linear for DCC compositing
+        - Superbuild now part of core repo
+        - Macosx and Windows build support
+        - Houdini SDL binary release builds
+        - Openimageio dependency removal
+        - Support for loading usdz files directly
+        - Custom OSPRay material support
+
+  - Jan 5, 2023: Version v0.11.0
     
         - Texture Transforms
         - UDIM textures
