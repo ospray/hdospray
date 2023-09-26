@@ -24,6 +24,11 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#include "pxr/base/tf/envSetting.h"
+#include "pxr/base/tf/fileUtils.h"
+#include "pxr/base/tf/pathUtils.h"
+#include "pxr/base/tf/staticTokens.h"
+#include "pxr/base/tf/stringUtils.h"
 #include "pxr/pxr.h"
 #include "pxr/usd/ndr/debugCodes.h"
 #include "pxr/usd/ndr/node.h"
@@ -33,30 +38,24 @@
 #include "pxr/usd/sdr/shaderNode.h"
 #include "pxr/usd/sdr/shaderProperty.h"
 #include "pxr/usd/usdUtils/pipeline.h"
-#include "pxr/base/tf/envSetting.h"
-#include "pxr/base/tf/fileUtils.h"
-#include "pxr/base/tf/pathUtils.h"
-#include "pxr/base/tf/staticTokens.h"
-#include "pxr/base/tf/stringUtils.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 namespace {
 
 TF_DEFINE_PRIVATE_TOKENS(
-    _tokens,
-    ((discoveryType1, "OspPrincipled"))
-    ((discoveryType2, "OspCarPaint"))
-    ((discoveryType3, "OspLuminous"))
-    ((sourceType, ""))
-);
+       _tokens,
+       ((discoveryType1, "OspPrincipled"))((discoveryType2, "OspCarPaint"))(
+              (discoveryType3, "OspLuminous"))((sourceType, "")));
 
 // This environment variable lets users override the name of the primary
 // UV set that MaterialX should look for.  If it's empty, it uses the USD
 // default, "st".
-TF_DEFINE_ENV_SETTING(USDMTLX_PRIMARY_UV_NAME, "",
-    "The name usdMtlx should use to reference the primary UV set.");
+TF_DEFINE_ENV_SETTING(
+       USDMTLX_PRIMARY_UV_NAME, "",
+       "The name usdMtlx should use to reference the primary UV set.");
 
-static const std::string _GetPrimaryUvSetName()
+static const std::string
+_GetPrimaryUvSetName()
 {
     static const std::string env = TfGetEnvSetting(USDMTLX_PRIMARY_UV_NAME);
     if (env.empty()) {
@@ -72,12 +71,23 @@ struct ShaderBuilder {
 public:
     ShaderBuilder(const NdrNodeDiscoveryResult& discoveryResult)
         : discoveryResult(discoveryResult)
-        , valid(true) 
-        , metadata(discoveryResult.metadata) { }
+        , valid(true)
+        , metadata(discoveryResult.metadata)
+    {
+    }
 
-    void SetInvalid()              { valid = false; }
-    explicit operator bool() const { return valid; }
-    bool operator !() const        { return !valid; }
+    void SetInvalid()
+    {
+        valid = false;
+    }
+    explicit operator bool() const
+    {
+        return valid;
+    }
+    bool operator!() const
+    {
+        return !valid;
+    }
 
     NdrNodeUniquePtr Build()
     {
@@ -85,17 +95,11 @@ public:
             return NdrParserPlugin::GetInvalidNode(discoveryResult);
         }
 
-        return NdrNodeUniquePtr(
-                new SdrShaderNode(discoveryResult.identifier,
-                                  discoveryResult.version,
-                                  discoveryResult.name,
-                                  discoveryResult.family,
-                                  context,
-                                  discoveryResult.sourceType,
-                                  definitionURI,
-                                  implementationURI,
-                                  std::move(properties),
-                                  std::move(metadata)));
+        return NdrNodeUniquePtr(new SdrShaderNode(
+               discoveryResult.identifier, discoveryResult.version,
+               discoveryResult.name, discoveryResult.family, context,
+               discoveryResult.sourceType, definitionURI, implementationURI,
+               std::move(properties), std::move(metadata)));
     }
 
     void AddPropertyNameRemapping(const std::string& from,
@@ -128,15 +132,14 @@ public:
     HdOSPRayParserPlugin() = default;
     ~HdOSPRayParserPlugin() override = default;
 
-    NdrNodeUniquePtr Parse(
-        const NdrNodeDiscoveryResult& discoveryResult) override;
+    NdrNodeUniquePtr
+    Parse(const NdrNodeDiscoveryResult& discoveryResult) override;
     const NdrTokenVec& GetDiscoveryTypes() const override;
     const TfToken& GetSourceType() const override;
 };
 
 NdrNodeUniquePtr
-HdOSPRayParserPlugin::Parse(
-    const NdrNodeDiscoveryResult& discoveryResult)
+HdOSPRayParserPlugin::Parse(const NdrNodeDiscoveryResult& discoveryResult)
 {
     ShaderBuilder builder(discoveryResult);
     return builder.Build();
@@ -145,10 +148,9 @@ HdOSPRayParserPlugin::Parse(
 const NdrTokenVec&
 HdOSPRayParserPlugin::GetDiscoveryTypes() const
 {
-    static const NdrTokenVec discoveryTypes = {
-        _tokens->discoveryType1, _tokens->discoveryType2,
-        _tokens->discoveryType3
-    };
+    static const NdrTokenVec discoveryTypes
+           = { _tokens->discoveryType1, _tokens->discoveryType2,
+               _tokens->discoveryType3 };
     return discoveryTypes;
 }
 

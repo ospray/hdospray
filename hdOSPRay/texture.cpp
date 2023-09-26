@@ -50,12 +50,13 @@ LoadPtexTexture(std::string file)
 }
 
 HdOSPRayTexture
-LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nearestFilter,
-                  bool complement)
+LoadHioTexture2D(const std::string file, const std::string channelsStr,
+                 bool nearestFilter, bool complement)
 {
     const auto image = HioImage::OpenForReading(file);
     if (!image) {
-        TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n", file.c_str());
+        TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n",
+                     file.c_str());
         return HdOSPRayTexture();
     }
 
@@ -71,33 +72,25 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nea
     size.y = desc.height;
     const bool srgb = image->IsColorSpaceSRGB();
     int depth = 1;
-    if (desc.format == HioFormatFloat16
-        || desc.format == HioFormatFloat16Vec2
+    if (desc.format == HioFormatFloat16 || desc.format == HioFormatFloat16Vec2
         || desc.format == HioFormatFloat16Vec3
-        || desc.format == HioFormatFloat16Vec4
-        || desc.format == HioFormatUInt16
+        || desc.format == HioFormatFloat16Vec4 || desc.format == HioFormatUInt16
         || desc.format == HioFormatUInt16Vec2
         || desc.format == HioFormatUInt16Vec3
-        || desc.format == HioFormatUInt16Vec4
-        || desc.format == HioFormatInt16
+        || desc.format == HioFormatUInt16Vec4 || desc.format == HioFormatInt16
         || desc.format == HioFormatInt16Vec2
         || desc.format == HioFormatInt16Vec3
-        || desc.format == HioFormatInt16Vec4
-        )
+        || desc.format == HioFormatInt16Vec4)
         depth = 2;
-    if (desc.format == HioFormatFloat32
-        || desc.format == HioFormatFloat32Vec2
+    if (desc.format == HioFormatFloat32 || desc.format == HioFormatFloat32Vec2
         || desc.format == HioFormatFloat32Vec3
-        || desc.format == HioFormatFloat32Vec4
-        || desc.format == HioFormatUInt32
+        || desc.format == HioFormatFloat32Vec4 || desc.format == HioFormatUInt32
         || desc.format == HioFormatUInt32Vec2
         || desc.format == HioFormatUInt32Vec3
-        || desc.format == HioFormatUInt32Vec4
-        || desc.format == HioFormatInt32
+        || desc.format == HioFormatUInt32Vec4 || desc.format == HioFormatInt32
         || desc.format == HioFormatInt32Vec2
         || desc.format == HioFormatInt32Vec3
-        || desc.format == HioFormatInt32Vec4
-        )
+        || desc.format == HioFormatInt32Vec4)
         depth = 4;
     int channels = image->GetBytesPerPixel() / depth;
     const size_t stride = size.x * image->GetBytesPerPixel() * depth;
@@ -107,7 +100,8 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nea
 
     bool loaded = image->Read(desc);
     if (!loaded) {
-        TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n", file.c_str());
+        TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n",
+                     file.c_str());
         return HdOSPRayTexture();
     }
 
@@ -124,8 +118,8 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nea
     if (channels == 4 && channelsStr == "a")
         channelOffset = 3;
     if (outChannels != channels || outDepth != depth) {
-        outData = new uint8_t[sizeof(uint8_t) * size.y * size.x
-                                         * outChannels * outDepth];
+        outData = new uint8_t[sizeof(uint8_t) * size.y * size.x * outChannels
+                              * outDepth];
     }
 
     OSPTextureFormat format = osprayTextureFormat(outDepth, outChannels, !srgb);
@@ -191,8 +185,10 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr, bool nea
     ospTexture.setParam("data", ospData);
     ospTexture.commit();
 
-    auto dataPtr = std::shared_ptr<uint8_t>(data, std::default_delete<uint8_t[]>());
-    auto outDataPtr = std::shared_ptr<uint8_t>(outData, std::default_delete<uint8_t[]>());
+    auto dataPtr
+           = std::shared_ptr<uint8_t>(data, std::default_delete<uint8_t[]>());
+    auto outDataPtr = std::shared_ptr<uint8_t>(
+           outData, std::default_delete<uint8_t[]>());
     return HdOSPRayTexture(ospTexture, outData ? outDataPtr : dataPtr);
 }
 
@@ -255,7 +251,8 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
         const std::string file = std::get<1>(tile);
         const auto image = HioImage::OpenForReading(file);
         if (!image) {
-            TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n", file.c_str());
+            TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n",
+                         file.c_str());
             return HdOSPRayTexture();
         }
 
@@ -281,8 +278,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
             || desc.format == HioFormatInt16
             || desc.format == HioFormatInt16Vec2
             || desc.format == HioFormatInt16Vec3
-            || desc.format == HioFormatInt16Vec4
-            )
+            || desc.format == HioFormatInt16Vec4)
             depth = 2;
         if (desc.format == HioFormatFloat32
             || desc.format == HioFormatFloat32Vec2
@@ -295,9 +291,8 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
             || desc.format == HioFormatInt32
             || desc.format == HioFormatInt32Vec2
             || desc.format == HioFormatInt32Vec3
-            || desc.format == HioFormatInt32Vec4
-            )
-        depth = 4;
+            || desc.format == HioFormatInt32Vec4)
+            depth = 4;
         int channels = image->GetBytesPerPixel() / depth;
         int texelSizeCurrent = channels * depth;
         if ((texelSize != 0) && (texelSize != texelSizeCurrent)) {
@@ -401,7 +396,8 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
     ospTexture.setParam("data", ospData);
     ospTexture.commit();
 
-    auto dataPtr = std::shared_ptr<uint8_t>(data, std::default_delete<uint8_t[]>());
+    auto dataPtr
+           = std::shared_ptr<uint8_t>(data, std::default_delete<uint8_t[]>());
 
     return HdOSPRayTexture(ospTexture, dataPtr);
 }

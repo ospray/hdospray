@@ -19,14 +19,7 @@ namespace opp = ospray::cpp;
 PXR_NAMESPACE_USING_DIRECTIVE
 
 #define HDOSPRAY_RENDER_SETTINGS_TOKENS                                        \
-    (ambientOcclusionSamples)(samplesPerFrame)(lightSamples)(useDenoiser)(     \
-           pixelFilterType)(maxDepth)(russianRouletteStartDepth)(aoRadius)(    \
-           aoIntensity)(samplesToConvergence)(ambientLight)(eyeLight)(         \
-           keyLight)(fillLight)(backLight)(pathTracer)(                        \
-           staticDirectionalLights)(minContribution)(maxContribution)(         \
-           interactiveTargetFPS)(useTextureGammaCorrection)(tmp_exposure)(     \
-           tmp_enabled)(tmp_contrast)(tmp_shoulder)(tmp_midIn)(tmp_midOut)(    \
-           tmp_hdrMax)(tmp_acesColor)
+    (ambientOcclusionSamples)(samplesPerFrame)(lightSamples)(useDenoiser)(pixelFilterType)(maxDepth)(russianRouletteStartDepth)(aoRadius)(aoIntensity)(samplesToConvergence)(ambientLight)(eyeLight)(keyLight)(fillLight)(backLight)(pathTracer)(staticDirectionalLights)(minContribution)(maxContribution)(interactiveTargetFPS)(useTextureGammaCorrection)(tmp_exposure)(tmp_enabled)(tmp_contrast)(tmp_shoulder)(tmp_midIn)(tmp_midOut)(tmp_hdrMax)(tmp_acesColor)
 
 TF_DECLARE_PUBLIC_TOKENS(HdOSPRayRenderSettingsTokens,
                          HDOSPRAY_RENDER_SETTINGS_TOKENS);

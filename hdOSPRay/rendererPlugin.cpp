@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if defined(WIN32)
-    #define WIN32_LEAN_AND_MEAN
-    #include <Windows.h>
+#    define WIN32_LEAN_AND_MEAN
+#    include <Windows.h>
 #endif
 
 #include "rendererPlugin.h"
@@ -15,15 +15,13 @@
 #ifdef WIN32
 // TF_REGISTER does not seem to work correctly for external plugins on Windows.
 // To get around this, we manually register the plugin with USD on library load
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
+BOOL APIENTRY
+DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-    {
+    switch (ul_reason_for_call) {
+    case DLL_PROCESS_ATTACH: {
         pxr::HdRendererPluginRegistry::Define<HdOSPRayRendererPlugin>();
-    }
-        break;
+    } break;
     default:
         break;
     }
@@ -105,7 +103,7 @@ HdOSPRayRendererPlugin::DeleteRenderDelegate(HdRenderDelegate* renderDelegate)
     ospShutdown();
 }
 
-bool 
+bool
 #if PXR_VERSION < 2302
 HdOSPRayRendererPlugin::IsSupported() const
 #else

@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "material.h"
-#include "texture.h"
 #include "renderParam.h"
+#include "texture.h"
 
 #include <pxr/base/gf/vec3f.h>
 #include <pxr/imaging/hd/material.h>
@@ -95,7 +95,9 @@ TF_DEFINE_PRIVATE_TOKENS(
 
 // clang-format on
 
-static vec3f GfToOSP(const GfVec3f& v){
+static vec3f
+GfToOSP(const GfVec3f& v)
+{
     return vec3f(v[0], v[1], v[2]);
 }
 
@@ -132,13 +134,16 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
                     == HdOSPRayMaterialTokens->UsdPreviewSurface) {
                     matNetwork = network;
                     newType = MaterialTypes::preview;
-                } else if (node->identifier == HdOSPRayMaterialTokens->OspPrincipled) {
+                } else if (node->identifier
+                           == HdOSPRayMaterialTokens->OspPrincipled) {
                     matNetwork = network;
                     newType = MaterialTypes::principled;
-                } else if (node->identifier == HdOSPRayMaterialTokens->OspCarPaint) {
+                } else if (node->identifier
+                           == HdOSPRayMaterialTokens->OspCarPaint) {
                     matNetwork = network;
                     newType = MaterialTypes::carPaint;
-                } else if (node->identifier == HdOSPRayMaterialTokens->OspLuminous) {
+                } else if (node->identifier
+                           == HdOSPRayMaterialTokens->OspLuminous) {
                     matNetwork = network;
                     newType = MaterialTypes::luminous;
                 }
@@ -223,15 +228,18 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
         if (!HdOSPRayConfig::GetInstance().useSimpleMaterial) {
             if (_type == MaterialTypes::carPaint) {
                 if (_typeDirty)
-                    _ospMaterial = opp::Material(rendererType.c_str(), "carPaint");
+                    _ospMaterial
+                           = opp::Material(rendererType.c_str(), "carPaint");
                 UpdateCarPaintMaterial();
             } else if (_type == MaterialTypes::luminous) {
                 if (_typeDirty)
-                    _ospMaterial = opp::Material(rendererType.c_str(), "luminous");
+                    _ospMaterial
+                           = opp::Material(rendererType.c_str(), "luminous");
                 UpdateLuminousMaterial();
             } else { // preview, principled, other
                 if (_typeDirty)
-                    _ospMaterial = opp::Material(rendererType.c_str(), "principled");
+                    _ospMaterial
+                           = opp::Material(rendererType.c_str(), "principled");
                 UpdatePrincipledMaterial(rendererType);
             }
         } else {
@@ -275,7 +283,8 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
             opacity = value.Get<float>();
         }
     }
-    // set transmissionColor to diffuseColor for usdpreviewsurface as there is no way to set it
+    // set transmissionColor to diffuseColor for usdpreviewsurface as there is
+    // no way to set it
     transmissionColor = diffuseColor;
 }
 
@@ -380,7 +389,7 @@ HdOSPRayMaterial::_ProcessOspCarPaintNode(HdMaterialNode node)
         } else if (name == HdOSPRayMaterialTokens->coatRoughness) {
             coatRoughness = value.Get<float>();
         } else if (name == HdOSPRayMaterialTokens->coatNormal) {
-          coatNormal = value.Get<float>();
+            coatNormal = value.Get<float>();
         } else if (name == HdOSPRayMaterialTokens->flipflopColor) {
             flipflopColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayMaterialTokens->flipflopFalloff) {
@@ -461,8 +470,8 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken inputName,
         } else {
             const auto& result = LoadHioTexture2D(
                    texture.file, inputName.GetString(), false,
-                   (outputName == HdOSPRayMaterialTokens->opacity &&
-                    _type == MaterialTypes::preview));
+                   (outputName == HdOSPRayMaterialTokens->opacity
+                    && _type == MaterialTypes::preview));
             texture.ospTexture = result.ospTexture;
             texture.data = result.data;
         }
@@ -542,8 +551,8 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(std::string rendererType)
         if (!value.ospTexture)
             continue;
         std::string name = "";
-        if (key == HdOSPRayMaterialTokens->diffuseColor ||
-            key == HdOSPRayMaterialTokens->baseColor)
+        if (key == HdOSPRayMaterialTokens->diffuseColor
+            || key == HdOSPRayMaterialTokens->baseColor)
             name = "map_baseColor";
         else if (key == HdOSPRayMaterialTokens->metallic) {
             name = "map_metallic";
@@ -570,17 +579,19 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(std::string rendererType)
                     std::string st_scale = name + ".scale";
                     std::string st_rotation = name + ".rotation";
                     _ospMaterial.setParam(st_translation.c_str(),
-                                        vec2f(-value.xfm_translation[0],
-                                            -value.xfm_translation[1]));
+                                          vec2f(-value.xfm_translation[0],
+                                                -value.xfm_translation[1]));
                     _ospMaterial.setParam(st_scale.c_str(),
-                                        vec2f(1.0f / value.xfm_scale[0],
-                                            1.0f / value.xfm_scale[1]));
-                    _ospMaterial.setParam(st_rotation.c_str(), -value.xfm_rotation);
+                                          vec2f(1.0f / value.xfm_scale[0],
+                                                1.0f / value.xfm_scale[1]));
+                    _ospMaterial.setParam(st_rotation.c_str(),
+                                          -value.xfm_rotation);
                 }
-            } else { //fallback
+            } else { // fallback
                 if (key == HdOSPRayMaterialTokens->diffuseColor) {
-                    _ospMaterial.setParam("baseColor",
-                        vec3f(fallback[0], fallback[1], fallback[2]));
+                    _ospMaterial.setParam(
+                           "baseColor",
+                           vec3f(fallback[0], fallback[1], fallback[2]));
                 } else if (key == HdOSPRayMaterialTokens->metallic) {
                     _ospMaterial.setParam("metallic", fallback[0]);
                 } else if (key == HdOSPRayMaterialTokens->roughness) {
@@ -598,7 +609,7 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(std::string rendererType)
     _ospMaterial.setParam("coatRoughness", coatRoughness);
     _ospMaterial.setParam("ior", ior);
     _ospMaterial.setParam("transmission",
-                         (hasOpacityTex ? 1.0f : 1.0f - opacity));
+                          (hasOpacityTex ? 1.0f : 1.0f - opacity));
     _ospMaterial.setParam("thin", thin);
     _ospMaterial.setParam("diffuse", diffuse);
     _ospMaterial.setParam("specular", specular);
@@ -649,11 +660,11 @@ HdOSPRayMaterial::UpdateCarPaintMaterial()
                 std::string st_scale = name + ".scale";
                 std::string st_rotation = name + ".rotation";
                 _ospMaterial.setParam(st_translation.c_str(),
-                                     vec2f(-value.xfm_translation[0],
-                                           -value.xfm_translation[1]));
+                                      vec2f(-value.xfm_translation[0],
+                                            -value.xfm_translation[1]));
                 _ospMaterial.setParam(st_scale.c_str(),
-                                     vec2f(1.0f / value.xfm_scale[0],
-                                           1.0f / value.xfm_scale[1]));
+                                      vec2f(1.0f / value.xfm_scale[0],
+                                            1.0f / value.xfm_scale[1]));
                 _ospMaterial.setParam(st_rotation.c_str(), -value.xfm_rotation);
             }
         }
@@ -681,8 +692,7 @@ void
 HdOSPRayMaterial::UpdateLuminousMaterial()
 {
     _ospMaterial.setParam(
-           "color",
-           vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
+           "color", vec3f(diffuseColor[0], diffuseColor[1], diffuseColor[2]));
     bool hasMetallicTex = false;
     bool hasRoughnessTex = false;
     bool hasOpacityTex = false;
@@ -705,11 +715,11 @@ HdOSPRayMaterial::UpdateLuminousMaterial()
                 std::string st_scale = name + ".scale";
                 std::string st_rotation = name + ".rotation";
                 _ospMaterial.setParam(st_translation.c_str(),
-                                     vec2f(-value.xfm_translation[0],
-                                           -value.xfm_translation[1]));
+                                      vec2f(-value.xfm_translation[0],
+                                            -value.xfm_translation[1]));
                 _ospMaterial.setParam(st_scale.c_str(),
-                                     vec2f(1.0f / value.xfm_scale[0],
-                                           1.0f / value.xfm_scale[1]));
+                                      vec2f(1.0f / value.xfm_scale[0],
+                                            1.0f / value.xfm_scale[1]));
                 _ospMaterial.setParam(st_rotation.c_str(), -value.xfm_rotation);
             }
         }
@@ -718,7 +728,7 @@ HdOSPRayMaterial::UpdateLuminousMaterial()
     // set material params
     _ospMaterial.setParam("intensity", intensity);
     _ospMaterial.setParam("transparency",
-                         (hasOpacityTex ? 1.0f : 1.0f - opacity));
+                          (hasOpacityTex ? 1.0f : 1.0f - opacity));
 }
 
 void
@@ -736,14 +746,14 @@ HdOSPRayMaterial::UpdateSimpleMaterial(std::string rendererType)
                vec3f(specularColor[0], specularColor[1], specularColor[2])
                       * avgFresnel);
         _ospMaterial.setParam("ns",
-                             RoughnesToPhongExponent(std::sqrt(roughness)));
+                              RoughnesToPhongExponent(std::sqrt(roughness)));
     } else {
         _ospMaterial.setParam("kd", vec3f(0.0f, 0.0f, 0.0f));
         _ospMaterial.setParam(
                "ks",
                vec3f(specularColor[0], specularColor[1], specularColor[2]));
         _ospMaterial.setParam("ns",
-                             RoughnesToPhongExponent(std::sqrt(roughness)));
+                              RoughnesToPhongExponent(std::sqrt(roughness)));
     }
 
     if (opacity < 1.0f) {

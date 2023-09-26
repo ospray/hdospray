@@ -24,28 +24,26 @@
 // KIND, either express or implied. See the Apache License for the specific
 // language governing permissions and limitations under the Apache License.
 //
+#include <algorithm>
+#include <cctype>
+#include <map>
+#include "pxr/base/tf/getenv.h"
+#include "pxr/base/tf/staticTokens.h"
+#include "pxr/base/tf/stringUtils.h"
 #include "pxr/pxr.h"
 #include "pxr/usd/ndr/declare.h"
 #include "pxr/usd/ndr/discoveryPlugin.h"
 #include "pxr/usd/ndr/filesystemDiscoveryHelpers.h"
-#include "pxr/base/tf/getenv.h"
-#include "pxr/base/tf/staticTokens.h"
-#include "pxr/base/tf/stringUtils.h"
-#include <algorithm>
-#include <cctype>
-#include <map>
 
 // PXR_NAMESPACE_OPEN_SCOPE
 PXR_NAMESPACE_USING_DIRECTIVE
 
 namespace {
 
-TF_DEFINE_PRIVATE_TOKENS(
-    _tokens,
-    ((discoveryType1, "OspPrincipled"))
-    ((discoveryType2, "OspCarPaint"))
-    ((discoveryType3, "OspLuminous"))
-);
+TF_DEFINE_PRIVATE_TOKENS(_tokens,
+                         ((discoveryType1, "OspPrincipled"))((discoveryType2,
+                                                              "OspCarPaint"))(
+                                (discoveryType3, "OspLuminous")));
 
 // Maps a nodedef name to its NdrNode name.
 using _NameMapping = std::map<std::string, std::string>;
@@ -87,18 +85,18 @@ NdrNodeDiscoveryResultVec
 HdOSPRayDiscoveryPlugin::DiscoverNodes(const Context& context)
 {
     NdrNodeDiscoveryResultVec result;
-    std::vector<TfToken> tkns = {TfToken("OspPrincipled"),
-        TfToken("OspCarPaint"), TfToken("OspLuminous")};
+    std::vector<TfToken> tkns
+           = { TfToken("OspPrincipled"), TfToken("OspCarPaint"),
+               TfToken("OspLuminous") };
     for (auto& tkn : tkns) {
-        result.emplace_back(
-            tkn, //id
-            NdrVersion(1), //version
-            tkn.GetString(), //name
-            tkn, //family
-            tkn, //discovery type
-            tkn, //source type
-            std::string(), //uri
-            std::string()); //resolved uri
+        result.emplace_back(tkn, // id
+                            NdrVersion(1), // version
+                            tkn.GetString(), // name
+                            tkn, // family
+                            tkn, // discovery type
+                            tkn, // source type
+                            std::string(), // uri
+                            std::string()); // resolved uri
     }
 
     return result;

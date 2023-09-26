@@ -264,7 +264,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _height = dataWindow.GetHeight();
     }
 
-    // if progressively rendering an image and not in interactive mode, cancel frame
+    // if progressively rendering an image and not in interactive mode, cancel
+    // frame
     if ((_frameBufferDirty || _pendingResetImage || aovDirty)) {
         // cancel rendering
         if (_currentFrame.isValid()) {
@@ -274,7 +275,8 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         if (_interactiveEnabled)
             _interacting = true;
 
-    } else if (_currentFrame.isValid()) {  // nothing dirty, progressively rendering next frame.
+    } else if (_currentFrame.isValid()) { // nothing dirty, progressively
+                                          // rendering next frame.
         // return until frame is ready
         if (!_currentFrame.osprayFrame.isReady())
             return;
@@ -292,16 +294,17 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         float currentFPS = 1.0f / frameDuration;
         float scaleChange = std::sqrt(_interactiveTargetFPS / currentFPS);
         updateInteractiveFrameBufferScale
-                = std::max(1.0f, _currentFrameBufferScale * scaleChange);
+               = std::max(1.0f, _currentFrameBufferScale * scaleChange);
         updateInteractiveFrameBufferScale
-                = std::min(updateInteractiveFrameBufferScale, 5.0f);
-        updateInteractiveFrameBufferScale = 0.125f
-                * std::ceil(updateInteractiveFrameBufferScale / 0.125f);
+               = std::min(updateInteractiveFrameBufferScale, 5.0f);
+        updateInteractiveFrameBufferScale
+               = 0.125f * std::ceil(updateInteractiveFrameBufferScale / 0.125f);
         if (_interactiveEnabled
-                && fabs(updateInteractiveFrameBufferScale - _currentFrameBufferScale) > 0.3f) {
+            && fabs(updateInteractiveFrameBufferScale
+                    - _currentFrameBufferScale)
+                   > 0.3f) {
             _interactiveFrameBufferDirty = true;
-            _newInteractiveFrameBufferScale
-                    = updateInteractiveFrameBufferScale;
+            _newInteractiveFrameBufferScale = updateInteractiveFrameBufferScale;
         }
     }
 
@@ -440,14 +443,16 @@ HdOSPRayRenderPass::_DisplayRenderBuffer(RenderFrame& renderBuffer)
             continue;
         ospRenderBuffer->Map();
         if (_aovNames[aovIndex].name == HdAovTokens->color) {
-            // ospray 2.12 + denoiser causing ghosting with 0 alphas, set alphas to 1
+            // ospray 2.12 + denoiser causing ghosting with 0 alphas, set alphas
+            // to 1
             tbb::parallel_for(
-                   tbb::blocked_range<int>(0, renderBuffer.width * renderBuffer.height),
+                   tbb::blocked_range<int>(
+                          0, renderBuffer.width * renderBuffer.height),
                    [&](tbb::blocked_range<int> r) {
                        for (int pIdx = r.begin(); pIdx < r.end(); ++pIdx) {
-                        // denoiser in ospray 2.12 causes alpha to go to 0
-                        if (_denoiserState)
-                            renderBuffer.colorBuffer[pIdx].w = 1.f;
+                           // denoiser in ospray 2.12 causes alpha to go to 0
+                           if (_denoiserState)
+                               renderBuffer.colorBuffer[pIdx].w = 1.f;
                        }
                    });
             _writeRenderBuffer<float>(ospRenderBuffer, renderBuffer,
@@ -543,7 +548,8 @@ HdOSPRayRenderPass::_ProcessCamera(
 
     if (fStop > 0.f)
         aperture = focalLength / fStop / 2.f * .1f;
-    // only set if apterture over epsilon. Ran into issues on windows setting DOF when 0.
+    // only set if apterture over epsilon. Ran into issues on windows setting
+    // DOF when 0.
     if (aperture > 1.0e-5) {
         _camera.setParam("focusDistance", focusDistance);
         _camera.setParam("apertureRadius", aperture);
@@ -714,8 +720,7 @@ HdOSPRayRenderPass::_ProcessInstances()
         hdOSPRayBasisCurves->AddOSPInstances(_oldInstances);
     }
     _oldInstances.emplace_back(_lightsInstance);
-    TF_DEBUG_MSG(OSP, "ospRP::num instances %zu\n",
-                 _oldInstances.size());
+    TF_DEBUG_MSG(OSP, "ospRP::num instances %zu\n", _oldInstances.size());
     if (!_oldInstances.empty()) {
         opp::CopiedData data = opp::CopiedData(
                _oldInstances.data(), OSP_INSTANCE, _oldInstances.size());
@@ -768,7 +773,9 @@ HdOSPRayRenderPass::_ComputeClearColor(VtValue const& clearValue)
     }
 }
 
-void HdOSPRayRenderPass::_CopyFrameBuffer(HdRenderPassStateSharedPtr const& renderPassState)
+void
+HdOSPRayRenderPass::_CopyFrameBuffer(
+       HdRenderPassStateSharedPtr const& renderPassState)
 {
     opp::FrameBuffer frameBuffer = _frameBuffer;
     if (_interacting)
@@ -779,101 +786,102 @@ void HdOSPRayRenderPass::_CopyFrameBuffer(HdRenderPassStateSharedPtr const& rend
     // and convert the image into a GL-compatible format.
     int frameSize = _currentFrame.width * _currentFrame.height;
     if (_hasColor) {
-        vec4f* rgba
-                = static_cast<vec4f*>(frameBuffer.map(OSP_FB_COLOR));
+        vec4f* rgba = static_cast<vec4f*>(frameBuffer.map(OSP_FB_COLOR));
         if (rgba)
-            std::copy(rgba, rgba + frameSize,
-                        _currentFrame.colorBuffer.data());
+            std::copy(rgba, rgba + frameSize, _currentFrame.colorBuffer.data());
         frameBuffer.unmap(rgba);
     }
     if (_numSamplesAccumulated == 0 || _pendingResetImage) {
         if (_hasDepth || _hasCameraDepth) { // clip space depth
-            float* depth
-                    = static_cast<float*>(frameBuffer.map(OSP_FB_DEPTH));
+            float* depth = static_cast<float*>(frameBuffer.map(OSP_FB_DEPTH));
             if (depth) {
                 if (_hasCameraDepth) {
                     std::copy(depth, depth + frameSize,
-                                _currentFrame.cameraDepthBuffer.data());
+                              _currentFrame.cameraDepthBuffer.data());
                 }
                 if (_hasDepth) {
                     // convert depth to clip space
-                    const auto viewMatrix = renderPassState->GetWorldToViewMatrix();
-                    const auto projMatrix = renderPassState->GetProjectionMatrix();
+                    const auto viewMatrix
+                           = renderPassState->GetWorldToViewMatrix();
+                    const auto projMatrix
+                           = renderPassState->GetProjectionMatrix();
 
                     tbb::parallel_for(
-                            tbb::blocked_range<int>(0, frameSize),
-                            [&](tbb::blocked_range<int> r) {
-                                for (int i = r.begin(); i < r.end();
-                                    ++i) {
-                                    float& d = depth[i];
-                                    auto v = GfVec3f(0.f, 0.f, _cameraOrigin[2] + d * _cameraDir[2]);
-                                    v = viewMatrix.Transform(v);
-                                    v = projMatrix.Transform(v);
-                                    d = (v[2] + 1.f) / 2.f;
-                                }
-                            });
+                           tbb::blocked_range<int>(0, frameSize),
+                           [&](tbb::blocked_range<int> r) {
+                               for (int i = r.begin(); i < r.end(); ++i) {
+                                   float& d = depth[i];
+                                   auto v = GfVec3f(0.f, 0.f,
+                                                    _cameraOrigin[2]
+                                                           + d * _cameraDir[2]);
+                                   v = viewMatrix.Transform(v);
+                                   v = projMatrix.Transform(v);
+                                   d = (v[2] + 1.f) / 2.f;
+                               }
+                           });
 
                     std::copy(depth, depth + frameSize,
-                                _currentFrame.depthBuffer.data());
+                              _currentFrame.depthBuffer.data());
                 }
             }
             frameBuffer.unmap(depth);
         }
 
         if (_hasNormal) {
-            vec3f* normal = static_cast<vec3f*>(
-                    frameBuffer.map(OSP_FB_NORMAL));
+            vec3f* normal = static_cast<vec3f*>(frameBuffer.map(OSP_FB_NORMAL));
             if (normal)
                 std::copy(normal, normal + frameSize,
-                            _currentFrame.normalBuffer.data());
+                          _currentFrame.normalBuffer.data());
             frameBuffer.unmap(normal);
         }
 
         if (_hasPrimId) {
             unsigned int* primId = static_cast<unsigned int*>(
-                    frameBuffer.map(OSP_FB_ID_OBJECT));
+                   frameBuffer.map(OSP_FB_ID_OBJECT));
             if (primId)
                 std::copy(primId, primId + frameSize,
-                            _currentFrame.primIdBuffer.data());
+                          _currentFrame.primIdBuffer.data());
             frameBuffer.unmap(primId);
         }
 
         if (_hasElementId) {
             unsigned int* geomId = static_cast<unsigned int*>(
-                    frameBuffer.map(OSP_FB_ID_PRIMITIVE));
+                   frameBuffer.map(OSP_FB_ID_PRIMITIVE));
             if (geomId)
                 std::copy(geomId, geomId + frameSize,
-                            _currentFrame.elementIdBuffer.data());
+                          _currentFrame.elementIdBuffer.data());
             frameBuffer.unmap(geomId);
         }
 
         if (_hasInstId) {
             unsigned int* instId = static_cast<unsigned int*>(
-                    frameBuffer.map(OSP_FB_ID_INSTANCE));
+                   frameBuffer.map(OSP_FB_ID_INSTANCE));
             if (instId)
                 std::copy(instId, instId + frameSize,
-                            _currentFrame.instIdBuffer.data());
+                          _currentFrame.instIdBuffer.data());
             frameBuffer.unmap(instId);
         }
     }
 }
 
-void HdOSPRayRenderPass::_UpdateFrameBuffer(bool useDenoiser, HdRenderPassStateSharedPtr const& renderPassState)
+void
+HdOSPRayRenderPass::_UpdateFrameBuffer(
+       bool useDenoiser, HdRenderPassStateSharedPtr const& renderPassState)
 {
     if (_frameBufferDirty) {
         _frameBuffer = opp::FrameBuffer(
-            (int)_width, (int)_height, OSP_FB_RGBA32F,
-            (_hasColor ? OSP_FB_COLOR : 0)
-                    | (_hasDepth || _hasCameraDepth ? OSP_FB_DEPTH : 0)
-                    | (_hasNormal ? OSP_FB_NORMAL : 0)
-                    | (_hasElementId ? OSP_FB_ID_PRIMITIVE : 0)
-                    | (_hasPrimId ? OSP_FB_ID_OBJECT : 0)
-                    | (_hasInstId ? OSP_FB_ID_INSTANCE : 0) | OSP_FB_ACCUM |
+               (int)_width, (int)_height, OSP_FB_RGBA32F,
+               (_hasColor ? OSP_FB_COLOR : 0)
+                      | (_hasDepth || _hasCameraDepth ? OSP_FB_DEPTH : 0)
+                      | (_hasNormal ? OSP_FB_NORMAL : 0)
+                      | (_hasElementId ? OSP_FB_ID_PRIMITIVE : 0)
+                      | (_hasPrimId ? OSP_FB_ID_OBJECT : 0)
+                      | (_hasInstId ? OSP_FB_ID_INSTANCE : 0) | OSP_FB_ACCUM |
 #if HDOSPRAY_ENABLE_DENOISER
-                    OSP_FB_ALBEDO | OSP_FB_VARIANCE | OSP_FB_NORMAL
-                    | OSP_FB_DEPTH |
+                      OSP_FB_ALBEDO | OSP_FB_VARIANCE | OSP_FB_NORMAL
+                      | OSP_FB_DEPTH |
 #endif
-                    0);
+                      0);
         _frameBuffer.commit();
         _currentFrame.resize(_width * _height);
 
@@ -885,32 +893,32 @@ void HdOSPRayRenderPass::_UpdateFrameBuffer(bool useDenoiser, HdRenderPassStateS
         {
             if (_hasColor)
                 _colorBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                    HdFormatFloat32Vec4,
-                                    /*multiSampled=*/false);
+                                      HdFormatFloat32Vec4,
+                                      /*multiSampled=*/false);
             if (_hasDepth)
                 _depthBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                    HdFormatFloat32,
-                                    /*multiSampled=*/false);
+                                      HdFormatFloat32,
+                                      /*multiSampled=*/false);
             if (_hasCameraDepth)
                 _cameraDepthBuffer.Allocate(GfVec3i(_width, _height, 1),
                                             HdFormatFloat32,
                                             /*multiSampled=*/false);
             if (_hasNormal)
                 _normalBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                    HdFormatFloat32Vec3,
-                                    /*multiSampled=*/false);
+                                       HdFormatFloat32Vec3,
+                                       /*multiSampled=*/false);
             if (_hasPrimId)
                 _primIdBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                    HdFormatInt32,
-                                    /*multiSampled=*/false);
+                                       HdFormatInt32,
+                                       /*multiSampled=*/false);
             if (_hasElementId)
                 _elementIdBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                        HdFormatInt32,
-                                        /*multiSampled=*/false);
+                                          HdFormatInt32,
+                                          /*multiSampled=*/false);
             if (_hasInstId)
                 _instIdBuffer.Allocate(GfVec3i(_width, _height, 1),
-                                    HdFormatInt32,
-                                    /*multiSampled=*/false);
+                                       HdFormatInt32,
+                                       /*multiSampled=*/false);
         }
         _interactiveFrameBufferDirty = true;
         _pendingResetImage = true;
@@ -920,15 +928,15 @@ void HdOSPRayRenderPass::_UpdateFrameBuffer(bool useDenoiser, HdRenderPassStateS
     if (_interactiveFrameBufferDirty) {
         _interactiveFrameBufferScale = _newInteractiveFrameBufferScale;
         _interactiveFrameBuffer = opp::FrameBuffer(
-            (int)(float(_width) / _interactiveFrameBufferScale),
-            (int)(float(_height) / _interactiveFrameBufferScale),
-            OSP_FB_RGBA32F,
-            (_hasColor ? OSP_FB_COLOR : 0)
-                    | (_hasDepth || _hasCameraDepth ? OSP_FB_DEPTH : 0)
-                    | (_hasNormal ? OSP_FB_NORMAL : 0)
-                    | (_hasElementId ? OSP_FB_ID_PRIMITIVE : 0)
-                    | (_hasPrimId ? OSP_FB_ID_OBJECT : 0)
-                    | (_hasInstId ? OSP_FB_ID_INSTANCE : 0));
+               (int)(float(_width) / _interactiveFrameBufferScale),
+               (int)(float(_height) / _interactiveFrameBufferScale),
+               OSP_FB_RGBA32F,
+               (_hasColor ? OSP_FB_COLOR : 0)
+                      | (_hasDepth || _hasCameraDepth ? OSP_FB_DEPTH : 0)
+                      | (_hasNormal ? OSP_FB_NORMAL : 0)
+                      | (_hasElementId ? OSP_FB_ID_PRIMITIVE : 0)
+                      | (_hasPrimId ? OSP_FB_ID_OBJECT : 0)
+                      | (_hasInstId ? OSP_FB_ID_INSTANCE : 0));
         _interactiveFrameBuffer.commit();
         _interactiveFrameBufferDirty = false;
         if (_interacting)
@@ -945,28 +953,29 @@ void HdOSPRayRenderPass::_UpdateFrameBuffer(bool useDenoiser, HdRenderPassStateS
             iops.emplace_back(denoiser);
         }
         if (_useTonemapper) {
-            HdRenderDelegate* renderDelegate = GetRenderIndex()->GetRenderDelegate();
+            HdRenderDelegate* renderDelegate
+                   = GetRenderIndex()->GetRenderDelegate();
             float exposure = renderDelegate->GetRenderSetting<float>(
-                HdOSPRayRenderSettingsTokens->tmp_exposure,
-                HdOSPRayConfig::GetInstance().tmp_exposure);
+                   HdOSPRayRenderSettingsTokens->tmp_exposure,
+                   HdOSPRayConfig::GetInstance().tmp_exposure);
             float contrast = renderDelegate->GetRenderSetting<float>(
-                HdOSPRayRenderSettingsTokens->tmp_contrast,
-                HdOSPRayConfig::GetInstance().tmp_contrast);
+                   HdOSPRayRenderSettingsTokens->tmp_contrast,
+                   HdOSPRayConfig::GetInstance().tmp_contrast);
             float shoulder = renderDelegate->GetRenderSetting<float>(
-                HdOSPRayRenderSettingsTokens->tmp_shoulder,
-                HdOSPRayConfig::GetInstance().tmp_shoulder);
+                   HdOSPRayRenderSettingsTokens->tmp_shoulder,
+                   HdOSPRayConfig::GetInstance().tmp_shoulder);
             float midIn = renderDelegate->GetRenderSetting<float>(
-                HdOSPRayRenderSettingsTokens->tmp_midIn,
-                HdOSPRayConfig::GetInstance().tmp_midIn);
+                   HdOSPRayRenderSettingsTokens->tmp_midIn,
+                   HdOSPRayConfig::GetInstance().tmp_midIn);
             float midOut = renderDelegate->GetRenderSetting<float>(
-                HdOSPRayRenderSettingsTokens->tmp_midOut,
-                HdOSPRayConfig::GetInstance().tmp_midOut);
+                   HdOSPRayRenderSettingsTokens->tmp_midOut,
+                   HdOSPRayConfig::GetInstance().tmp_midOut);
             float hdrMax = renderDelegate->GetRenderSetting<float>(
-                HdOSPRayRenderSettingsTokens->tmp_hdrMax,
-                HdOSPRayConfig::GetInstance().tmp_hdrMax);
+                   HdOSPRayRenderSettingsTokens->tmp_hdrMax,
+                   HdOSPRayConfig::GetInstance().tmp_hdrMax);
             bool acesColor = renderDelegate->GetRenderSetting<bool>(
-                HdOSPRayRenderSettingsTokens->tmp_acesColor,
-                HdOSPRayConfig::GetInstance().tmp_acesColor);
+                   HdOSPRayRenderSettingsTokens->tmp_acesColor,
+                   HdOSPRayConfig::GetInstance().tmp_acesColor);
             opp::ImageOperation tonemapper("tonemapper");
             tonemapper.setParam("exposure", exposure);
             tonemapper.setParam("contrast", contrast);

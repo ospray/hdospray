@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "light.h"
 #include "../texture.h"
+#include "light.h"
 
 PXR_NAMESPACE_USING_DIRECTIVE
 

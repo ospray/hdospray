@@ -79,7 +79,6 @@ public:
         }
     };
 
-
     void SetAovBindings(HdRenderPassAovBindingVector const& aovBindings);
 
     HdRenderPassAovBindingVector const& GetAovBindings() const
@@ -102,7 +101,8 @@ protected:
     virtual void _ProcessLights();
     virtual void _ProcessSettings();
     virtual void _ProcessInstances();
-    virtual void _CopyFrameBuffer(HdRenderPassStateSharedPtr const& renderPassState);
+    virtual void
+    _CopyFrameBuffer(HdRenderPassStateSharedPtr const& renderPassState);
     virtual void _DisplayRenderBuffer(RenderFrame& renderFrame);
 
 private:
@@ -145,13 +145,14 @@ private:
     static GfVec4f _ComputeClearColor(VtValue const& clearValue);
 
     // self allocate aovs if renderpassstate has invalid framing
-    void _UpdateFrameBuffer(bool useDenoiser, HdRenderPassStateSharedPtr const& renderPassState);
+    void _UpdateFrameBuffer(bool useDenoiser,
+                            HdRenderPassStateSharedPtr const& renderPassState);
 
     bool _pendingResetImage { true };
-    bool _interactiveFrameBufferDirty {true};
-    bool _frameBufferDirty {true};
-    bool _denoiserDirty {true};
-    bool _aovDirty {true};
+    bool _interactiveFrameBufferDirty { true };
+    bool _frameBufferDirty { true };
+    bool _denoiserDirty { true };
+    bool _aovDirty { true };
     bool _pendingModelUpdate { true };
     bool _pendingLightUpdate { true };
     bool _pendingSettingsUpdate { true };
@@ -177,7 +178,9 @@ private:
     bool _hasInstId { false };
     float _currentFrameBufferScale { 1.0f };
     float _interactiveFrameBufferScale { 2.0f };
-    float _newInteractiveFrameBufferScale { 2.0f }; // to be updated next new generation
+    float _newInteractiveFrameBufferScale {
+        2.0f
+    }; // to be updated next new generation
     float _interactiveTargetFPS { HDOSPRAY_DEFAULT_INTERACTIVE_TARGET_FPS };
 
     opp::Renderer _renderer;

@@ -20,13 +20,13 @@ public:
     virtual void
     DeleteRenderDelegate(HdRenderDelegate* renderDelegate) override;
 
-    /// Checks to see if the HdOSPRay plugin is supported on the running system
-    ///
-    #if PXR_VERSION < 2302
+/// Checks to see if the HdOSPRay plugin is supported on the running system
+///
+#if PXR_VERSION < 2302
     bool IsSupported() const override;
-    #else
+#else
     bool IsSupported(bool gpuEnabled = true) const override;
-    #endif
+#endif
 
 private:
     HdOSPRayRendererPlugin(const HdOSPRayRendererPlugin&) = delete;

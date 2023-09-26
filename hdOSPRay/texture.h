@@ -11,8 +11,8 @@
 #include <ospray/ospray_cpp.h>
 #include <ospray/ospray_cpp/ext/rkcommon.h>
 
-#include <string>
 #include <stdint.h>
+#include <string>
 
 namespace opp = ospray::cpp;
 
@@ -20,9 +20,12 @@ PXR_NAMESPACE_USING_DIRECTIVE
 
 struct HdOSPRayTexture {
 public:
-    HdOSPRayTexture(opp::Texture texture = nullptr, std::shared_ptr<uint8_t> data_ = nullptr)
-        : ospTexture(texture), data(data_)
-    {}
+    HdOSPRayTexture(opp::Texture texture = nullptr,
+                    std::shared_ptr<uint8_t> data_ = nullptr)
+        : ospTexture(texture)
+        , data(data_)
+    {
+    }
     ~HdOSPRayTexture() = default;
     std::string file;
     enum class WrapType { NONE, BLACK, CLAMP, REPEAT, MIRROR };
@@ -36,7 +39,8 @@ public:
     ColorType type;
     opp::Texture ospTexture { nullptr };
     bool isPtex { false };
-    std::shared_ptr<uint8_t> data;  // should be uint8_t[], but to support older compilers use custom delete
+    std::shared_ptr<uint8_t> data; // should be uint8_t[], but to support older
+                                   // compilers use custom delete
 };
 
 OSPTextureFormat osprayTextureFormat(int depth, int channels,
@@ -49,9 +53,10 @@ opp::Texture LoadPtexTexture(std::string file);
 /// @param nearestFilter or interpolation
 /// @param compute 1.f-val.  float only.
 /// @return OSPRay texture object, data pointer
-HdOSPRayTexture
-LoadHioTexture2D(const std::string file, const std::string channels = "",
-                  bool nearestFilter = false, bool complement = false);
+HdOSPRayTexture LoadHioTexture2D(const std::string file,
+                                 const std::string channels = "",
+                                 bool nearestFilter = false,
+                                 bool complement = false);
 
 /// @brief
 /// @param filename
@@ -60,8 +65,6 @@ LoadHioTexture2D(const std::string file, const std::string channels = "",
 /// @param use nearestFilter or interpolation
 /// @param compute 1.f-val.  float only.
 /// @return OSPRay texture object, data pointer
-HdOSPRayTexture
-LoadUDIMTexture2D(std::string file, int& numX,
-                                                 int& numY,
-                                                 bool nearestFilter = false,
-                                                 bool complement = false);
+HdOSPRayTexture LoadUDIMTexture2D(std::string file, int& numX, int& numY,
+                                  bool nearestFilter = false,
+                                  bool complement = false);

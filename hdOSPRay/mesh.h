@@ -120,9 +120,9 @@ private:
                 computedPrimvars = primvars;
             } else if (interpolation == HdInterpolationUniform) {
                 size_t numQuads = _quadIndices.size() / 4;
-                #if HD_API_VERSION < 44
-                            numQuads = _quadIndices.size();
-                #endif
+#if HD_API_VERSION < 44
+                numQuads = _quadIndices.size();
+#endif
                 computedPrimvars.resize(numQuads);
                 for (size_t i = 0; i < computedPrimvars.size(); i++)
                     computedPrimvars[i] = primvars[i];
@@ -162,7 +162,9 @@ private:
                 computedPrimvars.resize(1);
                 computedPrimvars[0] = primvars[0];
             } else if (interpolation == HdInterpolationInstance) {
-                TF_WARN("HdOSPRayMesh: unsupported interpolation mode HdInterpolationInstance");
+                TF_WARN(
+                       "HdOSPRayMesh: unsupported interpolation mode "
+                       "HdInterpolationInstance");
             } else {
                 TF_WARN("HdOSPRayMesh: unknown interpolation mode");
             }
@@ -189,9 +191,9 @@ private:
     VtVec3fArray _colors;
     VtVec3fArray _computedColors; // triangulated
     GfVec4f _singleColor { .5f, .5f, .5f, 1.f };
-    HdInterpolation _texcoordsInterpolation {HdInterpolationVertex};
-    HdInterpolation _colorsInterpolation {HdInterpolationVertex};
-    HdInterpolation _normalsInterpolation {HdInterpolationVarying};
+    HdInterpolation _texcoordsInterpolation { HdInterpolationVertex };
+    HdInterpolation _colorsInterpolation { HdInterpolationVertex };
+    HdInterpolation _normalsInterpolation { HdInterpolationVarying };
     TfToken _texcoordsPrimVarName;
     TfToken _colorsPrimVarName;
     TfToken _normalsPrimVarName;

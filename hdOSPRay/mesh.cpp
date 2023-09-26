@@ -358,10 +358,11 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             if (_normalsInterpolation == HdInterpolationFaceVarying) {
                 _ospMesh.setParam("normal", normalsData);
             } else if ((_normalsInterpolation == HdInterpolationVarying)
-                     || (_normalsInterpolation == HdInterpolationVertex)) {
+                       || (_normalsInterpolation == HdInterpolationVertex)) {
                 _ospMesh.setParam("vertex.normal", normalsData);
             } else {
-                TF_DEBUG_MSG(OSP, "osp::mesh unsupported normal interpolation mode");
+                TF_DEBUG_MSG(OSP,
+                             "osp::mesh unsupported normal interpolation mode");
             }
         }
 
@@ -465,7 +466,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
     if (HdChangeTracker::IsInstancerDirty(*dirtyBits, id) || isTransformDirty) {
         if (!GetInstancerId().IsEmpty()) {
-            //TODO: reuse instances for instancer?
+            // TODO: reuse instances for instancer?
             _ospInstances.clear();
             HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
             HdInstancer* instancer = renderIndex.GetInstancer(GetInstancerId());
@@ -516,10 +517,12 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
             if (newMesh) {
                 if (_geomSubsetModels.size()) {
-                    group.setParam("geometry", opp::CopiedData(_geomSubsetModels));
+                    group.setParam("geometry",
+                                   opp::CopiedData(_geomSubsetModels));
                 } else {
                     if (_geometricModel)
-                        group.setParam("geometry", opp::CopiedData(*_geometricModel));
+                        group.setParam("geometry",
+                                       opp::CopiedData(*_geometricModel));
                 }
                 group.commit();
                 _ospInstances.push_back(instance);
@@ -569,16 +572,17 @@ HdOSPRayMesh::_CreateOSPRayMesh(const VtVec2fArray& texcoords,
         if (useQuads) {
             size_t numQuads = _quadIndices.size() / 4;
             TF_DEBUG_MSG(OSP, "creating quad mesh of size: %zu\n", numQuads);
-            #if HD_API_VERSION < 44
-                        numQuads = _quadIndices.size();
-            #endif
-            opp::SharedData indices = opp::SharedData(
-                   _quadIndices.cdata(), OSP_VEC4UI, numQuads);
+#if HD_API_VERSION < 44
+            numQuads = _quadIndices.size();
+#endif
+            opp::SharedData indices = opp::SharedData(_quadIndices.cdata(),
+                                                      OSP_VEC4UI, numQuads);
             indices.commit();
             ospMesh.setParam("index", indices);
 
         } else { // triangles
-            TF_DEBUG_MSG(OSP, "creating tri mesh of size: %zu\n", _triangulatedIndices.size()/3);
+            TF_DEBUG_MSG(OSP, "creating tri mesh of size: %zu\n",
+                         _triangulatedIndices.size() / 3);
             opp::SharedData indices
                    = opp::SharedData(_triangulatedIndices.cdata(), OSP_VEC3UI,
                                      _triangulatedIndices.size());
@@ -630,7 +634,8 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
                                  OSP_UINT, numFaceVertices);
         faces.commit();
         mesh.setParam("face", faces);
-        TF_DEBUG_MSG(OSP, "creating subdiv mesh of size: %zu\n", _topology.GetFaceVertexCounts().size());
+        TF_DEBUG_MSG(OSP, "creating subdiv mesh of size: %zu\n",
+                     _topology.GetFaceVertexCounts().size());
     }
     if (numIndices > 0) {
         opp::SharedData indices = opp::SharedData(

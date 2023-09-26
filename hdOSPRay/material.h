@@ -124,7 +124,7 @@ protected:
     // and scale
     void _ProcessTransform2dNode(HdMaterialNode node, TfToken textureName);
 
-    enum MaterialTypes { preview = 0, principled, carPaint, luminous};
+    enum MaterialTypes { preview = 0, principled, carPaint, luminous };
     MaterialTypes _type { MaterialTypes::preview };
 
     GfVec3f diffuseColor { 0.18f, 0.18f, 0.18f }; // also baseColor

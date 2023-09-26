@@ -215,7 +215,7 @@ HdOSPRayRenderDelegate::GetMaterialRenderContexts() const
     // Carson: this should be "HdOSPRayTokens->ospray", but we return glslfx so
     // that we work with many supplied shaders
     // TODO: is it possible to return both?
-    return {HdOSPRayTokens->glslfx, HdOSPRayTokens->osp};
+    return { HdOSPRayTokens->glslfx, HdOSPRayTokens->osp };
 }
 #endif
 
