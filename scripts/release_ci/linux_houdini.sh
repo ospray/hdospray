@@ -10,6 +10,13 @@ env
 
 THREADS=`nproc`
 
+apt install python3-pip -y
+echo "pip packages: "
+ls /usr/local/lib/python3.8/dist-packages
+pip3 install PyOpenGL==3.1.5 PySide2 numpy
+echo "pip3 show PyOpenGL:"
+pip3 show PyOpenGL
+
 export ROOT_DIR=$PWD
 DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.02
 mkdir -p $ROOT_DIR/../hdospray_deps
@@ -20,6 +27,7 @@ export CMAKE_CXX_FLAGS="-std=c++17"
 echo "houdini_DIR:"
 ls $HOUDINI_DIR/toolkit/cmake
 
+rm -r $DEP_DIR/install
 if [ ! -d "$DEP_DIR/install" ]
 then
     mkdir -p $DEP_DIR/install
@@ -27,8 +35,9 @@ then
     cd build_deps
     cmake ../scripts/superbuild/ -DBUILD_HDOSPRAY=OFF \
         -DHDSUPER_OSPRAY_USE_EXTERNAL=ON \
-        -DHDSUPER_OSPRAY_EXTERNAL_DIR=/usr/lib/cmake/ospray-2.12.0 \
+        -DHDSUPER_OSPRAY_EXTERNAL_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-3.0.0/lib/cmake/ospray-3.0.0" \
         -DBUILD_OSPRAY=OFF -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=ON \
+        -DBUILD_USD=OFF \
         -DBUILD_PNG=ON -DBUILD_JPEG=ON -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF \
         -DCMAKE_INSTALL_PREFIX=$DEP_DIR/install .
     cmake --build . -j ${THREADS}
@@ -45,8 +54,9 @@ cd $ROOT_DIR
 mkdir -p build_release
 cd build_release
 cmake -L \
-  -D ospray_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-2.12.0.x86_64.linux/lib/cmake/ospray-2.12.0" \
-  -D rkcommon_DIR="$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.11.0" \
+  -D ospray_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-3.0.0/lib/cmake/ospray-3.0.0" \
+  -D rkcommon_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-3.0.0/lib/cmake/rkcommon-1.11.0" \
+  -D TBB_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-3.0.0/lib/cmake/tbb" \
   -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
   -D HDOSPRAY_INSTALL_USD_DEPENDENCIES=OFF \
   -D HDOSPRAY_GENERATE_SETUP=ON \
@@ -55,4 +65,4 @@ cmake -L \
   -D Houdini_DIR=$HOUDINI_DIR/toolkit/cmake \
   ..
 
-make -j $THREADS package || exit 2
+#make -j $THREADS package || exit 2

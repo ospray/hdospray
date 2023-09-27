@@ -229,28 +229,28 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
             if (_type == MaterialTypes::carPaint) {
                 if (_typeDirty)
                     _ospMaterial
-                           = opp::Material(rendererType.c_str(), "carPaint");
+                           = opp::Material("carPaint");
                 UpdateCarPaintMaterial();
             } else if (_type == MaterialTypes::luminous) {
                 if (_typeDirty)
                     _ospMaterial
-                           = opp::Material(rendererType.c_str(), "luminous");
+                           = opp::Material("luminous");
                 UpdateLuminousMaterial();
             } else { // preview, principled, other
                 if (_typeDirty)
                     _ospMaterial
-                           = opp::Material(rendererType.c_str(), "principled");
+                           = opp::Material("principled");
                 UpdatePrincipledMaterial(rendererType);
             }
         } else {
             if (_typeDirty)
-                _ospMaterial = opp::Material(rendererType.c_str(), "obj");
+                _ospMaterial = opp::Material("obj");
             UpdateSimpleMaterial(rendererType);
         }
         _typeDirty = false;
     } else {
         if (_typeDirty)
-            _ospMaterial = opp::Material(rendererType.c_str(), "obj");
+            _ospMaterial = opp::Material("obj");
         UpdateScivisMaterial(rendererType);
     }
 
@@ -521,13 +521,13 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
     opp::Material ospMaterial;
     if (rendererType == "pathtracer"
         && !HdOSPRayConfig::GetInstance().useSimpleMaterial) {
-        ospMaterial = opp::Material(rendererType.c_str(), "principled");
+        ospMaterial = opp::Material("principled");
         ospMaterial.setParam("baseColor", vec3f(color[0], color[1], color[2]));
         ospMaterial.setParam("ior", 1.5f);
         ospMaterial.setParam("metallic", 0.0f);
         // note: setting roughness here crashing on mac
     } else {
-        ospMaterial = opp::Material(rendererType.c_str(), "obj");
+        ospMaterial = opp::Material("obj");
         ospMaterial.setParam("ns", 10.f);
         ospMaterial.setParam("ks", vec3f(0.2f, 0.2f, 0.2f));
         ospMaterial.setParam("kd", vec3f(color[0], color[1], color[2]));

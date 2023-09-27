@@ -181,7 +181,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
     ospTexture.setParam("format", format);
     ospTexture.setParam("filter",
                         nearestFilter ? OSP_TEXTURE_FILTER_NEAREST
-                                      : OSP_TEXTURE_FILTER_BILINEAR);
+                                      : OSP_TEXTURE_FILTER_LINEAR);
     ospTexture.setParam("data", ospData);
     ospTexture.commit();
 
@@ -392,7 +392,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
     ospTexture.setParam("format", format);
     ospTexture.setParam("filter",
                         nearestFilter ? OSP_TEXTURE_FILTER_NEAREST
-                                      : OSP_TEXTURE_FILTER_BILINEAR);
+                                      : OSP_TEXTURE_FILTER_LINEAR);
     ospTexture.setParam("data", ospData);
     ospTexture.commit();
 

@@ -227,8 +227,8 @@ private:
     bool _tonemapperDirty { true };
     bool _denoiserLoaded { false }; // did the module successfully load?
     bool _denoiserState { false };
-    OSPPixelFilterTypes _pixelFilterType {
-        OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS
+    OSPPixelFilterType _pixelFilterType {
+        OSPPixelFilterType::OSP_PIXELFILTER_GAUSS
     };
     int _samplesToConvergence { HDOSPRAY_DEFAULT_SPP_TO_CONVERGE };
     int _denoiserSPPThreshold { 6 };

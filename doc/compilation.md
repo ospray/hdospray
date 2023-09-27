@@ -8,9 +8,7 @@ Tags are of the form `hdospray-vx.x.x-usdvx.x.x`, with `vx.x.x` being the
 release of OSPRay for Hydra and `usdv` being the version of USD it is built against.
 This is required due to the frequently changing internals of hydra.
 
-Currently OSPRay for Hydra is regularly tested on Linux Arch.  MacOS support in USD is 
-experimental, but we often test against it. Windows support of USD is
-also experimental, but we have not tested OSPRay for Hydra with it.
+Currently OSPRay for Hydra is regularly tested on Ubuntu 22.04, and has been tested on Windows 10 and MacOS 12.6.
 
 ## Prerequisites
 

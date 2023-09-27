@@ -30,6 +30,10 @@ Hydra Settings.
 
    Will progressively render frames until this many samples per pixel, then stop rendering.
 
+- `HDOSPRAY_INTERACTIVE_TARGET_FPS`
+
+   Set interactive scaling to match target fps when interacting.  0 Disables interactive scaling.
+
 -   `HDOSPRAY_LIGTH_SAMPLES`
 
    Number of light samples at every path intersection. A value of -1 leads to sampling all light

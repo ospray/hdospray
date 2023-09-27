@@ -629,9 +629,9 @@ HdOSPRayRenderPass::_ProcessSettings()
                   HdOSPRayRenderSettingsTokens->useDenoiser, true);
 #endif
     auto pixelFilterType
-           = (OSPPixelFilterTypes)renderDelegate->GetRenderSetting<int>(
+           = (OSPPixelFilterType)renderDelegate->GetRenderSetting<int>(
                   HdOSPRayRenderSettingsTokens->pixelFilterType,
-                  (int)OSPPixelFilterTypes::OSP_PIXELFILTER_GAUSS);
+                  (int)OSPPixelFilterType::OSP_PIXELFILTER_GAUSS);
     int spp = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->samplesPerFrame, _spp);
     int lSamples = renderDelegate->GetRenderSetting<int>(

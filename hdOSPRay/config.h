@@ -80,7 +80,7 @@ public:
     /// The type of pixel filter used by OSPRay.  See OSPRay docs for list.
     ///
     /// Override with *HDOSPRAY_PIXELFILTER_TYPE*.
-    OSPPixelFilterTypes pixelFilterType;
+    OSPPixelFilterType pixelFilterType;
 
     /// Whether OSPRay should use a simple
     /// diffuse + phong lobe BRDF instead of the

@@ -39,6 +39,7 @@ jobs:
       artifact-path: build_release/*.gz
       cmd: |
         scripts/release_ci/linux_houdini.sh
+        cmake --build build_release -j 32 --target package
         ls build_release
 
   # release-windows:
@@ -102,26 +103,11 @@ jobs:
     uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/static_analysis.yml@main
     with:
       image: hdospray/ubuntu:20.04-cb-hdospray23.02
-      project: hdospray
+      project: HDOSPRay
       prebuild: |
-        set -x
-        cmake -L -S . -B build \
-          -D CMAKE_CXX_FLAGS="-std=c++17" \
-          -D pxr_DIR=/gitlab/USD-install \
-          -D ospray_DIR=/usr \
-          -D embree_DIR=/usr \
-          -D ospcommon_DIR=/usr \
-          -D openvkl_DIR=/usr \
-          -D PXR_BUILD_OPENIMAGEIO_PLUGIN=ON \
-          -D OIIO_BASE_DIR=/gitlab/USD-install \
-          -D HDOSPRAY_ENABLE_DENOISER=OFF \
-          -D CMAKE_INSTALL_PREFIX=/gitlab/USD-install \
-          -D GLEW_LIBRARY=/gitlab/USD-install/lib64/libGLEW.so \
-          -D GLEW_INCLUDE_DIR=/gitlab/USD-install/include \
-          -D PXR_ENABLE_PTEX_SUPPORT=OFF \
-          -D PXR_BUILD_USD_IMAGING=OFF \
-          -D PXR_BUILD_USDVIEW=OFF
-      build: cmake --build build -j64
+        scripts/release_ci/linux_houdini.sh
+        ls build_release
+      build: cmake --build build_release -j 32
 
   binary-analysis:
     needs:
