@@ -22,21 +22,22 @@ struct HdOSPRayTexture {
 public:
     HdOSPRayTexture(opp::Texture texture = nullptr,
                     std::shared_ptr<uint8_t> data_ = nullptr)
-        : ospTexture(texture)
-        , data(data_)
+        : ospTexture(std::move(texture))
+        , data(std::move(data_))
     {
     }
     ~HdOSPRayTexture() = default;
     std::string file;
     enum class WrapType { NONE, BLACK, CLAMP, REPEAT, MIRROR };
-    WrapType wrapS, wrapT;
+    WrapType wrapS {WrapType::CLAMP};
+    WrapType wrapT {WrapType::CLAMP};
     GfVec4f scale { 1.0f };
     GfVec2f xfm_translation { 0.f, 0.f };
     GfVec2f xfm_scale { 1.f, 1.f };
     float xfm_rotation { 0.f };
     bool hasXfm { false };
     enum class ColorType { NONE, RGBA, RGB, R, G, B, A };
-    ColorType type;
+    ColorType type {ColorType::NONE};
     opp::Texture ospTexture { nullptr };
     bool isPtex { false };
     std::shared_ptr<uint8_t> data; // should be uint8_t[], but to support older

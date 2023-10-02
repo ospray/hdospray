@@ -39,7 +39,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     : HdRenderPass(index, collection)
     , _pendingResetImage(false)
     , _pendingModelUpdate(true)
-    , _renderer(renderer)
+    , _renderer(std::move(renderer))
     , _lastRenderedModelVersion(0)
     , _lastRenderedLightVersion(0)
     , _width(0)
@@ -47,7 +47,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     , _inverseViewMatrix(1.0f) // == identity
     , _inverseProjMatrix(1.0f) // == identity
     , _clearColor(0.0f, 0.0f, 0.0f, 0.f)
-    , _renderParam(renderParam)
+    , _renderParam(std::move(renderParam))
     , _colorBuffer(SdfPath::EmptyPath())
     , _depthBuffer(SdfPath::EmptyPath())
     , _cameraDepthBuffer(SdfPath::EmptyPath())
@@ -592,7 +592,7 @@ HdOSPRayRenderPass::_ProcessLights()
     std::vector<opp::Light> lights;
 
     // push scene lights
-    for (auto l : _renderParam->GetHdOSPRayLights()) {
+    for (const auto& l : _renderParam->GetHdOSPRayLights()) {
         if (l.second->IsVisible())
             lights.push_back(l.second->GetOSPLight());
     }

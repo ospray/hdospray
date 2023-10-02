@@ -15,7 +15,7 @@ PXR_NAMESPACE_USING_DIRECTIVE
 class HdOSPRayRenderBuffer : public HdRenderBuffer {
 public:
     HdOSPRayRenderBuffer(SdfPath const& id);
-    ~HdOSPRayRenderBuffer();
+    ~HdOSPRayRenderBuffer() = default;
 
     virtual bool
     Allocate(GfVec3i const& dimensions, HdFormat format,

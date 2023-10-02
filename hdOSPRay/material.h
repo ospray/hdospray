@@ -60,15 +60,15 @@ public:
     // static OSPMaterial CreateDiffuseMaterial(GfVec4f color);
 
     /// Create a default material based on the renderer type specified in config
-    void UpdatePrincipledMaterial(std::string renderType);
+    void UpdatePrincipledMaterial(const std::string& renderType);
     void UpdateCarPaintMaterial();
     void UpdateLuminousMaterial();
 
     /// Create a default material based on the renderer type specified in config
-    void UpdateSimpleMaterial(std::string renderType);
+    void UpdateSimpleMaterial(const std::string& renderType);
 
     /// Create a default material based on the renderer type specified in config
-    void UpdateScivisMaterial(std::string renderType);
+    void UpdateScivisMaterial(const std::string& renderType);
 
     /// Summary flag. Returns true if the material is bound to one or more
     /// textures and any of those textures is a ptex texture.
@@ -118,8 +118,8 @@ protected:
     void _ProcessOspCarPaintNode(HdMaterialNode node);
     void _ProcessOspLuminousNode(HdMaterialNode node);
     // parse texture node params and set them to appropriate map_ texture var
-    void _ProcessTextureNode(HdMaterialNode node, TfToken inputName,
-                             TfToken outputName);
+    void _ProcessTextureNode(HdMaterialNode node, const TfToken& inputName,
+                             const TfToken& outputName);
     // parse texture transformation node params and set rotation, translation,
     // and scale
     void _ProcessTransform2dNode(HdMaterialNode node, TfToken textureName);

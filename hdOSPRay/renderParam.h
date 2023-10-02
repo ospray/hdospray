@@ -26,7 +26,7 @@ PXR_NAMESPACE_USING_DIRECTIVE
 class HdOSPRayRenderParam final : public HdRenderParam {
 public:
     HdOSPRayRenderParam(opp::Renderer renderer)
-        : _renderer(renderer)
+        : _renderer(std::move(renderer))
     {
     }
     virtual ~HdOSPRayRenderParam() = default;

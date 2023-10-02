@@ -44,10 +44,6 @@ HdOSPRayRenderBuffer::HdOSPRayRenderBuffer(SdfPath const& id)
 {
 }
 
-HdOSPRayRenderBuffer::~HdOSPRayRenderBuffer()
-{
-}
-
 void
 HdOSPRayRenderBuffer::_Deallocate()
 {

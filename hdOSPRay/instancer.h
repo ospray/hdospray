@@ -48,4 +48,9 @@ private:
 
     // map of primvar name to data buffer
     TfHashMap<TfToken, HdVtBufferSource*, TfToken::HashFunctor> _primvarMap;
+
+private:
+    // This class does not support copying.
+    HdOSPRayInstancer(const HdOSPRayInstancer&) = delete;
+    HdOSPRayInstancer& operator=(const HdOSPRayInstancer&) = delete;
 };

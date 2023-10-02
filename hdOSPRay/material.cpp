@@ -179,8 +179,8 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
                     continue; // ignore unused texture
                 }
 
-                TfToken inputNameToken = relationship->inputName;
-                TfToken texNameToken = relationship->outputName;
+                const TfToken inputNameToken = relationship->inputName;
+                const TfToken texNameToken = relationship->outputName;
                 _ProcessTextureNode(*node, inputNameToken, texNameToken);
             } else if (node->identifier
                        == HdOSPRayMaterialTokens->UsdTransform2d) {
@@ -415,8 +415,8 @@ HdOSPRayMaterial::_ProcessOspLuminousNode(HdMaterialNode node)
 }
 
 void
-HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken inputName,
-                                      TfToken outputName)
+HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, const TfToken& inputName,
+                                      const TfToken& outputName)
 {
     bool isPtex = node.identifier == HdOSPRayMaterialTokens->HwPtexTexture_1;
     bool isUdim = false;
@@ -424,7 +424,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken inputName,
     if (_textures.find(outputName) == _textures.end())
         _textures[outputName] = HdOSPRayTexture();
     HdOSPRayTexture& texture = _textures[outputName];
-    std::string filename = "";
+    std::string&& filename("");
     TF_FOR_ALL (param, node.parameters) {
         const auto& name = param->first;
         const auto& value = param->second;
@@ -446,7 +446,7 @@ HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, TfToken inputName,
     }
 
     if (filename != "") {
-        texture.file = filename;
+        texture.file = std::move(filename);
         isUdim = TfStringContains(texture.file, "<UDIM>");
         if (isPtex) {
             hasPtex = true;
@@ -538,7 +538,7 @@ HdOSPRayMaterial::CreateDefaultMaterial(GfVec4f color)
 }
 
 void
-HdOSPRayMaterial::UpdatePrincipledMaterial(std::string rendererType)
+HdOSPRayMaterial::UpdatePrincipledMaterial(const std::string& rendererType)
 {
     _ospMaterial.setParam(
            "baseColor",
@@ -732,7 +732,7 @@ HdOSPRayMaterial::UpdateLuminousMaterial()
 }
 
 void
-HdOSPRayMaterial::UpdateSimpleMaterial(std::string rendererType)
+HdOSPRayMaterial::UpdateSimpleMaterial(const std::string& rendererType)
 {
     float avgFresnel = EvalAvgFresnel(ior);
 
@@ -775,7 +775,7 @@ HdOSPRayMaterial::UpdateSimpleMaterial(std::string rendererType)
 }
 
 void
-HdOSPRayMaterial::UpdateScivisMaterial(std::string rendererType)
+HdOSPRayMaterial::UpdateScivisMaterial(const std::string& rendererType)
 {
     _ospMaterial.setParam("ns", 10.f);
     _ospMaterial.setParam("ks", vec3f(0.2f, 0.2f, 0.2f));

@@ -129,7 +129,7 @@ HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
     }
 
     // Create ospray mesh
-    _PopulateOSPMesh(sceneDelegate, renderer, dirtyBits, desc, ospRenderParam);
+    _PopulateOSPMesh(sceneDelegate, std::move(renderer), dirtyBits, desc, ospRenderParam);
 
     if (*dirtyBits & HdChangeTracker::DirtyTopology) {
         // TODO: need to update material when topology has changed?
@@ -402,7 +402,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
         const HdOSPRayMaterial* subsetMaterial = nullptr;
 
-        for (auto subset : _topology.GetGeomSubsets()) {
+        for (const auto& subset : _topology.GetGeomSubsets()) {
             if (!TF_VERIFY(subset.type == HdGeomSubset::TypeFaceSet))
                 continue;
 

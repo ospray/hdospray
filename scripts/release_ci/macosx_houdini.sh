@@ -45,6 +45,7 @@ if [ -z $CC ]; then
 fi
 
 #### Build dependencies ####
+mkdir -p $OSPRAY_ROOT
 rm -r $OSPRAY_ROOT/*
 if [ ! -d "$OSPRAY_ROOT/install" ]
   then
@@ -69,9 +70,7 @@ if [ ! -d "$OSPRAY_ROOT/install" ]
     alias python3=/usr/local/bin/python3.9
     export MACOSX_DEPLOYMENT_TARGET=11.7
     cmake $ROOT_DIR/scripts/superbuild/ -DHDSUPER_PYTHON_VERSION=3.9 \
-      -DHDSUPER_OSPRAY_URL="https://github.com/intel-innersource/libraries.graphics.renderkit.ospray.git" \
       -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DBUILD_OSPRAY=ON \
-      -DOSPRAY_VERSION=3.0.0 -DHDSUPER_OSPRAY_VERSION="v3.0.0_beta_rc1" \
       -DBUILD_OSPRAY_ISPC=ON -DBUILD_HDOSPRAY_ISPC=OFF -DBUILD_HDOSPRAY=OFF \
       -DBUILD_USD=OFF -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF \
       -DBUILD_BOOST=OFF -DPYSIDE_BIN_DIR=/Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec \
@@ -84,8 +83,6 @@ if [ ! -d "$OSPRAY_ROOT/install" ]
     ls $OSPRAY_ROOT/OSPRay
     echo "dep install dir: "
     ls $OSPRAY_ROOT/install
-    echo "dep install ospray/lib/cmake:"
-    ls $OSPRAY_ROOT/install/ospray/lib/cmake
     echo "dependency build completed"
     cd $ROOT_DIR
 fi
@@ -111,7 +108,7 @@ cd build_release
 rm -rf *
 cmake .. -D Houdini_DIR=$HOUDINI_ROOT/Resources/toolkit/cmake/ \
          -D USE_HOUDINI_USD=ON \
-         -Dospray_DIR=$OSPRAY_ROOT/install/ospray/lib/cmake/ospray-3.0.0 \
+         -Dospray_DIR=$OSPRAY_ROOT/install/ospray/lib/cmake/ospray-2.12.0 \
          -Drkcommon_DIR=$OSPRAY_ROOT/install/rkcommon/lib/cmake/rkcommon-1.11.0 \
          -DOpenImageDenoise_DIR=$OSPRAY_ROOT/install/oidn/lib/cmake/OpenImageDenoise-1.4.3 \
          -DTBB_DIR=$OSPRAY_ROOT/install/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \

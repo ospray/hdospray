@@ -189,7 +189,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
            = std::shared_ptr<uint8_t>(data, std::default_delete<uint8_t[]>());
     auto outDataPtr = std::shared_ptr<uint8_t>(
            outData, std::default_delete<uint8_t[]>());
-    return HdOSPRayTexture(ospTexture, outData ? outDataPtr : dataPtr);
+    return HdOSPRayTexture(std::move(ospTexture), outData ? outDataPtr : dataPtr);
 }
 
 struct UDIMTileDesc {
@@ -236,7 +236,7 @@ HdOSPRayTexture
 LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
                   bool complement)
 {
-    auto udimTiles = _ParseUDIMTiles(file);
+    const auto& udimTiles = _ParseUDIMTiles(file);
     std::vector<UDIMTileDesc> udimTileDescs;
     vec2i totalSize { 0, 0 };
     vec2i numTiles { 0, 0 };
@@ -247,7 +247,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
     OSPTextureFormat format = OSP_TEXTURE_FORMAT_INVALID;
 
     // load tile data  TODO: parallelize
-    for (auto tile : udimTiles) {
+    for (const auto& tile : udimTiles) {
         const std::string file = std::get<1>(tile);
         const auto image = HioImage::OpenForReading(file);
         if (!image) {
@@ -363,7 +363,7 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
     auto* data = new uint8_t[sizeof(uint8_t) * dataSize];
 
     // copy tile to main texture
-    for (auto tile : udimTileDescs) {
+    for (const auto& tile : udimTileDescs) {
         vec2i startTexels;
         startTexels.x = tile.size.x * (tile.offset % 10);
         startTexels.y = tile.size.y * (tile.offset / 10);
@@ -399,5 +399,5 @@ LoadUDIMTexture2D(std::string file, int& numX, int& numY, bool nearestFilter,
     auto dataPtr
            = std::shared_ptr<uint8_t>(data, std::default_delete<uint8_t[]>());
 
-    return HdOSPRayTexture(ospTexture, dataPtr);
+    return HdOSPRayTexture(std::move(ospTexture), std::move(dataPtr));
 }

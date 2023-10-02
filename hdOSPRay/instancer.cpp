@@ -83,10 +83,7 @@ HdOSPRayInstancer::_SyncPrimvars()
             if (HdChangeTracker::IsPrimvarDirty(dirtyBits, id, pv.name)) {
                 VtValue value = GetDelegate()->Get(id, pv.name);
                 if (!value.IsEmpty()) {
-                    if (_primvarMap.count(pv.name) > 0) {
-                        delete _primvarMap[pv.name];
-                    }
-                    _primvarMap[pv.name] = new HdVtBufferSource(pv.name, value);
+                    _primvarMap[pv.name] = std::make_unique<HdVtBufferSource>(new HdVtBufferSource(pv.name, value));
                 }
             }
         }
