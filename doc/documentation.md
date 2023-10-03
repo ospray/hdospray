@@ -21,6 +21,9 @@ OSPRay can be set to the default renderer by either
 Most of these options are also exposed through the usdview GUI under
 Hydra Settings.
 
+- `HDOSPRAY_DEVICE`
+
+   cpu (default) or gpu device.
 
 - `HDOSPRAY_SAMPLES_PER_FRAME`
 

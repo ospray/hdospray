@@ -42,7 +42,7 @@ HdOSPRayRendererPlugin::CreateRenderDelegate()
     // Check supported pxr version
 #if PXR_MAJOR_VERSION != 0 || PXR_MINOR_VERSION < 20
     error This version of HdOSPRay is configured to built against USD
-           v0 .20.x to v0 .22.x
+           v0 .20.x to v0 .23.x
 #endif
 
            int ac

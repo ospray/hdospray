@@ -15,6 +15,9 @@ TF_INSTANTIATE_SINGLETON(HdOSPRayConfig);
 // The environment variable macro takes the variable name, a default value,
 // and a description...
 // clang-format off
+TF_DEFINE_ENV_SETTING(HDOSPRAY_DEVICE, "cpu",
+        "set cpu (default) or gpu device");
+
 TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_PER_FRAME, HDOSPRAY_DEFAULT_SPP,
         "Raytraced samples per pixel per frame (must be >= 1)");
 
@@ -73,8 +76,12 @@ HdOSPRayConfig::HdOSPRayConfig()
             TfGetEnvSetting(HDOSPRAY_LIGHT_SAMPLES));
     interactiveTargetFPS = TfGetEnvSetting(HDOSPRAY_INTERACTIVE_TARGET_FPS);
 
-    usePathTracing =TfGetEnvSetting(HDOSPRAY_USE_PATH_TRACING);
-    initArgs =TfGetEnvSetting(HDOSPRAY_INIT_ARGS);
+    usePathTracing = TfGetEnvSetting(HDOSPRAY_USE_PATH_TRACING);
+    device = TfGetEnvSetting(HDOSPRAY_DEVICE);
+    std::string deviceArgs("");
+    if (device == "gpu")
+        deviceArgs = std::string(" --osp:load-modules=gpu --osp:device=gpu ");
+    initArgs = TfGetEnvSetting(HDOSPRAY_INIT_ARGS);
     useDenoiser = bool(TfGetEnvSetting(HDOSPRAY_USE_DENOISER) == 1);
     pixelFilterType = (OSPPixelFilterType) TfGetEnvSetting(HDOSPRAY_PIXELFILTER_TYPE);
     forceQuadrangulate = TfGetEnvSetting(HDOSPRAY_FORCE_QUADRANGULATE);

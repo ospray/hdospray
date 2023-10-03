@@ -138,6 +138,12 @@ public:
     /// Override with *HDOSPRAY_AMBIENT_LIGHT*.
     bool ambientLight { false };
 
+    ///  OSPRay device
+    ///
+    /// "cpu" or "gpu" device
+    /// Override with *HDOSPRAY_DEVICE*.
+    std::string device { "cpu" };
+
     /// Tonemapper parameters
     ///
     /// Override with HDOSPRAY_TMP_*

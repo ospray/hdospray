@@ -12,23 +12,24 @@ Currently OSPRay for Hydra is regularly tested on Ubuntu 22.04, and has been tes
 
 ## Prerequisites
 
-If using the superbuild, the only dependencies are:
+USD has a large number of dependencies depending on your configuration.  We provide a superbuild for linux/mac which builds USD and other dependencies.  At a base you will need the following system libraries, though you may need others depending on what USD modules you are building and what system you are running:
 - c/c++ compiler (gcc 6.3.1+)
 - cmake 3.1.1+
-- python (3.7.x+ recommended), with PySide/PySide2 and PyOpenGL.  'pip install PySide2 PyOpenGL' may work
+- (for USD python support including usdview) python (3.7.x+ recommended), with PySide2/PySide6 and PyOpenGL.  'pip install PySide2 PyOpenGL'
 
 If you are building standalone, you will need:
-- [USD 22.08, 21.08, or 20.08](https://graphics.pixar.com/usd/docs/index.html)
+- [USD 23.02, 22.08, 21.08, or 20.08](https://graphics.pixar.com/usd/docs/index.html)
+  - Other USD versions between these discrete releases may work, but are untested.
   - For a full list of USD dependencies, see the USD page.
-  - [OSPRay 2.10.0](http://www.ospray.org/)
+  - [OSPRay 3.0.0](http://www.ospray.org/)
       - We recommend using ospray’s superbuild to build dependencies
         such as embree, ospcommon, and openvkl.  OpenImageDenoise can
         also be enabled through superbuild.
-  - [OpenImageIO 1.8.17](https://sites.google.com/site/openimageio/home)
+      - rkcommon is a library dependency of OSPRay and hdOSPRay, and built as part of OSPRay's superbuild.
 
 ## Optional Dependencies
 
-  - Houdini SDK (tested against 18.5 and 19.0). To use, enable SUPERBUILD_USE_HOUDINI in superbuild.
+  - Houdini SDK (tested against 18.5, 19.0, 19.5). To use, enable SUPERBUILD_USE_HOUDINI in superbuild.
   - [OpenImageDenoise](https://github.com/OpenImageDenoise/oidn.git)
       - Open Image Denoise needs be be enabled in the OSPRay build.
 
@@ -36,8 +37,7 @@ If you are building standalone, you will need:
 
 OSPRay for Hydra contains a cmake superbuild script that builds external dependencies for you
 and is the recommended way of building OSPRay for Hydra. Alternatively, instructions for
-manually building each component is also given.  Currently, USD 21.08 is the default to match
-Houdini, but this can be changed to 20.08 or 22.08 by setting the USD_VERSION in cmake.
+manually building each component is also given.  Currently, USD 23.02 is the default.
 
 ```
 mkdir build
