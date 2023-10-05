@@ -806,19 +806,27 @@ HdOSPRayRenderPass::_CopyFrameBuffer(
                     const auto projMatrix
                            = renderPassState->GetProjectionMatrix();
 
-                    tbb::parallel_for(
-                           tbb::blocked_range<int>(0, frameSize),
-                           [&](tbb::blocked_range<int> r) {
-                               for (int i = r.begin(); i < r.end(); ++i) {
-                                   float& d = depth[i];
-                                   auto v = GfVec3f(0.f, 0.f,
-                                                    _cameraOrigin[2]
-                                                           + d * _cameraDir[2]);
-                                   v = viewMatrix.Transform(v);
-                                   v = projMatrix.Transform(v);
-                                   d = (v[2] + 1.f) / 2.f;
-                               }
-                           });
+                    const float w = _currentFrame.width;
+                    const float h = _currentFrame.height;
+                    tbb::parallel_for(0, (int)h, [&](int iy) {
+                        tbb::parallel_for(0, (int)w, [&](int ix) {
+                            const float x = ix;
+                            const float y = iy;
+                            const GfVec3f pos( 2.f * (x / w) - 1.f,
+                            2.f * (y / h) - 1.f, -1.f);
+                            GfVec3f dir = _inverseProjMatrix.Transform(pos);
+                            GfVec3f origin = GfVec3f(0, 0, 0);
+                            origin = _inverseViewMatrix.Transform(origin);
+                            dir = -_inverseViewMatrix.Transform(dir).GetNormalized();
+                            float& d = depth[static_cast<int>(y * w + x)];
+                            GfVec3f hit = origin + dir * d;
+                            hit = viewMatrix.Transform(hit);
+                            hit = projMatrix.Transform(hit);
+                            d = (hit[2] + 1.f) / 2.f;
+                            if (isnan(d))
+                                d = 1.f;
+                        });
+                    });
 
                     std::copy(depth, depth + frameSize,
                               _currentFrame.depthBuffer.data());
