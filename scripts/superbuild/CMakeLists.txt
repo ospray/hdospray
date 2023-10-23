@@ -47,11 +47,10 @@ option(HDSUPER_OSPRAY_USE_GIT OFF)
 option(HDSUPER_OSPRAY_USE_EXTERNAL OFF)
 if (HDSUPER_OSPRAY_USE_EXTERNAL)
   set(HDSUPER_OSPRAY_EXTERNAL_DIR "" CACHE PATH "location of external ospray install")
-else()
-  set(HDSUPER_OSPRAY_VERSION "v2.12.0" CACHE STRING "git tag of ospray")
-  set(HDSUPER_OSPRAY_URL "https://github.com/ospray/ospray/archive/v2.12.0.zip"
-    CACHE STRING "url of ospray git")
 endif()
+set(HDSUPER_OSPRAY_VERSION "v3.0.0" CACHE STRING "git tag of ospray")
+set(HDSUPER_OSPRAY_URL "https://github.com/ospray/ospray/archive/v3.0.0.zip"
+  CACHE STRING "url of ospray git")
 option(HDSUPER_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
 
 ###############################################################################
@@ -63,6 +62,7 @@ option(BUILD_OSPRAY "Build OSPRay" ON)
 option(BUILD_OSPRAY_ISPC "Build OSPRay's ISPC" OFF)
 option(BUILD_HDOSPRAY_ISPC "Build ISPC" ON)
 option(BUILD_HDOSPRAY "Build HDOSPRAY" ON)
+option(BUILD_RKCOMMON "Build rkcommon separately(ospray superbuild builds its own)" OFF)
 set(DOWNLOAD_TBB ON CACHE BOOL "download and build tbb")
 set(TBB_PATH ${CMAKE_INSTALL_PREFIX}/tbb CACHE PATH "tbb root")
 
@@ -90,14 +90,17 @@ endif()
 if (BUILD_OSPRAY)
   include(ep_ospray)
 endif()
+if (BUILD_RKCOMMON)
+  include(dep_rkcommon)
+endif()
 
 if(BUILD_HDOSPRAY_ISPC)
-  set(HDOSPRAY_ISPC_VERSION 1.20.0)
+  set(HDOSPRAY_ISPC_VERSION 1.21.1)
   include(dep_ispc)
 endif()
 
 set(OSPRAY_INSTALL_DIR ${CMAKE_INSTALL_PREFIX})
-if (HDSUOPER_OSPRAY_USE_EXTERNAL)
+if (HDSUPER_OSPRAY_USE_EXTERNAL)
   set(OSPRAY_INSTALL_DIR ${OSPRAY_EXTERNAL_DIR})
 endif()
 
@@ -110,8 +113,8 @@ if (BUILD_HDOSPRAY)
     set(USD_ROOT_DIR ${EXTERNAL_USD_DIR})
   endif()
 
-  set(OSPRAY_VERSION "2.12.0" CACHE STRING "ospray library version")
-  set(RKCOMMON_VERSION "1.11.0" CACHE STRING "rkcommon library version")
+  set(OSPRAY_VERSION "3.0.0" CACHE STRING "ospray library version")
+  set(RKCOMMON_VERSION "1.12.0" CACHE STRING "rkcommon library version")
 
   ExternalProject_Add (
     ${EP_HDOSPRAY}

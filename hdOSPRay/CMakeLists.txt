@@ -17,12 +17,12 @@ function(_add_target_to_rpath CURRENT_RPATH target)
   set (HDOSPRAY_RPATH "${CURRENT_RPATH}:$ORIGIN/${LIBRARY_PATH_REL}" PARENT_SCOPE)
 endfunction()
 
+option(USE_HOUDINI_USD "use Houdini USD" OFF)
+
 find_package(ospray 3 REQUIRED
   PATHS ${ospray_DIR})
-find_package(rkcommon 1.11.0 REQUIRED
+find_package(rkcommon 1.12.0 REQUIRED
   PATHS ${rkcommon_DIR})
-
-option(USE_HOUDINI_USD "use Houdini USD" OFF)
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
@@ -111,7 +111,7 @@ if (HDOSPRAY_PLUGIN_PTEX)
 endif()
 
 # add OpenImageDenoise
-option(HDOSPRAY_ENABLE_DENOISER "build OSPRay plugin using OpenImageDenoise" OFF)
+option(HDOSPRAY_ENABLE_DENOISER "build OSPRay plugin using OpenImageDenoise" ON)
 if (HDOSPRAY_ENABLE_DENOISER)
   target_compile_definitions(hdOSPRay PUBLIC -DHDOSPRAY_ENABLE_DENOISER)
 endif()

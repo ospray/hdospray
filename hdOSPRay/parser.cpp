@@ -47,21 +47,10 @@ TF_DEFINE_PRIVATE_TOKENS(
        ((discoveryType1, "OspPrincipled"))((discoveryType2, "OspCarPaint"))(
               (discoveryType3, "OspLuminous"))((sourceType, "")));
 
-// This environment variable lets users override the name of the primary
-// UV set that MaterialX should look for.  If it's empty, it uses the USD
-// default, "st".
-TF_DEFINE_ENV_SETTING(
-       USDMTLX_PRIMARY_UV_NAME, "",
-       "The name usdMtlx should use to reference the primary UV set.");
-
 static const std::string
 _GetPrimaryUvSetName()
 {
-    static const std::string env = TfGetEnvSetting(USDMTLX_PRIMARY_UV_NAME);
-    if (env.empty()) {
-        return UsdUtilsGetPrimaryUVSetName().GetString();
-    }
-    return env;
+    return UsdUtilsGetPrimaryUVSetName().GetString();
 }
 
 // A builder for shader nodes.  We find it convenient to build the

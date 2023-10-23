@@ -45,14 +45,17 @@ HdOSPRayRendererPlugin::CreateRenderDelegate()
            v0 .20.x to v0 .23.x
 #endif
 
-           int ac
-           = 1;
+    int ac = 1;
     std::string initArgs = HdOSPRayConfig::GetInstance().initArgs;
     std::stringstream ss(initArgs);
     std::string arg;
     std::vector<std::string> args;
     while (ss >> arg) {
         args.push_back(arg);
+    }
+    if (HdOSPRayConfig::GetInstance().device == "gpu") {
+        args.push_back("--osp:load-modules=gpu");
+        args.push_back("--osp:device=gpu");
     }
     ac = static_cast<int>(args.size() + 1);
     const char** av = new const char*[ac];

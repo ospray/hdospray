@@ -8,7 +8,7 @@ if (APPLE)
 elseif(WIN32)
   set(ISPC_OSSUFFIX "windows.zip")
 else()
-  set(ISPC_OSSUFFIX "linux.tar.gz")
+  set(ISPC_OSSUFFIX "linux-oneapi.tar.gz")
 endif()
 
 set(ISPC_URL "https://github.com/ispc/ispc/releases/download/v${HDOSPRAY_ISPC_VERSION}/ispc-v${HDOSPRAY_ISPC_VERSION}-${ISPC_OSSUFFIX}")

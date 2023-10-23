@@ -7,6 +7,7 @@ cmake --version
 
 echo "NAS:"
 ls /NAS
+ls /NAS/packages
 echo "/:"
 ls /
 
@@ -62,6 +63,8 @@ if [ ! -d "$OSPRAY_ROOT/install" ]
     ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages
     echo "libexec: "
     ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec
+    mkdir -p $OSPRAY_ROOT/install
+    mkdir -p /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/ospray-3.0.0/install/embree
     mkdir -p $OSPRAY_ROOT/install/bin
     cd $OSPRAY_ROOT
     export Python_ROOT_DIR="/usr/local/Frameworks/Python.framework/Versions/3.9"
@@ -69,14 +72,21 @@ if [ ! -d "$OSPRAY_ROOT/install" ]
     alias python=/usr/local/bin/python3.9
     alias python3=/usr/local/bin/python3.9
     export MACOSX_DEPLOYMENT_TARGET=11.7
+    echo "existing install dir: "
+    ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/ospray-3.0.0/install
+    echo "embree install dir: "
+    ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/ospray-3.0.0/install/embree
     cmake $ROOT_DIR/scripts/superbuild/ -DHDSUPER_PYTHON_VERSION=3.9 \
-      -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DBUILD_OSPRAY=ON \
+      -D CMAKE_BUILD_TYPE=Release \
+      -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DHDSUPER_OSPRAY_USE_EXTERNAL=ON \
+      -DHDSUPER_OSPRAY_EXTERNAL_DIR="/NAS/packages/apps/usd/macos/ospray-3.0.0/lib/cmake/ospray-3.0.0" \
       -DBUILD_OSPRAY_ISPC=ON -DBUILD_HDOSPRAY_ISPC=OFF -DBUILD_HDOSPRAY=OFF \
       -DBUILD_USD=OFF -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF \
       -DBUILD_BOOST=OFF -DPYSIDE_BIN_DIR=/Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec \
-      -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF -DCMAKE_INSTALL_PREFIX=$OSPRAY_ROOT/install .
-    cmake --build . -j ${THREADS} || (rm -r install ; exit 2)
-    make install -j ${THREADS}
+      -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF -DCMAKE_INSTALL_PREFIX=$OSPRAY_ROOT/install
+    cmake --build . -j ${THREADS}
+    #|| (rm -r install ; exit 2)
+    #make install -j ${THREADS}
     echo "dep dir: "
     ls $OSPRAY_ROOT
     echo "dep dir ospray: "
@@ -86,6 +96,11 @@ if [ ! -d "$OSPRAY_ROOT/install" ]
     echo "dependency build completed"
     cd $ROOT_DIR
 fi
+
+echo "embree dir: "
+ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/ospray-3.0.0/OSPRay/build/embree
+echo "embree src dir: "
+ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/ospray-3.0.0/OSPRay/build/embree/src
 
 #rm -rf $HOUDINI_ROOT
 if [ ! -d "$HOUDINI_ROOT" ]
@@ -106,21 +121,38 @@ mkdir -p build_release
 cd build_release
 # Clean out build directory to be sure we are doing a fresh build
 rm -rf *
+echo "ospray_DIR:"
+ls /NAS/packages/apps/usd/macos/ospray-3.0.0/lib/cmake/ospray-3.0.0
+ls $OSPRAY_ROOT/install/ospray/lib/cmake/ospray-3.0.0
+echo "ospray install dir:"
+ls $OSPRAY_ROOT/install
+ls $OSPRAY_ROOT/install/lib
+ls $OSPRAY_ROOT/install/lib/cmake
+ls $OSPRAY_ROOT/OSPRayBinaries/src/lib/cmake/ospray-3.0.0
 cmake .. -D Houdini_DIR=$HOUDINI_ROOT/Resources/toolkit/cmake/ \
+         -D CMAKE_BUILD_TYPE=Release \
          -D USE_HOUDINI_USD=ON \
-         -Dospray_DIR=$OSPRAY_ROOT/install/ospray/lib/cmake/ospray-2.12.0 \
-         -Drkcommon_DIR=$OSPRAY_ROOT/install/rkcommon/lib/cmake/rkcommon-1.11.0 \
-         -DOpenImageDenoise_DIR=$OSPRAY_ROOT/install/oidn/lib/cmake/OpenImageDenoise-1.4.3 \
+         -Dospray_DIR=$OSPRAY_ROOT/OSPRayBinaries/src/lib/cmake/ospray-3.0.0 \
+         -Drkcommon_DIR=$OSPRAY_ROOT/install/rkcommon/lib/cmake/rkcommon-1.12.0 \
          -DTBB_DIR=$OSPRAY_ROOT/install/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
          -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
          -D HDOSPRAY_GENERATE_SETUP=ON \
          -D HDOSPRAY_PYTHON_INSTALL_DIR=/Users/github-runner/Library/Python/3.9 \
+         -D CMAKE_BUILD_WITH_INSTALL_RPATH=ON \
+         -D CMAKE_INSTALL_PREFIX=/opt/local \
+         -D CMAKE_INSTALL_INCLUDEDIR=include \
+         -D CMAKE_INSTALL_LIBDIR=lib \
+         -D CMAKE_INSTALL_BINDIR=bin \
+         -D CMAKE_MACOSX_RPATH=ON \
+         -D CMAKE_INSTALL_RPATH=$ROOT_DIR/build_release/install \
          -DHDOSPRAY_SIGN_FILE=$SIGN_FILE_MAC || exit 2
 
 # set release and installer settings
 # create installers
 make -j $THREADS package || exit 2
 cmake -L -D HDOSPRAY_ZIP_MODE=ON .
+install_name_tool -change /usr/local/opt/tbb/lib/libtbb.12.dylib @rpath/libtbb.12.dylib plugin/usd/hdOSPRay.dylib
+install_name_tool -change /usr/local/opt/tbb/lib/libtbbmalloc.2.dylib @rpath/libtbbmalloc.2.dylib plugin/usd/hdOSPRay.dylib
 make -j $THREADS package || exit 2
 # make -j $THREADS package || exit 2
 # cpack -G ZIP || exit 2

@@ -15,9 +15,9 @@ set(ARGS_OSPRAY_DOWNLOAD URL ${HDSUPER_OSPRAY_URL})
   else()
     set(OSPRAY_INSTALL_COMMAND
       COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/ospray/lib/ ${CMAKE_INSTALL_PREFIX}/ospray_tmp
-      COMMAND "${CMAKE_COMMAND}" -E rm -f ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
-      COMMAND "${CMAKE_COMMAND}" -E rm -f ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbb.12.${CMAKE_SHARED_LIBRARY_SUFFIX}
-      COMMAND "${CMAKE_COMMAND}" -E rm -f ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbbmalloc.12.${CMAKE_SHARED_LIBRARY_SUFFIX}
+      COMMAND "${CMAKE_COMMAND}" -E remove_directory ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX}
+      COMMAND "${CMAKE_COMMAND}" -E remove_directory ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbb.12.${CMAKE_SHARED_LIBRARY_SUFFIX}
+      COMMAND "${CMAKE_COMMAND}" -E remove_directory ${CMAKE_INSTALL_PREFIX}/ospray_tmp/libtbbmalloc.12.${CMAKE_SHARED_LIBRARY_SUFFIX}
       COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/ospray/include/ ${CMAKE_INSTALL_PREFIX}/include
       COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/oidn/include/ ${CMAKE_INSTALL_PREFIX}/include
       COMMAND "${CMAKE_COMMAND}" -E copy_directory ${CMAKE_INSTALL_PREFIX}/rkcommon/include/ ${CMAKE_INSTALL_PREFIX}/include
@@ -27,15 +27,47 @@ set(ARGS_OSPRAY_DOWNLOAD URL ${HDSUPER_OSPRAY_URL})
       )
   endif()
 
-  message("BUILD ISPC? ${BUILD_OSPRAY_ISPC}")
+  option(HDSUPER_OSPRAY_DEPENDENCIES_ONLY "only build ospray dependencies" ON)
+  option(HDSUPER_DOWNLOAD_OSPRAY_BINARIES "use pre-built ospray binaries" ON)
+  # by default, download ospray binaries but we need to build rkcommon for dev includes
+  if (HDSUPER_DOWNLOAD_OSPRAY_BINARIES)
+    set(HDSUPER_OSPRAY_DEPENDENCIES_ONLY ON)
+    set(OSPRAY_BINARIES_URL https://github.com/ospray/ospray/releases/download/v3.0.0/ospray-3.0.0.sycl.x86_64.linux.tar.gz)
+    if (WIN32)
+      set(OSPRAY_BINARIES_URL https://github.com/ospray/ospray/releases/download/v3.0.0/ospray-3.0.0.sycl.x86_64.windows.zip)
+    elseif (APPLE)
+      set(OSPRAY_BINARIES_URL https://github.com/ospray/ospray/releases/download/v3.0.0/ospray-3.0.0.x86_64.macosx.zip)
+    endif()
+    ExternalProject_Add (
+      OSPRayBinaries
+      PREFIX OSPRayBinaries
+      STAMP_DIR OSPRayBinaries/stamp
+      SOURCE_DIR OSPRayBinaries/src
+      BINARY_DIR OSPRayBinaries
+      URL ${OSPRAY_BINARIES_URL}
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ""
+      BUILD_ALWAYS OFF
+      INSTALL_COMMAND 
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+        <SOURCE_DIR>/lib
+        ${CMAKE_INSTALL_PREFIX}/lib
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+        <SOURCE_DIR>/bin
+        ${CMAKE_INSTALL_PREFIX}/bin
+    )
+  endif()
+
   set(EP_OSPRAY "OSPRay")
+  message ("ARGS_OSPRAY_DOWNLOAD: ${ARGS_OSPRAY_DOWNLOAD}")
+  message("OSPRAY_INSTALL COMMAND: ${OSPRAY_INSTALL_COMMAND}")
   ExternalProject_Add (
     ${EP_OSPRAY}
     PREFIX ${EP_OSPRAY}
-    ${ARGS_OSPRAY_DOWNLOAD}
     STAMP_DIR     ${EP_OSPRAY}/stamp
     SOURCE_DIR    ${EP_OSPRAY}/source
     BINARY_DIR    ${EP_OSPRAY}/build
+    ${ARGS_OSPRAY_DOWNLOAD}
     GIT_SHALLOW   1
     GIT_SUBMODULES "scripts"  # hack: setting submodules to empty enables all submodules
     #GIT_SUBMODULES_RECURSE 0
@@ -52,11 +84,9 @@ set(ARGS_OSPRAY_DOWNLOAD URL ${HDSUPER_OSPRAY_URL})
       -DBUILD_OIDN=${HDSUPER_USE_DENOISER}
       -DBUILD_OIDN_FROM_SOURCE=OFF
       -DBUILD_EMBREE_FROM_SOURCE=OFF
-      -DTBB_PATH=/home/cbrownle/git/build-hdospray/install/tbb
-      -DEMBREE_TBB_ROOT=/home/cbrownle/git/build-hdospray/install/tbb
-      -DTBB_INCLUDE_DIR=/home/cbrownle/git/build-hdospray/install/tbb/include
+      -DBUILD_DEPENDENCIES_ONLY=${HDOSPRAY_BUILD_OSPRAY_DEPENDENCIES_ONLY}
     INSTALL_COMMAND ${OSPRAY_INSTALL_COMMAND}
-    DEPENDS ${EP_USD}
+    DEPENDS ${EP_USD_SUPER}
   )
 
 #external_install(OSPRay)
