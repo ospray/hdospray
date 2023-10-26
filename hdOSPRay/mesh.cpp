@@ -129,7 +129,8 @@ HdOSPRayMesh::Sync(HdSceneDelegate* sceneDelegate, HdRenderParam* renderParam,
     }
 
     // Create ospray mesh
-    _PopulateOSPMesh(sceneDelegate, std::move(renderer), dirtyBits, desc, ospRenderParam);
+    _PopulateOSPMesh(sceneDelegate, std::move(renderer), dirtyBits, desc,
+                     ospRenderParam);
 
     if (*dirtyBits & HdChangeTracker::DirtyTopology) {
         // TODO: need to update material when topology has changed?

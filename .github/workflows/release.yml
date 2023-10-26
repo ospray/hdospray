@@ -29,18 +29,18 @@ jobs:
   #       scripts/release_ci/linux.sh
   #       ls build_release
 
-  # release-linux-houdini:
-  #   secrets: inherit
-  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
-  #   with:
-  #     force-delete: true    # guarantees .gitattributes are respected in working dir
-  #     image: hdospray/ubuntu:20.04-cb-hdospray23.02
-  #     artifact-out: release-linux-houdini
-  #     artifact-path: build_release/*.gz
-  #     cmd: |
-  #       scripts/release_ci/linux_houdini.sh
-  #       cmake --build build_release -j 32 --target package
-  #       ls build_release
+  release-linux-houdini:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/docker.yml@main
+    with:
+      force-delete: true    # guarantees .gitattributes are respected in working dir
+      image: hdospray/ubuntu:20.04-cb-hdospray23.02
+      artifact-out: release-linux-houdini
+      artifact-path: build_release/*.gz
+      cmd: |
+        scripts/release_ci/linux_houdini.sh
+        cmake --build build_release -j 32 --target package
+        ls build_release
 
   # release-windows:
   #   secrets: inherit
@@ -54,17 +54,17 @@ jobs:
   #     artifact-out: release-windows
   #     artifact-path: "build_release/hdospray*.zip build_release/hdospray*.msi"
 
-  # release-windows-houdini:
-  #   secrets: inherit
-  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
-  #   with:
-  #     runs-on: '[ "Windows", "build", "NAS" ]'
-  #     cmd: |
-  #       scripts/release_ci/win_houdini.ps1
-  #       & $env:SIGN_FILE_WINDOWS hdospray*.zip
-  #       & ls
-  #     artifact-out: release-windows-houdini
-  #     artifact-path: "build_release/hdospray*.zip"
+  release-windows-houdini:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/windows.yml@main
+    with:
+      runs-on: '[ "Windows", "build", "NAS" ]'
+      cmd: |
+        scripts/release_ci/win_houdini.ps1
+        & $env:SIGN_FILE_WINDOWS hdospray*.zip
+        & ls
+      artifact-out: release-windows-houdini
+      artifact-path: "build_release/hdospray*.zip"
 
   # release-osx-clang:
   #   secrets: inherit
@@ -98,44 +98,44 @@ jobs:
 
   ### SCAN JOBS ###
 
-  # static-analysis:
-  #   secrets: inherit
-  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/static_analysis.yml@main
-  #   with:
-  #     image: hdospray/ubuntu:20.04-cb-hdospray23.02
-  #     project: HDOSPRay
-  #     prebuild: |
-  #       scripts/release_ci/linux_houdini.sh
-  #       ls build_release
-  #     build: cmake --build build_release -j 32
+  static-analysis:
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/static_analysis.yml@main
+    with:
+      image: hdospray/ubuntu:20.04-cb-hdospray23.02
+      project: HDOSPRay
+      prebuild: |
+        scripts/release_ci/linux_houdini.sh
+        ls build_release
+      build: cmake --build build_release -j 32
 
-  # binary-analysis:
-  #   needs:
-  #     - release-linux-houdini
-  #     - release-osx-clang-houdini
-  #     - release-windows-houdini
-  #   secrets: inherit
-  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/binary_analysis.yml@main
-  #   with:
-  #     project: hdospray
-  #     artifact-in-linux: release-linux-houdini
-  #     artifact-in-macos: release-osx-clang-houdini
-  #     artifact-in-windows: release-windows-houdini
-  #     path: build_release/hdospray*
+  binary-analysis:
+    needs:
+      - release-linux-houdini
+      - release-osx-clang-houdini
+      - release-windows-houdini
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/binary_analysis.yml@main
+    with:
+      project: hdospray
+      artifact-in-linux: release-linux-houdini
+      artifact-in-macos: release-osx-clang-houdini
+      artifact-in-windows: release-windows-houdini
+      path: build_release/hdospray*
 
-  # antivirus-scan:
-  #   needs:
-  #     - release-linux-houdini
-  #     - release-osx-clang-houdini
-  #     - release-windows-houdini
-  #   secrets: inherit
-  #   uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/antivirus_scan.yml@main
-  #   with:
-  #     project: hdospray
-  #     artifact-in-linux: release-linux-houdini
-  #     artifact-in-macos: release-osx-clang-houdini
-  #     artifact-in-windows: release-windows-houdini
-  #     path: build_release/hdospray*
+  antivirus-scan:
+    needs:
+      - release-linux-houdini
+      - release-osx-clang-houdini
+      - release-windows-houdini
+    secrets: inherit
+    uses: intel-innersource/libraries.devops.renderkit.workflows/.github/workflows/antivirus_scan.yml@main
+    with:
+      project: hdospray
+      artifact-in-linux: release-linux-houdini
+      artifact-in-macos: release-osx-clang-houdini
+      artifact-in-windows: release-windows-houdini
+      path: build_release/hdospray*
 
   # snyk-scan:
   #   secrets: inherit

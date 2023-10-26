@@ -68,7 +68,7 @@ private:
     VtFloatArray _widths;
     VtVec3fArray _points;
     VtVec3fArray _normals;
-    GfMatrix4f _xfm{1};
+    GfMatrix4f _xfm { 1 };
     VtVec2fArray _texcoords;
     VtVec4fArray _colors;
     GfVec4f _singleColor { .5f, .5f, .5f, 1.f };

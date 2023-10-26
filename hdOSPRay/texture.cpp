@@ -189,7 +189,8 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
            = std::shared_ptr<uint8_t>(data, std::default_delete<uint8_t[]>());
     auto outDataPtr = std::shared_ptr<uint8_t>(
            outData, std::default_delete<uint8_t[]>());
-    return HdOSPRayTexture(std::move(ospTexture), outData ? outDataPtr : dataPtr);
+    return HdOSPRayTexture(std::move(ospTexture),
+                           outData ? outDataPtr : dataPtr);
 }
 
 struct UDIMTileDesc {

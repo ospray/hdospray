@@ -228,18 +228,15 @@ HdOSPRayMaterial::_UpdateOSPRayMaterial()
         if (!HdOSPRayConfig::GetInstance().useSimpleMaterial) {
             if (_type == MaterialTypes::carPaint) {
                 if (_typeDirty)
-                    _ospMaterial
-                           = opp::Material("carPaint");
+                    _ospMaterial = opp::Material("carPaint");
                 UpdateCarPaintMaterial();
             } else if (_type == MaterialTypes::luminous) {
                 if (_typeDirty)
-                    _ospMaterial
-                           = opp::Material("luminous");
+                    _ospMaterial = opp::Material("luminous");
                 UpdateLuminousMaterial();
             } else { // preview, principled, other
                 if (_typeDirty)
-                    _ospMaterial
-                           = opp::Material("principled");
+                    _ospMaterial = opp::Material("principled");
                 UpdatePrincipledMaterial(rendererType);
             }
         } else {
@@ -415,7 +412,8 @@ HdOSPRayMaterial::_ProcessOspLuminousNode(HdMaterialNode node)
 }
 
 void
-HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node, const TfToken& inputName,
+HdOSPRayMaterial::_ProcessTextureNode(HdMaterialNode node,
+                                      const TfToken& inputName,
                                       const TfToken& outputName)
 {
     bool isPtex = node.identifier == HdOSPRayMaterialTokens->HwPtexTexture_1;

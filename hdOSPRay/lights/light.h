@@ -103,7 +103,7 @@ protected:
     // USDLuxLight parameters to set up the emission of the light source
     EmissionParameter _emissionParam;
     // The transformation of the light source in the scene.
-    GfMatrix4d _transform{1};
+    GfMatrix4d _transform { 1 };
 
     // if light source is on (not to be confused with camera visible)
     bool _visibility { true };

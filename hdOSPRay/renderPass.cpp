@@ -812,12 +812,13 @@ HdOSPRayRenderPass::_CopyFrameBuffer(
                         tbb::parallel_for(0, (int)w, [&](int ix) {
                             const float x = ix;
                             const float y = iy;
-                            const GfVec3f pos( 2.f * (x / w) - 1.f,
-                            2.f * (y / h) - 1.f, -1.f);
+                            const GfVec3f pos(2.f * (x / w) - 1.f,
+                                              2.f * (y / h) - 1.f, -1.f);
                             GfVec3f dir = _inverseProjMatrix.Transform(pos);
                             GfVec3f origin = GfVec3f(0, 0, 0);
                             origin = _inverseViewMatrix.Transform(origin);
-                            dir = -_inverseViewMatrix.Transform(dir).GetNormalized();
+                            dir = -_inverseViewMatrix.Transform(dir)
+                                          .GetNormalized();
                             float& d = depth[static_cast<int>(y * w + x)];
                             GfVec3f hit = origin + dir * d;
                             hit = viewMatrix.Transform(hit);

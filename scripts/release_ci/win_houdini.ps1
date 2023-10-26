@@ -6,7 +6,7 @@ pip3.8 install PySide2
 pip3.8 install numpy
 pip3.8 show PyOpenGL
 
-$NAS = "\\vis-nassie.an.intel.com\NAS"
+$NAS = "*removed*"
 $NAS_DEP_DIR = "$NAS\packages\apps\usd\win10"
 $ROOT_DIR = pwd
 $DEP_DIR = "$ROOT_DIR/../../hdospray_deps"

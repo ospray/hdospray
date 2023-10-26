@@ -45,7 +45,8 @@ HdOSPRayRendererPlugin::CreateRenderDelegate()
            v0 .20.x to v0 .23.x
 #endif
 
-    int ac = 1;
+           int ac
+           = 1;
     std::string initArgs = HdOSPRayConfig::GetInstance().initArgs;
     std::stringstream ss(initArgs);
     std::string arg;

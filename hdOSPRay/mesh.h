@@ -182,7 +182,7 @@ private:
 
     HdMeshUtil* _meshUtil { nullptr };
     HdMeshTopology _topology;
-    GfMatrix4f _transform {1};
+    GfMatrix4f _transform { 1 };
     VtVec3fArray _points;
     VtVec2fArray _texcoords;
     VtVec2fArray _computedTexcoords; // triangulated

@@ -5,16 +5,6 @@
 set -x
 cmake --version
 
-echo "deps: "
-ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps
-echo "deps/usd-23.02/install: "
-ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install
-echo "deps/usd-23.02/install/ospray: "
-ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/ospray
-echo "deps/usd-23.02/install/ospray/bin: "
-ls /Users/github-runner/actions-runner/intel/001/_work/libraries.graphics.renderkit.ospray-hydra/hdospray_deps/usd-23.02/install/ospray/bin
-echo "done"
-
 #### Set variables for script ####
 
 ROOT_DIR=$PWD
@@ -45,14 +35,6 @@ echo "which pyside6-uic:"
 which pyside6-uic
 which uic
 pip3.9 show PySide6
-echo "site-packages:"
-ls /usr/local/lib/python3.9/site-packages
-echo "site-packages2:"
-ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages
-echo "libexec: "
-ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec
-ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt
-ls /Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6
 
 # rebuild dependencies - clear install dir
 # rm -r $DEP_DIR/install
@@ -95,7 +77,7 @@ cmake .. -Dpxr_DIR=$USD_ROOT -Dospray_DIR=$USD_ROOT/ospray/lib/cmake/ospray-2.12
          -DTBB_DIR=$USD_ROOT/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
          -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
          -D HDOSPRAY_GENERATE_SETUP=ON \
-         -D HDOSPRAY_PYTHON_INSTALL_DIR=/Users/github-runner/Library/Python/3.9 \
+         -D HDOSPRAY_PYTHON_INSTALL_DIR=~/Library/Python/3.9 \
          -DHDOSPRAY_SIGN_FILE=$SIGN_FILE_MAC || exit 2
 cmake --build . -j ${THREADS} || exit 2
 

@@ -2,8 +2,9 @@
 
 ## Running
 
-Once built, the plugin code should be located in your `usd` install directory under `plugin/usd/HdOSPRay`.
-Run `usdview <scenefile>` and select `view->Hydra` and then `Renderer->OSPRay`.
+Once built, the plugin should be located in your install directory under `plugin/usd/HdOSPRay`.  A setup script is provided for setting env vars.  If you built usd with usdimaging, you can run `usdview <scenefile>` and select `view->Hydra` and then `Renderer->OSPRay`.
+
+Houdini setup is specific to each platform, but has been tested with Houdini 19.5.640. For Mac/Linux, there is a houdini_setup script in your Houdini installation directory. This should be sourced, and then source the hdospray_setup.sh script and you should be able to select OSPRay as a hydra delegate in the drop down menu in stage view. For windows, it is recommended to copy the bin and plugin directories from your hdOSPRay build to the respective directories in the Houdini install.
 
 OSPRay can be set to the default renderer by either
 
