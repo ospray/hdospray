@@ -1,16 +1,20 @@
 News, Updates, and Announcements
 ================================
 
-- Sep 27, 2023: Version v1.0.0
+- Oct 25, 2023: Version v1.0.0
 
       - USD 23.02 support
-      - Depth buffer transform to non-linear for DCC compositing
       - Superbuild now part of core repo
       - Macosx and Windows build support
-      - Houdini SDL binary release builds
+      - Fixes for Windows DLL loading
+      - Houdini binary release builds
+      - Resource loading now uses Hio
       - Openimageio dependency removal
       - Support for loading usdz files directly
-      - Custom OSPRay material support
+      - Custom OSPRay materials
+      - Changes to interactive rendering mode for smoother camera movement
+      - Depth buffer transform to non-linear for DCC compositing
+      - Various bug fixes
 
 - Jan 5, 2023: Version v0.11.0
 

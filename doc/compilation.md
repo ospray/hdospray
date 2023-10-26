@@ -8,14 +8,14 @@ Tags are of the form `hdospray-vx.x.x-usdvx.x.x`, with `vx.x.x` being the
 release of OSPRay for Hydra and `usdv` being the version of USD it is built against.
 This is required due to the frequently changing internals of hydra.
 
-Currently OSPRay for Hydra is regularly tested on Ubuntu 22.04, and has been tested on Windows 10 and MacOS 12.6.
+Currently OSPRay for Hydra is regularly tested on Ubuntu 22.04, and has been tested on Windows 10 and MacOS 13.6.
 
 ## Prerequisites
 
 USD has a large number of dependencies depending on your configuration.  We provide a superbuild for linux/mac which builds USD and other dependencies.  At a base you will need the following system libraries, though you may need others depending on what USD modules you are building and what system you are running:
 - c/c++ compiler (gcc 6.3.1+)
 - cmake 3.1.1+
-- (for USD python support including usdview) python (3.7.x+ recommended), with PySide2/PySide6 and PyOpenGL.  'pip install PySide2 PyOpenGL'
+- (for USD python support including usdview) python (3.7.x+ recommended), with PySide2/PySide6, numpy, and PyOpenGL.  'pip install PySide6 PyOpenGL'
 
 If you are building standalone, you will need:
 - [USD 23.02, 22.08, 21.08, or 20.08](https://graphics.pixar.com/usd/docs/index.html)
@@ -36,7 +36,7 @@ If you are building standalone, you will need:
 ## Superbuild on Linux/MacOS
 
 OSPRay for Hydra contains a cmake superbuild script that builds external dependencies for you
-and is the recommended way of building OSPRay for Hydra. Alternatively, instructions for
+and is the recommended way of building OSPRay for Hydra on Linux/Mac. Alternatively, instructions for
 manually building each component is also given.  Currently, USD 23.02 is the default.
 
 ```
@@ -71,7 +71,8 @@ To set TBB explicitly, go to `<USD_BUILD_DIR>`/build/USD and set TBB libraries a
 ## Compiling OSPRay on Linux/MacOS
 
 You can use the distributed binaries of OSPRay or build it yourself.
-We recommend using the OSPRay superbuild system according the instructions listed on [github](https://github.com/ospray/OSPRay).  Make sure that TBB is the same used by USD.  You can force using system TBB using the superbuild by going to `<OSPRAY_BUILD_DIR>`, and setting the cmake variable `DOWNLOAD_TBB` to OFF.
+We recommend using the OSPRay superbuild system according the instructions listed on [github](https://github.com/ospray/OSPRay).  Make sure that TBB is the same used by USD.  You can force using system TBB using the superbuild by going to `<OSPRAY_BUILD_DIR>`, and setting the cmake variable `DOWNLOAD_TBB` to OFF. GPU Support
+needs to be manually enabled, see OSPRay docs.
 
 ## Compiling OSPRay for Hydra on Linux/MacOS
 
@@ -121,4 +122,4 @@ The plugin should now be in `<usd install directory>/plugin/usd/hdOSPRay`
 
 ## Compiling OSPRay for Hydra on Windows
 
-We do not currently test on Windows, but all dependencies are.
+Compliation on windows is similar to Linux/Mac.

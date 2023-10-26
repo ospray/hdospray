@@ -25,6 +25,10 @@ Hydra Settings.
 
    cpu (default) or gpu device.
 
+- `HDOSPRAY_USE_DENOISER`
+
+   If built in, enable the denoiser
+
 - `HDOSPRAY_SAMPLES_PER_FRAME`
 
    Number of samples per pixel.
@@ -75,9 +79,6 @@ Hydra Settings.
 
    Force Quadrangulate meshes for debug.
 
-- `HDOSPRAY_USE_DENOISER`
-
-   If built in, enable the denoiser
 
 ## Features
 

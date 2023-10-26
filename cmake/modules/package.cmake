@@ -224,3 +224,27 @@ if (HDOSPRAY_GENERATE_SETUP)
             DESTINATION .)
   endif()
 endif()
+
+#
+# Install docs and copyright info
+#
+install(FILES
+ ${PROJECT_SOURCE_DIR}/third-party-programs.txt
+ ${PROJECT_SOURCE_DIR}/third-party-programs-oneTBB.txt
+ ${PROJECT_SOURCE_DIR}/third-party-programs-Embree.txt
+ ${PROJECT_SOURCE_DIR}/third-party-programs-OpenVKL.txt
+ ${PROJECT_SOURCE_DIR}/third-party-programs-OIDN.txt
+ ${PROJECT_SOURCE_DIR}/third-party-programs-oneDNN.txt
+ ${PROJECT_SOURCE_DIR}/third-party-programs-DPCPP.txt
+ ${PROJECT_SOURCE_DIR}/third-party-programs-oneAPI-DPCPP.txt
+ ${PROJECT_SOURCE_DIR}/third-party-programs-ISPC.txt
+ ${PROJECT_SOURCE_DIR}/README.md
+ DESTINATION doc COMPONENT lib)
+
+if (HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES)
+  install(FILES ${PROJECT_SOURCE_DIR}/doc/BINARY-LICENSE.txt RENAME LICENSE.txt
+    DESTINATION doc COMPONENT lib)
+else()
+  install(FILES ${PROJECT_SOURCE_DIR}/LICENSE.txt
+    DESTINATION doc COMPONENT lib)
+endif()
