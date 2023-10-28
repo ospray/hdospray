@@ -299,6 +299,8 @@ renderer.*
   - Oct 25, 2023: Version v1.0.0
     
         - USD 23.02 support
+        - OSPRay 3.0
+        - GPU support
         - Superbuild now part of core repo
         - Macosx and Windows build support
         - Fixes for Windows DLL loading
