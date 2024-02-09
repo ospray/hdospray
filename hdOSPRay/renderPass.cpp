@@ -643,9 +643,9 @@ HdOSPRayRenderPass::_ProcessSettings()
     int russianRouletteStartDepth = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->russianRouletteStartDepth,
            _russianRouletteStartDepth);
-    int minContribution = renderDelegate->GetRenderSetting<float>(
+    float minContribution = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->minContribution, _minContribution);
-    int maxContribution = renderDelegate->GetRenderSetting<float>(
+    float maxContribution = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->maxContribution, _maxContribution);
     bool useTonemapper = renderDelegate->GetRenderSetting<bool>(
            HdOSPRayRenderSettingsTokens->tmp_enabled,
@@ -690,6 +690,7 @@ HdOSPRayRenderPass::_ProcessSettings()
         _renderer.setParam("roulettePathLength", _russianRouletteStartDepth);
         _renderer.setParam("minContribution", _minContribution);
         _renderer.setParam("maxContribution", _maxContribution);
+        _renderer.setParam("roulettePathLength", _russianRouletteStartDepth);
         _renderer.setParam("pixelFilter", (int)_pixelFilterType);
         _rendererDirty = true;
 

@@ -63,6 +63,8 @@ public:
     void UpdatePrincipledMaterial(const std::string& renderType);
     void UpdateCarPaintMaterial();
     void UpdateLuminousMaterial();
+    void UpdateThinGlassMaterial();
+    void UpdateGlassMaterial();
 
     /// Create a default material based on the renderer type specified in config
     void UpdateSimpleMaterial(const std::string& renderType);
@@ -117,6 +119,8 @@ protected:
     void _ProcessOspPrincipledNode(HdMaterialNode node);
     void _ProcessOspCarPaintNode(HdMaterialNode node);
     void _ProcessOspLuminousNode(HdMaterialNode node);
+    void _ProcessOspThinGlassNode(HdMaterialNode node);
+    void _ProcessOspGlassNode(HdMaterialNode node);
     // parse texture node params and set them to appropriate map_ texture var
     void _ProcessTextureNode(HdMaterialNode node, const TfToken& inputName,
                              const TfToken& outputName);
@@ -124,7 +128,7 @@ protected:
     // and scale
     void _ProcessTransform2dNode(HdMaterialNode node, TfToken textureName);
 
-    enum MaterialTypes { preview = 0, principled, carPaint, luminous };
+    enum MaterialTypes { preview = 0, principled, carPaint, luminous, thinGlass, glass };
     MaterialTypes _type { MaterialTypes::preview };
 
     GfVec3f diffuseColor { 0.18f, 0.18f, 0.18f }; // also baseColor
@@ -134,6 +138,10 @@ protected:
     float metallic { 0.f };
     float diffuse { 1.f };
     float specular { 1.f };
+    //thinglass
+    float eta {1.5f};
+    GfVec3f attenuationColor {1.f, 1.f, 1.f};
+    float attenuationDistance {1.f};
 
     float intensity { 1.f }; // luminous intensity
     float roughness { 0.5f };
