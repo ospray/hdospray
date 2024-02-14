@@ -37,10 +37,10 @@ endmacro()
 option(USE_PYTHON "enable python support" ON)
 option(USE_PYTHON2 "if USE_PYTHON enabled, use python2 instead of python3" OFF)
 
-set(HDSUPER_USD_VERSION "v23.02" CACHE STRING "git tag of usd")
+set(HDSUPER_USD_VERSION "v23.08" CACHE STRING "git tag of usd")
 set(HDSUPER_PYTHON_EXECUTABLE "" CACHE PATH "python executable")
 set(HDSUPER_PYTHON_VERSION "" CACHE STRING "python version, eg 3.9")
-set(HDSUPER_USDSUPER_TAG "release-23.02" CACHE STRING "git tag of usd superbuild")
+set(HDSUPER_USDSUPER_TAG "release-23.08" CACHE STRING "git tag of usd superbuild")
 set(HDSUPER_USDSUPER_URL "https://github.com/carsonbrownlee/USD_superbuild.git"
   CACHE STRING "url of usd superbuild git")
 option(HDSUPER_OSPRAY_USE_GIT OFF)
