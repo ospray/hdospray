@@ -74,7 +74,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("minContribution", _minContribution);
     _renderer.setParam("maxContribution", _maxContribution);
     _renderer.setParam("epsilon", 0.001f);
-    _renderer.setParam("geometryLights", true);
+    _renderer.setParam("geometryLights", false);
     _rendererDirty = true;
 
     _lightsGroup.commit();
@@ -650,6 +650,11 @@ HdOSPRayRenderPass::_ProcessSettings()
     bool useTonemapper = renderDelegate->GetRenderSetting<bool>(
            HdOSPRayRenderSettingsTokens->tmp_enabled,
            HdOSPRayConfig::GetInstance().tmp_enabled);
+    GfVec4f shadowCatcherPlane = renderDelegate->GetRenderSetting<GfVec4f>(
+        HdOSPRayRenderSettingsTokens->shadowCatcherPlane,
+            _shadowCatcherPlane);
+    bool geometryLights = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->geometryLights, _geometryLights);
 
     _interactiveTargetFPS = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->interactiveTargetFPS,
@@ -668,7 +673,9 @@ HdOSPRayRenderPass::_ProcessSettings()
         || _maxContribution != maxContribution
         || pixelFilterType != _pixelFilterType
         || russianRouletteStartDepth != _russianRouletteStartDepth
-        || useTonemapper != _useTonemapper) {
+        || useTonemapper != _useTonemapper
+        || shadowCatcherPlane != _shadowCatcherPlane
+        || geometryLights != _geometryLights) {
         _spp = spp;
         _aoSamples = aoSamples;
         _maxDepth = maxDepth;
@@ -681,6 +688,8 @@ HdOSPRayRenderPass::_ProcessSettings()
         _pixelFilterType = pixelFilterType;
         _useTonemapper = useTonemapper;
         _tonemapperDirty = true;
+        _shadowCatcherPlane = shadowCatcherPlane;
+        _geometryLights = geometryLights;
         _renderer.setParam("pixelSamples", _spp);
         _renderer.setParam("lightSamples", _lightSamples);
         _renderer.setParam("aoSamples", _aoSamples);
@@ -692,6 +701,9 @@ HdOSPRayRenderPass::_ProcessSettings()
         _renderer.setParam("maxContribution", _maxContribution);
         _renderer.setParam("roulettePathLength", _russianRouletteStartDepth);
         _renderer.setParam("pixelFilter", (int)_pixelFilterType);
+        _renderer.setParam("shadowCatcherPlane", vec4f(_shadowCatcherPlane[0],
+            _shadowCatcherPlane[1], _shadowCatcherPlane[2], _shadowCatcherPlane[3]));
+        _renderer.setParam("geometryLights", _geometryLights);
         _rendererDirty = true;
 
         _pendingResetImage = true;

@@ -6,6 +6,7 @@
 #include <pxr/base/tf/debug.h>
 #include <pxr/base/tf/singleton.h>
 #include <pxr/pxr.h>
+#include <pxr/base/gf/vec4f.h>
 
 #include <ospray/ospray_cpp.h>
 #include <ospray/ospray_cpp/ext/rkcommon.h>
@@ -137,6 +138,12 @@ public:
     ///
     /// Override with *HDOSPRAY_AMBIENT_LIGHT*.
     bool ambientLight { false };
+
+    ///  ShadowCatcher for ospray path tracer
+    GfVec4f shadowCatcherPlane;
+
+    ///  Geometry Lights
+    bool geometryLights;
 
     ///  OSPRay device
     ///

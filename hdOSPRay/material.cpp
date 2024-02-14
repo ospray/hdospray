@@ -143,10 +143,12 @@ HdOSPRayMaterial::Sync(HdSceneDelegate* sceneDelegate,
                            == HdOSPRayMaterialTokens->OspPrincipled) {
                     matNetwork = network;
                     newType = MaterialTypes::principled;
+                    roughness = 0.f; // default roughness
                 } else if (node->identifier
                            == HdOSPRayMaterialTokens->OspCarPaint) {
                     matNetwork = network;
                     newType = MaterialTypes::carPaint;
+                    roughness = 0.f; // default roughness
                 } else if (node->identifier
                            == HdOSPRayMaterialTokens->OspLuminous) {
                     matNetwork = network;
