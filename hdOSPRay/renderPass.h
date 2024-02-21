@@ -187,9 +187,8 @@ private:
     bool _rendererDirty { true };
 
     bool _interacting { false };
-    bool _interactiveEnabled {
-        true
-    }; // disabled by setting interactivetargetfps to 0
+    bool _interactiveScaled { false }; // is fb/param scaled from interaction?
+    bool _interactiveEnabled { true}; // disabled by setting interactivetargetfps to 0
 
     int _lastRenderedModelVersion { -1 };
     int _lastRenderedLightVersion { -1 };

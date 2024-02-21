@@ -312,14 +312,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     _UpdateFrameBuffer(useDenoiser, renderPassState);
 
     // setup renderer params
-    if ((_interacting != cameraDirty) && _interactiveEnabled) {
-        _renderer.setParam("maxPathLength", (cameraDirty ? 4 : _maxDepth));
-        _renderer.setParam("minContribution",
-                           (cameraDirty ? 0.1f : _minContribution));
-        _renderer.setParam("maxContribution",
-                           (cameraDirty ? 3.0f : _maxContribution));
-        _renderer.setParam("aoSamples", (cameraDirty ? 0 : _aoSamples));
+    if (!_interacting && _interactiveEnabled && !cameraDirty) {
+        _renderer.setParam("maxPathLength", _maxDepth);
+        _renderer.setParam("minContribution", _minContribution);
+        _renderer.setParam("maxContribution", _maxContribution);
+        _renderer.setParam("aoSamples", _aoSamples);
         _rendererDirty = true;
+        _interactiveScaled = false;
     }
 
     // setup camera
@@ -390,6 +389,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _renderer.setParam("maxPathLength", min(4, _maxDepth));
         _renderer.setParam("aoSamples", (cameraDirty ? 0 : _aoSamples));
         _rendererDirty = true;
+        _interactiveScaled = true;
     }
 
     if (_rendererDirty) {

@@ -49,10 +49,21 @@ LoadPtexTexture(std::string file)
     return ospTexture;
 }
 
+static std::map<std::string, HdOSPRayTexture*> _mapHio;
+
 HdOSPRayTexture
 LoadHioTexture2D(const std::string file, const std::string channelsStr,
                  bool nearestFilter, bool complement)
 {
+    // check texture and params for cached texture
+    // TODO: when to delete texture cache?
+    std::stringstream ss;
+    ss << file << ":" << channelsStr << ":" << nearestFilter << ":" << complement;
+    const std::string key = ss.str();
+    auto cache = _mapHio[key];
+    if (cache)
+        return *cache;
+
     const auto image = HioImage::OpenForReading(file);
     if (!image) {
         TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n",
@@ -189,8 +200,10 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
            = std::shared_ptr<uint8_t>(data, std::default_delete<uint8_t[]>());
     auto outDataPtr = std::shared_ptr<uint8_t>(
            outData, std::default_delete<uint8_t[]>());
-    return HdOSPRayTexture(std::move(ospTexture),
+    HdOSPRayTexture* result = new HdOSPRayTexture(std::move(ospTexture),
                            outData ? outDataPtr : dataPtr);
+    _mapHio[key] = result;
+    return *result;
 }
 
 struct UDIMTileDesc {

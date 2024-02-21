@@ -133,7 +133,7 @@ protected:
 
     GfVec3f diffuseColor { 0.18f, 0.18f, 0.18f }; // also baseColor
     GfVec4f fallback { 0.f, 0.f, 0.f, 1.f };
-    GfVec3f edgeColor { 0.18f, 0.18f, 0.18f };
+    GfVec3f edgeColor { 1.0f, 1.0f, 1.0f };
     GfVec3f specularColor { 0.0f, 0.0f, 0.0f };
     float metallic { 0.f };
     float diffuse { 1.f };
@@ -171,7 +171,7 @@ protected:
     float flipflopFalloff { 1.f };
     float ior { 1.0f };
     float opacity { 1.f }; // 1.f - transmission
-    float sheen { 1.f };
+    float sheen { 0.f };
     GfVec3f sheenColor { 1.f, 1.f, 1.f };
     float sheenTint { 0.f };
     float sheenRoughness { 0.2f };
