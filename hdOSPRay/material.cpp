@@ -39,16 +39,20 @@ TF_DEFINE_PRIVATE_TOKENS(
     (specularColor)
     (emissiveColor)
     (metallic)
+    (map_metallic)
     (roughness)
+    (map_roughness)
     (clearcoat)
     (clearcoatRoughness)
     (ior)
     (eta)
     (color)
     (baseColor)
+    (map_baseColor)
     (attenuationColor)
     (attenuationDistance)
     (opacity)
+    (map_opacity)
     (UsdUVTexture)
     (normal)
     (displacement)
@@ -79,6 +83,7 @@ TF_DEFINE_PRIVATE_TOKENS(
     (sheenTint)
     (sheenRoughness)
     (transmission)
+    (map_transmission)
     (transmissionColor)
     (transmissionDepth)
     (anisotropy)
@@ -95,7 +100,6 @@ TF_DEFINE_PRIVATE_TOKENS(
     (edgeColor)
     (specular)
     (transparency)
-    (baseColorMult)
 );
 
 // clang-format on
@@ -319,8 +323,6 @@ HdOSPRayMaterial::_ProcessOspPrincipledNode(HdMaterialNode node)
         const auto& name = param->first;
         const auto& value = param->second;
         if (name == HdOSPRayMaterialTokens->baseColor) {
-            diffuseColor = value.Get<GfVec3f>();
-        } else if (name == HdOSPRayMaterialTokens->baseColorMult) {
             diffuseColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayMaterialTokens->edgeColor) {
             edgeColor = value.Get<GfVec3f>();
@@ -609,21 +611,26 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(const std::string& rendererType)
             continue;
         std::string name = "";
         if (key == HdOSPRayMaterialTokens->diffuseColor
-            || key == HdOSPRayMaterialTokens->baseColor)
+            || key == HdOSPRayMaterialTokens->baseColor
+            || key == HdOSPRayMaterialTokens->map_baseColor)
             name = "map_baseColor";
-        else if (key == HdOSPRayMaterialTokens->metallic) {
+        else if (key == HdOSPRayMaterialTokens->metallic
+            || key == HdOSPRayMaterialTokens->map_metallic) {
             name = "map_metallic";
             hasMetallicTex = true;
-        } else if (key == HdOSPRayMaterialTokens->roughness) {
+        } else if (key == HdOSPRayMaterialTokens->roughness
+            || key == HdOSPRayMaterialTokens->map_roughness) {
             name = "map_roughness";
             hasRoughnessTex = true;
-        } else if (key == HdOSPRayMaterialTokens->opacity) {
+        } else if (key == HdOSPRayMaterialTokens->opacity
+            || key == HdOSPRayMaterialTokens->map_opacity) {
             if (_type == MaterialTypes::preview) {
                 name = "map_transmission";
                 hasOpacityTex = true;
             } else
                 name = "map_opacity";
-        } else if (key == HdOSPRayMaterialTokens->transmission) {
+        } else if (key == HdOSPRayMaterialTokens->transmission
+            || key == HdOSPRayMaterialTokens->map_transmission) {
             name = "map_transmission";
             hasOpacityTex = true;
         }
@@ -644,19 +651,8 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(const std::string& rendererType)
                     _ospMaterial.setParam(st_rotation.c_str(),
                                           -value.xfm_rotation);
                 }
-            } else { // fallback
-                if (key == HdOSPRayMaterialTokens->diffuseColor) {
-                    _ospMaterial.setParam(
-                           "baseColor",
-                           vec3f(fallback[0], fallback[1], fallback[2]));
-                } else if (key == HdOSPRayMaterialTokens->metallic) {
-                    _ospMaterial.setParam("metallic", fallback[0]);
-                } else if (key == HdOSPRayMaterialTokens->roughness) {
-                    _ospMaterial.setParam("roughness", fallback[0]);
-                } else if (key == HdOSPRayMaterialTokens->opacity) {
-                    _ospMaterial.setParam("transmission", 1.f - fallback[3]);
-                }
             }
+            // no fallbacks for principled, as you can specify both a map_ and a non map param
         }
     }
 
@@ -703,9 +699,12 @@ HdOSPRayMaterial::UpdateCarPaintMaterial()
         if (!value.ospTexture)
             continue;
         std::string name = "";
-        if (key == HdOSPRayMaterialTokens->diffuseColor) {
+        if (key == HdOSPRayMaterialTokens->diffuseColor
+            || key == HdOSPRayMaterialTokens->map_baseColor
+            || key == HdOSPRayMaterialTokens->baseColor) {
             name = "map_baseColor";
-        } else if (key == HdOSPRayMaterialTokens->roughness) {
+        } else if (key == HdOSPRayMaterialTokens->roughness
+            || key == HdOSPRayMaterialTokens->map_roughness) {
             name = "map_roughness";
             hasRoughnessTex = true;
         }
