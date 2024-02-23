@@ -66,7 +66,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
 
     const auto image = HioImage::OpenForReading(file);
     if (!image) {
-        TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n",
+        TF_DEBUG_MSG(OSP, "#osp: failed to open texture \"%s\"\n",
                      file.c_str());
         return HdOSPRayTexture();
     }
@@ -149,12 +149,9 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
     else if (format == OSP_TEXTURE_RGBA8 || format == OSP_TEXTURE_SRGBA)
         dataType = OSP_VEC4UC;
     else {
-        std::cout << "Texture: file: " << file << "\tdepth: " << depth
-                  << "\tchannels: " << channels << "\format: " << format
-                  << std::endl;
-        throw std::runtime_error(
-               "hdOSPRay::LoadHioOTexture2D: \
-                                         Unknown texture format");
+        TF_DEBUG_MSG(OSP, "#osp: unknown texture format \"%s\" \"%d\" \"%d\" \"%d\"\n",
+                     file.c_str(), depth, channels, format);
+        return HdOSPRayTexture();
     }
 
     if (complement && (format == OSP_TEXTURE_R32F)) {
