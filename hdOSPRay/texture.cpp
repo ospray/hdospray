@@ -25,6 +25,15 @@ osprayTextureFormat(int depth, int channels, bool preferLinear)
             return preferLinear ? OSP_TEXTURE_RGB8 : OSP_TEXTURE_SRGB;
         if (channels == 4)
             return preferLinear ? OSP_TEXTURE_RGBA8 : OSP_TEXTURE_SRGBA;
+    } else if (depth == 2) {
+        if (channels == 1)
+            return OSP_TEXTURE_R16;
+        if (channels == 2)
+            return OSP_TEXTURE_RA16;
+        if (channels == 3)
+            return OSP_TEXTURE_RGB16;
+        if (channels == 4)
+            return OSP_TEXTURE_RGBA16;
     } else if (depth == 4) {
         if (channels == 1)
             return OSP_TEXTURE_R32F;
@@ -82,10 +91,14 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
     size.x = desc.width;
     size.y = desc.height;
     const bool srgb = image->IsColorSpaceSRGB();
+    bool isHalfFloat = false;
     int depth = 1;
     if (desc.format == HioFormatFloat16 || desc.format == HioFormatFloat16Vec2
         || desc.format == HioFormatFloat16Vec3
-        || desc.format == HioFormatFloat16Vec4 || desc.format == HioFormatUInt16
+        || desc.format == HioFormatFloat16Vec4) {
+        depth = 2;
+        isHalfFloat = true;
+    } else if (desc.format == HioFormatUInt16
         || desc.format == HioFormatUInt16Vec2
         || desc.format == HioFormatUInt16Vec3
         || desc.format == HioFormatUInt16Vec4 || desc.format == HioFormatInt16
@@ -93,7 +106,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
         || desc.format == HioFormatInt16Vec3
         || desc.format == HioFormatInt16Vec4)
         depth = 2;
-    if (desc.format == HioFormatFloat32 || desc.format == HioFormatFloat32Vec2
+    else if (desc.format == HioFormatFloat32 || desc.format == HioFormatFloat32Vec2
         || desc.format == HioFormatFloat32Vec3
         || desc.format == HioFormatFloat32Vec4 || desc.format == HioFormatUInt32
         || desc.format == HioFormatUInt32Vec2
@@ -114,6 +127,21 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
         TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n",
                      file.c_str());
         return HdOSPRayTexture();
+    }
+
+    // ospray does not support float16, convert to float32
+    if (depth == 2)  {
+        depth = 4;
+        GfHalf* cdata = (GfHalf*)data;
+        float* floatData = new float[size.y * size.x * channels];
+        for (size_t i = 0; i < size.x * size.y; i++) {
+            for(int j = 0; j < channels; j++) {
+                int const idx = i * channels + j;
+                floatData[idx] = cdata[idx];
+            }
+        }
+        delete[] data;
+        data = (uint8_t*)floatData;
     }
 
     const int outChannels
@@ -142,6 +170,14 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
         dataType = OSP_VEC3F;
     else if (format == OSP_TEXTURE_RGBA32F)
         dataType = OSP_VEC4F;
+    else if (format == OSP_TEXTURE_R16)
+        dataType = OSP_HALF;
+    else if (format == OSP_TEXTURE_RA16)
+        dataType = OSP_VEC2H;
+    else if (format == OSP_TEXTURE_RGB16)
+        dataType = OSP_VEC3H;
+    else if (format == OSP_TEXTURE_RGBA16)
+        dataType = OSP_VEC4H;
     else if ((format == OSP_TEXTURE_R8) || (format == OSP_TEXTURE_L8))
         dataType = OSP_UCHAR;
     else if ((format == OSP_TEXTURE_RGB8) || (format == OSP_TEXTURE_SRGB))
@@ -150,7 +186,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
         dataType = OSP_VEC4UC;
     else {
         TF_DEBUG_MSG(OSP, "#osp: unknown texture format \"%s\" \"%d\" \"%d\" \"%d\"\n",
-                     file.c_str(), depth, channels, format);
+                     file.c_str(), outDepth, outChannels, format);
         return HdOSPRayTexture();
     }
 
