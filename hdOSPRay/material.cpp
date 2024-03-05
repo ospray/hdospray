@@ -337,7 +337,10 @@ HdOSPRayMaterial::_ProcessOspPrincipledNode(HdMaterialNode node)
         } else if (name == HdOSPRayMaterialTokens->rotation) {
             rotation = value.Get<float>();
         } else if (name == HdOSPRayMaterialTokens->thin) {
-            thin = value.Get<float>();
+            if (value.IsHolding<float>())
+                thin = value.Get<float>();
+            else if (value.IsHolding<bool>())
+                thin = value.Get<bool>();
         } else if (name == HdOSPRayMaterialTokens->thickness) {
             thickness = value.Get<float>();
         } else if (name == HdOSPRayMaterialTokens->backlight) {
