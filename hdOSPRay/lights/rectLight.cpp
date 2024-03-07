@@ -90,8 +90,8 @@ HdOSPRayRectLight::_PrepareOSPLight()
     // checking, if we need to flip the direction of the osp quad light
     // to match the direction of the USD rect light
     if (GfDot(osp_quadDir, usd_rectLightDir) < 0.0f) {
-        osp_position = osp_position + osp_edge1;
-        osp_edge1 = osp_edge1 * -1.0f;
+        osp_position = osp_position + osp_edge1/2.f + osp_edge2/2.f;
+        osp_edge2 = osp_edge2 * -1.0f;
     }
 
     OSPIntensityQuantity intensityQuantity = _emissionParam.intensityQuantity;
@@ -112,7 +112,7 @@ HdOSPRayRectLight::_PrepareOSPLight()
     _ospLight.setParam("edge2",
                        vec3f(osp_edge2[0], osp_edge2[1], osp_edge2[2]));
     // emission
-    _ospLight.setParam("intensityQuantity", intensityQuantity);
+    _ospLight.setParam("intensityQuantity", (uint)intensityQuantity);
     _ospLight.setParam("color",
                        vec3f(_emissionParam.color[0], _emissionParam.color[1],
                              _emissionParam.color[2]));
