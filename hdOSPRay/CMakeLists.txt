@@ -21,7 +21,7 @@ option(USE_HOUDINI_USD "use Houdini USD" OFF)
 
 find_package(ospray 3 REQUIRED
   PATHS ${ospray_DIR})
-find_package(rkcommon 1.12.0 REQUIRED
+find_package(rkcommon 1 REQUIRED
   PATHS ${rkcommon_DIR})
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
