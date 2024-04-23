@@ -90,13 +90,15 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
     vec2i size;
     size.x = desc.width;
     size.y = desc.height;
-    const bool srgb = image->IsColorSpaceSRGB();
+    bool srgb = image->IsColorSpaceSRGB();
     bool isHalfFloat = false;
+    bool convertToFloat = false; // OSPRay does not support UNorm
     int depth = 1;
+    int outDepth = depth;
     if (desc.format == HioFormatFloat16 || desc.format == HioFormatFloat16Vec2
         || desc.format == HioFormatFloat16Vec3
         || desc.format == HioFormatFloat16Vec4) {
-        depth = 2;
+        depth = outDepth = 2;
         isHalfFloat = true;
     } else if (desc.format == HioFormatUInt16
         || desc.format == HioFormatUInt16Vec2
@@ -105,7 +107,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
         || desc.format == HioFormatInt16Vec2
         || desc.format == HioFormatInt16Vec3
         || desc.format == HioFormatInt16Vec4)
-        depth = 2;
+        depth = outDepth = 2;
     else if (desc.format == HioFormatFloat32 || desc.format == HioFormatFloat32Vec2
         || desc.format == HioFormatFloat32Vec3
         || desc.format == HioFormatFloat32Vec4 || desc.format == HioFormatUInt32
@@ -115,9 +117,22 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
         || desc.format == HioFormatInt32Vec2
         || desc.format == HioFormatInt32Vec3
         || desc.format == HioFormatInt32Vec4)
-        depth = 4;
+        depth = outDepth = 4;
+    else if (
+        desc.format == HioFormatUNorm8
+        || desc.format == HioFormatUNorm8Vec2
+        || desc.format == HioFormatUNorm8Vec3
+        || desc.format == HioFormatUNorm8Vec4
+        || desc.format == HioFormatUNorm8srgb
+        || desc.format == HioFormatUNorm8Vec2srgb
+        || desc.format == HioFormatUNorm8Vec3srgb
+        || desc.format == HioFormatUNorm8Vec4srgb) {
+        //TODO: do we need to convert to float in some cases?
+        // UNorm is an 8 bit float in range 0...1
+        //  unclear how this differs from RGB8
+    }
     int channels = image->GetBytesPerPixel() / depth;
-    const size_t stride = size.x * image->GetBytesPerPixel() * depth;
+    const size_t stride = size.x * image->GetBytesPerPixel();
     auto* data = new uint8_t[sizeof(char) * size.y * stride];
     uint8_t* outData = nullptr;
     desc.data = data;
@@ -130,8 +145,9 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
     }
 
     // ospray does not support float16, convert to float32
-    if (depth == 2)  {
+    if (isHalfFloat)  {
         depth = 4;
+        outDepth = 4;
         GfHalf* cdata = (GfHalf*)data;
         float* floatData = new float[size.y * size.x * channels];
         for (size_t i = 0; i < size.x * size.y; i++) {
@@ -144,9 +160,9 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
         data = (uint8_t*)floatData;
     }
 
-    const int outChannels
-           = channelsStr.empty() ? channels : channelsStr.length();
-    int outDepth = depth;
+    int outChannels = channelsStr.empty() ? channels : channelsStr.length();
+    if (desc.format == HioFormatUNorm8Vec4srgb)
+        outChannels = 4;
     if (outChannels == 1)
         outDepth = 4; // convert to float
     int channelOffset = 0;
@@ -156,7 +172,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
         channelOffset = 2;
     if (channels == 4 && channelsStr == "a")
         channelOffset = 3;
-    if (outChannels != channels || outDepth != depth) {
+    if (outChannels != channels || outDepth != depth || convertToFloat) {
         outData = new uint8_t[sizeof(uint8_t) * size.y * size.x * outChannels
                               * outDepth];
     }
@@ -205,12 +221,19 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
         unsigned char* in = (unsigned char*)data + offsetBytes;
         unsigned char* out = outData;
         for (size_t i = 0; i < size.x * size.y; i++) {
-            if (outDepth == depth)
+            if (outDepth == depth  && !convertToFloat)
                 std::copy(in, in + outBytes, out);
             else { // assume conversion to float
                 float* vals = (float*)out;
-                for (int j = 0; j < outChannels; j++)
-                    vals[j] = float(in[j]) / 256.f;
+                for (int j = 0; j < outChannels; j++) {
+                    float inFloat = float(in[j]);
+                    vals[j] = inFloat / 255.f;
+                    if (depth == 2) { //uint16
+                        unsigned short* inShort = (unsigned short*)in;
+                        inFloat = float(inShort[j]);
+                        vals[j] = inFloat/float(std::numeric_limits<uint16_t>::max());
+                    }
+                }
             }
             in += inBytes;
             out += outBytes;
@@ -222,6 +245,8 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
     ospData.commit();
 
     opp::Texture ospTexture = opp::Texture("texture2d");
+    if (!ospTexture)
+        TF_WARN("could not create texture2d");
     ospTexture.setParam("format", format);
     ospTexture.setParam("filter",
                         nearestFilter ? OSP_TEXTURE_FILTER_NEAREST

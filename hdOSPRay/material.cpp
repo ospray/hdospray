@@ -45,6 +45,7 @@ TF_DEFINE_PRIVATE_TOKENS(
     (clearcoat)
     (clearcoatRoughness)
     (ior)
+    (map_ior)
     (eta)
     (color)
     (baseColor)
@@ -56,6 +57,8 @@ TF_DEFINE_PRIVATE_TOKENS(
     (UsdUVTexture)
     (normal)
     (map_normal)
+    (baseNormal)
+    (map_baseNormal)
     (displacement)
     (file)
     (filename)
@@ -72,6 +75,7 @@ TF_DEFINE_PRIVATE_TOKENS(
     (map_rotation)
     (translation)
     (diffuse)
+    (map_diffuse)
     (coat)
     (coatColor)
     (coatThickness)
@@ -81,6 +85,7 @@ TF_DEFINE_PRIVATE_TOKENS(
     (flipflopColor)
     (flipflopFalloff)
     (sheen)
+    (map_sheen)
     (sheenColor)
     (sheenTint)
     (sheenRoughness)
@@ -100,7 +105,9 @@ TF_DEFINE_PRIVATE_TOKENS(
     (backlight)
     (intensity)
     (edgeColor)
+    (map_edgeColor)
     (specular)
+    (map_specular)
     (transparency)
 );
 
@@ -375,6 +382,8 @@ HdOSPRayMaterial::_ProcessOspPrincipledNode(HdMaterialNode node)
             specular = value.Get<float>();
         } else if (name == HdOSPRayMaterialTokens->normal) {
             normalScale = value.Get<float>();
+        } else if (name == HdOSPRayMaterialTokens->baseNormal) {
+            baseNormal = value.Get<float>();
         } else if (name == HdOSPRayMaterialTokens->roughness) {
             roughness = value.Get<float>();
         } else if (name == HdOSPRayMaterialTokens->ior) {
@@ -613,24 +622,46 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(const std::string& rendererType)
     bool hasRoughnessTex = false;
     bool hasOpacityTex = false;
     // set texture maps
+    // TODO: we can skip the name mapping if we require them to be in ospray nomenclature
     for (const auto& [key, value] : _textures) {
         if (!value.ospTexture)
             continue;
         std::string name = "";
         if (key == HdOSPRayMaterialTokens->diffuseColor
             || key == HdOSPRayMaterialTokens->baseColor
-            || key == HdOSPRayMaterialTokens->map_baseColor)
+            || key == HdOSPRayMaterialTokens->map_baseColor) {
             name = "map_baseColor";
-        else if (key == HdOSPRayMaterialTokens->metallic
+        } else if (key == HdOSPRayMaterialTokens->edgeColor
+            || key == HdOSPRayMaterialTokens->map_edgeColor) {
+            name = "map_edgeColor";
+        } else if (key == HdOSPRayMaterialTokens->ior
+            || key == HdOSPRayMaterialTokens->map_ior) {
+            name = "map_ior";
+        } else if (key == HdOSPRayMaterialTokens->metallic
             || key == HdOSPRayMaterialTokens->map_metallic) {
             name = "map_metallic";
             hasMetallicTex = true;
         } else if (key == HdOSPRayMaterialTokens->roughness
             || key == HdOSPRayMaterialTokens->map_roughness) {
             name = "map_roughness";
+        } else if (key == HdOSPRayMaterialTokens->diffuse
+            || key == HdOSPRayMaterialTokens->map_diffuse) {
+            name = "map_diffuse";
+        } else if (key == HdOSPRayMaterialTokens->ior
+            || key == HdOSPRayMaterialTokens->map_ior) {
+            name = "map_ior";
+        } else if (key == HdOSPRayMaterialTokens->specular
+            || key == HdOSPRayMaterialTokens->map_specular) {
+            name = "map_specular";
+        } else if (key == HdOSPRayMaterialTokens->sheen
+            || key == HdOSPRayMaterialTokens->map_sheen) {
+            name = "map_sheen";
         } else if (key == HdOSPRayMaterialTokens->normal
             || key == HdOSPRayMaterialTokens->map_normal) {
             name = "map_normal";
+        } else if (key == HdOSPRayMaterialTokens->baseNormal
+            || key == HdOSPRayMaterialTokens->map_baseNormal) {
+            name = "map_baseNormal";
         } else if (key == HdOSPRayMaterialTokens->rotation
             || key == HdOSPRayMaterialTokens->map_rotation) {
             name = "map_rotation";
@@ -683,6 +714,7 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(const std::string& rendererType)
     _ospMaterial.setParam("anisotropy", anisotropy);
     _ospMaterial.setParam("rotation", rotation);
     _ospMaterial.setParam("normal", normalScale);
+    _ospMaterial.setParam("baseNormal", baseNormal);
     _ospMaterial.setParam("thickness", thickness);
     _ospMaterial.setParam("backlight", backlight);
     _ospMaterial.setParam("coat", coat);

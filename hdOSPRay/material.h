@@ -151,7 +151,7 @@ protected:
     float transmissionDepth { 1.f };
     float anisotropy { 0.f };
     float rotation { 0.f };
-    // float baseNormal { 1.f };
+    float baseNormal { 1.f };
     GfVec3f flakeColor { 1.f, 1.f, 1.f };
     float flakeDensity { 0.f };
     float flakeScale { 100.0f };
