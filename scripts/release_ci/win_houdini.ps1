@@ -1,6 +1,11 @@
 ## Copyright 2009 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
+#
+# builders assume ospray + houdini binaries are externally
+#   available in NAS_DEP_DIR
+#
+
 pip3.8 install PyOpenGL
 pip3.8 install PySide2
 pip3.8 install numpy

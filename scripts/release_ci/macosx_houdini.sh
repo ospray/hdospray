@@ -2,6 +2,11 @@
 ## Copyright 2023 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
+#
+# builders assume ospray + houdini binaries are externally
+#   available in NAS_DEP_DIR
+#
+
 set -x
 cmake --version
 
@@ -12,8 +17,11 @@ DEP_DIR=$ROOT_DIR/../hdospray_deps
 THREADS=`sysctl -n hw.logicalcpu`
 #USD_ROOT=$STORAGE_PATH/packages/apps/usd/macos/build-hdospray-superbuild
 USD_ROOT=$DEP_DIR/usd-23.02
-OSPRAY_ROOT=$DEP_DIR/ospray-3.0.0
+OSPRAY_ROOT=$DEP_DIR/ospray-3.1.0
 HOUDINI_ROOT=$DEP_DIR/houdini-19.5.682
+
+echo "usrbinpip: "
+ls /usr/bin/pip*
 
 echo $PWD
 
@@ -55,7 +63,7 @@ if [ ! -d "$OSPRAY_ROOT/install" ]
     cmake $ROOT_DIR/scripts/superbuild/ -DHDSUPER_PYTHON_VERSION=3.9 \
       -D CMAKE_BUILD_TYPE=Release \
       -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DHDSUPER_OSPRAY_USE_EXTERNAL=ON \
-      -DHDSUPER_OSPRAY_EXTERNAL_DIR="/NAS/packages/apps/usd/macos/ospray-3.0.0/lib/cmake/ospray-3.0.0" \
+      -DHDSUPER_OSPRAY_EXTERNAL_DIR="/NAS/packages/apps/usd/macos/ospray-3.1.0/lib/cmake/ospray-3.1.0" \
       -DBUILD_OSPRAY_ISPC=ON -DBUILD_HDOSPRAY_ISPC=OFF -DBUILD_HDOSPRAY=OFF \
       -DBUILD_USD=OFF -DHDSUPER_USD_VERSION=v23.08 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF \
       -DBUILD_BOOST=OFF -DPYSIDE_BIN_DIR=/Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec \
@@ -96,8 +104,8 @@ echo "ospray_DIR:"
 cmake .. -D Houdini_DIR=$HOUDINI_ROOT/Resources/toolkit/cmake/ \
          -D CMAKE_BUILD_TYPE=Release \
          -D USE_HOUDINI_USD=ON \
-         -Dospray_DIR=$OSPRAY_ROOT/OSPRayBinaries/src/lib/cmake/ospray-3.0.0 \
-         -Drkcommon_DIR=$OSPRAY_ROOT/install/rkcommon/lib/cmake/rkcommon-1.12.0 \
+         -Dospray_DIR=$OSPRAY_ROOT/OSPRayBinaries/src/lib/cmake/ospray-3.1.0 \
+         -Drkcommon_DIR=$OSPRAY_ROOT/install/rkcommon/lib/cmake/rkcommon-1.13.0 \
          -DTBB_DIR=$OSPRAY_ROOT/install/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
          -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
          -D HDOSPRAY_GENERATE_SETUP=ON \

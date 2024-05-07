@@ -2,6 +2,11 @@
 ## Copyright 2023 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
+#
+# builders assume ospray + houdini binaries are externally
+#   available in NAS_DEP_DIR
+#
+
 set -x
 cmake --version
 

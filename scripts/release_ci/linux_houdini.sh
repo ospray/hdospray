@@ -2,7 +2,13 @@
 ## Copyright 2023 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
-HOUDINI_DIR=/NAS/packages/apps/usd/ubuntu22_04/hfs19.5.640
+#
+# builders assume ospray + houdini binaries are externally
+#   available in NAS_DEP_DIR
+#
+
+NAS_DEP_DIR=/NAS/packages/apps/usd/ubuntu22_04
+HOUDINI_DIR=${NAS_DEP_DIR}/hfs19.5.640
 
 set -x
 cmake --version
@@ -27,6 +33,9 @@ export CMAKE_CXX_FLAGS="-std=c++17"
 echo "houdini_DIR:"
 ls $HOUDINI_DIR/toolkit/cmake
 
+echo "NASOSPRAY:"
+ls /NAS/packages/apps/usd/ubuntu22_04/ospray-3.1.0/lib/cmake/ospray-3.1.0
+
 rm -r $DEP_DIR/install
 if [ ! -d "$DEP_DIR/install" ]
 then
@@ -36,7 +45,7 @@ then
     cd build_deps
     cmake ../scripts/superbuild/ -DBUILD_HDOSPRAY=OFF \
         -DHDSUPER_OSPRAY_USE_EXTERNAL=ON \
-        -DHDSUPER_OSPRAY_EXTERNAL_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-3.0.0/lib/cmake/ospray-3.0.0" \
+        -DHDSUPER_OSPRAY_EXTERNAL_DIR="${NAS_DEP_DIR}/ospray-3.1.0/lib/cmake/ospray-3.1.0" \
         -DBUILD_OSPRAY=ON -DHDSUPER_USD_VERSION=v23.08 -DBUILD_TIFF=ON \
         -DBUILD_USD=OFF \
         -DBUILD_PNG=ON -DBUILD_JPEG=ON -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF \
@@ -55,11 +64,11 @@ cd $ROOT_DIR
 mkdir -p build_release
 cd build_release
 echo "rkcommon_DIR: "
-echo "$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.12.0"
+echo "$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.13.0"
 cmake -L \
-  -D ospray_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-3.0.0/lib/cmake/ospray-3.0.0" \
-  -D rkcommon_DIR="$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.12.0" \
-  -D TBB_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-3.0.0/lib/cmake/tbb" \
+  -D ospray_DIR="${NAS_DEP_DIR}/ospray-3.1.0/lib/cmake/ospray-3.1.0" \
+  -D rkcommon_DIR="$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.13.0" \
+  -D TBB_DIR="${NAS_DEP_DIR}/ospray-3.1.0/lib/cmake/tbb" \
   -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
   -D HDOSPRAY_INSTALL_USD_DEPENDENCIES=OFF \
   -D HDOSPRAY_GENERATE_SETUP=ON \

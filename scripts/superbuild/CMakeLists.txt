@@ -95,7 +95,7 @@ if (BUILD_RKCOMMON)
 endif()
 
 if(BUILD_HDOSPRAY_ISPC)
-  set(HDOSPRAY_ISPC_VERSION 1.21.1)
+  set(HDOSPRAY_ISPC_VERSION 1.23.0)
   include(dep_ispc)
 endif()
 
