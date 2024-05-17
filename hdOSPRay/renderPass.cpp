@@ -830,7 +830,7 @@ HdOSPRayRenderPass::_CopyFrameBuffer(
                             GfVec3f dir = _inverseProjMatrix.Transform(pos);
                             GfVec3f origin = GfVec3f(0, 0, 0);
                             origin = _inverseViewMatrix.Transform(origin);
-                            dir = -_inverseViewMatrix.Transform(dir)
+                            dir = _inverseViewMatrix.TransformDir(dir)
                                           .GetNormalized();
                             float& d = depth[static_cast<int>(y * w + x)];
                             GfVec3f hit = origin + dir * d;
