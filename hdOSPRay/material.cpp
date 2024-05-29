@@ -371,7 +371,9 @@ HdOSPRayMaterial::_ProcessOspPrincipledNode(HdMaterialNode node)
         } else if (name == HdOSPRayMaterialTokens->sheenRoughness) {
             sheenRoughness = value.Get<float>();
         } else if (name == HdOSPRayMaterialTokens->transmission) {
-            opacity = 1.f - value.Get<float>();
+            transmission = value.Get<float>();
+        } else if (name == HdOSPRayMaterialTokens->opacity) {
+            opacity = value.Get<float>();
         } else if (name == HdOSPRayMaterialTokens->specularColor) {
             specularColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayMaterialTokens->metallic) {
@@ -388,8 +390,6 @@ HdOSPRayMaterial::_ProcessOspPrincipledNode(HdMaterialNode node)
             roughness = value.Get<float>();
         } else if (name == HdOSPRayMaterialTokens->ior) {
             ior = value.Get<float>();
-        } else if (name == HdOSPRayMaterialTokens->opacity) {
-            cutoutOpacity = value.Get<float>();
         }
     }
 }
@@ -700,12 +700,16 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(const std::string& rendererType)
     }
 
     // set material params
+    if (_type == MaterialTypes::preview) {
+        transmission = 1.f - opacity;
+    }
     _ospMaterial.setParam("metallic", (hasMetallicTex ? 1.0f : metallic));
     _ospMaterial.setParam("roughness", (hasRoughnessTex ? 1.0f : roughness));
     _ospMaterial.setParam("coatRoughness", coatRoughness);
     _ospMaterial.setParam("ior", ior);
     _ospMaterial.setParam("transmission",
-                          (hasOpacityTex ? 1.0f : 1.0f - opacity));
+                          (hasOpacityTex ? 1.0f : transmission));
+    _ospMaterial.setParam("opacity", opacity);
     _ospMaterial.setParam("thin", thin);
     _ospMaterial.setParam("diffuse", diffuse);
     _ospMaterial.setParam("specular", specular);

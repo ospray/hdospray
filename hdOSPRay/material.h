@@ -146,7 +146,7 @@ protected:
     float intensity { 1.f }; // luminous intensity
     float roughness { 0.5f };
     float normalScale { 1.f }; // normal map scale
-    // float transmission { 0.f };  // 1.f - opacity
+    float transmission { 0.f };
     GfVec3f transmissionColor { 1.0f, 1.0f, 1.0f };
     float transmissionDepth { 1.f };
     float anisotropy { 0.f };
@@ -170,12 +170,11 @@ protected:
     GfVec3f flipflopColor { 1.f, 1.f, 1.f };
     float flipflopFalloff { 1.f };
     float ior { 1.0f };
-    float opacity { 1.f }; // 1.f - transmission
+    float opacity { 1.f }; // 1.f - transmission for preview
     float sheen { 0.f };
     GfVec3f sheenColor { 1.f, 1.f, 1.f };
     float sheenTint { 0.f };
     float sheenRoughness { 0.2f };
-    float cutoutOpacity { 1.f };
     TfToken type;
     bool hasPtex { false };
 
