@@ -98,6 +98,10 @@ target_compile_definitions(hdOSPRay
   $<$<CXX_COMPILER_ID:MSVC>:/MP /wd4244 /wd4305 /wd4996>
   )
 
+if (APPLE) # fix boost error with xcode
+  add_definitions(-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION)
+endif()
+
 install(TARGETS hdOSPRay DESTINATION plugin/usd)
 
 # plugInfo.json

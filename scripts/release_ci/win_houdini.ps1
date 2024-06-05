@@ -39,7 +39,7 @@ md -Force build_deps
 cd build_deps
 cmake ../scripts/superbuild/ -DBUILD_HDOSPRAY=OFF `
     -DHDSUPER_OSPRAY_USE_EXTERNAL=ON `
-    -DHDSUPER_OSPRAY_EXTERNAL_DIR="/NAS/packages/apps/usd/win10/ospray-3.0.0/lib/cmake/ospray-3.0.0" `
+    -DHDSUPER_OSPRAY_EXTERNAL_DIR="/NAS/packages/apps/usd/win10/ospray-3.1.0/lib/cmake/ospray-3.1.0" `
     -DBUILD_OSPRAY=ON -DHDSUPER_USD_VERSION=v23.08 -DBUILD_TIFF=OFF `
     -DBUILD_USD=OFF `
     -DBUILD_PNG=OFF -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF `
@@ -47,6 +47,10 @@ cmake ../scripts/superbuild/ -DBUILD_HDOSPRAY=OFF `
 cmake --build . --config release -j 32
 echo "dep dir install:"
 ls $DEP_DIR/install
+echo "dep dir install ospray:"
+ls $DEP_DIR/install/ospray
+ls $DEP_DIR/install/ospray/lib
+ls $DEP_DIR/install/ospray/lib/cmake
 
 cd $ROOT_DIR
 md build_release
@@ -62,9 +66,9 @@ $env:HOUDINI_DIR = $HOUDINI_DIR
 
 #cmake --debug-output --trace-expand -L `
 cmake -L `
-  -D ospray_DIR="$NAS_DEP_DIR\ospray-3.0.0\lib\cmake\ospray-3.0.0" `
+  -D ospray_DIR="$DEP_DIR/install/ospray/lib/cmake/ospray-3.1.0" `
   -D Houdini_DIR="$HOUDINI_DIR" `
-  -D rkcommon_DIR="$DEP_DIR\install\rkcommon\lib\cmake\rkcommon-1.12.0" `
+  -D rkcommon_DIR="$DEP_DIR\install\rkcommon\lib\cmake\rkcommon-1.13.0" `
   -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON `
   -D HDOSPRAY_INSTALL_PYTHON_DEPENDENCIES=OFF `
   -D HDOSPRAY_GENERATE_SETUP=OFF `

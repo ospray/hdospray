@@ -78,6 +78,9 @@ if [ ! -d "$OSPRAY_ROOT/install" ]
     echo "dep install dir: "
     ls $OSPRAY_ROOT/install
     echo "dependency build completed"
+    echo "rkcommon: "
+    ls $OSPRAY_ROOT/install/rkcommon/lib/
+    ls $OSPRAY_ROOT/install/rkcommon/lib/cmake/
     cd $ROOT_DIR
 fi
 
@@ -104,7 +107,7 @@ echo "ospray_DIR:"
 cmake .. -D Houdini_DIR=$HOUDINI_ROOT/Resources/toolkit/cmake/ \
          -D CMAKE_BUILD_TYPE=Release \
          -D USE_HOUDINI_USD=ON \
-         -Dospray_DIR=$OSPRAY_ROOT/OSPRayBinaries/src/lib/cmake/ospray-3.1.0 \
+         -Dospray_DIR=/NAS/packages/apps/usd/macos/ospray-3.1.0/lib/cmake/ospray-3.1.0 \
          -Drkcommon_DIR=$OSPRAY_ROOT/install/rkcommon/lib/cmake/rkcommon-1.13.0 \
          -DTBB_DIR=$OSPRAY_ROOT/install/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
          -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
@@ -116,8 +119,9 @@ cmake .. -D Houdini_DIR=$HOUDINI_ROOT/Resources/toolkit/cmake/ \
          -D CMAKE_INSTALL_LIBDIR=lib \
          -D CMAKE_INSTALL_BINDIR=bin \
          -D CMAKE_MACOSX_RPATH=ON \
-         -D CMAKE_INSTALL_RPATH=$ROOT_DIR/build_release/install \
-         -DHDOSPRAY_SIGN_FILE=$SIGN_FILE_MAC || exit 2
+         -D CMAKE_INSTALL_RPATH=$ROOT_DIR/build_release/install || exit 2
+         # disabling mac signing, signing currently broken on macs
+         #-DHDOSPRAY_SIGN_FILE=$SIGN_FILE_MAC || exit 2
 
 # set release and installer settings
 # create installers

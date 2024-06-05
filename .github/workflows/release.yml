@@ -93,8 +93,9 @@ jobs:
         export CC=clang
         export CXX=clang++
         scripts/release_ci/macosx_houdini.sh
-        $SIGN_FILE_MAC -o runtime -e scripts/release_ci/hdospray.entitlements build_release/*zip
-        scripts/release_ci/macosx_notarization.sh build_release/*.zip
+        # signing on mac currently broken
+        #$SIGN_FILE_MAC -o runtime -e scripts/release_ci/hdospray.entitlements build_release/*zip
+        #scripts/release_ci/macosx_notarization.sh build_release/*.zip
       artifact-out: release-osx-clang-houdini
       artifact-path: "build_release/*.zip"
 
