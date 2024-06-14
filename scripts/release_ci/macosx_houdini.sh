@@ -2,10 +2,6 @@
 ## Copyright 2023 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
-#
-# builders assume ospray + houdini binaries are externally
-#   available in NAS_DEP_DIR
-#
 
 set -x
 cmake --version
@@ -15,7 +11,6 @@ cmake --version
 ROOT_DIR=$PWD
 DEP_DIR=$ROOT_DIR/../hdospray_deps
 THREADS=`sysctl -n hw.logicalcpu`
-#USD_ROOT=$STORAGE_PATH/packages/apps/usd/macos/build-hdospray-superbuild
 USD_ROOT=$DEP_DIR/usd-23.02
 OSPRAY_ROOT=$DEP_DIR/ospray-3.1.0
 HOUDINI_ROOT=$DEP_DIR/houdini-19.5.682
@@ -62,9 +57,8 @@ if [ ! -d "$OSPRAY_ROOT/install" ]
     export MACOSX_DEPLOYMENT_TARGET=11.7
     cmake $ROOT_DIR/scripts/superbuild/ -DHDSUPER_PYTHON_VERSION=3.9 \
       -D CMAKE_BUILD_TYPE=Release \
-      -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DHDSUPER_OSPRAY_USE_EXTERNAL=ON \
-      -DHDSUPER_OSPRAY_EXTERNAL_DIR="/NAS/packages/apps/usd/macos/ospray-3.1.0/lib/cmake/ospray-3.1.0" \
-      -DBUILD_OSPRAY_ISPC=ON -DBUILD_HDOSPRAY_ISPC=OFF -DBUILD_HDOSPRAY=OFF \
+      -DHDSUPER_PYTHON_EXECUTABLE=/usr/local/bin/python3.9 -DHDSUPER_OSPRAY_USE_EXTERNAL=OFF \
+      -DBUILD_OSPRAY=ON -DBUILD_OSPRAY_ISPC=ON -DBUILD_HDOSPRAY_ISPC=OFF -DBUILD_HDOSPRAY=OFF \
       -DBUILD_USD=OFF -DHDSUPER_USD_VERSION=v23.08 -DBUILD_TIFF=OFF -DBUILD_PNG=OFF \
       -DBUILD_BOOST=OFF -DPYSIDE_BIN_DIR=/Users/github-runner/Library/Python/3.9/lib/python/site-packages/PySide6/Qt/libexec \
       -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF -DCMAKE_INSTALL_PREFIX=$OSPRAY_ROOT/install
@@ -87,7 +81,7 @@ fi
 #rm -rf $HOUDINI_ROOT
 if [ ! -d "$HOUDINI_ROOT" ]
   then
-    cp -r /NAS/packages/apps/usd/macos/houdini-19.5.682 $HOUDINI_ROOT
+    cp -r $STORAGE_PATH/packages/apps/usd/macos/houdini-19.5.682 $HOUDINI_ROOT
 fi
 # houdini framework seems to reference incorrect library locations
 ln -s $HOUDINI_ROOT/Libraries $HOUDINI_ROOT/Frameworks/Houdini.framework/Versions/19.5/Libraries
@@ -107,7 +101,7 @@ echo "ospray_DIR:"
 cmake .. -D Houdini_DIR=$HOUDINI_ROOT/Resources/toolkit/cmake/ \
          -D CMAKE_BUILD_TYPE=Release \
          -D USE_HOUDINI_USD=ON \
-         -Dospray_DIR=/NAS/packages/apps/usd/macos/ospray-3.1.0/lib/cmake/ospray-3.1.0 \
+         -Dospray_DIR=$OSPRAY_ROOT/install/ospray/lib/cmake/ospray-3.1.0 \
          -Drkcommon_DIR=$OSPRAY_ROOT/install/rkcommon/lib/cmake/rkcommon-1.13.0 \
          -DTBB_DIR=$OSPRAY_ROOT/install/tbb/lib/cmake/tbb -DCMAKE_BUILD_TYPE=Release \
          -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \

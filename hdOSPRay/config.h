@@ -143,7 +143,7 @@ public:
     GfVec4f shadowCatcherPlane;
 
     ///  Geometry Lights
-    bool geometryLights;
+    bool geometryLights { false };
 
     ///  OSPRay device
     ///

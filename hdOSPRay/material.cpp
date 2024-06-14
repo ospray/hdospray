@@ -676,6 +676,10 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(const std::string& rendererType)
             || key == HdOSPRayMaterialTokens->map_transmission) {
             name = "map_transmission";
             hasOpacityTex = true;
+        } else if (key == HdOSPRayMaterialTokens->roughness
+            || key == HdOSPRayMaterialTokens->map_roughness) {
+            name = "map_roughness";
+            hasRoughnessTex = true;
         }
 
         if (name != "") {

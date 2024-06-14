@@ -1,18 +1,13 @@
 ## Copyright 2009 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
-#
-# builders assume ospray + houdini binaries are externally
-#   available in NAS_DEP_DIR
-#
 
 pip3.8 install PyOpenGL
 pip3.8 install PySide2
 pip3.8 install numpy
 pip3.8 show PyOpenGL
 
-$NAS = "*removed*"
-$NAS_DEP_DIR = "$NAS\packages\apps\usd\win10"
+$STORAGE_DEP_DIR = "$STORAGE_PATH\packages\apps\usd\win10"
 $ROOT_DIR = pwd
 $DEP_DIR = "$ROOT_DIR/../../hdospray_deps"
 md -Force $DEP_DIR
@@ -23,13 +18,13 @@ cd $ROOT_DIR
 $HOUDINI_DIR = "$DEP_DIR\houdini-19.5.682"
 if (Test-Path -Path $HOUDINI_DIR ) {
 } else {
-  cp -r $NAS\packages\apps\usd\win10\houdini-19.5.682 $HOUDINI_DIR
+  cp -r $STORAGE_PATH\packages\apps\usd\win10\houdini-19.5.682 $HOUDINI_DIR
 }
 echo "houdini_dir: "
 ls $HOUDINI_DIR
 
 #
-# build rkcommon using superbuild
+# build ospray and rkcommon using superbuild
 #
 md -Force $DEP_DIR/install
 if (test-path build_deps) {
@@ -38,8 +33,7 @@ if (test-path build_deps) {
 md -Force build_deps
 cd build_deps
 cmake ../scripts/superbuild/ -DBUILD_HDOSPRAY=OFF `
-    -DHDSUPER_OSPRAY_USE_EXTERNAL=ON `
-    -DHDSUPER_OSPRAY_EXTERNAL_DIR="/NAS/packages/apps/usd/win10/ospray-3.1.0/lib/cmake/ospray-3.1.0" `
+    -DHDSUPER_OSPRAY_USE_EXTERNAL=OFF `
     -DBUILD_OSPRAY=ON -DHDSUPER_USD_VERSION=v23.08 -DBUILD_TIFF=OFF `
     -DBUILD_USD=OFF `
     -DBUILD_PNG=OFF -DBUILD_JPEG=OFF -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF `
@@ -61,7 +55,7 @@ pwd
 echo "ls build_release"
 dir
 
-$env:NAS_DEP_DIR = $NAS_DEP_DIR
+$env:STORAGE_DEP_DIR = $STORAGE_DEP_DIR
 $env:HOUDINI_DIR = $HOUDINI_DIR
 
 #cmake --debug-output --trace-expand -L `

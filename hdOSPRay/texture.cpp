@@ -141,6 +141,7 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
     if (!loaded) {
         TF_DEBUG_MSG(OSP, "#osp: failed to load texture \"%s\"\n",
                      file.c_str());
+        delete[] data;
         return HdOSPRayTexture();
     }
 
@@ -203,6 +204,8 @@ LoadHioTexture2D(const std::string file, const std::string channelsStr,
     else {
         TF_DEBUG_MSG(OSP, "#osp: unknown texture format \"%s\" \"%d\" \"%d\" \"%d\"\n",
                      file.c_str(), outDepth, outChannels, format);
+        delete[] data;
+        delete[] outData;
         return HdOSPRayTexture();
     }
 
