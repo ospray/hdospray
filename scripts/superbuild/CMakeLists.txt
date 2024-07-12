@@ -169,6 +169,12 @@ if (BUILD_HDOSPRAY)
     )
   endif()
 
+  if (EXISTS "${HDOSPRAY_ROOT}/lib64")
+    FILE(APPEND ${CMAKE_INSTALL_PREFIX}/setup_hdospray.sh
+    "export ${LD_EXPORT}=\${HDOSPRAY_ROOT}/lib64:\${LD_LIBRARY_PATH}\n"
+    )
+  endif()
+
   ExternalProject_Get_property(hdOSPRay BINARY_DIR)
   set(hdOSPRayBinaryDir ${BINARY_DIR})
   # build directory; name; components; destination dir in package
