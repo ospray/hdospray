@@ -19,7 +19,7 @@ pip3 install PyOpenGL==3.1.5 PySide2 numpy
 echo "pip3 show PyOpenGL:"
 pip3 show PyOpenGL
 export ROOT_DIR=$PWD
-DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.02
+DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.08
 mkdir -p $ROOT_DIR/../hdospray_deps
 mkdir -p $DEP_DIR
 ls $PWD

@@ -55,7 +55,6 @@ pwd
 echo "ls build_release"
 dir
 
-$env:STORAGE_DEP_DIR = $STORAGE_DEP_DIR
 $env:HOUDINI_DIR = $HOUDINI_DIR
 
 #cmake --debug-output --trace-expand -L `

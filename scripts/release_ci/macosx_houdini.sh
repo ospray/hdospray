@@ -11,7 +11,7 @@ cmake --version
 ROOT_DIR=$PWD
 DEP_DIR=$ROOT_DIR/../hdospray_deps
 THREADS=`sysctl -n hw.logicalcpu`
-USD_ROOT=$DEP_DIR/usd-23.02
+USD_ROOT=$DEP_DIR/usd-23.08
 OSPRAY_ROOT=$DEP_DIR/ospray-3.1.0
 HOUDINI_ROOT=$DEP_DIR/houdini-19.5.682
 

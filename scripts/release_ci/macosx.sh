@@ -8,7 +8,7 @@ cmake --version
 #### Set variables for script ####
 
 ROOT_DIR=$PWD
-DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.02
+DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.08
 THREADS=`sysctl -n hw.logicalcpu`
 #USD_ROOT=$STORAGE_PATH/packages/apps/usd/macos/build-hdospray-superbuild
 USD_ROOT=$DEP_DIR/install

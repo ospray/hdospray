@@ -6,9 +6,8 @@ pip3.8 install PySide2
 pip3.8 install numpy
 pip3.8 show PyOpenGL
 
-$STORAGE_DEP_DIR = "$STORAGE_PATH\packages\apps\usd\win10"
 $ROOT_DIR = pwd
-$DEP_DIR = "../hdospray_deps/usd-23.02"
+$DEP_DIR = "../hdospray_deps/usd-23.08"
 md $DEP_DIR
 
 
@@ -45,7 +44,7 @@ cd build_release
 
 cmake -L `
   -D ospray_DIR="$DEP_DIR/install/ospray/lib/cmake/ospray-3.1.0" `
-  -D pxr_DIR="$STORAGE_DEP_DIR\usd-23.02" `
+  -D pxr_DIR="$DEP_DIR/install" `
   -D rkcommon_DIR="$DEP_DIR\install\rkcommon\lib\cmake\rkcommon-1.13.0" `
   -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON `
   -D HDOSPRAY_GENERATE_SETUP=ON `

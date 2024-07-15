@@ -17,7 +17,7 @@ echo "pip3 show PyOpenGL:"
 pip3 show PyOpenGL
 
 export ROOT_DIR=$PWD
-DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.02
+DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.08
 mkdir -p $ROOT_DIR/../hdospray_deps
 HOUDINI_DIR=$STORAGE_PATH/packages/apps/usd/ubuntu22_04/hfs19.5.640
 mkdir -p $DEP_DIR
