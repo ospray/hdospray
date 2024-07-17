@@ -9,7 +9,7 @@ if (WIN32)
     add_compile_options("/W0")
 else()
     set(OCIO_ARGS "-DCMAKE_CXX_FLAGS:STRING=-fPIC -w")
-    add_compile_options("-fPIC -w)"
+    add_compile_options("-fPIC -w")
 endif()
 set(OCIO_ARGS ${OCIO_ARGS}
     -DOCIO_BUILD_TRUELIGHT=OFF

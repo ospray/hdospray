@@ -32,11 +32,11 @@ set(ARGS_OSPRAY_DOWNLOAD URL ${HDSUPER_OSPRAY_URL})
   # by default, download ospray binaries but we need to build rkcommon for dev includes
   if (HDSUPER_DOWNLOAD_OSPRAY_BINARIES)
     set(HDSUPER_OSPRAY_DEPENDENCIES_ONLY ON)
-    set(OSPRAY_BINARIES_URL https://github.com/ospray/ospray/releases/download/v3.0.0/ospray-3.0.0.sycl.x86_64.linux.tar.gz)
+    set(OSPRAY_BINARIES_URL https://github.com/RenderKit/ospray/releases/download/v3.1.0/ospray-3.1.0.x86_64.linux.tar.gz)
     if (WIN32)
-      set(OSPRAY_BINARIES_URL https://github.com/ospray/ospray/releases/download/v3.0.0/ospray-3.0.0.sycl.x86_64.windows.zip)
+      set(OSPRAY_BINARIES_URL https://github.com/RenderKit/ospray/releases/download/v3.1.0/ospray-3.1.0.x86_64.windows.zip)
     elseif (APPLE)
-      set(OSPRAY_BINARIES_URL https://github.com/ospray/ospray/releases/download/v3.0.0/ospray-3.0.0.x86_64.macosx.zip)
+      set(OSPRAY_BINARIES_URL https://github.com/RenderKit/ospray/releases/download/v3.1.0/ospray-3.1.0.x86_64.macosx.zip)
     endif()
     ExternalProject_Add (
       OSPRayBinaries

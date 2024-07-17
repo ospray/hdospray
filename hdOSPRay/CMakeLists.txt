@@ -3,6 +3,15 @@
 
 set(CMAKE_CXX_STANDARD 17)
 
+get_filename_component(SYCL_COMPILER_NAME ${CMAKE_CXX_COMPILER} NAME_WE)
+if (WIN32 AND (SYCL_COMPILER_NAME STREQUAL "icx" OR SYCL_COMPILER_NAME STREQUAL "icpx"))
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /Qoption,link,/DEPENDENTLOADFLAG:0x2000")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /Qoption,link,/DEPENDENTLOADFLAG:0x2000")
+elseif (WIN32) #MSVC
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DEPENDENTLOADFLAG:0x2000")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DEPENDENTLOADFLAG:0x2000")
+endif()
+
 # Add a relative target path to the HDOSPRAY_RPATH.
 function(_add_target_to_rpath CURRENT_RPATH target)
   get_target_property(LIBRARY_FILE ${target} LOCATION)
@@ -21,7 +30,7 @@ option(USE_HOUDINI_USD "use Houdini USD" OFF)
 
 find_package(ospray 3 REQUIRED
   PATHS ${ospray_DIR})
-find_package(rkcommon 1.12.0 REQUIRED
+find_package(rkcommon 1 REQUIRED
   PATHS ${rkcommon_DIR})
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
@@ -88,6 +97,10 @@ target_compile_definitions(hdOSPRay
   NOMINMAX
   $<$<CXX_COMPILER_ID:MSVC>:/MP /wd4244 /wd4305 /wd4996>
   )
+
+if (APPLE) # fix boost error with xcode
+  add_definitions(-D_LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION)
+endif()
 
 install(TARGETS hdOSPRay DESTINATION plugin/usd)
 

@@ -37,10 +37,10 @@ endmacro()
 option(USE_PYTHON "enable python support" ON)
 option(USE_PYTHON2 "if USE_PYTHON enabled, use python2 instead of python3" OFF)
 
-set(HDSUPER_USD_VERSION "v23.02" CACHE STRING "git tag of usd")
+set(HDSUPER_USD_VERSION "v23.08" CACHE STRING "git tag of usd")
 set(HDSUPER_PYTHON_EXECUTABLE "" CACHE PATH "python executable")
 set(HDSUPER_PYTHON_VERSION "" CACHE STRING "python version, eg 3.9")
-set(HDSUPER_USDSUPER_TAG "release-23.02" CACHE STRING "git tag of usd superbuild")
+set(HDSUPER_USDSUPER_TAG "release-23.08" CACHE STRING "git tag of usd superbuild")
 set(HDSUPER_USDSUPER_URL "https://github.com/carsonbrownlee/USD_superbuild.git"
   CACHE STRING "url of usd superbuild git")
 option(HDSUPER_OSPRAY_USE_GIT OFF)
@@ -48,8 +48,8 @@ option(HDSUPER_OSPRAY_USE_EXTERNAL OFF)
 if (HDSUPER_OSPRAY_USE_EXTERNAL)
   set(HDSUPER_OSPRAY_EXTERNAL_DIR "" CACHE PATH "location of external ospray install")
 endif()
-set(HDSUPER_OSPRAY_VERSION "v3.0.0" CACHE STRING "git tag of ospray")
-set(HDSUPER_OSPRAY_URL "https://github.com/ospray/ospray/archive/v3.0.0.zip"
+set(HDSUPER_OSPRAY_VERSION "v3.1.0" CACHE STRING "git tag of ospray")
+set(HDSUPER_OSPRAY_URL "https://github.com/ospray/ospray/archive/v3.1.0.zip"
   CACHE STRING "url of ospray git")
 option(HDSUPER_USE_DENOISER "use ospray denoiser for OSPRay+hdOSPRay" ON)
 
@@ -95,7 +95,7 @@ if (BUILD_RKCOMMON)
 endif()
 
 if(BUILD_HDOSPRAY_ISPC)
-  set(HDOSPRAY_ISPC_VERSION 1.21.1)
+  set(HDOSPRAY_ISPC_VERSION 1.23.0)
   include(dep_ispc)
 endif()
 
@@ -113,8 +113,8 @@ if (BUILD_HDOSPRAY)
     set(USD_ROOT_DIR ${EXTERNAL_USD_DIR})
   endif()
 
-  set(OSPRAY_VERSION "3.0.0" CACHE STRING "ospray library version")
-  set(RKCOMMON_VERSION "1.12.0" CACHE STRING "rkcommon library version")
+  set(OSPRAY_VERSION "3.1.0" CACHE STRING "ospray library version")
+  set(RKCOMMON_VERSION "1.13.0" CACHE STRING "rkcommon library version")
 
   ExternalProject_Add (
     ${EP_HDOSPRAY}
@@ -166,6 +166,12 @@ if (BUILD_HDOSPRAY)
     "export PYTHONPATH=\${HDOSPRAY_ROOT}/lib/python:\${PYTHONPATH}\n"
     "export PATH=\${HDOSPRAY_ROOT}/bin:\${PATH}\n"
     "export PXR_PLUGINPATH_NAME=\${HDOSPRAY_ROOT}/plugin/usd/hdOSPRay/resources:\${PXR_PLUGINPATHNAME}\n"
+    )
+  endif()
+
+  if (EXISTS "${HDOSPRAY_ROOT}/lib64")
+    FILE(APPEND ${CMAKE_INSTALL_PREFIX}/setup_hdospray.sh
+    "export ${LD_EXPORT}=\${HDOSPRAY_ROOT}/lib64:\${LD_LIBRARY_PATH}\n"
     )
   endif()
 

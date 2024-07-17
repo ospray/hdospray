@@ -41,9 +41,12 @@ PXR_NAMESPACE_USING_DIRECTIVE
 namespace {
 
 TF_DEFINE_PRIVATE_TOKENS(_tokens,
-                         ((discoveryType1, "OspPrincipled"))((discoveryType2,
-                                                              "OspCarPaint"))(
-                                (discoveryType3, "OspLuminous")));
+                         ((discoveryType1, "OspPrincipled"))
+                         ((discoveryType2, "OspCarPaint"))
+                         ((discoveryType3, "OspLuminous"))
+                         ((discoveryType4, "OspThinGlass"))
+                         ((discoveryType5, "OspGlass"))
+                         );
 
 // Maps a nodedef name to its NdrNode name.
 using _NameMapping = std::map<std::string, std::string>;
@@ -87,7 +90,8 @@ HdOSPRayDiscoveryPlugin::DiscoverNodes(const Context& context)
     NdrNodeDiscoveryResultVec result;
     std::vector<TfToken> tkns
            = { TfToken("OspPrincipled"), TfToken("OspCarPaint"),
-               TfToken("OspLuminous") };
+               TfToken("OspLuminous"), TfToken("OspThinGlass"),
+               TfToken("OspGlass") };
     for (auto& tkn : tkns) {
         result.emplace_back(tkn, // id
                             NdrVersion(1), // version

@@ -27,7 +27,7 @@ TF_DEFINE_ENV_SETTING(HDOSPRAY_SAMPLES_TO_CONVERGENCE, HDOSPRAY_DEFAULT_SPP_TO_C
 TF_DEFINE_ENV_SETTING(HDOSPRAY_AMBIENT_OCCLUSION_SAMPLES, HDOSPRAY_DEFAULT_AO_SAMPLES,
         "Ambient occlusion samples per camera ray (must be >= 0; a value of 0 disables ambient occlusion)");
 
-TF_DEFINE_ENV_SETTING(HDOSPRAY_LIGHT_SAMPLES, 1,
+TF_DEFINE_ENV_SETTING(HDOSPRAY_LIGHT_SAMPLES, -1,
         "Light samples at every path intersection. A value of -1 means that all light are sampled.");
 
 TF_DEFINE_ENV_SETTING(HDOSPRAY_CAMERA_LIGHT_INTENSITY, 300,

@@ -187,9 +187,8 @@ private:
     bool _rendererDirty { true };
 
     bool _interacting { false };
-    bool _interactiveEnabled {
-        true
-    }; // disabled by setting interactivetargetfps to 0
+    bool _interactiveScaled { false }; // is fb/param scaled from interaction?
+    bool _interactiveEnabled { true}; // disabled by setting interactivetargetfps to 0
 
     int _lastRenderedModelVersion { -1 };
     int _lastRenderedLightVersion { -1 };
@@ -241,6 +240,8 @@ private:
     int _russianRouletteStartDepth { HDOSPRAY_DEFAULT_RR_START_DEPTH };
     float _minContribution { HDOSPRAY_DEFAULT_MIN_CONTRIBUTION };
     float _maxContribution { HDOSPRAY_DEFAULT_MAX_CONTRIBUTION };
+    GfVec4f _shadowCatcherPlane;
+    bool _geometryLights {false};
 
     float _aoRadius { HDOSPRAY_DEFAULT_AO_RADIUS };
     float _aoIntensity { HDOSPRAY_DEFAULT_AO_INTENSITY };

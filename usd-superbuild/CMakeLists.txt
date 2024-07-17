@@ -61,7 +61,7 @@ option(BUILD_OPENCOLORIO "build OpenColorIO"  OFF)
 option(BUILD_PTEX        "build Ptex"         OFF)
 option(BUILD_OPENSUBDIV  "build OpenSubdiv"   ON)
 option(BUILD_USD "Build USD" ON)
-set(USD_VERSION "v23.02" CACHE STRING "USD version tag")
+set(USD_VERSION "v23.08" CACHE STRING "USD version tag")
 set(PYTHON_VERSION "" CACHE STRING "python version, eg 3.9")
 
 if(BUILD_ALL_DEPS)

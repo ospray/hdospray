@@ -74,7 +74,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _renderer.setParam("minContribution", _minContribution);
     _renderer.setParam("maxContribution", _maxContribution);
     _renderer.setParam("epsilon", 0.001f);
-    _renderer.setParam("geometryLights", true);
+    _renderer.setParam("geometryLights", false);
     _rendererDirty = true;
 
     _lightsGroup.commit();
@@ -312,14 +312,13 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
     _UpdateFrameBuffer(useDenoiser, renderPassState);
 
     // setup renderer params
-    if ((_interacting != cameraDirty) && _interactiveEnabled) {
-        _renderer.setParam("maxPathLength", (cameraDirty ? 4 : _maxDepth));
-        _renderer.setParam("minContribution",
-                           (cameraDirty ? 0.1f : _minContribution));
-        _renderer.setParam("maxContribution",
-                           (cameraDirty ? 3.0f : _maxContribution));
-        _renderer.setParam("aoSamples", (cameraDirty ? 0 : _aoSamples));
+    if (!_interacting && _interactiveEnabled && !cameraDirty) {
+        _renderer.setParam("maxPathLength", _maxDepth);
+        _renderer.setParam("minContribution", _minContribution);
+        _renderer.setParam("maxContribution", _maxContribution);
+        _renderer.setParam("aoSamples", _aoSamples);
         _rendererDirty = true;
+        _interactiveScaled = false;
     }
 
     // setup camera
@@ -390,6 +389,7 @@ HdOSPRayRenderPass::_Execute(HdRenderPassStateSharedPtr const& renderPassState,
         _renderer.setParam("maxPathLength", min(4, _maxDepth));
         _renderer.setParam("aoSamples", (cameraDirty ? 0 : _aoSamples));
         _rendererDirty = true;
+        _interactiveScaled = true;
     }
 
     if (_rendererDirty) {
@@ -643,13 +643,18 @@ HdOSPRayRenderPass::_ProcessSettings()
     int russianRouletteStartDepth = renderDelegate->GetRenderSetting<int>(
            HdOSPRayRenderSettingsTokens->russianRouletteStartDepth,
            _russianRouletteStartDepth);
-    int minContribution = renderDelegate->GetRenderSetting<float>(
+    float minContribution = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->minContribution, _minContribution);
-    int maxContribution = renderDelegate->GetRenderSetting<float>(
+    float maxContribution = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->maxContribution, _maxContribution);
     bool useTonemapper = renderDelegate->GetRenderSetting<bool>(
            HdOSPRayRenderSettingsTokens->tmp_enabled,
            HdOSPRayConfig::GetInstance().tmp_enabled);
+    GfVec4f shadowCatcherPlane = renderDelegate->GetRenderSetting<GfVec4f>(
+        HdOSPRayRenderSettingsTokens->shadowCatcherPlane,
+            _shadowCatcherPlane);
+    bool geometryLights = renderDelegate->GetRenderSetting<bool>(
+           HdOSPRayRenderSettingsTokens->geometryLights, _geometryLights);
 
     _interactiveTargetFPS = renderDelegate->GetRenderSetting<float>(
            HdOSPRayRenderSettingsTokens->interactiveTargetFPS,
@@ -668,7 +673,9 @@ HdOSPRayRenderPass::_ProcessSettings()
         || _maxContribution != maxContribution
         || pixelFilterType != _pixelFilterType
         || russianRouletteStartDepth != _russianRouletteStartDepth
-        || useTonemapper != _useTonemapper) {
+        || useTonemapper != _useTonemapper
+        || shadowCatcherPlane != _shadowCatcherPlane
+        || geometryLights != _geometryLights) {
         _spp = spp;
         _aoSamples = aoSamples;
         _maxDepth = maxDepth;
@@ -681,6 +688,8 @@ HdOSPRayRenderPass::_ProcessSettings()
         _pixelFilterType = pixelFilterType;
         _useTonemapper = useTonemapper;
         _tonemapperDirty = true;
+        _shadowCatcherPlane = shadowCatcherPlane;
+        _geometryLights = geometryLights;
         _renderer.setParam("pixelSamples", _spp);
         _renderer.setParam("lightSamples", _lightSamples);
         _renderer.setParam("aoSamples", _aoSamples);
@@ -690,7 +699,11 @@ HdOSPRayRenderPass::_ProcessSettings()
         _renderer.setParam("roulettePathLength", _russianRouletteStartDepth);
         _renderer.setParam("minContribution", _minContribution);
         _renderer.setParam("maxContribution", _maxContribution);
+        _renderer.setParam("roulettePathLength", _russianRouletteStartDepth);
         _renderer.setParam("pixelFilter", (int)_pixelFilterType);
+        _renderer.setParam("shadowCatcherPlane", vec4f(_shadowCatcherPlane[0],
+            _shadowCatcherPlane[1], _shadowCatcherPlane[2], _shadowCatcherPlane[3]));
+        _renderer.setParam("geometryLights", _geometryLights);
         _rendererDirty = true;
 
         _pendingResetImage = true;
@@ -817,7 +830,7 @@ HdOSPRayRenderPass::_CopyFrameBuffer(
                             GfVec3f dir = _inverseProjMatrix.Transform(pos);
                             GfVec3f origin = GfVec3f(0, 0, 0);
                             origin = _inverseViewMatrix.Transform(origin);
-                            dir = -_inverseViewMatrix.Transform(dir)
+                            dir = _inverseViewMatrix.TransformDir(dir)
                                           .GetNormalized();
                             float& d = depth[static_cast<int>(y * w + x)];
                             GfVec3f hit = origin + dir * d;

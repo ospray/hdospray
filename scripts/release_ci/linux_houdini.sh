@@ -2,7 +2,6 @@
 ## Copyright 2023 Intel Corporation
 ## SPDX-License-Identifier: Apache-2.0
 
-HOUDINI_DIR=/NAS/packages/apps/usd/ubuntu22_04/hfs19.5.640
 
 set -x
 cmake --version
@@ -18,11 +17,11 @@ echo "pip3 show PyOpenGL:"
 pip3 show PyOpenGL
 
 export ROOT_DIR=$PWD
-DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.02
+DEP_DIR=$ROOT_DIR/../hdospray_deps/usd-23.08
 mkdir -p $ROOT_DIR/../hdospray_deps
+HOUDINI_DIR=$STORAGE_PATH/packages/apps/usd/ubuntu22_04/hfs19.5.640
 mkdir -p $DEP_DIR
 ls $PWD
-export TBB_ROOT=$DEP_DIR
 export CMAKE_CXX_FLAGS="-std=c++17"
 echo "houdini_DIR:"
 ls $HOUDINI_DIR/toolkit/cmake
@@ -35,9 +34,8 @@ then
     mkdir -p build_deps
     cd build_deps
     cmake ../scripts/superbuild/ -DBUILD_HDOSPRAY=OFF \
-        -DHDSUPER_OSPRAY_USE_EXTERNAL=ON \
-        -DHDSUPER_OSPRAY_EXTERNAL_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-3.0.0/lib/cmake/ospray-3.0.0" \
-        -DBUILD_OSPRAY=ON -DHDSUPER_USD_VERSION=v23.02 -DBUILD_TIFF=ON \
+	-DHDSUPER_OSPRAY_USE_EXTERNAL=OFF \
+        -DBUILD_OSPRAY=ON -DHDSUPER_USD_VERSION=v23.08 -DBUILD_TIFF=ON \
         -DBUILD_USD=OFF \
         -DBUILD_PNG=ON -DBUILD_JPEG=ON -DBUILD_PTEX=OFF -DENABLE_PTEX=OFF \
         -DCMAKE_INSTALL_PREFIX=$DEP_DIR/install .
@@ -45,6 +43,8 @@ then
 else
    echo "using cached dependencies"
 fi
+
+export TBB_ROOT=$DEP_DIR/install/tbb
 
 echo "ospray install dirs: "
 ls $DEP_DIR/install/ospray/lib
@@ -55,11 +55,10 @@ cd $ROOT_DIR
 mkdir -p build_release
 cd build_release
 echo "rkcommon_DIR: "
-echo "$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.12.0"
+echo "$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.13.0"
 cmake -L \
-  -D ospray_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-3.0.0/lib/cmake/ospray-3.0.0" \
-  -D rkcommon_DIR="$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.12.0" \
-  -D TBB_DIR="/NAS/packages/apps/usd/ubuntu22_04/ospray-3.0.0/lib/cmake/tbb" \
+  -D ospray_DIR="$DEP_DIR/install/lib/cmake/ospray-3.1.0" \
+  -D rkcommon_DIR="$DEP_DIR/install/rkcommon/lib/cmake/rkcommon-1.13.0" \
   -D HDOSPRAY_INSTALL_OSPRAY_DEPENDENCIES=ON \
   -D HDOSPRAY_INSTALL_USD_DEPENDENCIES=OFF \
   -D HDOSPRAY_GENERATE_SETUP=ON \

@@ -169,6 +169,12 @@ HdOSPRayRenderDelegate::_Initialize()
     _settingDescriptors.push_back(
            { "tmp_acesColor", HdOSPRayRenderSettingsTokens->tmp_acesColor,
              VtValue(bool(HdOSPRayConfig::GetInstance().tmp_acesColor)) });
+    _settingDescriptors.push_back(
+           { "shadowCatcherPlane", HdOSPRayRenderSettingsTokens->shadowCatcherPlane,
+             VtValue(GfVec4f(HdOSPRayConfig::GetInstance().shadowCatcherPlane)) });
+    _settingDescriptors.push_back(
+           { "geometryLights", HdOSPRayRenderSettingsTokens->geometryLights,
+             VtValue(bool(HdOSPRayConfig::GetInstance().geometryLights)) });
     _PopulateDefaultSettings(_settingDescriptors);
 }
 

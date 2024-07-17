@@ -252,7 +252,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     _smoothNormals = !desc.flatShadingEnabled;
 
     _smoothNormals = _smoothNormals
-           && ((_topology.GetScheme() != PxOsdOpenSubdivTokens->none));
+           && (_topology.GetScheme() != PxOsdOpenSubdivTokens->none)
+           && (_topology.GetScheme() != PxOsdOpenSubdivTokens->bilinear);
 
     if (_meshUtil)
         delete _meshUtil;

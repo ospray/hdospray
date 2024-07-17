@@ -27,6 +27,10 @@ private:
     /// width and height of the USDRectLight
     float _width { 1.0f };
     float _height { 1.0f };
+    GfVec3f _edge1;
+    GfVec3f _edge2;
+    GfVec3f _position;
+    bool _positionSet { false };
 
     /// the texture file to model the emission
     /// Note: not supported by OSPRay yet

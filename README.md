@@ -65,11 +65,11 @@ building and what system you are running: - c/c++ compiler (gcc 6.3.1+)
 install PySide6 PyOpenGL’
 
 If you are building standalone, you will need: -
-[USD 23.02, 22.08, 21.08,
+[USD 23.08, 23.02, 22.08, 21.08,
 or 20.08](https://graphics.pixar.com/usd/docs/index.html) - Other USD
 versions between these discrete releases may work, but are untested. -
 For a full list of USD dependencies, see the USD page. -
-[OSPRay 3.0.0](http://www.ospray.org/) - We recommend using ospray’s
+[OSPRay 3.1.0](http://www.ospray.org/) - We recommend using ospray’s
 superbuild to build dependencies such as embree, ospcommon, and openvkl.
 OpenImageDenoise can also be enabled through superbuild. - rkcommon is a
 library dependency of OSPRay and hdOSPRay, and built as part of OSPRay’s
@@ -87,7 +87,7 @@ superbuild.
 OSPRay for Hydra contains a cmake superbuild script that builds external
 dependencies for you and is the recommended way of building OSPRay for
 Hydra on Linux/Mac. Alternatively, instructions for manually building
-each component is also given. Currently, USD 23.02 is the default.
+each component is also given. Currently, USD 23.08 is the default.
 
     mkdir build
     cd build
@@ -295,6 +295,10 @@ renderer.*
   - Principled shader (similar to Disney BSDF shader)
 
 # News, Updates, and Announcements
+  - Jul 16, 2024: Version v1.1.0
+
+        - USD 23.08 support
+        - OSPRay 3.1
 
   - Oct 25, 2023: Version v1.0.0
     

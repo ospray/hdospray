@@ -1,6 +1,11 @@
 News, Updates, and Announcements
 ================================
 
+- Jul 16, 2024: Version v1.1.0
+
+      - USD 23.08 support
+      - OSPRay 3.1
+
 - Oct 25, 2023: Version v1.0.0
 
       - USD 23.02 support

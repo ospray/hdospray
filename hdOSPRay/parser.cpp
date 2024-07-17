@@ -44,8 +44,10 @@ namespace {
 
 TF_DEFINE_PRIVATE_TOKENS(
        _tokens,
-       ((discoveryType1, "OspPrincipled"))((discoveryType2, "OspCarPaint"))(
-              (discoveryType3, "OspLuminous"))((sourceType, "")));
+       ((discoveryType1, "OspPrincipled"))((discoveryType2, "OspCarPaint"))
+       ((discoveryType3, "OspLuminous"))((discoveryType4, "OspThinGlass"))
+       ((discoveryType5, "OspGlass"))
+       ((sourceType, "")));
 
 static const std::string
 _GetPrimaryUvSetName()
@@ -139,7 +141,8 @@ HdOSPRayParserPlugin::GetDiscoveryTypes() const
 {
     static const NdrTokenVec discoveryTypes
            = { _tokens->discoveryType1, _tokens->discoveryType2,
-               _tokens->discoveryType3 };
+               _tokens->discoveryType3, _tokens->discoveryType4,
+               _tokens->discoveryType5 };
     return discoveryTypes;
 }
 

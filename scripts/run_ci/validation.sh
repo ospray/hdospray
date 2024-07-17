@@ -13,8 +13,8 @@ cd build
 mkdir testing
 mkdir testing/external
 ls /
-cp -r /NAS/projects/hdospray/scenes/* testing/external/.
-cp -r /NAS/projects/hdospray/golden_images testing/.
+cp -r $STORAGE_PATH/projects/hdospray/scenes/* testing/external/.
+cp -r $STORAGE_PATH/projects/hdospray/golden_images testing/.
 
 cmake -GNinja \
   -D CMAKE_CXX_FLAGS="-std=c++17" \
