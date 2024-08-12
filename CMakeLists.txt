@@ -1,4 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
+if (WIN32)
+    cmake_minimum_required(VERSION 3.1.1)
+else()
+    cmake_minimum_required(VERSION 2.8.8)
+endif()
 
 PROJECT(hdOSPRayPlugin)
 
@@ -7,11 +12,6 @@ set(HDOSPRAY_VERSION_MINOR 1)
 set(HDOSPRAY_VERSION_PATCH 0)
 set(HDOSPRAY_VERSION ${HDOSPRAY_VERSION_MAJOR}.${HDOSPRAY_VERSION_MINOR}.${HDOSPRAY_VERSION_PATCH})
 
-if (WIN32)
-    cmake_minimum_required(VERSION 3.1.1)
-else()
-    cmake_minimum_required(VERSION 2.8.8)
-endif()
 
 if (NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
     if (WIN32)
