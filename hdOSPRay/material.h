@@ -175,6 +175,7 @@ protected:
     GfVec3f sheenColor { 1.f, 1.f, 1.f };
     float sheenTint { 0.f };
     float sheenRoughness { 0.2f };
+    GfVec3f emissiveColor { 0.f, 0.f, 0.f };
     TfToken type;
     bool hasPtex { false };
 
