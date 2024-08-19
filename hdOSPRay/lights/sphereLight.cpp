@@ -9,10 +9,6 @@
 
 #include <pxr/base/gf/matrix4d.h>
 
-#include <pxr/usd/usdLux/lightAPI.h>
-#include <pxr/usd/usdLux/shapingAPI.h>
-
-#include <algorithm>
 #include <iostream>
 
 using namespace rkcommon::math;
