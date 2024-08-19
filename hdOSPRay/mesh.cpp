@@ -262,6 +262,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
     bool useQuads = _UseQuadIndices(renderIndex, _topology);
 
+    const HdOSPRayMaterial* material = _GetAssignedMaterial(renderIndex);
+
     if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)
         && _topology.GetRefineLevel() > 0) {
         _topology.SetSubdivTags(sceneDelegate->GetSubdivTags(id));
@@ -329,7 +331,7 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
                 || _points.empty())
                 return;
 
-            if (!_colors.empty()) {
+            if (!material && !_colors.empty()) {
                 _ComputePrimvars<VtVec3fArray>(
                        *_meshUtil, useQuads, _colors, _computedColors,
                        _colorsPrimVarName, _colorsInterpolation);
@@ -368,7 +370,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
             }
         }
 
-        if (!_colors.empty()) {
+        // use vertex colors (displayColor) only as fallback in case no material is assigned
+        if (!material && !_colors.empty()) {
             // TODO: add back in opacities
             VtVec3fArray& colors = _colors;
             if (!_computedColors.empty())
@@ -402,26 +405,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
 
         _ospMesh.commit();
 
-        const HdOSPRayMaterial* subsetMaterial = nullptr;
-
-        for (const auto& subset : _topology.GetGeomSubsets()) {
-            if (!TF_VERIFY(subset.type == HdGeomSubset::TypeFaceSet))
-                continue;
-
-            const HdOSPRayMaterial* material
-                   = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
-                          HdPrimTypeTokens->material, subset.materialId));
-            subsetMaterial = material;
-        }
-
-        const HdOSPRayMaterial* material = nullptr;
-        if (subsetMaterial)
-            material = subsetMaterial;
-        else
-            material
-                   = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
-                          HdPrimTypeTokens->material, GetMaterialId()));
-
         opp::Material ospMaterial = nullptr;
 
         if (material && material->GetOSPRayMaterial()) {
@@ -438,20 +421,20 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         _geometricModel->setParam("material", ospMaterial);
         _geometricModel->setParam("id", (unsigned int)GetPrimId());
         _ospMesh.commit();
-        if (_colorsInterpolation == HdInterpolationUniform
-            && !_computedColors.empty()) {
-            std::vector<vec4f> colors(_computedColors.size());
-            for (int i = 0; i < _computedColors.size(); i++) {
-                const auto& c = _computedColors[i];
-                colors[i] = vec4f(c[0], c[1], c[2], 1.f);
+        if (!material && !_computedColors.empty()) {
+            if (_colorsInterpolation == HdInterpolationUniform) {
+                std::vector<vec4f> colors(_computedColors.size());
+                for (int i = 0; i < _computedColors.size(); i++) {
+                    const auto& c = _computedColors[i];
+                    colors[i] = vec4f(c[0], c[1], c[2], 1.f);
+                }
+                _geometricModel->setParam("color", opp::CopiedData(colors));
             }
-            _geometricModel->setParam("color", opp::CopiedData(colors));
-        }
-        if (_colorsInterpolation == HdInterpolationConstant
-            && !_computedColors.empty()) {
-            _geometricModel->setParam(
-                   "color",
-                   vec4f(_colors[0][0], _colors[0][1], _colors[0][2], 1.f));
+            else if (_colorsInterpolation == HdInterpolationConstant) {
+                _geometricModel->setParam(
+                       "color",
+                       vec4f(_colors[0][0], _colors[0][1], _colors[0][2], 1.f));
+            }
         }
 
         _geometricModel->commit();
@@ -724,4 +707,26 @@ HdOSPRayMesh::_CreateOSPRaySubdivMesh()
     mesh.setParam("id", (unsigned int)GetPrimId());
 
     return mesh;
+}
+
+const HdOSPRayMaterial*
+HdOSPRayMesh::_GetAssignedMaterial(const HdRenderIndex& renderIndex) const
+{
+    const HdOSPRayMaterial* subsetMaterial = nullptr;
+
+    for (const auto& subset : _topology.GetGeomSubsets()) {
+        if (!TF_VERIFY(subset.type == HdGeomSubset::TypeFaceSet))
+            continue;
+
+        const HdOSPRayMaterial* material
+               = static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
+                      HdPrimTypeTokens->material, subset.materialId));
+        subsetMaterial = material;
+    }
+
+    if (subsetMaterial)
+        return subsetMaterial;
+    else
+        return static_cast<const HdOSPRayMaterial*>(renderIndex.GetSprim(
+               HdPrimTypeTokens->material, GetMaterialId()));
 }

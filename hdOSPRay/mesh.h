@@ -26,6 +26,7 @@ namespace opp = ospray::cpp;
 PXR_NAMESPACE_USING_DIRECTIVE
 
 class HdStDrawItem;
+class HdOSPRayMaterial;
 class HdOSPRayRenderParam;
 
 /// \class HdOSPRayMesh
@@ -87,6 +88,8 @@ private:
                                     const VtVec3fArray& normals,
                                     const VtVec3fArray& colors, bool refined,
                                     bool useQuads);
+
+    const HdOSPRayMaterial* _GetAssignedMaterial(const HdRenderIndex& renderIndex) const;
 
     ///  \param meshUtil
     ///  \param useQuads
