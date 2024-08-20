@@ -12,7 +12,6 @@
 #include "mesh.h"
 #include "renderDelegate.h"
 
-#include <pxr/imaging/hd/camera.h>
 #include <pxr/imaging/hd/perfLog.h>
 #include <pxr/imaging/hd/renderPassState.h>
 
@@ -59,6 +58,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _world = opp::World();
     _world.setParam("dynamicScene", true);
     _camera = opp::Camera("perspective");
+    _cameraProjection = HdCamera::Projection::Perspective;
     _renderer.setParam("backgroundColor",
                        vec4f(_clearColor[0], _clearColor[1], _clearColor[2],
                              _clearColor[3]));
@@ -515,6 +515,20 @@ void
 HdOSPRayRenderPass::_ProcessCamera(
        HdRenderPassStateSharedPtr const& renderPassState)
 {
+    const HdCamera* camera = renderPassState->GetCamera();
+    if (camera) {
+        if (camera->GetProjection() != _cameraProjection) {
+            _cameraProjection = camera->GetProjection();
+            _camera = (_cameraProjection == HdCamera::Projection::Perspective)
+                   ? opp::Camera("perspective")
+                   : opp::Camera("orthographic");
+        }
+    }
+
+    float aspect = _width / float(_height);
+    _camera.setParam("aspect", aspect);
+    TF_DEBUG_MSG(OSP, "aspect: %f\n", aspect);
+
     GfVec3f origin = GfVec3f(0, 0, 0);
     GfVec3f dir = GfVec3f(0, 0, -1);
     GfVec3f up = GfVec3f(0, 1, 0);
@@ -522,54 +536,55 @@ HdOSPRayRenderPass::_ProcessCamera(
     origin = _inverseViewMatrix.Transform(origin);
     dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
     up = _inverseViewMatrix.TransformDir(up).GetNormalized();
-    _cameraDir = dir;
-    _cameraOrigin = origin;
 
-    float aspect = _width / float(_height);
-    _camera.setParam("aspect", aspect);
-
-    double prjMatrix[4][4];
-    renderPassState->GetProjectionMatrix().Get(prjMatrix);
-    float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
-
-    float focusDistance = 3.96f;
-    float focalLength = 8.f;
-    float fStop = 0.f;
-    float aperture = 0.f;
-
-    const HdCamera* camera = renderPassState->GetCamera();
-    const HdOSPRayCamera* ospCamera
-           = dynamic_cast<const HdOSPRayCamera*>(camera);
-    if (ospCamera) {
-        fStop = ospCamera->GetFStop();
-        focusDistance = ospCamera->GetFocusDistance();
-        focalLength = ospCamera->GetFocalLength();
-    }
-
-    if (fStop > 0.f)
-        aperture = focalLength / fStop / 2.f * .1f;
-    // only set if apterture over epsilon. Ran into issues on windows setting
-    // DOF when 0.
-    if (aperture > 1.0e-5) {
-        _camera.setParam("focusDistance", focusDistance);
-        _camera.setParam("apertureRadius", aperture);
-    } else {
-        _camera.setParam("apertureRadius", 0.f);
-        _camera.setParam("focusDistance", 1.f);
-    }
     _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));
     _camera.setParam("direction", vec3f(dir[0], dir[1], dir[2]));
     _camera.setParam("up", vec3f(up[0], up[1], up[2]));
-    _camera.setParam("fovy", fov);
-    _camera.commit();
-
-    TF_DEBUG_MSG(OSP, "aspect: %f\n", aspect);
-    TF_DEBUG_MSG(OSP, "focusDistance: %f\n", focusDistance);
-    TF_DEBUG_MSG(OSP, "apertureRadius: %f\n", aperture);
     TF_DEBUG_MSG(OSP, "position: %f %f %f\n", origin[0], origin[1], origin[2]);
     TF_DEBUG_MSG(OSP, "direction: %f %f %f\n", dir[0], dir[1], dir[2]);
     TF_DEBUG_MSG(OSP, "up: %f %f %f\n", up[0], up[1], up[2]);
-    TF_DEBUG_MSG(OSP, "fovy: %f\n", fov);
+
+    if (_cameraProjection == HdCamera::Projection::Perspective) {
+        double prjMatrix[4][4];
+        renderPassState->GetProjectionMatrix().Get(prjMatrix);
+        float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
+
+        float focusDistance = 3.96f;
+        float focalLength = 8.f;
+        float fStop = 0.f;
+        float aperture = 0.f;
+
+        const HdOSPRayCamera* ospCamera
+               = dynamic_cast<const HdOSPRayCamera*>(camera);
+        if (ospCamera) {
+            fStop = ospCamera->GetFStop();
+            focusDistance = ospCamera->GetFocusDistance();
+            focalLength = ospCamera->GetFocalLength();
+        }
+
+        if (fStop > 0.f)
+            aperture = focalLength / fStop / 2.f * .1f;
+        // only set if apterture over epsilon. Ran into issues on windows
+        // setting DOF when 0.
+        if (aperture > 1.0e-5) {
+            _camera.setParam("focusDistance", focusDistance);
+            _camera.setParam("apertureRadius", aperture);
+        } else {
+            _camera.setParam("apertureRadius", 0.f);
+            _camera.setParam("focusDistance", 1.f);
+        }
+        _camera.setParam("fovy", fov);
+        TF_DEBUG_MSG(OSP, "focusDistance: %f\n", focusDistance);
+        TF_DEBUG_MSG(OSP, "apertureRadius: %f\n", aperture);
+        TF_DEBUG_MSG(OSP, "fovy: %f\n", fov);
+    }
+    else { // orthographic
+        float height = camera ? camera->GetVerticalAperture() : 100.0f;
+        _camera.setParam("height", height);
+        TF_DEBUG_MSG(OSP, "height: %f\n", height);
+    }
+
+    _camera.commit();
 }
 
 void
