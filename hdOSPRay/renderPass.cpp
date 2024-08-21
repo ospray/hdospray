@@ -828,35 +828,7 @@ HdOSPRayRenderPass::_CopyFrameBuffer(
                               _currentFrame.cameraDepthBuffer.data());
                 }
                 if (_hasDepth) {
-                    // convert depth to clip space
-                    const auto viewMatrix
-                           = renderPassState->GetWorldToViewMatrix();
-                    const auto projMatrix
-                           = renderPassState->GetProjectionMatrix();
-
-                    const float w = _currentFrame.width;
-                    const float h = _currentFrame.height;
-                    tbb::parallel_for(0, (int)h, [&](int iy) {
-                        tbb::parallel_for(0, (int)w, [&](int ix) {
-                            const float x = ix;
-                            const float y = iy;
-                            const GfVec3f pos(2.f * (x / w) - 1.f,
-                                              2.f * (y / h) - 1.f, -1.f);
-                            GfVec3f dir = _inverseProjMatrix.Transform(pos);
-                            GfVec3f origin = GfVec3f(0, 0, 0);
-                            origin = _inverseViewMatrix.Transform(origin);
-                            dir = _inverseViewMatrix.TransformDir(dir)
-                                          .GetNormalized();
-                            float& d = depth[static_cast<int>(y * w + x)];
-                            GfVec3f hit = origin + dir * d;
-                            hit = viewMatrix.Transform(hit);
-                            hit = projMatrix.Transform(hit);
-                            d = (hit[2] + 1.f) / 2.f;
-                            if (isnan(d))
-                                d = 1.f;
-                        });
-                    });
-
+                    _ConvertDepthToClipSpace(renderPassState, depth);
                     std::copy(depth, depth + frameSize,
                               _currentFrame.depthBuffer.data());
                 }
@@ -1038,4 +1010,58 @@ HdOSPRayRenderPass::_UpdateFrameBuffer(
 
     _frameBufferDirty = false;
     _interactiveFrameBufferDirty = false;
+}
+
+void
+HdOSPRayRenderPass::_ConvertDepthToClipSpace(
+       HdRenderPassStateSharedPtr const& renderPassState, float* depth)
+{
+    const auto viewMatrix = renderPassState->GetWorldToViewMatrix();
+    const auto projMatrix = renderPassState->GetProjectionMatrix();
+    GfMatrix4d viewProjMatrix = viewMatrix * projMatrix;
+    GfMatrix4d inverseViewProjMatrix = _inverseProjMatrix * _inverseViewMatrix;
+    const GfVec3f origin = _inverseViewMatrix.Transform(GfVec3f(0, 0, 0));
+
+    const float w = _currentFrame.width;
+    const float h = _currentFrame.height;
+    if (_cameraProjection == HdCamera::Projection::Orthographic) {
+        const GfVec3f nearPlaneCenter
+               = inverseViewProjMatrix.Transform(GfVec3f(0, 0, -1.f));
+        GfVec3f dir = nearPlaneCenter - origin;
+        const float dNear = dir.Normalize();
+
+        tbb::parallel_for(0, (int)h, [&](int iy) {
+            tbb::parallel_for(0, (int)w, [&](int ix) {
+                const float x = ix;
+                const float y = iy;
+                const GfVec3f pos(2.f * (x / w) - 1.f, 2.f * (y / h) - 1.f,
+                                  -1.f);
+                GfVec3f posNear = inverseViewProjMatrix.Transform(pos);
+                float& d = depth[static_cast<int>(y * w + x)];
+                GfVec3f hit = posNear + dir * (d - dNear);
+                hit = viewProjMatrix.Transform(hit);
+                d = (hit[2] + 1.f) / 2.f;
+                if (isnan(d))
+                    d = 1.f;
+            });
+        });
+
+    } else { // perspective
+        tbb::parallel_for(0, (int)h, [&](int iy) {
+            tbb::parallel_for(0, (int)w, [&](int ix) {
+                const float x = ix;
+                const float y = iy;
+                const GfVec3f pos(2.f * (x / w) - 1.f, 2.f * (y / h) - 1.f,
+                                  -1.f);
+                GfVec3f dir = (inverseViewProjMatrix.Transform(pos) - origin)
+                                     .GetNormalized();
+                float& d = depth[static_cast<int>(y * w + x)];
+                GfVec3f hit = origin + dir * d;
+                hit = viewProjMatrix.Transform(hit);
+                d = (hit[2] + 1.f) / 2.f;
+                if (isnan(d))
+                    d = 1.f;
+            });
+        });
+    }
 }

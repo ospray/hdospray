@@ -149,6 +149,9 @@ private:
     void _UpdateFrameBuffer(bool useDenoiser,
                             HdRenderPassStateSharedPtr const& renderPassState);
 
+    void _ConvertDepthToClipSpace(HdRenderPassStateSharedPtr const& renderPassState,
+                                  float* depth);
+
     bool _pendingResetImage { true };
     bool _interactiveFrameBufferDirty { true };
     bool _frameBufferDirty { true };
