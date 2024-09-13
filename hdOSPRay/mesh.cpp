@@ -262,8 +262,6 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
     const HdRenderIndex& renderIndex = sceneDelegate->GetRenderIndex();
     bool useQuads = _UseQuadIndices(renderIndex, _topology);
 
-    const HdOSPRayMaterial* material = _GetAssignedMaterial(renderIndex);
-
     if (HdChangeTracker::IsSubdivTagsDirty(*dirtyBits, id)
         && _topology.GetRefineLevel() > 0) {
         _topology.SetSubdivTags(sceneDelegate->GetSubdivTags(id));
@@ -317,6 +315,8 @@ HdOSPRayMesh::_PopulateOSPMesh(HdSceneDelegate* sceneDelegate,
         || HdChangeTracker::IsPrimvarDirty(*dirtyBits, id,
                                            HdOSPRayTokens->st)) {
         newMesh = true;
+
+        const HdOSPRayMaterial* material = _GetAssignedMaterial(renderIndex);
 
         if (!_refined) {
             if (useQuads) {
