@@ -95,6 +95,7 @@ target_compile_definitions(hdOSPRay
   MFB_PACKAGE_NAME=hdOSPRay
   MFB_ALT_PACKAGE_NAME=hdOSPRay
   NOMINMAX
+  HDOSPRAY_EXPORTS
   $<$<CXX_COMPILER_ID:MSVC>:/MP /wd4244 /wd4305 /wd4996>
   )
 
