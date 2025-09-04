@@ -39,6 +39,22 @@ HdOSPRaySphereLight::_LightSpecificSync(HdSceneDelegate* sceneDelegate,
                         ->GetLightParamValue(
                                id, HdOSPRaySphereLightTokens->treatAsPoint)
                         .Get<bool>();
+
+        {
+            const VtValue tValue {
+                sceneDelegate
+                    ->GetLightParamValue(
+                        id, HdLightTokens->shapingConeAngle) };
+
+            if (tValue.IsHolding<float>())
+                _coneAngle = tValue.Get<float>();
+            else
+                _coneAngle.reset();
+        }
+        _coneSoftness =
+            sceneDelegate
+                ->GetLightParamValue(id, HdLightTokens->shapingConeSoftness)
+                    .GetWithDefault<float>(0.f);
     }
 }
 
@@ -62,8 +78,32 @@ HdOSPRaySphereLight::_PrepareOSPLight()
     // We could also consider scaling but is is not clear what to do
     // if the scaling i non-uniform
 
-    if (!_ospLight)
-        _ospLight = opp::Light("sphere");
+    if (_coneAngle) {
+        // We need to have a "spot" light
+        if (!_ospLight || !_lightIsConeLight)
+            _ospLight = opp::Light("spot");
+        _lightIsConeLight = true;
+
+        _ospLight.setParam("openingAngle", *_coneAngle);
+
+        // describes "cutoff softness for cone angle"
+        _ospLight.setParam("penumbraAngle", _coneSoftness);
+
+        GfVec3f direction { 0.f, 0.f, -1.f };
+        direction = _transform.TransformDir(direction);
+        // Normalized direction required to be accurate, otherwise value will
+        // not be accepted
+        direction.Normalize();
+        _ospLight.setParam("direction",
+                           vec3f { direction[0], direction[1], direction[2] });
+    }
+    else {
+        // We need to have a "sphere" light
+        if (!_ospLight || _lightIsConeLight)
+            _ospLight = opp::Light("sphere");
+        _lightIsConeLight = false;
+    }
+
     _ospLight.setParam("position",
                        vec3f(position[0], position[1], position[2]));
     if (_treatAsPoint)

@@ -5,6 +5,8 @@
 
 #include "light.h"
 
+#include <optional>
+
 PXR_NAMESPACE_USING_DIRECTIVE
 
 /// \class HdOSPRaySphereLight
@@ -28,4 +30,10 @@ private:
     float _radius { 0.5f };
     // if the sphere light should be treated as a virtual point light
     bool _treatAsPoint { false };
+    // A Sphere Light can optionally be shaped into a cone
+    std::optional<float> _coneAngle;
+    // The cone can further be refined, by having a soft outer ring
+    float _coneSoftness { 0.f };
+    // To know when to recreate the light
+    bool _lightIsConeLight { false };
 };
