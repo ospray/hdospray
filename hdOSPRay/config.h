@@ -140,7 +140,7 @@ public:
     bool ambientLight { false };
 
     ///  ShadowCatcher for ospray path tracer
-    GfVec4f shadowCatcherPlane;
+    GfVec4f shadowCatcherPlane { 0, 0, 0, 0 };
 
     ///  Geometry Lights
     bool geometryLights { false };

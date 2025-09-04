@@ -240,7 +240,7 @@ private:
     int _russianRouletteStartDepth { HDOSPRAY_DEFAULT_RR_START_DEPTH };
     float _minContribution { HDOSPRAY_DEFAULT_MIN_CONTRIBUTION };
     float _maxContribution { HDOSPRAY_DEFAULT_MAX_CONTRIBUTION };
-    GfVec4f _shadowCatcherPlane;
+    GfVec4f _shadowCatcherPlane { 0, 0, 0, 0 };
     bool _geometryLights {false};
 
     float _aoRadius { HDOSPRAY_DEFAULT_AO_RADIUS };
