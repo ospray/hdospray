@@ -304,6 +304,8 @@ HdOSPRayMaterial::_ProcessUsdPreviewSurfaceNode(HdMaterialNode node)
         const auto& value = param->second;
         if (name == HdOSPRayMaterialTokens->diffuseColor) {
             diffuseColor = value.Get<GfVec3f>();
+        } else if (name == HdOSPRayMaterialTokens->emissiveColor) {
+            emissiveColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayMaterialTokens->specularColor) {
             specularColor = value.Get<GfVec3f>();
         } else if (name == HdOSPRayMaterialTokens->metallic) {
@@ -621,6 +623,7 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(const std::string& rendererType)
     bool hasMetallicTex = false;
     bool hasRoughnessTex = false;
     bool hasOpacityTex = false;
+    bool hasEmissiveTex = false;
     // set texture maps
     // TODO: we can skip the name mapping if we require them to be in ospray nomenclature
     for (const auto& [key, value] : _textures) {
@@ -680,6 +683,9 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(const std::string& rendererType)
             || key == HdOSPRayMaterialTokens->map_roughness) {
             name = "map_roughness";
             hasRoughnessTex = true;
+        } else if (key == HdOSPRayMaterialTokens->emissiveColor) {
+            name = "map_emissiveColor";
+            hasEmissiveTex = true;
         }
 
         if (name != "") {
@@ -735,6 +741,8 @@ HdOSPRayMaterial::UpdatePrincipledMaterial(const std::string& rendererType)
     _ospMaterial.setParam("sheenColor", GfToOSP(sheenColor));
     _ospMaterial.setParam("sheenTint", sheenTint);
     _ospMaterial.setParam("sheenRoughness", sheenRoughness);
+    _ospMaterial.setParam("emissiveColor",
+                          (hasEmissiveTex ? vec3f( 1.f, 1.f, 1.f) : GfToOSP(emissiveColor)));
 }
 
 void
