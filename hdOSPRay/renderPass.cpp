@@ -12,7 +12,6 @@
 #include "mesh.h"
 #include "renderDelegate.h"
 
-#include <pxr/imaging/hd/camera.h>
 #include <pxr/imaging/hd/perfLog.h>
 #include <pxr/imaging/hd/renderPassState.h>
 
@@ -59,6 +58,7 @@ HdOSPRayRenderPass::HdOSPRayRenderPass(
     _world = opp::World();
     _world.setParam("dynamicScene", true);
     _camera = opp::Camera("perspective");
+    _cameraProjection = HdCamera::Projection::Perspective;
     _renderer.setParam("backgroundColor",
                        vec4f(_clearColor[0], _clearColor[1], _clearColor[2],
                              _clearColor[3]));
@@ -515,6 +515,20 @@ void
 HdOSPRayRenderPass::_ProcessCamera(
        HdRenderPassStateSharedPtr const& renderPassState)
 {
+    const HdCamera* camera = renderPassState->GetCamera();
+    if (camera) {
+        if (camera->GetProjection() != _cameraProjection) {
+            _cameraProjection = camera->GetProjection();
+            _camera = (_cameraProjection == HdCamera::Projection::Perspective)
+                   ? opp::Camera("perspective")
+                   : opp::Camera("orthographic");
+        }
+    }
+
+    float aspect = _width / float(_height);
+    _camera.setParam("aspect", aspect);
+    TF_DEBUG_MSG(OSP, "aspect: %f\n", aspect);
+
     GfVec3f origin = GfVec3f(0, 0, 0);
     GfVec3f dir = GfVec3f(0, 0, -1);
     GfVec3f up = GfVec3f(0, 1, 0);
@@ -522,54 +536,55 @@ HdOSPRayRenderPass::_ProcessCamera(
     origin = _inverseViewMatrix.Transform(origin);
     dir = _inverseViewMatrix.TransformDir(dir).GetNormalized();
     up = _inverseViewMatrix.TransformDir(up).GetNormalized();
-    _cameraDir = dir;
-    _cameraOrigin = origin;
 
-    float aspect = _width / float(_height);
-    _camera.setParam("aspect", aspect);
-
-    double prjMatrix[4][4];
-    renderPassState->GetProjectionMatrix().Get(prjMatrix);
-    float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
-
-    float focusDistance = 3.96f;
-    float focalLength = 8.f;
-    float fStop = 0.f;
-    float aperture = 0.f;
-
-    const HdCamera* camera = renderPassState->GetCamera();
-    const HdOSPRayCamera* ospCamera
-           = dynamic_cast<const HdOSPRayCamera*>(camera);
-    if (ospCamera) {
-        fStop = ospCamera->GetFStop();
-        focusDistance = ospCamera->GetFocusDistance();
-        focalLength = ospCamera->GetFocalLength();
-    }
-
-    if (fStop > 0.f)
-        aperture = focalLength / fStop / 2.f * .1f;
-    // only set if apterture over epsilon. Ran into issues on windows setting
-    // DOF when 0.
-    if (aperture > 1.0e-5) {
-        _camera.setParam("focusDistance", focusDistance);
-        _camera.setParam("apertureRadius", aperture);
-    } else {
-        _camera.setParam("apertureRadius", 0.f);
-        _camera.setParam("focusDistance", 1.f);
-    }
     _camera.setParam("position", vec3f(origin[0], origin[1], origin[2]));
     _camera.setParam("direction", vec3f(dir[0], dir[1], dir[2]));
     _camera.setParam("up", vec3f(up[0], up[1], up[2]));
-    _camera.setParam("fovy", fov);
-    _camera.commit();
-
-    TF_DEBUG_MSG(OSP, "aspect: %f\n", aspect);
-    TF_DEBUG_MSG(OSP, "focusDistance: %f\n", focusDistance);
-    TF_DEBUG_MSG(OSP, "apertureRadius: %f\n", aperture);
     TF_DEBUG_MSG(OSP, "position: %f %f %f\n", origin[0], origin[1], origin[2]);
     TF_DEBUG_MSG(OSP, "direction: %f %f %f\n", dir[0], dir[1], dir[2]);
     TF_DEBUG_MSG(OSP, "up: %f %f %f\n", up[0], up[1], up[2]);
-    TF_DEBUG_MSG(OSP, "fovy: %f\n", fov);
+
+    if (_cameraProjection == HdCamera::Projection::Perspective) {
+        double prjMatrix[4][4];
+        renderPassState->GetProjectionMatrix().Get(prjMatrix);
+        float fov = 2.0 * std::atan(1.0 / prjMatrix[1][1]) * 180.0 / M_PI;
+
+        float focusDistance = 3.96f;
+        float focalLength = 8.f;
+        float fStop = 0.f;
+        float aperture = 0.f;
+
+        const HdOSPRayCamera* ospCamera
+               = dynamic_cast<const HdOSPRayCamera*>(camera);
+        if (ospCamera) {
+            fStop = ospCamera->GetFStop();
+            focusDistance = ospCamera->GetFocusDistance();
+            focalLength = ospCamera->GetFocalLength();
+        }
+
+        if (fStop > 0.f)
+            aperture = focalLength / fStop / 2.f * .1f;
+        // only set if apterture over epsilon. Ran into issues on windows
+        // setting DOF when 0.
+        if (aperture > 1.0e-5) {
+            _camera.setParam("focusDistance", focusDistance);
+            _camera.setParam("apertureRadius", aperture);
+        } else {
+            _camera.setParam("apertureRadius", 0.f);
+            _camera.setParam("focusDistance", 1.f);
+        }
+        _camera.setParam("fovy", fov);
+        TF_DEBUG_MSG(OSP, "focusDistance: %f\n", focusDistance);
+        TF_DEBUG_MSG(OSP, "apertureRadius: %f\n", aperture);
+        TF_DEBUG_MSG(OSP, "fovy: %f\n", fov);
+    }
+    else { // orthographic
+        float height = camera ? camera->GetVerticalAperture() : 100.0f;
+        _camera.setParam("height", height);
+        TF_DEBUG_MSG(OSP, "height: %f\n", height);
+    }
+
+    _camera.commit();
 }
 
 void
@@ -813,35 +828,7 @@ HdOSPRayRenderPass::_CopyFrameBuffer(
                               _currentFrame.cameraDepthBuffer.data());
                 }
                 if (_hasDepth) {
-                    // convert depth to clip space
-                    const auto viewMatrix
-                           = renderPassState->GetWorldToViewMatrix();
-                    const auto projMatrix
-                           = renderPassState->GetProjectionMatrix();
-
-                    const float w = _currentFrame.width;
-                    const float h = _currentFrame.height;
-                    tbb::parallel_for(0, (int)h, [&](int iy) {
-                        tbb::parallel_for(0, (int)w, [&](int ix) {
-                            const float x = ix;
-                            const float y = iy;
-                            const GfVec3f pos(2.f * (x / w) - 1.f,
-                                              2.f * (y / h) - 1.f, -1.f);
-                            GfVec3f dir = _inverseProjMatrix.Transform(pos);
-                            GfVec3f origin = GfVec3f(0, 0, 0);
-                            origin = _inverseViewMatrix.Transform(origin);
-                            dir = _inverseViewMatrix.TransformDir(dir)
-                                          .GetNormalized();
-                            float& d = depth[static_cast<int>(y * w + x)];
-                            GfVec3f hit = origin + dir * d;
-                            hit = viewMatrix.Transform(hit);
-                            hit = projMatrix.Transform(hit);
-                            d = (hit[2] + 1.f) / 2.f;
-                            if (isnan(d))
-                                d = 1.f;
-                        });
-                    });
-
+                    _ConvertDepthToClipSpace(renderPassState, depth);
                     std::copy(depth, depth + frameSize,
                               _currentFrame.depthBuffer.data());
                 }
@@ -1023,4 +1010,58 @@ HdOSPRayRenderPass::_UpdateFrameBuffer(
 
     _frameBufferDirty = false;
     _interactiveFrameBufferDirty = false;
+}
+
+void
+HdOSPRayRenderPass::_ConvertDepthToClipSpace(
+       HdRenderPassStateSharedPtr const& renderPassState, float* depth)
+{
+    const auto viewMatrix = renderPassState->GetWorldToViewMatrix();
+    const auto projMatrix = renderPassState->GetProjectionMatrix();
+    GfMatrix4d viewProjMatrix = viewMatrix * projMatrix;
+    GfMatrix4d inverseViewProjMatrix = _inverseProjMatrix * _inverseViewMatrix;
+    const GfVec3f origin = _inverseViewMatrix.Transform(GfVec3f(0, 0, 0));
+
+    const float w = _currentFrame.width;
+    const float h = _currentFrame.height;
+    if (_cameraProjection == HdCamera::Projection::Orthographic) {
+        const GfVec3f nearPlaneCenter
+               = inverseViewProjMatrix.Transform(GfVec3f(0, 0, -1.f));
+        GfVec3f dir = nearPlaneCenter - origin;
+        const float dNear = dir.Normalize();
+
+        tbb::parallel_for(0, (int)h, [&](int iy) {
+            tbb::parallel_for(0, (int)w, [&](int ix) {
+                const float x = ix;
+                const float y = iy;
+                const GfVec3f pos(2.f * (x / w) - 1.f, 2.f * (y / h) - 1.f,
+                                  -1.f);
+                GfVec3f posNear = inverseViewProjMatrix.Transform(pos);
+                float& d = depth[static_cast<int>(y * w + x)];
+                GfVec3f hit = posNear + dir * (d - dNear);
+                hit = viewProjMatrix.Transform(hit);
+                d = (hit[2] + 1.f) / 2.f;
+                if (isnan(d))
+                    d = 1.f;
+            });
+        });
+
+    } else { // perspective
+        tbb::parallel_for(0, (int)h, [&](int iy) {
+            tbb::parallel_for(0, (int)w, [&](int ix) {
+                const float x = ix;
+                const float y = iy;
+                const GfVec3f pos(2.f * (x / w) - 1.f, 2.f * (y / h) - 1.f,
+                                  -1.f);
+                GfVec3f dir = (inverseViewProjMatrix.Transform(pos) - origin)
+                                     .GetNormalized();
+                float& d = depth[static_cast<int>(y * w + x)];
+                GfVec3f hit = origin + dir * d;
+                hit = viewProjMatrix.Transform(hit);
+                d = (hit[2] + 1.f) / 2.f;
+                if (isnan(d))
+                    d = 1.f;
+            });
+        });
+    }
 }

@@ -7,6 +7,7 @@
 
 #include <pxr/base/gf/matrix4d.h>
 #include <pxr/base/tf/debug.h>
+#include <pxr/imaging/hd/camera.h>
 #include <pxr/imaging/hd/renderPass.h>
 #include <pxr/pxr.h>
 #include "pxr/base/gf/rect2i.h"
@@ -148,6 +149,9 @@ private:
     void _UpdateFrameBuffer(bool useDenoiser,
                             HdRenderPassStateSharedPtr const& renderPassState);
 
+    void _ConvertDepthToClipSpace(HdRenderPassStateSharedPtr const& renderPassState,
+                                  float* depth);
+
     bool _pendingResetImage { true };
     bool _interactiveFrameBufferDirty { true };
     bool _frameBufferDirty { true };
@@ -203,8 +207,7 @@ private:
     unsigned int _height { 0 };
 
     opp::Camera _camera;
-    GfVec3f _cameraDir { 0.f, 0.f, -1.f };
-    GfVec3f _cameraOrigin { 0.f, 0.f, 1.f };
+    HdCamera::Projection _cameraProjection { HdCamera::Projection::Perspective };
 
     // camera space to world space
     GfMatrix4d _inverseViewMatrix;
